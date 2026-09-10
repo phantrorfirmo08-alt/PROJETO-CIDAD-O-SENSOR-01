@@ -1,0 +1,539 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sara IA - Defesa Civil Digital (Rocha Sobrinho)</title>
+
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'><circle cx='256' cy='256' r='240' fill='%231b2a4a'/><circle cx='256' cy='256' r='240' fill='none' stroke='%232563eb' stroke-width='12'/><text x='50%25' y='55%25' text-anchor='middle' fill='%232ecc71' font-size='220' font-weight='bold' dominant-baseline='central'>S</text></svg>">
+
+    <link rel="manifest" href="data:application/manifest+json;charset=utf-8,%7B%22name%22%3A%22Sara%20IA%20-%20Defesa%20Civil%20Digital%22%2C%22short_name%22%3A%22Sara%20IA%22%2C%22start_url%22%3A%22.%2Findex.html%22%2C%22display%22%3A%22standalone%22%2C%22background_color%22%3A%22%230f172a%22%2C%22theme_color%22%3A%22%232563eb%22%2C%22icons%22%3A%5B%7B%22src%22%3A%22data%3Aimage%2Fsvg%2Bxml%3Butf-8%2C%3Csvg%20xmlns%3D%27http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%27%20viewBox%3D%270%200%20192%20192%27%3E%3Crect%20width%3D%27192%27%20height%3D%27192%27%20fill%3D%27%231b2a4a%27%2F%3E%3Ctext%20x%3D%2796%27%20y%3D%27110%27%20font-size%3D%27120%27%20fill%3D%27%232ecc71%27%20text-anchor%3D%27middle%27%3ES%3C%2Ftext%3E%3C%2Fsvg%3E%22%2C%22sizes%22%3A%22192x192%22%2C%22type%22%3A%22image%2Fsvg%2Bxml%22%7D%2C%7B%22src%22%3A%22data%3Aimage%2Fsvg%2Bxml%3Butf-8%2C%3Csvg%20xmlns%3D%27http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%27%20viewBox%3D%270%200%20512%20512%27%3E%3Crect%20width%3D%27512%27%20height%3D%27512%27%20fill%3D%27%231b2a4a%27%2F%3E%3Ctext%20x%3D%27256%27%20y%3D%27300%27%20font-size%3D%27320%27%20fill%3D%27%232ecc71%27%20text-anchor%3D%27middle%27%3ES%3C%2Ftext%3E%3C%2Fsvg%3E%22%2C%22sizes%22%3A%22512x512%22%2C%22type%22%3A%22image%2Fsvg%2Bxml%22%7D%5D%7D">
+
+    <meta name="theme-color" id="themeMetaColor" content="#2563eb">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Sara IA">
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <style>
+        :root {
+            --safe-color: #2ecc71;
+            --warning-color: #f1c40f;
+            --danger-color: #e74c3c;
+            --primary-blue: #2563eb;
+            --bg-color: #f1f5f9;
+            --card-bg: #ffffff;
+            --text-main: #1e293b;
+            --text-muted: #64748b;
+            --chat-bg: #ffffff;
+            --bubble-sara: #f1f5f9;
+            --border-color: #e2e8f0;
+            --input-bg: #f8fafc;
+            --overlay-bg: rgba(15, 23, 42, 0.6);
+        }
+        [data-theme="dark"] {
+            --bg-color: #0f172a;
+            --card-bg: #1e293b;
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --chat-bg: #1e293b;
+            --bubble-sara: #334155;
+            --border-color: #334155;
+            --input-bg: #0f172a;
+        }
+        body {
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            margin: 0;
+            padding: 10px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            transition: background-color 0.3s, color 0.3s;
+        }
+        .app-container {
+            width: 100%;
+            max-width: 480px;
+            background: var(--card-bg);
+            border-radius: 24px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            padding: 16px;
+            box-sizing: border-box;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            transition: background-color 0.3s;
+        }
+        .modal-overlay {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: var(--overlay-bg);
+            backdrop-filter: blur(4px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+        .modal-card {
+            background: var(--card-bg);
+            border-radius: 20px;
+            padding: 24px;
+            max-width: 400px;
+            width: 100%;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+        .modal-title {
+            font-size: 17px;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            color: var(--text-main);
+        }
+        .modal-body {
+            font-size: 13.5px;
+            line-height: 1.5;
+            max-height: 200px;
+            overflow-y: auto;
+            color: var(--text-main);
+            border: 1px solid var(--border-color);
+            padding: 10px;
+            border-radius: 8px;
+            background: var(--input-bg);
+        }
+        .modal-input {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid var(--border-color);
+            border-radius: 10px;
+            background: var(--input-bg);
+            color: var(--text-main);
+            box-sizing: border-box;
+            font-size: 14px;
+            outline: none;
+        }
+        .modal-input:focus { border-color: var(--primary-blue); }
+        .btn-modal {
+            background: var(--primary-blue);
+            color: white;
+            border: none;
+            padding: 12px;
+            border-radius: 10px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: background 0.2s;
+            font-size: 14px;
+        }
+        .btn-modal:hover { background: #1d4ed8; }
+        .btn-modal.secondary {
+            background: var(--text-muted);
+        }
+        .btn-modal.secondary:hover { background: #475569; }
+        .utility-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding-bottom: 4px;
+            border-bottom: 1px solid var(--border-color);
+            flex-wrap: wrap;
+            gap: 6px;
+        }
+        .utility-actions {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+            margin-left: auto;
+        }
+        .btn-util {
+            background: none;
+            border: none;
+            color: var(--text-muted);
+            font-size: 15px;
+            cursor: pointer;
+            padding: 6px;
+            border-radius: 50%;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .btn-util:hover {
+            background: var(--input-bg);
+            color: var(--primary-blue);
+        }
+        .btn-install {
+            background: var(--safe-color);
+            color: white;
+            border: none;
+            padding: 6px 12px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: 700;
+            cursor: pointer;
+            display: none;
+            align-items: center;
+            gap: 5px;
+            transition: background 0.2s;
+        }
+        .btn-install:hover { background: #27ae60; }
+        .btn-share {
+            background: var(--primary-blue);
+            color: white;
+            border: none;
+            padding: 6px 12px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: 700;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            transition: background 0.2s;
+        }
+        .btn-share:hover { background: #1d4ed8; }
+        .header-box {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+            background: var(--input-bg);
+            padding: 10px 14px;
+            border-radius: 16px;
+            border-left: 5px solid var(--primary-blue);
+        }
+        .main-header-title {
+            font-size: 20px;
+            font-weight: 900;
+            color: var(--text-main);
+            margin: 0;
+            line-height: 1.2;
+            letter-spacing: -0.5px;
+        }
+        .header-sub {
+            font-size: 11px;
+            font-weight: 700;
+            color: var(--primary-blue);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        .header-sensor {
+            font-size: 10px;
+            font-weight: 800;
+            color: var(--safe-color);
+            letter-spacing: 0.5px;
+        }
+        .sara-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            background: var(--input-bg);
+            padding: 10px 12px;
+            border-radius: 16px;
+            border-left: 5px solid var(--safe-color);
+            transition: all 0.3s ease;
+        }
+        .avatar-wrapper {
+            position: relative;
+            width: 50px;
+            height: 50px;
+            flex-shrink: 0;
+        }
+        .sara-avatar {
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            background: var(--border-color);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 26px;
+            border: 3px solid var(--safe-color);
+            transition: all 0.3s ease;
+            overflow: hidden;
+        }
+        .header-meta {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+            flex: 1;
+        }
+        .sara-name {
+            font-weight: 700;
+            font-size: 15px;
+            color: var(--text-main);
+        }
+        .status-badge {
+            display: inline-block;
+            align-self: flex-start;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 10px;
+            font-weight: 800;
+            color: white;
+            background: var(--safe-color);
+            letter-spacing: 0.5px;
+        }
+        .status-badge.offline {
+            background: var(--danger-color);
+        }
+        .metrics-section {
+            background: var(--input-bg);
+            border-radius: 16px;
+            padding: 10px;
+            border: 1px solid var(--border-color);
+        }
+        .chart-header {
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--text-muted);
+            margin: 0 0 4px 0;
+            display: flex;
+            justify-content: space-between;
+        }
+        .chart-container {
+            position: relative;
+            height: 100px;
+            width: 100%;
+            margin-bottom: 8px;
+        }
+        .chat-section {
+            display: flex;
+            flex-direction: column;
+            border: 1px solid var(--border-color);
+            border-radius: 18px;
+            height: 260px;
+            background: var(--chat-bg);
+            overflow: hidden;
+            box-shadow: inset 0 2px 4px rgba(0,0,0,0.02);
+        }
+        .chat-messages {
+            flex: 1;
+            padding: 12px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            scroll-behavior: smooth;
+        }
+        .msg-packet {
+            display: flex;
+            flex-direction: column;
+            max-width: 85%;
+        }
+        .msg-packet.sara { align-self: flex-start; }
+        .msg-packet.user { align-self: flex-end; }
+        .msg-sender {
+            font-size: 10px;
+            font-weight: 700;
+            color: var(--text-muted);
+            margin-bottom: 2px;
+            margin-left: 4px;
+        }
+        .msg-packet.user .msg-sender {
+            align-self: flex-end;
+            margin-right: 4px;
+        }
+        .msg-bubble {
+            padding: 9px 13px;
+            font-size: 13px;
+            line-height: 1.4;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.02);
+            word-break: break-word;
+        }
+        .sara .msg-bubble {
+            background: var(--bubble-sara);
+            color: var(--text-main);
+            border-radius: 4px 14px 14px 14px;
+            border: 1px solid var(--border-color);
+        }
+        .user .msg-bubble {
+            background: var(--primary-blue);
+            color: #ffffff;
+            border-radius: 14px 4px 14px 14px;
+        }
+        .msg-time {
+            font-size: 9px;
+            color: var(--text-muted);
+            margin-top: 2px;
+            margin-left: 4px;
+        }
+        .msg-packet.user .msg-time {
+            text-align: right;
+            margin-right: 4px;
+        }
+        .typing-indicator {
+            display: flex;
+            gap: 4px;
+            padding: 8px 14px;
+            align-items: center;
+        }
+        .typing-indicator span {
+            width: 7px;
+            height: 7px;
+            background: var(--text-muted);
+            border-radius: 50%;
+            animation: typingBounce 1.2s infinite;
+        }
+        .typing-indicator span:nth-child(2) { animation-delay: 0.2s; }
+        .typing-indicator span:nth-child(3) { animation-delay: 0.4s; }
+        @keyframes typingBounce {
+            0%, 60%, 100% { transform: translateY(0); }
+            30% { transform: translateY(-6px); }
+        }
+        .chat-input-bar {
+            display: flex;
+            align-items: center;
+            padding: 8px 10px;
+            background: var(--input-bg);
+            border-top: 1px solid var(--border-color);
+            gap: 8px;
+        }
+        .chat-input {
+            flex: 1;
+            border: 1px solid var(--border-color);
+            border-radius: 20px;
+            padding: 8px 14px;
+            font-size: 13px;
+            outline: none;
+            background: var(--card-bg);
+            color: var(--text-main);
+            transition: border-color 0.2s;
+        }
+        .chat-input:focus { border-color: var(--primary-blue); }
+        .chat-btn {
+            background: transparent;
+            border: none;
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            color: var(--text-muted);
+            transition: all 0.2s;
+            flex-shrink: 0;
+        }
+        .chat-btn.mic:hover { background: var(--border-color); color: var(--text-main); }
+        .chat-btn.send { background: var(--primary-blue); color: #fff; }
+        .chat-btn.send:hover { background: #1d4ed8; }
+        .btn-emergency {
+            width: 100%;
+            background: #dc2626;
+            color: white;
+            border: none;
+            padding: 11px;
+            border-radius: 14px;
+            font-size: 13px;
+            font-weight: 700;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            transition: background 0.2s;
+        }
+        .btn-emergency:active { background: #991b1b; }
+        .footer-info {
+            font-size: 10px;
+            text-align: center;
+            color: var(--text-muted);
+            margin-top: 4px;
+            line-height: 1.4;
+        }
+        .key-status {
+            font-size: 10px;
+            font-weight: 700;
+            padding: 2px 8px;
+            border-radius: 8px;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+        }
+        .key-status.connected { background: #d1fae5; color: #065f46; }
+        .key-status.disconnected { background: #fee2e2; color: #991b1b; }
+        [data-theme="dark"] .key-status.connected { background: #064e3b; color: #6ee7b7; }
+        [data-theme="dark"] .key-status.disconnected { background: #7f1d1d; color: #fca5a5; }
+    </style>
+</head>
+<body>
+
+    <!-- MODAL LGPD -->
+    <div class="modal-overlay" id="modalLgpd">
+        <div class="modal-card">
+            <div class="modal-title"><i class="fa-solid fa-shield-halved"></i> Privacidade & LGPD</div>
+            <div class="modal-body">
+                Este aplicativo monitora dados hidrológicos públicos (Open-Meteo) para Mesquita - RJ (Rocha Sobrinho). Suas conversas com a Sara IA e registros locais ficam salvos estritamente no seu dispositivo (localStorage), garantindo total privacidade. Nenhum dado pessoal é compartilhado com terceiros.
+            </div>
+            <button class="btn-modal" onclick="aceitarLgpd()">Concordar e Continuar</button>
+        </div>
+    </div>
+
+    <!-- MODAL CHAVE API -->
+    <div class="modal-overlay" id="modalKey" style="display: none;">
+        <div class="modal-card">
+            <div class="modal-title"><i class="fa-solid fa-key"></i> Chave API - Gemini 2.5 Flash</div>
+            <div class="modal-body" style="background: transparent; border: none; max-height: none; padding: 0;">
+                Insira sua chave do <strong>Google AI Studio</strong> para ativar a Sara IA com o modelo <strong>Gemini 2.5 Flash</strong>. Sem a chave, a Sara funciona com respostas básicas locais.
+            </div>
+            <input type="password" id="inputApiKey" class="modal-input" placeholder="AIzaSy...">
+            <button class="btn-modal" onclick="salvarChave()"><i class="fa-solid fa-plug"></i> Conectar Gemini 2.5</button>
+            <button class="btn-modal secondary" onclick="pularChave()">Usar Modo Local (Sem IA)</button>
+        </div>
+    </div>
+
+    <!-- APP PRINCIPAL -->
+    <div class="app-container" id="appContainer" style="display: none;">
+
+        <!-- BARRA DE UTILIDADES -->
+        <div class="utility-bar">
+            <button class="btn-install" id="btnInstall" onclick="instalarPwa()">
+                <i class="fa-solid fa-download"></i> Instalar App
+            </button>
+            <div class="utility-actions">
+                <button class="btn-share" onclick="compartilharApp()">
+                    <i class="fa-solid fa-share-nodes"></i> Compartilhar
+                </button>
+                <button class="btn-util" onclick="abrirConfigKey()" title="Configurar Chave API">
+                    <i class="fa-solid fa-gear"></i>
+                </button>
+                <button class="btn-util" id="themeToggleBtn" onclick="alternarTema()" title="Alternar Tema">
+                    <i class="fa-solid fa-moon"></i>
+                </button>
+            </div>
+        </div>
+
+        <!-- CABEÇALHO -->
+        <div class="header-box">
+            <h1 class="main-header-title">Sara IA</h1>
+            <div class="header-sub">Defesa Civil Digital</div>
+            <div class="header-sensor"><i class="fa-solid fa-satellite-dish"></i> Cidadao Sensor - Rocha Sobrinho</div>
+        </div>
+
+        <!-- SARA HEADER -->
+        <div class="sara-header" id="saraHeader">
+            <div class="avatar-wrapper">
+                <div class="sara-avatar" id="saraAvatar">🛡️</div>
+            </div>
+            <div class="header-meta">
+                <div class="sara-name">Sara IA <span style="font-size:10px; font-weight:400; color:var(--text-muted);">(Gemini 2.5 Flash)</span></div>
+                <span class="status-badge offline" id="statusBadge">Desconectada</span>
+                <span class="key-status disconnected" id="keyStatus">
+                    <i class="fa-solid fa-circle-xmark"></i> Sem chave API
+                </span>
+            </div>
+        </div>
+
+        <!-- MÉTRICAS -->
+        <div class="metrics-section">
+            <div class="chart-header">
+                <span><i class="fa-solid fa-cloud-rain"></i> Telemetria - Bacia do Sarapui</span>
+                <span id="metricTime">--:--</span>
+            </div
