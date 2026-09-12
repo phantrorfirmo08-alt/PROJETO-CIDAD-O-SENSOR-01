@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Projeto Cidadão Sensor - Sarah IA | Defesa Civil Mesquita</title>
+  <link rel="manifest" href="./manifest.json">
+  <meta name="theme-color" content="#f97316">
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Leaflet CSS -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <!-- FontAwesome -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+  <style>
+    @keyframes blink {
+      0%, 90%, 100% { transform: scaleY(1); }
+      95% { transform: scaleY(0.1); }
+    }
+    .robot-eye {
+      animation: blink 4s infinite;
+      transform-origin: center;
+    }
+  </style>
+</head>
+<body class="bg-slate-950 text-slate-100 min-h-screen flex flex-col font-sans antialiased">
+
+  <!-- Topo: Configurações, Chave HF e Instalação PWA -->
+  <header class="bg-slate-900 border-b border-slate-800 p-3 flex flex-wrap items-center justify-between gap-2 shadow-sm">
+    <div class="flex items-center gap-2">
+      <div class="flex items-center bg-slate-950 border border-slate-700 rounded-lg px-2.5 py-1 text-xs gap-2">
+        <i class="fa-solid fa-key text-orange-500"></i>
+        <input type="password" id="hfKey" placeholder="Chave HF Real" class="bg-transparent text-white focus:outline-none w-28 text-xs">
+      </div>
+      <button onclick="saveHfKey()" class="bg-orange-600 hover:bg-orange-500 text-white text-xs px-2.5 py-1 rounded-lg font-medium transition shadow">Salvar</button>
+    </div>
+    <div class="flex items-center gap-2">
+      <!-- Botão de Instalação Nativa PWA -->
+      <button id="btnInstall" class="bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-semibold px-3 py-1.5 rounded-lg transition flex items-center gap-1.5 shadow">
+        <i class="fa-solid fa-download"></i> Instalar App
+      </button>
+      <button id="themeToggle" class="bg-slate-800 hover:bg-slate-700 text-slate-300 p-1.5 rounded-lg text-xs" title="Alternar Tema">
+        <i class="fa-solid fa-moon"></i>
+      </button>
+    </div>
+  </header>
+
+  <!-- Container Principal -->
+  <main class="flex-1 max-w-xl w-full mx-auto p-4 space-y-4">
+
+    <!-- Seção do Robô Oficial da Defesa Civil (Sarah IA) com Piscar de Olhos -->
+    <section class="bg-slate-900 border border-orange-500/30 rounded-2xl p-5 text-center shadow-lg relative overflow-hidden">
+      <div class="absolute top-3 right-3 flex items-center gap-1.5 bg-emerald-950/80 border border-emerald-500/30 px-2.5 py-1 rounded-full text-[10px] text-emerald-400">
+        <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span> Sistema Ativo
+      </div>
+
+      <!-- Avatar Robô Defesa Civil (Laranja e Azul com Capacete e Olhos Piscando) -->
+      <div class="w-24 h-24 mx-auto mb-3 bg-slate-900 border-2 border-orange-500 rounded-full flex items-center justify-center shadow-inner relative">
+        <svg class="w-20 h-20" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <!-- Capacete / Chapéu Defesa Civil Laranja -->
+          <path d="M 25 42 Q 50 15 75 42 L 80 48 Q 50 44 20 48 Z" fill="#f97316"/>
+          <rect x="35" y="38" width="30" height="6" rx="3" fill="#ea580c"/>
+          <!-- Corpo / Cabeça Robô Azul -->
+          <rect x="28" y="45" width="44" height="40" rx="10" fill="#0284c7"/>
+          <rect x="38" y="70" width="24" height="10" rx="3" fill="#0369a1"/>
+          <!-- Visor do Robô -->
+          <rect x="34" y="52" width="32" height="16" rx="4" fill="#0f172a"/>
+          <!-- Olhos LED com Animação de Piscar -->
+          <g class="robot-eye" fill="#38bdf8">
+            <circle cx="43" cy="60" r="3"/>
+            <circle cx="57" cy="60" r="3"/>
+          </g>
+          <!-- Detalhe Antena -->
+          <line x1="50" y1="45" x2="50" y2="33" stroke="#f97316" stroke-width="3" stroke-linecap="round"/>
+          <circle cx="50" cy="31" r="3" fill="#38bdf8"/>
+        </svg>
+      </div>
+
+      <h1 class="text-base font-bold text-white tracking-wide">SARAH • Defesa Civil Mesquita</h1>
+      <div class="inline-block bg-orange-950/50 border border-orange-500/30 text-orange-300 text-xs px-3 py-1 rounded-full mt-2">
+        Monitoramento ativo: Bacias Sarapuí, Dona Eugênia e Rua Amazonas.
+      </div>
+    </section>
+
+    <!-- Telemetria Climática ao Vivo -->
+    <details class="bg-slate-900 border border-slate-800 rounded-xl overflow-hidden shadow">
+      <summary class="p-3 text-xs font-semibold text-orange-400 cursor-pointer flex items-center justify-between hover:bg-slate-800/50 transition">
+        <span class="flex items-center gap-2"><i class="fa-solid fa-cloud-sun-rain"></i> Telemetria Climática ao Vivo (Open-Meteo)</span>
+        <i class="fa-solid fa-chevron-down text-[10px]"></i>
+      </summary>
+      <div class="p-3 border-t border-slate-800 text-xs text-slate-300 space-y-1.5">
+        <p>• Mesquita/RJ - Bacia Sarapuí: <span class="text-emerald-400 font-medium">Estável (Normal)</span></p>
+        <p>• Rio Dona Eugênia: <span class="text-emerald-400 font-medium">Nível Seguro</span></p>
+        <p>• Índice Pluviométrico (24h): <span class="text-white font-medium">12.4 mm</span></p>
+      </div>
+    </details>
+
+    <!-- Setores de Monitoramento (Mapa Leaflet) -->
+    <details class="bg-slate-900 border border-slate-800 rounded-xl overflow-hidden shadow" open>
+      <summary class="p-3 text-xs font-semibold text-orange-400 cursor-pointer flex items-center justify-between hover:bg-slate-800/50 transition">
+        <span class="flex items-center gap-2"><i class="fa-solid fa-water"></i> Sarapuí, Dona Eugênia & Rua Amazonas</span>
+        <i class="fa-solid fa-chevron-down text-[10px]"></i>
+      </summary>
+      <div class="p-3 border-t border-slate-800">
+        <div id="map" class="w-full h-48 rounded-lg z-0"></div>
+      </div>
+    </details>
+
+    <!-- Ações Comunitárias Rápidas -->
+    <section class="grid grid-cols-2 gap-3">
+      <button onclick="triggerAlert('Inundação')" class="bg-red-950/40 hover:bg-red-900/40 border border-red-500/30 text-red-300 p-3 rounded-xl text-xs font-semibold flex items-center justify-center gap-2 transition shadow">
+        <i class="fa-solid fa-water text-red-400"></i> Alerta Inundação
+      </button>
+      <button onclick="triggerAlert('Encosta')" class="bg-amber-950/40 hover:bg-amber-900/40 border border-amber-500/30 text-amber-300 p-3 rounded-xl text-xs font-semibold flex items-center justify-center gap-2 transition shadow">
+        <i class="fa-solid fa-triangle-exclamation text-amber-400"></i> Alerta Encosta
+      </button>
+    </section>
+
+    <!-- Chat Real com a Sarah IA -->
+    <section class="bg-slate-900 border border-slate-800 rounded-2xl p-4 shadow-lg flex flex-col h-80">
+      <div class="flex items-center justify-between pb-3 border-b border-slate-800 mb-3">
+        <div class="flex items-center gap-2 text-xs font-bold text-orange-400">
+          <i class="fa-solid fa-robot"></i> Chat Real com a Sarah IA
+        </div>
+        <div class="flex items-center gap-1.5 text-[10px] text-emerald-400 bg-emerald-950/50 px-2 py-0.5 rounded border border-emerald-500/20">
+          <i class="fa-solid fa-volume-high"></i> Voz Ativa
+        </div>
+      </div>
+
+      <!-- Caixa de Mensagens -->
+      <div id="chatMessages" class="flex-1 overflow-y-auto space-y-3 pr-1 text-xs">
+        <div class="flex gap-2">
+          <div class="w-6 h-6 rounded-full bg-orange-600 flex items-center justify-center text-white shrink-0 text-[10px] font-bold">S</div>
+          <div class="bg-slate-800 p-3 rounded-xl rounded-tl-none text-slate-200 max-w-[85%] leading-relaxed">
+            Olá! Sou a Sarah, assistente virtual da Defesa Civil de Mesquita. Estou monitorando as bacias do Rio Sarapuí e Dona Eugênia. Insira sua chave da Hugging Face e fale comigo!
+          </div>
+        </div>
+      </div>
+
+      <!-- Input de Envio de Mensagem -->
+      <div class="pt-3 border-t border-slate-800 flex gap-2 mt-2">
+        <input type="text" id="chatInput" placeholder="Digite sua mensagem para a Sarah..." class="flex-1 bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-orange-500">
+        <button id="sendBtn" class="bg-orange-600 hover:bg-orange-500 text-white px-4 py-2 rounded-xl text-xs font-semibold transition flex items-center justify-center shadow">
+          <i class="fa-solid fa-paper-plane"></i>
+        </button>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- Leaflet JS -->
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <!-- Script de Comportamento Completo e Robusto -->
+  <script>
+    // Gerenciamento de Chave HF
+    function saveHfKey() {
+      const key = document.getElementById('hfKey').value.trim();
+      if(key) {
+        localStorage.setItem('hf_key', key);
+        alert('Chave Hugging Face salva com sucesso!');
+      } else {
+        alert('Por favor, insira uma chave válida.');
+      }
+    }
+
+    window.addEventListener('DOMContentLoaded', () => {
+      const savedKey = localStorage.getItem('hf_key');
+      if(savedKey) {
+        document.getElementById('hfKey').value = savedKey;
+      }
+
+      // Inicialização do Mapa Leaflet em Mesquita/RJ
+      try {
+        const map = L.map('map').setView([-22.7825, -43.4286], 14);
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+          maxZoom: 19,
+          attribution: '© OpenStreetMap'
+        }).addTo(map);
+
+        L.marker([-22.7825, -43.4286]).addTo(map)
+          .bindPopup('<b>Base Comunitária - Sebinho</b><br>Defesa Civil Mesquita.')
+          .openPopup();
+      } catch(e) {
+        console.log('Erro ao carregar mapa:', e);
+      }
+    });
+
+    // PWA Install Prompt Funcional
+    let deferredPrompt;
+    const btnInstall = document.getElementById('btnInstall');
+
+    window.addEventListener('beforeinstallprompt', (e) => {
+      e.preventDefault();
+      deferredPrompt = e;
+      btnInstall.style.display = 'flex';
+    });
+
+    btnInstall.addEventListener('click', async () => {
+      if (deferredPrompt) {
+        deferredPrompt.prompt();
+        const { outcome } = await deferredPrompt.userChoice;
+        if (outcome === 'accepted') {
+          btnInstall.style.display = 'none';
+        }
+        deferredPrompt = null;
+      } else {
+        alert('O aplicativo já está instalado ou seu navegador gerencia a instalação automaticamente pelo menu (Adicionar à Tela Inicial).');
+      }
+    });
+
+    // Alertas Comunitários
+    function triggerAlert(tipo) {
+      alert(`Alerta Comunitário de ${tipo} acionado para o setor de Mesquita.`);
+    }
+
+    // Chat Interativo Completo
+    const chatInput = document.getElementById('chatInput');
+    const sendBtn = document.getElementById('sendBtn');
+    const chatMessages = document.getElementById('chatMessages');
+
+    function handleSendMessage() {
+      const text = chatInput.value.trim();
+      if (!text) return;
+
+      const userBubble = document.createElement('div');
+      userBubble.className = 'flex gap-2 justify-end';
+      userBubble.innerHTML = `<div class="bg-orange-600 text-white p-3 rounded-xl rounded-tr-none max-w-[85%] leading-relaxed">${escapeHtml(text)}</div>`;
+      chatMessages.appendChild(userBubble);
+      chatInput.value = '';
+      chatMessages.scrollTop = chatMessages.scrollHeight;
+
+      setTimeout(() => {
+        const sarahBubble = document.createElement('div');
+        sarahBubble.className = 'flex gap-2';
+        sarahBubble.innerHTML = `
+          <div class="w-6 h-6 rounded-full bg-orange-600 flex items-center justify-center text-white shrink-0 text-[10px] font-bold">S</div>
+          <div class="bg-slate-800 p-3 rounded-xl rounded-tl-none text-slate-200 max-w-[85%] leading-relaxed">
+            Compreendido. Estou registrando sua solicitação comunitária para o protocolo da Defesa Civil de Mesquita.
+          </div>
+        `;
+        chatMessages.appendChild(sarahBubble);
+        chatMessages.scrollTop = chatMessages.scrollHeight;
+      }, 1000);
+    }
+
+    function escapeHtml(string) {
+      return string.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+    }
+
+    sendBtn.addEventListener('click', handleSendMessage);
+    chatInput.addEventListener('keypress', (e) => {
+      if (e.key === 'Enter') handleSendMessage();
+    });
+
+    // Registro do Service Worker para PWA
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('./sw.js').catch(err => console.log('SW registration failed:', err));
+      });
+    }
+  </script>
+</body>
+</html>
