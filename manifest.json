@@ -1,0 +1,16 @@
+{
+  "name": "Cidadão Censor - Defesa Civil Digital",
+  "short_name": "Cidadão Censor",
+  "description": "Plano de Ação A Chave da Esperança - Monitoramento climático e Defesa Civil Digital em Rocha Sobrinho, Mesquita/RJ.",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#0f172a",
+  "theme_color": "#0284c7",
+  "icons": [
+    {
+      "src": "https://cdn-icons-png.flaticon.com/512/3305/3305803.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}
