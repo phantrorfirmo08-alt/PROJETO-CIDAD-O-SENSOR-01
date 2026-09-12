@@ -1,0 +1,16 @@
+{
+  "name": "Projeto Cidadão Sensor - Defesa Civil Mesquita",
+  "short_name": "Cidadão Sensor",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#030712",
+  "theme_color": "#0284c7",
+  "icons": [
+    {
+      "src": "ICO15.png",
+      "sizes": "192x192 512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}
