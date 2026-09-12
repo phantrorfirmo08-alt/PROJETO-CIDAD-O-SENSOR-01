@@ -1,0 +1,319 @@
+<!DOCTYPE html>
+<html lang="pt-BR" class="h-full">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sarah • Defesa Civil Mesquita</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Leaflet CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <!-- PWA Manifest -->
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#090d16">
+    <script>
+        if (localStorage.getItem('temaSarah') === 'dark') {
+            document.documentElement.classList.add('dark');
+        }
+        const savedFontSize = localStorage.getItem('tabelaFonteSarah');
+        if(savedFontSize) {
+             document.documentElement.style.setProperty('--app-font-size', savedFontSize + 'px');
+        }
+    </script>
+    <style>
+        :root { --app-font-size: 14px; }
+        body { font-size: var(--app-font-size); }
+        .dark .map-box { filter: invert(90%) hue-rotate(180deg); }
+        .mic-active { animation: pulse 1s infinite; background-color: #06b6d4 !important; color: white !important; }
+        /* Custom Scrollbar for clean look */
+        ::-webkit-scrollbar { width: 5px; height: 5px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: rgba(100, 116, 139, 0.3); border-radius: 9999px; }
+        ::-webkit-scrollbar-thumb:hover { background: rgba(100, 116, 139, 0.5); }
+    </style>
+</head>
+<body class="h-full bg-slate-50 text-slate-900 dark:bg-[#090d16] dark:text-slate-100 flex flex-col overflow-hidden select-none transition-colors duration-200">
+
+    <!-- CABEÇALHO CLEAN & PREMIUM -->
+    <header class="h-14 bg-white/80 dark:bg-[#0f172a]/80 backdrop-blur-md border-b border-slate-200/80 dark:border-slate-800/80 px-4 flex items-center justify-between z-30 shrink-0">
+        <div class="flex items-center gap-3">
+            <div class="w-9 h-9 rounded-xl bg-gradient-to-tr from-cyan-600 to-teal-500 flex items-center justify-center text-white shadow-md shadow-cyan-500/20">
+                <i class="fas fa-shield-alt text-sm"></i>
+            </div>
+            <div>
+                <h1 class="text-xs font-bold tracking-wider uppercase flex items-center gap-2">
+                    Sarah <span class="text-[9px] bg-cyan-500/10 text-cyan-600 dark:text-cyan-400 px-1.5 py-0.5 rounded font-medium border border-cyan-500/20">Defesa Civil</span>
+                </h1>
+                <p class="text-[10px] text-slate-500 dark:text-slate-400 font-medium">Sebinho • Mesquita/RJ</p>
+            </div>
+        </div>
+
+        <!-- AÇÕES DO TOPO -->
+        <div class="flex items-center gap-1.5">
+            <button id="btnTogglePainel" class="h-8 px-3 rounded-lg bg-slate-100 dark:bg-slate-800/80 hover:bg-slate-200 dark:hover:bg-slate-700/80 text-slate-700 dark:text-slate-200 text-xs font-medium transition flex items-center gap-1.5 border border-slate-200 dark:border-slate-700/60">
+                <i class="fas fa-sliders-h text-cyan-500"></i> <span class="hidden sm:inline">Painel</span>
+            </button>
+            <button id="btnTema" class="w-8 h-8 rounded-lg bg-slate-100 dark:bg-slate-800/80 hover:bg-slate-200 dark:hover:bg-slate-700/80 text-slate-700 dark:text-slate-200 text-xs transition flex items-center justify-center border border-slate-200 dark:border-slate-700/60">
+                <i class="fas fa-moon" id="iconeTema"></i>
+            </button>
+            <div class="hidden sm:flex bg-slate-100 dark:bg-slate-800/80 rounded-lg p-0.5 border border-slate-200 dark:border-slate-700/60">
+                <button id="btnDiminuir" class="w-7 h-7 text-xs font-bold text-slate-600 dark:text-slate-300 hover:bg-white dark:hover:bg-slate-700 rounded-md transition">A-</button>
+                <button id="btnAumentar" class="w-7 h-7 text-xs font-bold text-slate-600 dark:text-slate-300 hover:bg-white dark:hover:bg-slate-700 rounded-md transition">A+</button>
+            </div>
+            <button id="btnInstalarPWA" class="hidden h-8 px-3 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-semibold rounded-lg transition items-center gap-1.5 shadow-sm">
+                <i class="fas fa-download"></i> Instalar
+            </button>
+        </div>
+    </header>
+
+    <!-- PAINEL LATERAL OCULTO (TELEMETRIA E MAPA ISOLADOS) -->
+    <div id="painelOculto" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 hidden flex justify-end transition-opacity duration-300">
+        <div class="bg-white dark:bg-[#0b1120] w-full max-w-sm h-full shadow-2xl flex flex-col p-4 overflow-y-auto border-l border-slate-200 dark:border-slate-800">
+            <div class="flex justify-between items-center pb-3 border-b border-slate-200 dark:border-slate-800">
+                <h2 class="text-xs font-bold uppercase tracking-wider flex items-center gap-2 text-slate-800 dark:text-slate-200">
+                    <i class="fas fa-chart-pie text-cyan-500"></i> Painel Operacional
+                </h2>
+                <button id="btnFecharPainel" class="w-8 h-8 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-400 hover:text-slate-700 dark:hover:text-white transition flex items-center justify-center">
+                    <i class="fas fa-times text-sm"></i>
+                </button>
+            </div>
+
+            <div class="space-y-4 mt-4 text-xs">
+                <!-- Chave API -->
+                <div class="bg-slate-50 dark:bg-slate-900/60 p-3 rounded-xl border border-slate-200/80 dark:border-slate-800">
+                    <label class="block font-semibold text-slate-700 dark:text-slate-300 mb-1">Chave Hugging Face (Opcional)</label>
+                    <input type="password" id="apiKeyHuggingFace" placeholder="hf_..." class="w-full px-3 py-2 rounded-lg text-xs bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-1 focus:ring-cyan-500">
+                </div>
+
+                <!-- Telemetria -->
+                <div class="bg-slate-50 dark:bg-slate-900/60 p-3 rounded-xl border border-slate-200/80 dark:border-slate-800">
+                    <h3 class="font-semibold text-slate-700 dark:text-slate-300 mb-1.5 flex items-center gap-1.5">
+                        <i class="fas fa-cloud-sun text-amber-500"></i> Condições Atmosféricas
+                    </h3>
+                    <p class="text-slate-500 dark:text-slate-400">Temp: 28°C • Umidade: 65% • Estável</p>
+                </div>
+
+                <!-- Mapa Isolado -->
+                <div class="bg-slate-50 dark:bg-slate-900/60 p-3 rounded-xl border border-slate-200/80 dark:border-slate-800">
+                    <h3 class="font-semibold text-slate-700 dark:text-slate-300 mb-2">Monitoramento Sebinho</h3>
+                    <div id="map" class="map-box w-full h-40 rounded-lg border border-slate-200 dark:border-slate-700/60 z-10"></div>
+                </div>
+
+                <!-- Alertas de Acionamento -->
+                <div class="bg-slate-50 dark:bg-slate-900/60 p-3 rounded-xl border border-slate-200/80 dark:border-slate-800">
+                    <h3 class="font-semibold text-slate-700 dark:text-slate-300 mb-2">Disparos de Emergência</h3>
+                    <div class="grid grid-cols-2 gap-2">
+                        <button onclick="enviarAlertaRapido('Alerta de Inundação na via')" class="bg-red-500/10 hover:bg-red-500/20 text-red-600 dark:text-red-400 border border-red-500/20 p-2 rounded-lg font-medium text-left transition flex items-center gap-1.5">
+                            <i class="fas fa-water"></i> Inundação
+                        </button>
+                        <button onclick="enviarAlertaRapido('Risco de Encosta / Deslizamento')" class="bg-amber-500/10 hover:bg-amber-500/20 text-amber-600 dark:text-amber-400 border border-amber-500/20 p-2 rounded-lg font-medium text-left transition flex items-center gap-1.5">
+                            <i class="fas fa-mountain"></i> Encosta
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- TELA PRINCIPAL: CHAT LIMPO E MODERNO -->
+    <main class="flex-1 max-w-3xl w-full mx-auto p-2 sm:p-4 flex flex-col overflow-hidden">
+        <div class="bg-white dark:bg-[#0f172a] rounded-2xl shadow-sm border border-slate-200/80 dark:border-slate-800 flex flex-col flex-1 overflow-hidden">
+            
+            <!-- Caixa de Mensagens -->
+            <div id="chatContainer" class="flex-1 p-4 overflow-y-auto space-y-4 text-xs sm:text-sm">
+                <div class="flex items-start gap-3">
+                    <div class="w-8 h-8 rounded-xl bg-gradient-to-tr from-cyan-600 to-teal-500 text-white flex items-center justify-center shrink-0 shadow-sm">
+                        <i class="fas fa-robot text-xs"></i>
+                    </div>
+                    <div class="bg-slate-100 dark:bg-slate-800/70 p-3.5 rounded-2xl border border-slate-200/60 dark:border-slate-700/60 text-slate-700 dark:text-slate-200 max-w-[85%] leading-relaxed">
+                        Olá! Sou a <strong>Sarah</strong>, assistente virtual da Defesa Civil de Mesquita. Estou monitorando o setor do Sebinho. Como posso ajudar você agora?
+                    </div>
+                </div>
+            </div>
+
+            <!-- BARRA DE INPUT ESTILO CHATGPT/CLAUDE -->
+            <div class="p-3 bg-white dark:bg-[#0f172a] border-t border-slate-200/80 dark:border-slate-800/80 flex items-center gap-2">
+                <button id="btnMic" class="w-10 h-10 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 transition flex items-center justify-center shrink-0 border border-slate-200 dark:border-slate-700/60" title="Comando por voz">
+                    <i class="fas fa-microphone text-xs"></i>
+                </button>
+                <input type="text" id="chatInput" placeholder="Digite sua mensagem para a Sarah..." class="flex-1 text-xs sm:text-sm border border-slate-200 dark:border-slate-700/80 rounded-xl px-4 py-2.5 bg-slate-50 dark:bg-slate-900/60 text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-1 focus:ring-cyan-500 transition">
+                <button id="btnEnviar" class="h-10 px-4 rounded-xl bg-cyan-600 hover:bg-cyan-500 text-white text-xs sm:text-sm font-semibold transition shadow-sm shadow-cyan-500/20 flex items-center gap-1.5 shrink-0">
+                    <i class="fas fa-paper-plane text-xs"></i> <span class="hidden sm:inline">Enviar</span>
+                </button>
+            </div>
+        </div>
+    </main>
+
+    <!-- SCRIPTS DE EXECUÇÃO -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script>
+        const chatContainer = document.getElementById('chatContainer');
+        const chatInput = document.getElementById('chatInput');
+        const btnEnviar = document.getElementById('btnEnviar');
+        const btnMic = document.getElementById('btnMic');
+        const btnTogglePainel = document.getElementById('btnTogglePainel');
+        const btnFecharPainel = document.getElementById('btnFecharPainel');
+        const painelOculto = document.getElementById('painelOculto');
+        const btnTema = document.getElementById('btnTema');
+        const iconeTema = document.getElementById('iconeTema');
+        const btnAumentar = document.getElementById('btnAumentar');
+        const btnDiminuir = document.getElementById('btnDiminuir');
+
+        let mapInstance = null;
+
+        // Painel e Mapa Sob Demanda (Mantém a tela principal totalmente limpa)
+        btnTogglePainel.addEventListener('click', () => {
+            painelOculto.classList.remove('hidden');
+            setTimeout(() => {
+                if (!mapInstance && document.getElementById('map')) {
+                    mapInstance = L.map('map').setView([-22.7844, -43.4241], 15);
+                    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                        attribution: '&copy; OpenStreetMap'
+                    }).addTo(mapInstance);
+                    L.marker([-22.7844, -43.4241]).addTo(mapInstance)
+                        .bindPopup('<b>Comunidade do Sebinho</b><br>Mesquita - RJ')
+                        .openPopup();
+                } else if (mapInstance) {
+                    mapInstance.invalidateSize();
+                }
+            }, 100);
+        });
+
+        btnFecharPainel.addEventListener('click', () => painelOculto.classList.add('hidden'));
+
+        // Alternância de Tema com persistência
+        btnTema.addEventListener('click', () => {
+            document.documentElement.classList.toggle('dark');
+            if(document.documentElement.classList.contains('dark')) {
+                localStorage.setItem('temaSarah', 'dark');
+                iconeTema.className = 'fas fa-sun';
+            } else {
+                localStorage.setItem('temaSarah', 'light');
+                iconeTema.className = 'fas fa-moon';
+            }
+        });
+        if(document.documentElement.classList.contains('dark')) {
+            iconeTema.className = 'fas fa-sun';
+        }
+
+        // Ajuste de Fonte Dinâmico
+        let currentFontSize = parseInt(getComputedStyle(document.documentElement).getPropertyValue('--app-font-size')) || 14;
+        btnAumentar.addEventListener('click', () => {
+            if(currentFontSize < 18) {
+                currentFontSize += 1;
+                document.documentElement.style.setProperty('--app-font-size', currentFontSize + 'px');
+                localStorage.setItem('tabelaFonteSarah', currentFontSize);
+            }
+        });
+        btnDiminuir.addEventListener('click', () => {
+            if(currentFontSize > 11) {
+                currentFontSize -= 1;
+                document.documentElement.style.setProperty('--app-font-size', currentFontSize + 'px');
+                localStorage.setItem('tabelaFonteSarah', currentFontSize);
+            }
+        });
+
+        // Gerenciador de Mensagens do Chat
+        function adicionarMensagem(texto, remetente) {
+            const div = document.createElement('div');
+            if(remetente === 'user') {
+                div.className = 'flex items-start justify-end gap-3';
+                div.innerHTML = `
+                    <div class="bg-cyan-600 text-white p-3.5 rounded-2xl shadow-sm max-w-[85%] leading-relaxed">${texto}</div>
+                    <div class="w-8 h-8 rounded-xl bg-slate-700 text-white flex items-center justify-center shrink-0 shadow-sm"><i class="fas fa-user text-xs"></i></div>
+                `;
+            } else {
+                div.className = 'flex items-start gap-3';
+                div.innerHTML = `
+                    <div class="w-8 h-8 rounded-xl bg-gradient-to-tr from-cyan-600 to-teal-500 text-white flex items-center justify-center shrink-0 shadow-sm"><i class="fas fa-robot text-xs"></i></div>
+                    <div class="bg-slate-100 dark:bg-slate-800/70 p-3.5 rounded-2xl border border-slate-200/60 dark:border-slate-700/60 text-slate-700 dark:text-slate-200 max-w-[85%] leading-relaxed">${texto}</div>
+                `;
+            }
+            chatContainer.appendChild(div);
+            chatContainer.scrollTop = chatContainer.scrollHeight;
+        }
+
+        async function processarMensagem(mensagem) {
+            if(!mensagem.trim()) return;
+            adicionarMensagem(mensagem, 'user');
+            chatInput.value = '';
+
+            setTimeout(() => {
+                let resposta = "Recebi sua mensagem sobre '" + mensagem + "'. A Defesa Civil de Mesquita está em alerta preventivo na região do Sebinho.";
+                if(mensagem.toLowerCase().includes('inundação') || mensagem.toLowerCase().includes('alagamento')) {
+                    resposta = "⚠️ **Alerta registrado!** Equipes de prontidão da Defesa Civil foram notificadas sobre ocorrência de alagamento na área informada.";
+                } else if(mensagem.toLowerCase().includes('encosta') || mensagem.toLowerCase().includes('deslizamento')) {
+                    resposta = "🚨 **Atenção máxima!** Risco geológico reportado. Evite o perímetro e procure abrigo seguro imediatamente.";
+                }
+                adicionarMensagem(resposta, 'bot');
+            }, 800);
+        }
+
+        btnEnviar.addEventListener('click', () => processarMensagem(chatInput.value));
+        chatInput.addEventListener('keypress', (e) => {
+            if(e.key === 'Enter') processarMensagem(chatInput.value);
+        });
+
+        function enviarAlertaRapido(texto) {
+            painelOculto.classList.add('hidden');
+            processarMensagem(texto);
+        }
+
+        // Reconhecimento de Voz Nativo
+        if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
+            const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+            const recognition = new SpeechRecognition();
+            recognition.lang = 'pt-BR';
+            recognition.continuous = false;
+
+            btnMic.addEventListener('click', () => {
+                btnMic.classList.add('mic-active');
+                recognition.start();
+            });
+
+            recognition.onresult = (event) => {
+                const textoVoz = event.results[0][0].transcript;
+                chatInput.value = textoVoz;
+                btnMic.classList.remove('mic-active');
+                processarMensagem(textoVoz);
+            };
+
+            recognition.onerror = () => btnMic.classList.remove('mic-active');
+            recognition.onend = () => btnMic.classList.remove('mic-active');
+        } else {
+            btnMic.style.display = 'none';
+        }
+
+        // PWA Install Prompt Trigger
+        let deferredPrompt;
+        const btnInstalarPWA = document.getElementById('btnInstalarPWA');
+        window.addEventListener('beforeinstallprompt', (e) => {
+            e.preventDefault();
+            deferredPrompt = e;
+            btnInstalarPWA.classList.remove('hidden');
+        });
+
+        if(btnInstalarPWA) {
+            btnInstalarPWA.addEventListener('click', async () => {
+                if (deferredPrompt) {
+                    deferredPrompt.prompt();
+                    const { outcome } = await deferredPrompt.userChoice;
+                    if (outcome === 'accepted') {
+                        btnInstalarPWA.classList.add('hidden');
+                    }
+                    deferredPrompt = null;
+                }
+            });
+        }
+
+        // Service Worker Registration
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('./sw.js').catch(() => {});
+            });
+        }
+    </script>
+</body>
+  </html>
