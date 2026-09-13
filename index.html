@@ -1,0 +1,444 @@
+      </div>
+    </div>
+  </main>
+
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+  <script>
+    (() => {
+      "use strict";
+
+      const $ = id => document.getElementById(id);
+
+      const chatContainer = $("chatContainer");
+      const chatInput = $("chatInput");
+      const btnEnviar = $("btnEnviar");
+      const btnMic = $("btnMic");
+      const btnTema = $("btnTema");
+      const iconeTema = $("iconeTema");
+      const btnAumentar = $("btnAumentar");
+      const btnDiminuir = $("btnDiminuir");
+      const btnCompartilhar = $("btnCompartilhar");
+      const btnInstalarPWA = $("btnInstalarPWA");
+      const btnTogglePainel = $("btnTogglePainel");
+      const btnFecharPainel = $("btnFecharPainel");
+      const painelOculto = $("painelOculto");
+      const statusClima = $("statusClima");
+      const btnAtualizarClima = $("btnAtualizarClima");
+      const btnInundacao = $("btnInundacao");
+      const btnEncosta = $("btnEncosta");
+      const statusRegistro = $("statusRegistro");
+
+      const LATITUDE = -22.7844;
+      const LONGITUDE = -43.4241;
+      const LOCAL = "Sebinho, Mesquita/RJ";
+
+      let eventoInstalacao = null;
+      let mapa = null;
+      let reconhecimento = null;
+
+      function escaparHTML(texto) {
+        return String(texto)
+          .replaceAll("&", "&amp;")
+          .replaceAll("<", "&lt;")
+          .replaceAll(">", "&gt;")
+          .replaceAll('"', "&quot;")
+          .replaceAll("'", "&#039;");
+      }
+
+      function rolarChat() {
+        chatContainer.scrollTop = chatContainer.scrollHeight;
+      }
+
+      function adicionarMensagem(texto, remetente = "bot") {
+        const linha = document.createElement("div");
+
+        linha.className = remetente === "user"
+          ? "flex items-start justify-end gap-3"
+          : "flex items-start gap-3";
+
+        const textoSeguro = escaparHTML(texto).replaceAll("\n", "<br>");
+
+        if (remetente === "user") {
+          linha.innerHTML = `
+            <div class="bg-cyan-600 text-white p-3.5 rounded-2xl max-w-[85%] leading-relaxed">
+              ${textoSeguro}
+            </div>
+            <div class="w-8 h-8 rounded-xl bg-slate-700 text-white flex items-center justify-center shrink-0">
+              <i class="fas fa-user text-xs"></i>
+            </div>
+          `;
+        } else {
+          linha.innerHTML = `
+            <div class="w-8 h-8 rounded-xl bg-cyan-600 text-white flex items-center justify-center shrink-0">
+              <i class="fas fa-robot text-xs"></i>
+            </div>
+            <div class="bg-slate-100 dark:bg-slate-800 p-3.5 rounded-2xl border border-slate-200 dark:border-slate-700 max-w-[85%] leading-relaxed">
+              ${textoSeguro}
+            </div>
+          `;
+        }
+
+        chatContainer.appendChild(linha);
+        rolarChat();
+      }
+
+      function gerarResposta(mensagem) {
+        const texto = mensagem.toLowerCase();
+
+        if (
+          texto.includes("emergência") ||
+          texto.includes("perigo") ||
+          texto.includes("socorro")
+        ) {
+          return "Se houver risco imediato, afaste-se do perigo sem aumentar o risco. Bombeiros: 193. SAMU: 192. Defesa Civil: 199, quando disponível. Eu não consigo enviar uma equipe diretamente.";
+        }
+
+        if (
+          texto.includes("alagamento") ||
+          texto.includes("inundação") ||
+          texto.includes("enchente")
+        ) {
+          return "Posso registrar um relato local de possível alagamento. Informe o local aproximado, o horário e se há pessoas em risco. Este registro não é um chamado oficial.";
+        }
+
+        if (
+          texto.includes("encosta") ||
+          texto.includes("deslizamento") ||
+          texto.includes("rachadura")
+        ) {
+          return "Afaste-se de encostas, muros ou imóveis com rachaduras. Não atravesse áreas com movimentação de terra. Informe a localização aproximada e se há pessoas em risco.";
+        }
+
+        if (
+          texto.includes("clima") ||
+          texto.includes("chuva") ||
+          texto.includes("tempo")
+        ) {
+          return "Estou consultando as condições meteorológicas disponíveis para o Sebinho. Os dados são estimativas e não substituem alertas oficiais.";
+        }
+
+        if (
+          texto.includes("quem é você") ||
+          texto.includes("seu nome") ||
+          texto.includes("sarah")
+        ) {
+          return "Sou a Sarah, assistente do Cidadão Sensor. Posso ajudar a organizar relatos, consultar dados climáticos e indicar próximos passos.";
+        }
+
+        return `Recebi seu relato: "${mensagem}". Informe o local, o horário, o que aconteceu e se existe risco imediato.`;
+      }
+
+      function falar(texto) {
+        if (!("speechSynthesis" in window)) return;
+
+        speechSynthesis.cancel();
+
+        const fala = new SpeechSynthesisUtterance(texto);
+        fala.lang = "pt-BR";
+        fala.rate = 1;
+        fala.pitch = 1;
+
+        speechSynthesis.speak(fala);
+      }
+
+      function processarMensagem(valor) {
+        const mensagem = String(valor || "").trim();
+
+        if (!mensagem) return;
+
+        adicionarMensagem(mensagem, "user");
+        chatInput.value = "";
+
+        setTimeout(() => {
+          const resposta = gerarResposta(mensagem);
+          adicionarMensagem(resposta, "bot");
+          falar(resposta);
+        }, 500);
+      }
+
+      btnEnviar.addEventListener("click", () => {
+        processarMensagem(chatInput.value);
+      });
+
+      chatInput.addEventListener("keydown", evento => {
+        if (evento.key === "Enter") {
+          evento.preventDefault();
+          processarMensagem(chatInput.value);
+        }
+      });
+
+      function atualizarIconeTema() {
+        const escuro = document.documentElement.classList.contains("dark");
+
+        iconeTema.className = escuro
+          ? "fas fa-sun"
+          : "fas fa-moon";
+      }
+
+      btnTema.addEventListener("click", () => {
+        const escuro = document.documentElement.classList.toggle("dark");
+
+        localStorage.setItem(
+          "temaSarah",
+          escuro ? "dark" : "light"
+        );
+
+        atualizarIconeTema();
+      });
+
+      atualizarIconeTema();
+
+      let tamanhoFonte =
+        Number(localStorage.getItem("tamanhoFonteSarah")) || 14;
+
+      function aplicarFonte() {
+        tamanhoFonte = Math.max(11, Math.min(18, tamanhoFonte));
+
+        document.documentElement.style.setProperty(
+          "--app-font-size",
+          `${tamanhoFonte}px`
+        );
+
+        localStorage.setItem(
+          "tamanhoFonteSarah",
+          String(tamanhoFonte)
+        );
+      }
+
+      btnAumentar.addEventListener("click", () => {
+        tamanhoFonte++;
+        aplicarFonte();
+      });
+
+      btnDiminuir.addEventListener("click", () => {
+        tamanhoFonte--;
+        aplicarFonte();
+      });
+
+      aplicarFonte();
+
+      btnTogglePainel.addEventListener("click", () => {
+        painelOculto.classList.remove("hidden");
+        painelOculto.classList.add("flex");
+
+        setTimeout(() => {
+          if (!mapa && window.L) {
+            mapa = L.map("map").setView(
+              [LATITUDE, LONGITUDE],
+              15
+            );
+
+            L.tileLayer(
+              "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
+              {
+                attribution: "&copy; OpenStreetMap contributors"
+              }
+            ).addTo(mapa);
+
+            L.marker([LATITUDE, LONGITUDE])
+              .addTo(mapa)
+              .bindPopup("Sebinho — Mesquita/RJ")
+              .openPopup();
+          }
+
+          if (mapa) {
+            mapa.invalidateSize();
+          }
+        }, 200);
+      });
+
+      btnFecharPainel.addEventListener("click", () => {
+        painelOculto.classList.add("hidden");
+        painelOculto.classList.remove("flex");
+      });
+
+      async function consultarClima() {
+        statusClima.textContent = "Consultando dados meteorológicos...";
+
+        const url =
+          `https://api.open-meteo.com/v1/forecast` +
+          `?latitude=${LATITUDE}` +
+          `&longitude=${LONGITUDE}` +
+          `&current=temperature_2m,relative_humidity_2m,precipitation,rain,weather_code` +
+          `&timezone=America%2FSao_Paulo`;
+
+        try {
+          const resposta = await fetch(url);
+
+          if (!resposta.ok) {
+            throw new Error("Falha na API meteorológica.");
+          }
+
+          const dados = await resposta.json();
+          const atual = dados.current;
+
+          statusClima.textContent =
+            `${LOCAL} — ${atual.temperature_2m}°C, ` +
+            `umidade ${atual.relative_humidity_2m}%, ` +
+            `chuva ${atual.rain} mm.`;
+        } catch (erro) {
+          console.error(erro);
+          statusClima.textContent =
+            "Não foi possível atualizar os dados agora.";
+        }
+      }
+
+      btnAtualizarClima.addEventListener("click", consultarClima);
+      consultarClima();
+
+      function salvarOcorrencia(tipo) {
+        const ocorrencias = JSON.parse(
+          localStorage.getItem("ocorrenciasSarah") || "[]"
+        );
+
+        ocorrencias.push({
+          tipo,
+          local: LOCAL,
+          data: new Date().toISOString(),
+          status: "registrada localmente"
+        });
+
+        localStorage.setItem(
+          "ocorrenciasSarah",
+          JSON.stringify(ocorrencias)
+        );
+
+        statusRegistro.textContent =
+          "Ocorrência registrada somente neste dispositivo. Nenhum órgão foi notificado.";
+
+        adicionarMensagem(
+          `Registro local criado: ${tipo}. Informe a localização exata às autoridades competentes se houver risco.`,
+          "bot"
+        );
+      }
+
+      btnInundacao.addEventListener("click", () => {
+        salvarOcorrencia("Possível inundação");
+      });
+
+      btnEncosta.addEventListener("click", () => {
+        salvarOcorrencia("Possível risco de encosta");
+      });
+
+      btnCompartilhar.addEventListener("click", async () => {
+        const dados = {
+          title: "Sarah — Defesa Civil Mesquita",
+          text: "Acesse a Sarah, assistente do Cidadão Sensor.",
+          url: window.location.href
+        };
+
+        try {
+          if (navigator.share) {
+            await navigator.share(dados);
+          } else {
+            await navigator.clipboard.writeText(window.location.href);
+            alert("Link copiado.");
+          }
+        } catch (erro) {
+          console.log("Compartilhamento cancelado.");
+        }
+      });
+
+      const Reconhecimento =
+        window.SpeechRecognition ||
+        window.webkitSpeechRecognition;
+
+      if (Reconhecimento && btnMic) {
+        reconhecimento = new Reconhecimento();
+        reconhecimento.lang = "pt-BR";
+        reconhecimento.continuous = false;
+        reconhecimento.interimResults = false;
+
+        reconhecimento.onstart = () => {
+          btnMic.classList.add("text-red-500");
+          btnMic.setAttribute("aria-label", "Parar gravação");
+        };
+
+        reconhecimento.onend = () => {
+          btnMic.classList.remove("text-red-500");
+          btnMic.setAttribute("aria-label", "Falar por voz");
+        };
+
+        reconhecimento.onerror = erro => {
+          console.error("Erro no reconhecimento de voz:", erro);
+          btnMic.classList.remove("text-red-500");
+        };
+
+        reconhecimento.onresult = evento => {
+          const resultado = evento.results[0][0].transcript;
+          chatInput.value = resultado;
+          processarMensagem(resultado);
+        };
+
+        btnMic.addEventListener("click", () => {
+          try {
+            reconhecimento.start();
+          } catch (erro) {
+            console.log("O reconhecimento já está ativo.");
+          }
+        });
+      } else if (btnMic) {
+        btnMic.addEventListener("click", () => {
+          alert("O reconhecimento de voz não é compatível com este navegador.");
+        });
+      }
+
+      window.addEventListener("beforeinstallprompt", evento => {
+        evento.preventDefault();
+        eventoInstalacao = evento;
+
+        if (btnInstalarPWA) {
+          btnInstalarPWA.classList.remove("hidden");
+        }
+      });
+
+      if (btnInstalarPWA) {
+        btnInstalarPWA.addEventListener("click", async () => {
+          if (!eventoInstalacao) {
+            alert("A instalação ainda não está disponível neste navegador.");
+            return;
+          }
+
+          eventoInstalacao.prompt();
+
+          const escolha = await eventoInstalacao.userChoice;
+
+          if (escolha.outcome === "accepted") {
+            btnInstalarPWA.classList.add("hidden");
+          }
+
+          eventoInstalacao = null;
+        });
+      }
+
+      window.addEventListener("appinstalled", () => {
+        eventoInstalacao = null;
+
+        if (btnInstalarPWA) {
+          btnInstalarPWA.classList.add("hidden");
+        }
+      });
+
+      if ("serviceWorker" in navigator) {
+        window.addEventListener("load", () => {
+          navigator.serviceWorker
+            .register("./service-worker.js")
+            .then(registro => {
+              console.log(
+                "Service Worker registrado:",
+                registro.scope
+              );
+            })
+            .catch(erro => {
+              console.error(
+                "Erro ao registrar o Service Worker:",
+                erro
+              );
+            });
+        });
+      }
+    })();
+  </script>
+</body>
+</html>
