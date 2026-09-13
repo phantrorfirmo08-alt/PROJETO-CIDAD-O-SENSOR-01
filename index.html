@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SARAH AI - Cidadão Sensor (Completo)</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/react@18/umd/react.development.js" crossorigin></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js" crossorigin></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#020617">
+</head>
+<body class="min-h-screen bg-[#020617] text-slate-100 selection:bg-cyan-500 selection:text-slate-950 pb-32">
+    <div id="root"></div>
+
+    <script type="text/babel">
+        function App() {
+            const [userName] = React.useState('Alexandre');
+            const [riverLevel, setRiverLevel] = React.useState(1.85);
+            const [status, setStatus] = React.useState('normal');
+            const [messages, setMessages] = React.useState([
+                { id: '1', sender: 'sarah', text: 'SARAH conectada ao setor Sarapuí-Mesquita. Nível do rio em 1.85m com monitoramento ativo.', timestamp: '22:15' }
+            ]);
+            const [input, setInput] = React.useState('');
+            const [soundEnabled, setSoundEnabled] = React.useState(true);
+            const [isListening, setIsListening] = React.useState(false);
+
+            // Sistema de Sirene de Emergência
+            const playEmergencySiren = () => {
+                try {
+                    const AudioCtx = window.AudioContext || window.webkitAudioContext;
+                    if (!AudioCtx) return;
+                    const ctx = new AudioCtx();
+                    const gain = ctx.createGain();
+                    gain.gain.setValueAtTime(0.3, ctx.currentTime);
+                    gain.connect(ctx.destination);
+
+                    const osc = ctx.createOscillator();
+                    osc.type = 'sawtooth';
+                    osc.frequency.setValueAtTime(440, ctx.currentTime);
+                    osc.connect(gain);
+                    osc.start();
+
+                    let up = true;
+                    let freq = 440;
+                    const interval = setInterval(() => {
+                        freq = up ? freq + 35 : freq - 35;
+                        if (freq >= 880) up = false;
+                        if (freq <= 440) up = true;
+                        osc.frequency.setValueAtTime(freq, ctx.currentTime);
+                    }, 100);
+
+                    setTimeout(() => {
+                        clearInterval(interval);
+                        try { osc.stop(); ctx.close(); } catch(e) {}
+                    }, 8000);
+                } catch (e) { console.error(e); }
+            };
+
+            const speakText = (text) => {
+                if (!soundEnabled || !('speechSynthesis' in window)) return;
+                window.speechSynthesis.cancel();
+                const utterance = new SpeechSynthesisUtterance(text);
+                utterance.lang = 'pt-BR';
+                window.speechSynthesis.speak(utterance);
+            };
+
+            const handleSend = (txt) => {
+                const textToSend = txt || input;
+                if (!textToSend.trim()) return;
+
+                const userMsg = { 
+                    id: Date.now().toString(), 
+                    sender: 'user', 
+                    text: textToSend, 
+                    timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) 
+                };
+                setMessages(prev => [...prev, userMsg]);
+                if (!txt) setInput('');
+
+                setTimeout(() => {
+                    const reply = `Compreendido, ${userName}. Sensores na Bacia do Sarapuí monitorando o nível de ${riverLevel.toFixed(2)}m.`;
+                    setMessages(prev => [...prev, { 
+                        id: (Date.now() + 1).toString(), 
+                        sender: 'sarah', 
+                        text: reply, 
+                        timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) 
+                    }]);
+                    speakText(reply);
+                }, 800);
+            };
+
+            const toggleListening = () => {
+                const SpeechRec = window.SpeechRecognition || window.webkitSpeechRecognition;
+                if (!SpeechRec) {
+                    alert("Reconhecimento de voz não suportado neste navegador.");
+                    return;
+                }
+                if (isListening) {
+                    setIsListening(false);
+                    return;
+                }
+                const rec = new SpeechRec();
+                rec.lang = 'pt-BR';
+                rec.onstart = () => setIsListening(true);
+                rec.onresult = (e) => {
+                    const txt = e.results[0][0].transcript;
+                    setInput(txt);
+                    setIsListening(false);
+                    handleSend(txt);
+                };
+                rec.onerror = () => setIsListening(false);
+                rec.onend = () => setIsListening(false);
+                rec.start();
+            };
+
+            return (
+                <div className="max-w-2xl mx-auto pt-6 px-4">
+                    <header className="text-center mb-6">
+                        <div className="flex items-center justify-center gap-2 mb-1">
+                            <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping" />
+                            <span className="font-mono text-[10px] text-orange-400 tracking-widest uppercase font-bold">
+                                NETWORK: ONLINE • SETOR SARAPUÍ-MESQUITA
+                            </span>
+                        </div>
+                        <h1 className="text-2xl md:text-3xl font-black tracking-tight text-white">SARAH AI COMANDO</h1>
+                    </header>
+
+                    {/* Painel de Status do Rio */}
+                    <div className="grid grid-cols-2 gap-4 mb-6">
+                        <div className="bg-slate-900/90 border border-cyan-500/30 rounded-2xl p-4 text-center">
+                            <span className="text-xs font-mono text-cyan-400 uppercase">Cota Atual</span>
+                            <div className="text-2xl font-black text-white mt-1">{riverLevel.toFixed(2)}m</div>
+                        </div>
+                        <div className="bg-slate-900/90 border border-cyan-500/30 rounded-2xl p-4 text-center flex flex-col justify-center items-center">
+                            <button 
+                                onClick={playEmergencySiren}
+                                className="px-3 py-1.5 bg-rose-500/20 hover:bg-rose-500/30 text-rose-300 border border-rose-500/40 rounded-xl text-xs font-mono transition-colors"
+                            >
+                                Testar Sirene
+                            </button>
+                        </div>
+                    </div>
+
+                    {/* Chat Interface */}
+                    <div className="bg-slate-900/90 backdrop-blur-md border-2 border-cyan-500/40 rounded-3xl p-5 shadow-2xl">
+                        <div className="flex items-center justify-between mb-4 border-b border-cyan-500/20 pb-3">
+                            <span className="font-mono text-xs text-cyan-300 font-bold uppercase">Interface Neural SARAH</span>
+                            <button 
+                                onClick={() => setSoundEnabled(!soundEnabled)}
+                                className="px-2.5 py-1 bg-slate-800 border border-cyan-500/30 rounded-lg text-xs text-cyan-300"
+                            >
+                                {soundEnabled ? '🔊 Som Ativado' : '🔇 Mudo'}
+                            </button>
+                        </div>
+
+                        <div className="h-72 overflow-y-auto space-y-3 mb-4 pr-1 text-sm">
+                            {messages.map(m => (
+                                <div key={m.id} className={`flex flex-col ${m.sender === 'user' ? 'items-end' : 'items-start'}`}>
+                                    <div className={`max-w-[85%] rounded-2xl px-4 py-2.5 shadow-md ${m.sender === 'user' ? 'bg-cyan-600 text-white rounded-br-none' : 'bg-slate-800/90 border border-cyan-500/30 text-slate-200 rounded-bl-none'}`}>
+                                        <p className="leading-relaxed">{m.text}</p>
+                                    </div>
+                                    <span className="text-[10px] text-slate-500 font-mono mt-1 px-1">{m.timestamp}</span>
+                                </div>
+                            ))}
+                        </div>
+
+                        <div className="flex items-center gap-2">
+                            <input
+                                type="text"
+                                value={input}
+                                onChange={e => setInput(e.target.value)}
+                                onKeyDown={e => e.key === 'Enter' && handleSend()}
+                                placeholder="Digite sua mensagem ou comando..."
+                                className="flex-1 bg-slate-950 border border-cyan-500/30 rounded-xl px-4 py-2.5 text-sm text-slate-100 focus:outline-none focus:border-cyan-400"
+                            />
+                            <button
+                                onClick={toggleListening}
+                                className={`p-2.5 rounded-xl border transition-all ${isListening ? 'bg-rose-500 border-rose-400 text-white animate-pulse' : 'bg-slate-800 border-cyan-500/30 text-cyan-400'}`}
+                                title="Comando por Voz"
+                            >
+                                🎤
+                            </button>
+                            <button
+                                onClick={() => handleSend()}
+                                className="px-4 py-2.5 bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-bold rounded-xl shadow-lg shadow-cyan-500/20 transition-all"
+                            >
+                                Enviar
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            );
+        }
+
+        ReactDOM.render(<App />, document.getElementById('root'));
+    </script>
+</body>
+</html>
