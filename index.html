@@ -1,12 +1,18 @@
 <!DOCTYPE html>
-<html lang="pt-BR" class="dark">
+<html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>SARAH AI - Sistema de Monitoramento e Defesa Civil (Sarapuí - Mesquita/RJ)</title>
     
+    <!-- Theme Initialization (antes de qualquer JS) -->
+    <script>
+        const isDark = localStorage.getItem('darkMode') !== 'false';
+        if (isDark) document.documentElement.classList.add('dark');
+    </script>
+    
     <!-- Tailwind CSS -->
-    <script src="https://cdn.tailwindcss.com"></script>
+    <script defer src="https://cdn.tailwindcss.com"></script>
     <script>
         tailwind.config = {
             darkMode: 'class',
@@ -23,17 +29,17 @@
         }
     </script>
     
-    <!-- React & Babel -->
-    <script src="https://unpkg.com/react@18/umd/react.development.js" crossorigin></script>
-    <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js" crossorigin></script>
-    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <!-- React & Babel (Async) -->
+    <script async src="https://unpkg.com/react@18/umd/react.development.js" crossorigin></script>
+    <script async src="https://unpkg.com/react-dom@18/umd/react-dom.development.js" crossorigin></script>
+    <script async src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
 
-    <!-- Leaflet CSS & JS for Map -->
+    <!-- Leaflet CSS & JS -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin=""/>
-    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
+    <script async src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
 
-    <!-- Chart.js for River Metrics -->
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Chart.js -->
+    <script async src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
     <!-- PWA Manifest & Meta -->
     <link rel="manifest" href="manifest.json">
@@ -49,13 +55,13 @@
             const [awaitingGuestName, setAwaitingGuestName] = React.useState(false);
             const [guestNames, setGuestNames] = React.useState([]);
             const [hfApiKey, setHfApiKey] = React.useState(() => localStorage.getItem('hf_api_key') || '');
-            const [darkMode, setDarkMode] = React.useState(true);
-            const [fontSizeScale, setFontSizeScale] = React.useState('normal'); // 'small', 'normal', 'large', 'xl'
+            const [darkMode, setDarkMode] = React.useState(() => localStorage.getItem('darkMode') !== 'false');
+            const [fontSizeScale, setFontSizeScale] = React.useState('normal');
             const [soundEnabled, setSoundEnabled] = React.useState(true);
             const [isSpeaking, setIsSpeaking] = React.useState(false);
             const [isListening, setIsListening] = React.useState(false);
 
-            // Módulos Recolhíveis (Escondidos por trás do chat, acionados via botão)
+            // Módulos Recolhíveis
             const [mapOpen, setMapOpen] = React.useState(false);
             const [chartOpen, setChartOpen] = React.useState(false);
             const [termsOpen, setTermsOpen] = React.useState(false);
@@ -86,6 +92,7 @@
             // Sincronizar Modo Dark/Light na tag html
             React.useEffect(() => {
                 const rootHtml = document.documentElement;
+                localStorage.setItem('darkMode', darkMode ? 'true' : 'false');
                 if (darkMode) {
                     rootHtml.classList.add('dark');
                     rootHtml.classList.remove('light');
@@ -98,7 +105,6 @@
             // Inicializar Mapa Leaflet quando aberto
             React.useEffect(() => {
                 if (mapOpen && mapRef.current && !mapInstanceRef.current) {
-                    // Coordenadas focadas em Rocha Sobrinho, Mesquita - Rua Amazonas / Comunidade do Sebinho
                     const lat = -22.7845;
                     const lng = -43.4140;
                     const map = L.map(mapRef.current).setView([lat, lng], 16);
@@ -118,7 +124,7 @@
                 }
             }, [mapOpen]);
 
-            // Inicializar Gráfico de Métricas do Rio Sarapuí (Zerado aguardando dados reais)
+            // Inicializar Gráfico de Métricas do Rio Sarapuí
             React.useEffect(() => {
                 if (chartOpen && chartRef.current && !chartInstanceRef.current) {
                     const ctx = chartRef.current.getContext('2d');
@@ -218,7 +224,6 @@
                     let reply = "";
                     const lowerText = textToSend.toLowerCase();
 
-                    // Se a SARAH perguntou o nome de alguém e o usuário está respondendo
                     if (awaitingGuestName) {
                         const guestName = textToSend.trim();
                         setGuestNames(prev => [...prev, guestName]);
@@ -266,7 +271,7 @@
                     
                     <div>
                         {/* BARRA DE FERRAMENTAS SUPERIOR COM BOTÕES FUNCIONAIS */}
-                        <header className="bg-slate-900/95 dark:bg-slate-900/95 bg-white/95 border-b border-cyan-500/30 px-3 py-2.5 backdrop-blur-md sticky top-0 z-50 shadow-md">
+                        <header className="bg-slate-900/95 border-b border-cyan-500/30 px-3 py-2.5 backdrop-blur-md sticky top-0 z-50 shadow-md">
                             <div className="max-w-4xl mx-auto flex flex-wrap items-center justify-between gap-2">
                                 
                                 {/* Hugging Face Key Input & Attach */}
@@ -349,7 +354,7 @@
                         {/* CONTEÚDO PRINCIPAL */}
                         <main className="max-w-2xl mx-auto pt-6 px-4">
                             
-                            {/* CABEÇALHO DO SISTEMA SOLICITADO */}
+                            {/* CABEÇALHO DO SISTEMA */}
                             <div className="text-center mb-6 relative">
                                 <div className="inline-flex flex-col items-center gap-1 mb-3 px-4 py-2 bg-cyan-500/10 border border-cyan-500/30 rounded-2xl shadow-inner">
                                     <span className="font-mono text-xs text-cyan-400 font-bold tracking-widest uppercase">
@@ -361,4 +366,96 @@
                                     <span className="font-mono text-[11px] text-cyan-300 tracking-wider">
                                         Defesa civil Digital Comunitária
                                     </span>
-                                </
+                                </div>
+                            </div>
+
+                            {/* MÓDULOS RECOLHÍVEIS */}
+                            <div className="space-y-4 mb-6">
+                                {/* Botão Mapa */}
+                                <button
+                                    onClick={() => setMapOpen(!mapOpen)}
+                                    className="w-full px-4 py-3 bg-cyan-500/20 hover:bg-cyan-500/30 text-cyan-300 border border-cyan-500/40 rounded font-mono text-sm transition-colors"
+                                >
+                                    {mapOpen ? '🗺️ Ocultar Mapa' : '🗺️ Ver Mapa - Setor Sarapuí'}
+                                </button>
+                                {mapOpen && (
+                                    <div className="w-full h-80 bg-slate-800 rounded border border-cyan-500/30 overflow-hidden">
+                                        <div ref={mapRef} className="w-full h-full"></div>
+                                    </div>
+                                )}
+
+                                {/* Botão Gráfico */}
+                                <button
+                                    onClick={() => setChartOpen(!chartOpen)}
+                                    className="w-full px-4 py-3 bg-cyan-500/20 hover:bg-cyan-500/30 text-cyan-300 border border-cyan-500/40 rounded font-mono text-sm transition-colors"
+                                >
+                                    {chartOpen ? '📊 Ocultar Gráfico' : '📊 Ver Métricas - Rio Sarapuí'}
+                                </button>
+                                {chartOpen && (
+                                    <div className="w-full h-80 bg-slate-800 rounded border border-cyan-500/30 p-4">
+                                        <canvas ref={chartRef}></canvas>
+                                    </div>
+                                )}
+                            </div>
+
+                            {/* ÁREA DE CHAT */}
+                            <div className="bg-slate-800/50 rounded border border-cyan-500/30 p-4 h-96 overflow-y-auto mb-4 space-y-3">
+                                {messages.map((msg) => (
+                                    <div key={msg.id} className={`flex ${msg.sender === 'user' ? 'justify-end' : 'justify-start'}`}>
+                                        <div className={`max-w-xs px-3 py-2 rounded ${msg.sender === 'user' ? 'bg-cyan-600/40 text-cyan-100' : 'bg-slate-700/60 text-slate-100'}`}>
+                                            <p className="text-sm">{msg.text}</p>
+                                            <span className="text-xs opacity-60 mt-1 block">{msg.timestamp}</span>
+                                        </div>
+                                    </div>
+                                ))}
+                                {isLoadingChat && (
+                                    <div className="flex justify-start">
+                                        <div className="bg-slate-700/60 text-slate-100 px-3 py-2 rounded">
+                                            <p className="text-sm">SARAH está digitando...</p>
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
+
+                            {/* INPUT DE MENSAGEM */}
+                            <div className="flex gap-2">
+                                <input
+                                    type="text"
+                                    value={input}
+                                    onChange={(e) => setInput(e.target.value)}
+                                    onKeyPress={(e) => e.key === 'Enter' && handleSendMessage()}
+                                    placeholder="Digite sua mensagem..."
+                                    className="flex-1 bg-slate-900 border border-cyan-500/40 rounded px-3 py-2 text-sm font-mono text-slate-100 focus:outline-none focus:border-cyan-400"
+                                    disabled={isLoadingChat}
+                                />
+                                <button
+                                    onClick={() => handleSendMessage()}
+                                    disabled={isLoadingChat}
+                                    className="px-4 py-2 bg-cyan-500/20 hover:bg-cyan-500/30 text-cyan-300 border border-cyan-500/40 rounded font-mono text-sm transition-colors disabled:opacity-50"
+                                >
+                                    Enviar
+                                </button>
+                                <button
+                                    onClick={toggleListening}
+                                    className={`px-3 py-2 ${isListening ? 'bg-red-500/30 border-red-500/40' : 'bg-cyan-500/20 border-cyan-500/40'} hover:bg-cyan-500/30 text-cyan-300 border rounded font-mono text-sm transition-colors`}
+                                    title="Ativar Reconhecimento de Voz"
+                                >
+                                    🎤 {isListening ? 'Ouvindo...' : 'Voz'}
+                                </button>
+                            </div>
+                        </main>
+                    </div>
+
+                    {/* RODAPÉ */}
+                    <footer className="max-w-2xl mx-auto w-full px-4 py-4 text-center text-xs text-slate-400 border-t border-slate-800">
+                        <p>© 2025 SARAH AI - Defesa Civil Digital | Comunidade Sebinho, Mesquita/RJ</p>
+                    </footer>
+                </div>
+            );
+        }
+
+        // Renderizar App
+        ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+    </script>
+</body>
+</html>
