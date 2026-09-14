@@ -1,0 +1,632 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>SARAH AI Core v4.6 | G.C.E.</title>
+    <meta name="theme-color" content="#151922">
+    <link rel="manifest" href="./manifest.json">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        :root {
+            --bg-obsidian: #0A0D14;
+            --surface-midnight: #151922;
+            --surface-card: #1E2533;
+            --border-color: #333D52;
+            --accent-cyan: #38BDF8;
+            --text-primary: #FFFFFF;
+            --text-secondary: #CBD5E1;
+            --alert-red: #EF4444;
+            --alert-yellow: #F59E0B;
+            --success-green: #10B981;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        html, body {
+            width: 100%;
+            height: 100%;
+            background-color: var(--bg-obsidian);
+            color: var(--text-primary);
+            font-size: 16px;
+            overflow: hidden;
+        }
+
+        /* Modais de Onboarding (Telefone ➔ Termo de Responsabilidade) */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: rgba(10, 13, 20, 0.96);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 999999;
+            padding: 20px;
+        }
+
+        .modal-card {
+            background: var(--surface-midnight);
+            border: 2px solid var(--accent-cyan);
+            border-radius: 18px;
+            max-width: 100%;
+            width: 100%;
+            padding: 28px;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.9);
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+
+        .modal-title {
+            font-size: 1.35rem;
+            font-weight: 800;
+            color: var(--text-primary);
+            margin-bottom: 14px;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .modal-desc {
+            font-size: 1.05rem;
+            color: var(--text-secondary);
+            margin-bottom: 20px;
+            line-height: 1.6;
+        }
+
+        .modal-input-group {
+            margin-bottom: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .modal-input-group label {
+            font-size: 0.95rem;
+            color: var(--text-secondary);
+            font-weight: 600;
+        }
+
+        .modal-input-group input {
+            background: var(--surface-card);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 14px 16px;
+            color: var(--text-primary);
+            font-size: 1.15rem;
+            outline: none;
+            width: 100%;
+        }
+
+        .modal-input-group input:focus {
+            border-color: var(--accent-cyan);
+        }
+
+        .modal-list {
+            list-style: none;
+            margin-bottom: 24px;
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+        }
+
+        .modal-list li {
+            font-size: 1.05rem;
+            color: var(--text-primary);
+            line-height: 1.5;
+        }
+
+        .modal-list li span {
+            color: var(--accent-cyan);
+            font-weight: bold;
+        }
+
+        .modal-checkbox-container {
+            display: flex;
+            align-items: flex-start;
+            gap: 14px;
+            margin-bottom: 24px;
+            background: var(--surface-card);
+            padding: 16px;
+            border-radius: 12px;
+            border: 1px solid var(--border-color);
+        }
+
+        .modal-checkbox-container input[type="checkbox"] {
+            width: 26px;
+            height: 26px;
+            accent-color: var(--accent-cyan);
+            cursor: pointer;
+            margin-top: 2px;
+            flex-shrink: 0;
+        }
+
+        .modal-checkbox-container label {
+            font-size: 1.02rem;
+            color: var(--text-primary);
+            cursor: pointer;
+            line-height: 1.5;
+        }
+
+        .modal-btn {
+            width: 100%;
+            background: var(--accent-cyan);
+            color: var(--bg-obsidian);
+            border: none;
+            padding: 18px;
+            border-radius: 14px;
+            font-weight: 800;
+            font-size: 1.15rem;
+            cursor: pointer;
+            text-align: center;
+            transition: opacity 0.2s, background 0.2s;
+        }
+
+        .modal-btn:active {
+            background: #0284c7;
+        }
+
+        .modal-btn.disabled {
+            opacity: 0.4;
+            pointer-events: none;
+        }
+
+        /* Layout Principal */
+        .app-layout {
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            height: 100dvh;
+            width: 100vw;
+            max-width: 600px;
+            margin: 0 auto;
+            background: var(--bg-obsidian);
+        }
+
+        header {
+            background: var(--surface-midnight);
+            border-bottom: 1px solid var(--border-color);
+            padding: 14px 18px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            min-height: 64px;
+        }
+
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+        }
+
+        .header-right {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .sara-avatar {
+            width: 42px;
+            height: 42px;
+            background: var(--surface-card);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .sara-avatar svg {
+            width: 26px;
+            height: 26px;
+            stroke: var(--accent-cyan);
+            fill: none;
+            stroke-width: 2;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+        }
+
+        @keyframes blink {
+            0%, 90%, 100% { transform: scaleY(1); }
+            95% { transform: scaleY(0.1); }
+        }
+
+        .sara-eyes {
+            transform-origin: 13px 10px;
+            animation: blink 4s infinite;
+        }
+
+        @keyframes talk {
+            0% { transform: scaleY(1) scaleX(1); }
+            25% { transform: scaleY(1.8) scaleX(0.8); }
+            50% { transform: scaleY(0.5) scaleX(1.3); }
+            75% { transform: scaleY(1.6) scaleX(0.9); }
+            100% { transform: scaleY(1) scaleX(1); }
+        }
+
+        .sara-mouth {
+            transform-origin: 13px 16px;
+            transition: transform 0.1s ease;
+        }
+
+        .sara-avatar.speaking .sara-mouth {
+            animation: talk 0.25s infinite ease-in-out;
+        }
+
+        /* Escudo Dinâmico (Mudança de Cor por Clima + Disparo de Alarme ao Tocar) */
+        .shield-btn {
+            background: var(--surface-card);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            width: 44px;
+            height: 44px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .shield-btn svg {
+            width: 24px;
+            height: 24px;
+            transition: fill 0.3s ease;
+        }
+
+        .shield-btn.status-green svg {
+            fill: var(--success-green);
+        }
+
+        .shield-btn.status-yellow svg {
+            fill: var(--alert-yellow);
+        }
+
+        .shield-btn.status-red svg {
+            fill: var(--alert-red);
+            animation: pulse-red 1s infinite;
+        }
+
+        @keyframes pulse-red {
+            0% { transform: scale(1); filter: drop-shadow(0 0 3px rgba(239, 68, 68, 0.8)); }
+            50% { transform: scale(1.15); filter: drop-shadow(0 0 10px rgba(239, 68, 68, 1)); }
+            100% { transform: scale(1); filter: drop-shadow(0 0 3px rgba(239, 68, 68, 0.8)); }
+        }
+
+        .brand-title {
+            font-size: 1rem;
+            font-weight: 800;
+            letter-spacing: 0.05em;
+            color: var(--text-primary);
+        }
+
+        .btn-action {
+            background: var(--surface-card);
+            border: 1px solid var(--border-color);
+            color: var(--text-primary);
+            padding: 8px 12px;
+            border-radius: 10px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            cursor: pointer;
+            min-height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .btn-action:active {
+            background: var(--border-color);
+        }
+
+        /* Telemetria Ticker */
+        .telemetry-ticker {
+            background: var(--surface-midnight);
+            border-bottom: 1px solid var(--border-color);
+            padding: 10px 18px;
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .telemetry-ticker span {
+            color: var(--accent-cyan);
+            font-weight: 700;
+        }
+
+        /* Gráficos e Widgets */
+        .analytics-container {
+            background: var(--bg-obsidian);
+            padding: 12px 18px;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            max-height: 170px;
+        }
+
+        .analytics-card {
+            background: var(--surface-midnight);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 10px;
+            display: flex;
+            flex-direction: column;
+            height: 146px;
+        }
+
+        .card-header {
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+            font-weight: 700;
+            margin-bottom: 6px;
+            text-transform: uppercase;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .card-content-inner {
+            flex: 1;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .card-content-inner canvas {
+            width: 100% !important;
+            height: 100% !important;
+        }
+
+        .goes-viewer {
+            background: #000;
+            border-radius: 8px;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            padding: 6px;
+            border: 1px solid var(--border-color);
+        }
+
+        .goes-viewer p {
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+            margin-bottom: 8px;
+        }
+
+        .goes-link {
+            font-size: 0.85rem;
+            color: var(--accent-cyan);
+            text-decoration: none;
+            font-weight: 700;
+            background: rgba(56, 189, 248, 0.15);
+            padding: 8px 12px;
+            border-radius: 8px;
+            border: 1px solid rgba(56, 189, 248, 0.4);
+        }
+
+        /* Container do Chat */
+        .main-chat-container {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            padding: 0 18px;
+        }
+
+        .chat-messages {
+            flex: 1;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            padding: 14px 0;
+        }
+
+        .message {
+            max-width: 92%;
+            padding: 14px 18px;
+            border-radius: 14px;
+            font-size: 1.1rem;
+            line-height: 1.6;
+            word-wrap: break-word;
+        }
+
+        .message.user {
+            background: var(--surface-card);
+            border: 1px solid var(--border-color);
+            align-self: flex-end;
+            color: var(--text-primary);
+            border-bottom-right-radius: 4px;
+        }
+
+        .message.assistant {
+            background: transparent;
+            align-self: flex-start;
+            color: var(--text-secondary);
+            border-left: 3.5px solid var(--accent-cyan);
+            padding-left: 14px;
+        }
+
+        /* Input e Microfone */
+        .input-wrapper {
+            background: var(--surface-midnight);
+            border-top: 1px solid var(--border-color);
+            padding: 14px 18px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .input-row {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            background: var(--surface-card);
+            border: 1px solid var(--border-color);
+            border-radius: 14px;
+            padding: 6px 14px;
+        }
+
+        .input-row textarea {
+            flex: 1;
+            background: transparent;
+            border: none;
+            color: var(--text-primary);
+            font-size: 1.1rem;
+            resize: none;
+            outline: none;
+            height: 46px;
+            max-height: 110px;
+            padding-top: 10px;
+        }
+
+        .mic-btn {
+            background: var(--surface-midnight);
+            border: 1px solid var(--border-color);
+            color: var(--accent-cyan);
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            font-size: 1.4rem;
+            flex-shrink: 0;
+        }
+
+        .mic-btn.recording {
+            background: var(--alert-red);
+            color: #fff;
+            border-color: var(--alert-red);
+            animation: pulse 1s infinite;
+        }
+
+        .input-footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .status-text {
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+        }
+
+        .send-btn {
+            background: var(--accent-cyan);
+            color: var(--bg-obsidian);
+            border: none;
+            padding: 12px 22px;
+            border-radius: 10px;
+            font-weight: 800;
+            font-size: 1rem;
+            cursor: pointer;
+            min-height: 46px;
+        }
+
+        footer {
+            background: var(--surface-midnight);
+            border-top: 1px solid var(--border-color);
+            padding: 10px 18px;
+            text-align: center;
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Onboarding Passo 1: Cadastro de Telefone -->
+    <div class="modal-overlay" id="phoneModal" style="display: none;">
+        <div class="modal-card">
+            <h2 class="modal-title">Identificação Operacional | G.C.E.</h2>
+            <p class="modal-desc">Informe o seu número de telefone (WhatsApp) para vincular ao sistema de alerta comunitário do Rio Sarapuí / Sebinho (Mesquita).</p>
+            <div class="modal-input-group">
+                <label for="userPhoneInput">Número de Telefone / WhatsApp:</label>
+                <input type="tel" id="userPhoneInput" placeholder="(21) 9XXXX-XXXX" oninput="validatePhoneInput()">
+            </div>
+            <button class="modal-btn disabled" id="phoneNextBtn" onclick="submitPhone()">Avançar para os Termos</button>
+        </div>
+    </div>
+
+    <!-- Onboarding Passo 2: Termo de Responsabilidade (Aparece DEPOIS do Telefone) -->
+    <div class="modal-overlay" id="termsModal" style="display: none;">
+        <div class="modal-card">
+            <h2 class="modal-title">Termo de Responsabilidade | G.C.E.</h2>
+            <p class="modal-desc">Defesa Civil Comunitária — Operação e Monitoramento do Rio Sarapuí / Sebinho (Mesquita).</p>
+            <ul class="modal-list">
+                <li><span>Privacidade Total:</span> Seu histórico, telefone e dados operacionais ficam salvos unicamente no seu dispositivo.</li>
+                <li><span>Fontes Oficiais:</span> Dados meteorológicos Open-Meteo e monitoramento visual GOES-19.</li>
+                <li><span>Uso Comunitário:</span> O escudo no topo serve como alerta climático automático e botão de disparo/teste do alarme.</li>
+            </ul>
+            <div class="modal-checkbox-container">
+                <input type="checkbox" id="termsCheck" onchange="toggleAcceptButton()">
+                <label for="termsCheck">Li, compreendi e concordo com os termos de responsabilidade operacional do sistema.</label>
+            </div>
+            <button class="modal-btn disabled" id="acceptBtn" onclick="acceptTerms()">Concordar e Entrar no Sistema</button>
+        </div>
+    </div>
+
+    <div class="app-layout">
+        <header>
+            <div class="header-left">
+                <div class="sara-avatar" id="saraAvatarContainer" title="Sara - IA Ativa">
+                    <svg viewBox="0 0 24 24">
+                        <path d="M12 2a7 7 0 0 0-7 7v3a5 5 0 0 0 10 0V9a7 7 0 0 0-3-7z" opacity="0.3"/>
+                        <path d="M5 19v1a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-1" />
+                        <g class="sara-eyes">
+                            <circle cx="9.5" cy="9" r="1" fill="var(--accent-cyan)"/>
+                            <circle cx="14.5" cy="9" r="1" fill="var(--accent-cyan)"/>
+                        </g>
+                        <circle class="sara-mouth" cx="12" cy="15" r="1.2" fill="var(--accent-cyan)"/>
+                    </svg>
+                </div>
+                <!-- O Escudo Dinâmico: muda de cor pelo clima e ao tocar dispara/testa o alarme -->
+                <button class="shield-btn status-green" id="shieldButton" title="Toque para testar/acionar o alarme de emergência" onclick="toggleAlarm()">
+                    <svg viewBox="0 0 24 24">
+                        <path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4z"/>
+                    </svg>
+                </button>
+                <span class="brand-title">SARAH AI CORE</span>
+            </div>
+            <div class="header-right">
+                <button class="btn-action" id="installBtn" onclick="installPWA()" style="display: none;">Instalar</button>
+                <button class="btn-action" onclick="shareApp()">Compartilhar</button>
+                <button class="btn-action" onclick="clearHistory()">Limpar</button>
+            </div>
+        </header>
+
+        <div class="telemetry-ticker">
+            <div>LOCAL: <span>Sebinho (Ponte Frigo Éden)</span></div>
+            <div>STATUS: <span id="telemetriaStatus">Sincronizando clima e telemetria...</span></div>
+        </div>
+
+        <div class="analytics-container">
+            <div class="analytics-card">
+                <div class="card-header"><span>Precipitação</span><span>Open-Meteo</span></div>
+                <div class="card-content-inner">
+                    <canvas id="precipChart"></canvas>
+                </div>
+            </div>
+            <div class="analytics-card">
+                <div class="card-header"><span>Visual Satélite</span><span>GOES-19</span></div>
+                <div class="card-content-inner">
+                    <div class="goes-viewer">
+                        <p>Sudeste (INPE)</p>
+                        <a href="https://www.cptec.inpe.br/dsat/"
+                           target="_blank"
+          
