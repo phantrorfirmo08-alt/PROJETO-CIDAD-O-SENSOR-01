@@ -1,0 +1,637 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>SARAH AI Core v4.3 | G.C.E.</title>
+    <meta name="theme-color" content="#151922">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        :root {
+            --bg-obsidian: #0A0D14;
+            --surface-midnight: #151922;
+            --surface-card: #1E2533;
+            --border-color: #333D52;
+            --accent-cyan: #38BDF8;
+            --text-primary: #FFFFFF;
+            --text-secondary: #CBD5E1;
+            --alert-red: #EF4444;
+            --success-green: #10B981;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        html, body {
+            width: 100%;
+            height: 100%;
+            background-color: var(--bg-obsidian);
+            color: var(--text-primary);
+            font-size: 16px;
+            overflow: hidden;
+        }
+
+        /* Modal de Termos */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: rgba(10, 13, 20, 0.95);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 999999;
+            padding: 16px;
+        }
+
+        .modal-card {
+            background: var(--surface-midnight);
+            border: 2px solid var(--accent-cyan);
+            border-radius: 16px;
+            max-width: 100%;
+            width: 100%;
+            padding: 24px;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.9);
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+
+        .modal-title {
+            font-size: 1.25rem;
+            font-weight: 800;
+            color: var(--text-primary);
+            margin-bottom: 12px;
+            text-transform: uppercase;
+        }
+
+        .modal-desc {
+            font-size: 1rem;
+            color: var(--text-secondary);
+            margin-bottom: 16px;
+            line-height: 1.5;
+        }
+
+        .modal-list {
+            list-style: none;
+            margin-bottom: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .modal-list li {
+            font-size: 0.95rem;
+            color: var(--text-primary);
+            line-height: 1.4;
+        }
+
+        .modal-list li span {
+            color: var(--accent-cyan);
+            font-weight: bold;
+        }
+
+        .modal-checkbox-container {
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+            margin-bottom: 20px;
+            background: var(--surface-card);
+            padding: 14px;
+            border-radius: 10px;
+            border: 1px solid var(--border-color);
+        }
+
+        .modal-checkbox-container input[type="checkbox"] {
+            width: 24px;
+            height: 24px;
+            accent-color: var(--accent-cyan);
+            cursor: pointer;
+            margin-top: 2px;
+        }
+
+        .modal-checkbox-container label {
+            font-size: 0.95rem;
+            color: var(--text-primary);
+            cursor: pointer;
+            line-height: 1.4;
+        }
+
+        .modal-btn {
+            width: 100%;
+            background: var(--accent-cyan);
+            color: var(--bg-obsidian);
+            border: none;
+            padding: 16px;
+            border-radius: 12px;
+            font-weight: 800;
+            font-size: 1.1rem;
+            cursor: pointer;
+            text-align: center;
+            opacity: 0.4;
+            pointer-events: none;
+            transition: opacity 0.2s;
+        }
+
+        .modal-btn.enabled {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        /* Layout Principal */
+        .app-layout {
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            height: 100dvh;
+            width: 100vw;
+            max-width: 600px;
+            margin: 0 auto;
+            background: var(--bg-obsidian);
+        }
+
+        header {
+            background: var(--surface-midnight);
+            border-bottom: 1px solid var(--border-color);
+            padding: 12px 16px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            min-height: 60px;
+        }
+
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .header-right {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .sara-avatar {
+            width: 38px;
+            height: 38px;
+            background: var(--surface-card);
+            border: 1px solid var(--border-color);
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .sara-avatar svg {
+            width: 24px;
+            height: 24px;
+            stroke: var(--accent-cyan);
+            fill: none;
+            stroke-width: 2;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+        }
+
+        @keyframes blink {
+            0%, 90%, 100% { transform: scaleY(1); }
+            95% { transform: scaleY(0.1); }
+        }
+
+        .sara-eyes {
+            transform-origin: 12px 9px;
+            animation: blink 4s infinite;
+        }
+
+        @keyframes talk {
+            0% { transform: scaleY(1) scaleX(1); }
+            25% { transform: scaleY(1.8) scaleX(0.8); }
+            50% { transform: scaleY(0.5) scaleX(1.3); }
+            75% { transform: scaleY(1.6) scaleX(0.9); }
+            100% { transform: scaleY(1) scaleX(1); }
+        }
+
+        .sara-mouth {
+            transform-origin: 12px 15px;
+            transition: transform 0.1s ease;
+        }
+
+        /* A boca só mexe quando a classe speaking está ativa */
+        .sara-avatar.speaking .sara-mouth {
+            animation: talk 0.25s infinite ease-in-out;
+        }
+
+        .shield-btn {
+            background: var(--surface-card);
+            border: 1px solid var(--border-color);
+            border-radius: 10px;
+            width: 38px;
+            height: 38px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+        }
+
+        .shield-icon {
+            width: 16px;
+            height: 16px;
+            background: var(--success-green);
+            clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
+        }
+
+        .shield-btn.alert .shield-icon {
+            background: var(--alert-red);
+            animation: pulse 1s infinite;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); opacity: 1; }
+            50% { transform: scale(1.2); opacity: 0.7; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+
+        .brand-title {
+            font-size: 0.9rem;
+            font-weight: 700;
+            letter-spacing: 0.05em;
+            color: var(--text-primary);
+        }
+
+        .btn-action {
+            background: var(--surface-card);
+            border: 1px solid var(--border-color);
+            color: var(--text-primary);
+            padding: 8px 12px;
+            border-radius: 8px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            cursor: pointer;
+            min-height: 38px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .btn-action:active {
+            background: var(--border-color);
+        }
+
+        /* Telemetria Ticker */
+        .telemetry-ticker {
+            background: var(--surface-midnight);
+            border-bottom: 1px solid var(--border-color);
+            padding: 8px 16px;
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .telemetry-ticker span {
+            color: var(--accent-cyan);
+            font-weight: 600;
+        }
+
+        /* Área de Gráficos e Widgets */
+        .analytics-container {
+            background: var(--bg-obsidian);
+            padding: 10px 16px;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            max-height: 160px;
+        }
+
+        .analytics-card {
+            background: var(--surface-midnight);
+            border: 1px solid var(--border-color);
+            border-radius: 10px;
+            padding: 8px;
+            display: flex;
+            flex-direction: column;
+            height: 140px;
+        }
+
+        .card-header {
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+            font-weight: 700;
+            margin-bottom: 4px;
+            text-transform: uppercase;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .card-content-inner {
+            flex: 1;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .goes-viewer {
+            background: #000;
+            border-radius: 6px;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            padding: 4px;
+            border: 1px solid var(--border-color);
+        }
+
+        .goes-viewer p {
+            font-size: 0.7rem;
+            color: var(--text-secondary);
+            margin-bottom: 6px;
+        }
+
+        .goes-link {
+            font-size: 0.8rem;
+            color: var(--accent-cyan);
+            text-decoration: none;
+            font-weight: 700;
+            background: rgba(56, 189, 248, 0.15);
+            padding: 6px 10px;
+            border-radius: 6px;
+            border: 1px solid rgba(56, 189, 248, 0.4);
+        }
+
+        /* Container do Chat */
+        .main-chat-container {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            padding: 0 16px;
+        }
+
+        .chat-messages {
+            flex: 1;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+            padding: 12px 0;
+        }
+
+        .message {
+            max-width: 90%;
+            padding: 12px 16px;
+            border-radius: 12px;
+            font-size: 1.05rem;
+            line-height: 1.5;
+            word-wrap: break-word;
+        }
+
+        .message.user {
+            background: var(--surface-card);
+            border: 1px solid var(--border-color);
+            align-self: flex-end;
+            color: var(--text-primary);
+            border-bottom-right-radius: 4px;
+        }
+
+        .message.assistant {
+            background: transparent;
+            align-self: flex-start;
+            color: var(--text-secondary);
+            border-left: 3px solid var(--accent-cyan);
+            padding-left: 12px;
+            font-size: 1.05rem;
+        }
+
+        /* Área de Input e Microfone */
+        .input-wrapper {
+            background: var(--surface-midnight);
+            border-top: 1px solid var(--border-color);
+            padding: 12px 16px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .input-row {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            background: var(--surface-card);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 6px 12px;
+        }
+
+        .input-row textarea {
+            flex: 1;
+            background: transparent;
+            border: none;
+            color: var(--text-primary);
+            font-size: 1.05rem;
+            resize: none;
+            outline: none;
+            height: 44px;
+            max-height: 100px;
+            padding-top: 10px;
+        }
+
+        .mic-btn {
+            background: var(--surface-midnight);
+            border: 1px solid var(--border-color);
+            color: var(--accent-cyan);
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            font-size: 1.3rem;
+            flex-shrink: 0;
+        }
+
+        .mic-btn.recording {
+            background: var(--alert-red);
+            color: #fff;
+            border-color: var(--alert-red);
+            animation: pulse 1s infinite;
+        }
+
+        .input-footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .status-text {
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+        }
+
+        .send-btn {
+            background: var(--accent-cyan);
+            color: var(--bg-obsidian);
+            border: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+            font-weight: 700;
+            font-size: 0.95rem;
+            cursor: pointer;
+            min-height: 44px;
+        }
+
+        footer {
+            background: var(--surface-midnight);
+            border-top: 1px solid var(--border-color);
+            padding: 8px 16px;
+            text-align: center;
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Termos de Aceite -->
+    <div class="modal-overlay" id="termsModal" style="display: none;">
+        <div class="modal-card">
+            <h2 class="modal-title">Termo de Operação | G.C.E.</h2>
+            <p class="modal-desc">Defesa Civil Comunitária — Monitoramento do Rio Sarapuí / Sebinho (Mesquita).</p>
+            <ul class="modal-list">
+                <li><span>Privacidade Total:</span> Histórico e dados salvos unicamente no seu dispositivo.</li>
+                <li><span>Fontes Oficiais:</span> Dados meteorológicos Open-Meteo e monitoramento visual GOES-19.</li>
+            </ul>
+            <div class="modal-checkbox-container">
+                <input type="checkbox" id="termsCheck" onchange="toggleAcceptButton()">
+                <label for="termsCheck">Li, compreendi e concordo com os termos operacionais do sistema.</label>
+            </div>
+            <button class="modal-btn" id="acceptBtn" onclick="acceptTerms()">Concordar e Entrar</button>
+        </div>
+    </div>
+
+    <div class="app-layout">
+        <header>
+            <div class="header-left">
+                <div class="sara-avatar" id="saraAvatarContainer" title="Sara - IA Ativa">
+                    <svg viewBox="0 0 24 24">
+                        <path d="M12 2a7 7 0 0 0-7 7v3a5 5 0 0 0 10 0V9a7 7 0 0 0-3-7z" opacity="0.3"/>
+                        <path d="M5 19v1a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-1" />
+                        <g class="sara-eyes">
+                            <circle cx="9.5" cy="9" r="1" fill="var(--accent-cyan)"/>
+                            <circle cx="14.5" cy="9" r="1" fill="var(--accent-cyan)"/>
+                        </g>
+                        <!-- Boca estática em repouso, só mexe ao falar -->
+                        <circle class="sara-mouth" cx="12" cy="15" r="1.2" fill="var(--accent-cyan)"/>
+                    </svg>
+                </div>
+                <button class="shield-btn" id="shieldButton" title="Alarme de Emergência" onclick="toggleAlarm()">
+                    <div class="shield-icon"></div>
+                </button>
+                <span class="brand-title">SARAH AI CORE</span>
+            </div>
+            <div class="header-right">
+                <button class="btn-action" id="installBtn" onclick="installPWA()" style="display: none;">Instalar</button>
+                <button class="btn-action" onclick="shareApp()">Compartilhar</button>
+                <button class="btn-action" onclick="clearHistory()">Limpar</button>
+            </div>
+        </header>
+
+        <div class="telemetry-ticker">
+            <div>LOCAL: <span>Sebinho (Ponte Frigo Éden)</span></div>
+            <div>STATUS: <span id="telemetriaStatus">Sincronizando dados abertos...</span></div>
+        </div>
+
+        <div class="analytics-container">
+            <div class="analytics-card">
+                <div class="card-header"><span>Precipitação</span><span>Open-Meteo</span></div>
+                <div class="card-content-inner">
+                    <canvas id="precipChart"></canvas>
+                </div>
+            </div>
+            <div class="analytics-card">
+                <div class="card-header"><span>Visual Satélite</span><span>GOES-19</span></div>
+                <div class="card-content-inner">
+                    <div class="goes-viewer">
+                        <p>Sudeste (INPE)</p>
+                        <a href="https://www.cptec.inpe.br/dsat/" target="_blank" class="goes-link">Abrir GOES</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="main-chat-container">
+            <div class="chat-messages" id="chatContainer"></div>
+        </div>
+
+        <div class="input-wrapper">
+            <div class="input-row">
+                <textarea id="userInput" placeholder="Digite sua mensagem..." onkeydown="handleKeyDown(event)"></textarea>
+                <button class="mic-btn" id="micBtn" onclick="toggleVoiceInput()" title="Falar com a Sara">🎙️</button>
+            </div>
+            <div class="input-footer">
+                <span class="status-text" id="statusIndicator">Núcleo Operacional Pronto</span>
+                <button class="send-btn" onclick="sendMessage()">Enviar</button>
+            </div>
+        </div>
+
+        <footer>
+            G.C.E. — Grupo a Chave da Esperança (Defesa Civil Comunitária)
+        </footer>
+    </div>
+
+    <script>
+        const pontoSebinho = {
+            comunidade: 'Sebinho',
+            referencia: 'Ponte Frigo Éden',
+            hidrografia: 'Confluência Rio Dona Eugênia / Rio Sarapuí',
+            coords: { lat: -22.78650, lon: -43.42600 }
+        };
+
+        let currentTelemetrySummary = "Telemetria ativa";
+        let precipChartInstance = null;
+        let chatHistory = JSON.parse(localStorage.getItem('sarah_chat_history')) || [];
+        let alarmActive = false;
+        let deferredPrompt = null;
+
+        window.addEventListener('beforeinstallprompt', (e) => {
+            e.preventDefault();
+            deferredPrompt = e;
+            const installBtn = document.getElementById('installBtn');
+            if (installBtn) installBtn.style.display = 'flex';
+        });
+
+        window.installPWA = async function() {
+            if (!deferredPrompt) {
+                alert('O aplicativo já está instalado ou pronto para uso.');
+                return;
+            }
+            deferredPrompt.prompt();
+            const { outcome } = await deferredPrompt.userChoice;
+            if (outcome === 'accepted') {
+                document.getElementById('installBtn').style.display = 'none';
+            }
+            deferredPrompt = null;
+        };
+
+        window.shareApp = function() {
+            if (navigator.share) {
+                navigator.share({
+                    title: 'SARAH AI Core - G.C.E.',
+                    text: 'Monitoramento Hidrológico - Rio Sarapuí / Sebinho',
+                    url: window.location.href
+                }).catch(console.warn);
+            } else {
+                navigator.clipboard.writeText(window.location.href);
+              
