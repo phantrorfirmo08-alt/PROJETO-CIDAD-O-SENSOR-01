@@ -1,0 +1,606 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SARAH AI Core v4.1 | G.C.E.</title>
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#151922">
+    <!-- Chart.js para gráficos de telemetria -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        :root {
+            --bg-obsidian: #0A0D14;
+            --surface-midnight: #151922;
+            --border-color: #262D3D;
+            --accent-cyan: #38BDF8;
+            --text-primary: #F9FAFB;
+            --text-secondary: #9CA3AF;
+            --alert-red: #EF4444;
+            --success-green: #10B981;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-obsidian);
+            color: var(--text-primary);
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        #terms-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(10, 13, 20, 0.98);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+            padding: 20px;
+        }
+
+        .terms-card {
+            background: var(--surface-midnight);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            max-width: 600px;
+            width: 100%;
+            padding: 32px;
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.5);
+        }
+
+        .terms-card h2 {
+            font-size: 1.25rem;
+            font-weight: 600;
+            margin-bottom: 16px;
+            color: var(--text-primary);
+        }
+
+        .terms-card p {
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+            margin-bottom: 20px;
+            line-height: 1.5;
+        }
+
+        .pillars-list {
+            list-style: none;
+            margin-bottom: 24px;
+        }
+
+        .pillars-list li {
+            font-size: 0.8125rem;
+            color: var(--text-secondary);
+            padding: 8px 0;
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            align-items: flex-start;
+            gap: 8px;
+        }
+
+        .pillars-list li::before {
+            content: "-";
+            color: var(--accent-cyan);
+            font-weight: bold;
+        }
+
+        .btn-primary {
+            width: 100%;
+            background: var(--accent-cyan);
+            color: var(--bg-obsidian);
+            border: none;
+            padding: 12px;
+            border-radius: 6px;
+            font-weight: 600;
+            font-size: 0.875rem;
+            cursor: pointer;
+            transition: opacity 0.2s;
+        }
+
+        .btn-primary:hover {
+            opacity: 0.9;
+        }
+
+        header {
+            background: var(--surface-midnight);
+            border-bottom: 1px solid var(--border-color);
+            padding: 10px 24px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            height: 56px;
+        }
+
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .sara-avatar {
+            width: 32px;
+            height: 32px;
+            background: var(--bg-obsidian);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .sara-avatar svg {
+            width: 20px;
+            height: 20px;
+            stroke: var(--accent-cyan);
+            fill: none;
+            stroke-width: 1.5;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+        }
+
+        @keyframes blink {
+            0%, 90%, 100% { transform: scaleY(1); }
+            95% { transform: scaleY(0.1); }
+        }
+
+        .sara-eyes {
+            transform-origin: center;
+            animation: blink 4s infinite;
+        }
+
+        @keyframes dataPulse {
+            0% { opacity: 0.4; }
+            50% { opacity: 1; }
+            100% { opacity: 0.4; }
+        }
+
+        .data-node {
+            animation: dataPulse 2s infinite ease-in-out;
+        }
+
+        .shield-btn {
+            background: none;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            width: 32px;
+            height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .shield-icon {
+            width: 14px;
+            height: 14px;
+            background: var(--success-green);
+            clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
+            transition: background 0.3s ease;
+        }
+
+        .shield-btn.alert .shield-icon {
+            background: var(--alert-red);
+            animation: pulse 1.5s infinite;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); opacity: 1; }
+            50% { transform: scale(1.15); opacity: 0.7; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+
+        .brand-title {
+            font-size: 0.8rem;
+            font-weight: 600;
+            letter-spacing: 0.05em;
+            color: var(--text-primary);
+        }
+
+        .telemetry-ticker {
+            background: var(--bg-obsidian);
+            border-bottom: 1px solid var(--border-color);
+            padding: 4px 24px;
+            font-size: 0.65rem;
+            color: var(--text-secondary);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .telemetry-ticker span {
+            color: var(--accent-cyan);
+            font-weight: 500;
+        }
+
+        /* Painel Analítico: Gráficos e GOES-19 Lado a Lado */
+        .analytics-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 10px;
+            padding: 10px 24px 0 24px;
+            background: var(--bg-obsidian);
+        }
+
+        .analytics-card {
+            background: var(--surface-midnight);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 10px;
+            height: 130px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .card-header {
+            font-size: 0.65rem;
+            color: var(--text-secondary);
+            font-weight: 600;
+            margin-bottom: 4px;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .card-content-inner {
+            flex: 1;
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+
+        /* Estilo do Monitor GOES-19 */
+        .goes-viewer {
+            background: #000;
+            border-radius: 6px;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            padding: 4px;
+            border: 1px solid var(--border-color);
+            position: relative;
+        }
+
+        .goes-viewer p {
+            font-size: 0.65rem;
+            color: var(--text-secondary);
+            margin-bottom: 4px;
+        }
+
+        .goes-link {
+            font-size: 0.7rem;
+            color: var(--accent-cyan);
+            text-decoration: none;
+            font-weight: 600;
+            background: rgba(56, 189, 248, 0.1);
+            padding: 4px 8px;
+            border-radius: 4px;
+            border: 1px solid rgba(56, 189, 248, 0.3);
+            transition: background 0.2s;
+        }
+
+        .goes-link:hover {
+            background: rgba(56, 189, 248, 0.2);
+        }
+
+        .main-container {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            max-width: 950px;
+            width: 100%;
+            margin: 0 auto;
+            padding: 12px 24px;
+            overflow: hidden;
+        }
+
+        .chat-container {
+            flex: 1;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            padding-bottom: 8px;
+        }
+
+        .message {
+            max-width: 85%;
+            padding: 10px 14px;
+            border-radius: 8px;
+            font-size: 0.85rem;
+            line-height: 1.4;
+        }
+
+        .message.user {
+            background: var(--surface-midnight);
+            border: 1px solid var(--border-color);
+            align-self: flex-end;
+            color: var(--text-primary);
+        }
+
+        .message.assistant {
+            background: transparent;
+            align-self: flex-start;
+            color: var(--text-secondary);
+            border-left: 2px solid var(--accent-cyan);
+            padding-left: 10px;
+        }
+
+        .input-area {
+            background: var(--surface-midnight);
+            border: 1px solid var(--border-color);
+            border-radius: 10px;
+            padding: 10px;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .input-area textarea {
+            width: 100%;
+            background: transparent;
+            border: none;
+            color: var(--text-primary);
+            font-size: 0.85rem;
+            resize: none;
+            outline: none;
+            height: 32px;
+            max-height: 80px;
+        }
+
+        .input-footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-top: 1px solid var(--border-color);
+            padding-top: 6px;
+        }
+
+        .btn-icon {
+            background: transparent;
+            border: 1px solid var(--border-color);
+            color: var(--text-secondary);
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 0.7rem;
+            cursor: pointer;
+        }
+
+        .btn-icon:hover {
+            color: var(--text-primary);
+            border-color: var(--accent-cyan);
+        }
+
+        .send-btn {
+            background: var(--accent-cyan);
+            color: var(--bg-obsidian);
+            border: none;
+            padding: 6px 14px;
+            border-radius: 4px;
+            font-weight: 600;
+            font-size: 0.75rem;
+            cursor: pointer;
+        }
+
+        footer {
+            background: var(--surface-midnight);
+            border-top: 1px solid var(--border-color);
+            padding: 6px 24px;
+            text-align: center;
+            font-size: 0.65rem;
+            color: var(--text-secondary);
+        }
+    </style>
+</head>
+<body>
+
+    <div id="terms-modal">
+        <div class="terms-card">
+            <h2>Termos de Responsabilidade e Operação</h2>
+            <p>Para inicializar o sistema SARAH AI Core, é obrigatório o aceite dos pilares de segurança e prevenção:</p>
+            <ul class="pillars-list">
+                <li>Conformidade com os protocolos de Defesa Civil e monitoramento da bacia do Rio Sarapuí.</li>
+                <li>Uso ético e seguro de dados de telemetria meteorológica e comunitária.</li>
+                <li>Privacidade absoluta com armazenamento local de histórico no dispositivo.</li>
+                <li>Ferramenta analítica de apoio preventivo, operando em conjunto com fontes abertas (Open-Meteo e GOES-19).</li>
+            </ul>
+            <button class="btn-primary" onclick="acceptTerms()">Aceitar e Iniciar Sistema</button>
+        </div>
+    </div>
+
+    <header>
+        <div class="header-left">
+            <div class="sara-avatar" title="Sara - IA Ativa">
+                <svg viewBox="0 0 24 24">
+                    <path d="M12 2a7 7 0 0 0-7 7v3a5 5 0 0 0 10 0V9a7 7 0 0 0-3-7z" opacity="0.3"/>
+                    <path d="M5 19v1a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-1" />
+                    <g class="sara-eyes">
+                        <circle cx="9.5" cy="9" r="0.75" fill="var(--accent-cyan)"/>
+                        <circle cx="14.5" cy="9" r="0.75" fill="var(--accent-cyan)"/>
+                    </g>
+                    <circle class="data-node" cx="12" cy="15" r="1" fill="var(--accent-cyan)"/>
+                </svg>
+            </div>
+            <button class="shield-btn" id="shieldButton" title="Status Normal / Botão de Alarme" onclick="toggleAlarm()">
+                <div class="shield-icon"></div>
+            </button>
+            <span class="brand-title">SARAH AI CORE V4.1 — G.C.E.</span>
+        </div>
+        <div class="header-right">
+            <button class="btn-icon" onclick="clearHistory()" title="Limpar Sessão">Limpar Sessão</button>
+        </div>
+    </header>
+
+    <div class="telemetry-ticker">
+        <div>ÁREA: <span id="telemetriaArea">Sebinho (Ponte Frigo Éden)</span></div>
+        <div>CONFLUÊNCIA: <span id="telemetriaHidro">Rio Dona Eugênia / Rio Sarapuí</span></div>
+        <div>STATUS: <span id="telemetriaStatus">Sincronizando telemetria...</span></div>
+    </div>
+
+    <!-- Painel Analítico Triplo: Precipitação, Nível e Satélite GOES-19 -->
+    <div class="analytics-grid">
+        <div class="analytics-card">
+            <div class="card-header"><span>Precipitação (mm/h)</span><span>Open-Meteo</span></div>
+            <div class="card-content-inner">
+                <canvas id="precipChart"></canvas>
+            </div>
+        </div>
+        <div class="analytics-card">
+            <div class="card-header"><span>Tendência Bacia (%)</span><span>Hidrologia</span></div>
+            <div class="card-content-inner">
+                <canvas id="hydroChart"></canvas>
+            </div>
+        </div>
+        <div class="analytics-card">
+            <div class="card-header"><span>Visual Nowcasting</span><span>GOES-19 (INPE/DSAT)</span></div>
+            <div class="card-content-inner">
+                <div class="goes-viewer">
+                    <p>IR & Vapor d'Água (Sudeste)</p>
+                    <a href="https://www.cptec.inpe.br/dsat/" target="_blank" class="goes-link">Abrir Loop GOES-19</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="main-container">
+        <div class="chat-container" id="chatContainer"></div>
+
+        <div class="input-area">
+            <textarea id="userInput" placeholder="Envie um comando de telemetria ou consulta..." onkeydown="handleKeyDown(event)"></textarea>
+            <div class="input-footer">
+                <div class="action-buttons">
+                    <span id="statusIndicator" style="font-size: 0.65rem; color: var(--text-secondary); align-self: center;">Núcleo Operacional Ativo</span>
+                </div>
+                <button class="send-btn" onclick="sendMessage()">Enviar</button>
+            </div>
+        </div>
+    </div>
+
+    <footer>
+        G.C.E. (Grupo a Chave da Esperança) — Monitoramento Hidrológico e Defesa Civil Comunitária
+    </footer>
+
+    <script>
+        const pontoSebinho = {
+            comunidade: 'Sebinho',
+            referencia: 'Ponte Frigo Éden',
+            hidrografia: 'Confluência do Rio Dona Eugênia no Rio Sarapuí',
+            coords: { lat: -22.78650, lon: -43.42600 }
+        };
+
+        let currentTelemetrySummary = "Sincronizando dados abertos...";
+        let precipChartInstance = null;
+        let hydroChartInstance = null;
+
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('sw.js')
+                    .then(reg => reg.update())
+                    .catch(err => console.log('SW error:', err));
+                
+                initCharts();
+                fetchAndRenderTelemetry();
+            });
+        }
+
+        function initCharts() {
+            const commonOptions = {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { legend: { display: false } },
+                scales: {
+                    x: {
+                        grid: { color: '#262D3D' },
+                        ticks: { color: '#9CA3AF', font: { size: 8 } }
+                    },
+                    y: {
+                        grid: { color: '#262D3D' },
+                        ticks: { color: '#9CA3AF', font: { size: 8 } },
+                        beginAtZero: true
+                    }
+                }
+            };
+
+            const ctxPrecip = document.getElementById('precipChart').getContext('2d');
+            precipChartInstance = new Chart(ctxPrecip, {
+                type: 'line',
+                data: {
+                    labels: [],
+                    datasets: [{
+                        data: [],
+                        borderColor: '#38BDF8',
+                        backgroundColor: 'rgba(56, 189, 248, 0.1)',
+                        fill: true,
+                        tension: 0.3,
+                        borderWidth: 1.5
+                    }]
+                },
+                options: commonOptions
+            });
+
+            const ctxHydro = document.getElementById('hydroChart').getContext('2d');
+            hydroChartInstance = new Chart(ctxHydro, {
+                type: 'line',
+                data: {
+                    labels: [],
+                    datasets: [{
+                        data: [],
+                        borderColor: '#10B981',
+                        backgroundColor: 'rgba(16, 185, 129, 0.1)',
+                        fill: true,
+                        tension: 0.3,
+                        borderWidth: 1.5
+                    }]
+                },
+                options: commonOptions
+            });
+        }
+
+        async function fetchAndRenderTelemetry() {
+            try {
+                const url = `https://api.open-meteo.com/v1/forecast?latitude=${pontoSebinho.coords.lat}&longitude=${pontoSebinho.coords.lon}&hourly=precipitation,rain&current=precipitation,rain`;
+                const response = await fetch(url);
+                const data = await response.json();
+
+                if (data && data.hourly) {
+                    const nowIndex = new Date().getHours();
+                    const hoursLabels = data.hourly.time.slice(nowIndex, nowIndex + 12).map(t => t.split('T')[1]);
+                    const precipValues = data.hourly.precipitation.slice(nowIndex, nowIndex + 12);
+                    const hydroValues = precipValues.map(p => Math.min(100, Math.round(30 + (p * 15))));
+
+                    precipChartInstance.data.labels = hoursLabels;
+                    precipChartInstance.data.datasets[0].data = precipValues;
+                    precipChartInstance.update();
+
+                    hydroChartInstance.data.labels = hoursLabels;
+                    hydroChartInstance.data.datasets[0].data = hydroValues;
+                    hydroChartInstance.update();
+
+                    const currentPrecip = data.current.precipitation;
+                    currentTelemetrySummary = `Precipitação: ${currentPrecip} mm/h | GOES-19 Ativo (Nowcasting)`;
+                    document.getElementById('telemetriaStatus').textContent = currentTelemetrySummary;
+                }
+            } catch (error) {
+                currentTelemetrySummary = "Rede aberta operando em modo offline/fallback";
+                document.getElementById('telemetriaStatus').textContent = currentTelemetrySummary;
+            }
+        }
+
+        let chatHistory = JSON.parse(localStorage.getItem('sarah
