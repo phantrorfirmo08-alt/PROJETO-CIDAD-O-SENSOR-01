@@ -1,0 +1,594 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SARAH AI Core v4.0 | G.C.E.</title>
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#151922">
+    <style>
+        :root {
+            --bg-obsidian: #0A0D14;
+            --surface-midnight: #151922;
+            --border-color: #262D3D;
+            --accent-cyan: #38BDF8;
+            --text-primary: #F9FAFB;
+            --text-secondary: #9CA3AF;
+            --alert-red: #EF4444;
+            --success-green: #10B981;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-obsidian);
+            color: var(--text-primary);
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        /* Modal de Termos de Responsabilidade (4 Pilares) */
+        #terms-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(10, 13, 20, 0.95);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            padding: 20px;
+        }
+
+        .terms-card {
+            background: var(--surface-midnight);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            max-width: 600px;
+            width: 100%;
+            padding: 32px;
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.5);
+        }
+
+        .terms-card h2 {
+            font-size: 1.25rem;
+            font-weight: 600;
+            margin-bottom: 16px;
+            color: var(--text-primary);
+        }
+
+        .terms-card p {
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+            margin-bottom: 20px;
+            line-height: 1.5;
+        }
+
+        .pillars-list {
+            list-style: none;
+            margin-bottom: 24px;
+        }
+
+        .pillars-list li {
+            font-size: 0.8125rem;
+            color: var(--text-secondary);
+            padding: 8px 0;
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            align-items: flex-start;
+            gap: 8px;
+        }
+
+        .pillars-list li::before {
+            content: "-";
+            color: var(--accent-cyan);
+            font-weight: bold;
+        }
+
+        .btn-primary {
+            width: 100%;
+            background: var(--accent-cyan);
+            color: var(--bg-obsidian);
+            border: none;
+            padding: 12px;
+            border-radius: 6px;
+            font-weight: 600;
+            font-size: 0.875rem;
+            cursor: pointer;
+            transition: opacity 0.2s;
+        }
+
+        .btn-primary:hover {
+            opacity: 0.9;
+        }
+
+        /* Header OpenAI Style */
+        header {
+            background: var(--surface-midnight);
+            border-bottom: 1px solid var(--border-color);
+            padding: 12px 24px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            height: 60px;
+        }
+
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        /* Ícone Animado da Sara (SVG + CSS) */
+        .sara-avatar {
+            width: 36px;
+            height: 36px;
+            background: var(--bg-obsidian);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .sara-avatar svg {
+            width: 24px;
+            height: 24px;
+            stroke: var(--accent-cyan);
+            fill: none;
+            stroke-width: 1.5;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+        }
+
+        @keyframes blink {
+            0%, 90%, 100% { transform: scaleY(1); }
+            95% { transform: scaleY(0.1); }
+        }
+
+        .sara-eyes {
+            transform-origin: center;
+            animation: blink 4s infinite;
+        }
+
+        @keyframes dataPulse {
+            0% { opacity: 0.4; }
+            50% { opacity: 1; }
+            100% { opacity: 0.4; }
+        }
+
+        .data-node {
+            animation: dataPulse 2s infinite ease-in-out;
+        }
+
+        /* Escudo Dinâmico & Alarme */
+        .shield-btn {
+            background: none;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            width: 36px;
+            height: 36px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            position: relative;
+            transition: all 0.3s ease;
+        }
+
+        .shield-icon {
+            width: 16px;
+            height: 16px;
+            background: var(--success-green);
+            clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
+            transition: background 0.3s ease;
+        }
+
+        .shield-btn.alert .shield-icon {
+            background: var(--alert-red);
+            animation: pulse 1.5s infinite;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); opacity: 1; }
+            50% { transform: scale(1.15); opacity: 0.7; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+
+        .brand-title {
+            font-size: 0.875rem;
+            font-weight: 600;
+            letter-spacing: 0.05em;
+            color: var(--text-primary);
+        }
+
+        .header-right {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        /* Painel Retrátil Groq API Key */
+        .api-panel-container {
+            position: relative;
+        }
+
+        .api-toggle-btn {
+            background: transparent;
+            border: 1px solid var(--border-color);
+            color: var(--text-secondary);
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-size: 0.75rem;
+            cursor: pointer;
+        }
+
+        .api-dropdown {
+            position: absolute;
+            right: 0;
+            top: 45px;
+            background: var(--surface-midnight);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 16px;
+            width: 280px;
+            display: none;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.4);
+            z-index: 100;
+        }
+
+        .api-dropdown.active {
+            display: block;
+        }
+
+        .api-dropdown input {
+            width: 100%;
+            background: var(--bg-obsidian);
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            padding: 8px;
+            color: var(--text-primary);
+            font-size: 0.75rem;
+            margin-bottom: 8px;
+        }
+
+        .btn-sm {
+            width: 100%;
+            background: var(--accent-cyan);
+            color: var(--bg-obsidian);
+            border: none;
+            padding: 6px;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        /* Layout Principal & Chat */
+        .main-container {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            max-width: 800px;
+            width: 100%;
+            margin: 0 auto;
+            padding: 20px;
+            overflow: hidden;
+        }
+
+        .chat-container {
+            flex: 1;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            padding-bottom: 20px;
+        }
+
+        .message {
+            max-width: 85%;
+            padding: 12px 16px;
+            border-radius: 8px;
+            font-size: 0.875rem;
+            line-height: 1.5;
+        }
+
+        .message.user {
+            background: var(--surface-midnight);
+            border: 1px solid var(--border-color);
+            align-self: flex-end;
+            color: var(--text-primary);
+        }
+
+        .message.assistant {
+            background: transparent;
+            align-self: flex-start;
+            color: var(--text-secondary);
+            border-left: 2px solid var(--accent-cyan);
+            padding-left: 12px;
+        }
+
+        /* Input Area */
+        .input-area {
+            background: var(--surface-midnight);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 12px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .input-area textarea {
+            width: 100%;
+            background: transparent;
+            border: none;
+            color: var(--text-primary);
+            font-size: 0.875rem;
+            resize: none;
+            outline: none;
+            height: 40px;
+            max-height: 120px;
+        }
+
+        .input-footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-top: 1px solid var(--border-color);
+            padding-top: 8px;
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 8px;
+        }
+
+        .btn-icon {
+            background: transparent;
+            border: 1px solid var(--border-color);
+            color: var(--text-secondary);
+            padding: 6px 10px;
+            border-radius: 6px;
+            font-size: 0.75rem;
+            cursor: pointer;
+        }
+
+        .btn-icon:hover {
+            color: var(--text-primary);
+            border-color: var(--accent-cyan);
+        }
+
+        .send-btn {
+            background: var(--accent-cyan);
+            color: var(--bg-obsidian);
+            border: none;
+            padding: 6px 16px;
+            border-radius: 6px;
+            font-weight: 600;
+            font-size: 0.75rem;
+            cursor: pointer;
+        }
+
+        /* Rodapé */
+        footer {
+            background: var(--surface-midnight);
+            border-top: 1px solid var(--border-color);
+            padding: 8px 24px;
+            text-align: center;
+            font-size: 0.7rem;
+            color: var(--text-secondary);
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Modal de Termos de Responsabilidade (4 Pilares) -->
+    <div id="terms-modal">
+        <div class="terms-card">
+            <h2>Termos de Responsabilidade e Operação</h2>
+            <p>Para inicializar o sistema SARAH AI Core, é obrigatório o aceite dos quatro pilares normativos de segurança:</p>
+            <ul class="pillars-list">
+                <li>Conformidade estrita com os protocolos oficiais de Defesa Civil e monitoramento hidrológico da bacia do Rio Sarapuí.</li>
+                <li>Uso ético, seguro e restrito dos dados de telemetria comunitária e habitacional.</li>
+                <li>Privacidade absoluta garantida pelo armazenamento local de credenciais e histórico no dispositivo.</li>
+                <li>O sistema opera como ferramenta de suporte analítico e orientativo, não substituindo decisões oficiais de evacuação.</li>
+            </ul>
+            <button class="btn-primary" onclick="acceptTerms()">Aceitar e Iniciar Sistema</button>
+        </div>
+    </div>
+
+    <!-- Header -->
+    <header>
+        <div class="header-left">
+            <div class="sara-avatar" title="Sara - IA Ativa">
+                <svg viewBox="0 0 24 24">
+                    <path d="M12 2a7 7 0 0 0-7 7v3a5 5 0 0 0 10 0V9a7 7 0 0 0-3-7z" opacity="0.3"/>
+                    <path d="M5 19v1a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-1" />
+                    <g class="sara-eyes">
+                        <circle cx="9.5" cy="9" r="0.75" fill="var(--accent-cyan)"/>
+                        <circle cx="14.5" cy="9" r="0.75" fill="var(--accent-cyan)"/>
+                    </g>
+                    <circle class="data-node" cx="12" cy="15" r="1" fill="var(--accent-cyan)"/>
+                </svg>
+            </div>
+            <button class="shield-btn" id="shieldButton" title="Status Normal / Botão de Alarme de Emergência" onclick="toggleAlarm()">
+                <div class="shield-icon"></div>
+            </button>
+            <span class="brand-title">SARAH AI CORE V4.0</span>
+        </div>
+        <div class="header-right">
+            <button class="btn-icon" onclick="clearHistory()" title="Limpar Conversa">Limpar Sessão</button>
+            <div class="api-panel-container">
+                <button class="api-toggle-btn" onclick="toggleApiPanel()">Configurar API</button>
+                <div class="api-dropdown" id="apiDropdown">
+                    <input type="password" id="apiKeyInput" placeholder="Insira a Groq API Key">
+                    <button class="btn-sm" onclick="saveApiKey()">Salvar Credencial</button>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Container / Chat -->
+    <div class="main-container">
+        <div class="chat-container" id="chatContainer"></div>
+
+        <div class="input-area">
+            <textarea id="userInput" placeholder="Envie um comando ou consulta de telemetria..." onkeydown="handleKeyDown(event)"></textarea>
+            <div class="input-footer">
+                <div class="action-buttons">
+                    <span id="statusIndicator" style="font-size: 0.7rem; color: var(--text-secondary); align-self: center;">Sistema Conectado</span>
+                </div>
+                <button class="send-btn" onclick="sendMessage()">Enviar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer>
+        G.C.E. (Grupo a Chave da Esperança) — SARAH AI Core v4.0 | Monitoramento Hidrológico (Rio Sarapuí) e Defesa Civil Comunitária
+    </footer>
+
+    <script>
+        // Registro do Service Worker para PWA
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('sw.js')
+                    .then(reg => console.log('SW registrado com sucesso:', reg.scope))
+                    .catch(err => console.log('Falha ao registrar SW:', err));
+            });
+        }
+
+        // Estado da Aplicação
+        let chatHistory = JSON.parse(localStorage.getItem('sarah_chat_history')) || [];
+        let sessionInitialized = sessionStorage.getItem('sarah_session_init') === 'true';
+        let alarmActive = false;
+
+        window.onload = function() {
+            if (localStorage.getItem('sarah_terms_accepted') === 'true') {
+                document.getElementById('terms-modal').style.display = 'none';
+            }
+            renderChat();
+            if (!sessionInitialized && chatHistory.length === 0 && localStorage.getItem('sarah_terms_accepted') === 'true') {
+                triggerInitialGreeting();
+            }
+        };
+
+        function acceptTerms() {
+            localStorage.setItem('sarah_terms_accepted', 'true');
+            document.getElementById('terms-modal').style.display = 'none';
+            if (!sessionInitialized && chatHistory.length === 0) {
+                triggerInitialGreeting();
+            }
+        }
+
+        function toggleApiPanel() {
+            const dropdown = document.getElementById('apiDropdown');
+            dropdown.classList.toggle('active');
+        }
+
+        function saveApiKey() {
+            const key = document.getElementById('apiKeyInput').value.trim();
+            if (key) {
+                localStorage.setItem('groq_api_key', key);
+                document.getElementById('apiKeyInput').value = '';
+                document.getElementById('apiDropdown').classList.remove('active');
+                alert('Chave de API salva com sucesso.');
+            }
+        }
+
+        function toggleAlarm() {
+            alarmActive = !alarmActive;
+            const shield = document.getElementById('shieldButton');
+            if (alarmActive) {
+                shield.classList.add('alert');
+                alert('ALARME DE EMERGÊNCIA ACIONADO: Protocolo de alerta da Defesa Civil ativado na bacia do Rio Sarapuí.');
+            } else {
+                shield.classList.remove('alert');
+                alert('Alarme desativado. Sistema retornado ao status operacional normal.');
+            }
+        }
+
+        function getBrasiliaGreeting() {
+            const now = new Date();
+            const utc = now.getTime() + (now.getTimezoneOffset() * 60000);
+            const brasiliaTime = new Date(utc - (3 * 3600000));
+            const hour = brasiliaTime.getHours();
+
+            if (hour >= 0 && hour < 5) return "Boa madrugada";
+            if (hour >= 5 && hour < 12) return "Bom dia";
+            if (hour >= 12 && hour < 18) return "Boa tarde";
+            return "Boa noite";
+        }
+
+        function triggerInitialGreeting() {
+            const greeting = getBrasiliaGreeting();
+            const introMessage = `${greeting}, eu sou a Sara, assistente meteorológica do projeto Cidadão Sensor. Em que posso ajudar?`;
+            
+            chatHistory.push({ role: 'assistant', content: introMessage });
+            sessionStorage.setItem('sarah_session_init', 'true');
+            sessionInitialized = true;
+            saveAndRender();
+        }
+
+        async function sendMessage() {
+            const input = document.getElementById('userInput');
+            const text = input.value.trim();
+            if (!text) return;
+
+            input.value = '';
+
+            chatHistory.push({ role: 'user', content: text });
+            saveAndRender();
+
+            const apiKey = localStorage.getItem('groq_api_key');
+            const container = document.getElementById('chatContainer');
+
+            const loadingId = 'loading-' + Date.now();
+            const loadingDiv = document.createElement('div');
+            loadingDiv.className = 'message assistant';
+            loadingDiv.id = loadingId;
+            loadingDiv.textContent = 'Processando dados de telemetria...';
+            container.appendChild(loadingDiv);
+            container.scrollTop = container.scrollHeight;
+
+            if (!apiKey) {
+                document.getElementById(loadingId).textContent = 'Erro: Chave Groq API Key não configurada. Configure no menu superior.';
+                return;
+            }
+
+            try {
+                const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${apiKey}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        model: 'llama-3.3-70b-versatile',
+                        messages: [
+                            {
+                                role: 'system',
+                                content: 'Você é a SARAH, assistente de inteligência artificial do projeto G.C.E. (Grupo a Chave da Esperança) focada em monitoramento hidrológico da bacia do Rio Sarapuí e Defesa Civil. Responda de forma profissional, direta e técnica. NUNCA repita saudações institucionais ou apresentações nas mensagens subsequentes; vá direto ao ponto solicitado pelo usuário. Zero emojis.'
+                            },
+                            ...chatHistory.map(m => ({ role: m.role, content: m.content }))
+                        ],
+                        temperature: 0.3
+                    })
+                });
+
+                const data = await response.json();
+                document.getElementById(loadingId).remove();
+
+                if (data.choices && data.choices[0]) {
+                    const assistantReply = data.choices[0].message.content;
+  
