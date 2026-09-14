@@ -1,9 +1,0 @@
-{
-  "name": "SARAH AI Core v4.0",
-  "short_name": "SARAH AI",
-  "start_url": "./index.html",
-  "display": "standalone",
-  "background_color": "#0A0D14",
-  "theme_color": "#151922",
-  "icons": []
-}
