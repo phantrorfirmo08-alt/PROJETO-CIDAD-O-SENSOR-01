@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
+<meta name="theme-color" content="#0a1020">
+<title>Cidadão Sensor - Defesa Civil Digital Comunitária</title>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:system-ui;background:#070b16;color:#e5e7eb;display:flex;flex-direction:column;height:100vh;height:100dvh}
+header{background:#0f172a;border-bottom:1px solid #1e293b;padding:12px 16px;display:flex;justify-content:space-between;align-items:center}
+#barra{display:flex;gap:8px;flex-wrap:wrap;padding:10px;background:#0b1324;border-bottom:1px solid #1e293b}
+#barra button{padding:10px 14px;border-radius:8px;border:1px solid #243049;background:#16203a;color:#d1d5db;font-size:13px}
+#barra button.ativo{background:#4f46e5;border-color:#4f46e5;color:#fff}
+#chat{flex:1;overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:10px;background:#080c18}
+.msg{max-width:88%;padding:12px 16px;border-radius:14px;line-height:1.5;font-size:14px;word-break:break-word}
+.user{align-self:flex-end;background:#4f46e5;color:#fff;border-bottom-right-radius:4px}
+.bot{align-self:flex-start;background:#151e33;border:1px solid #23304d}
+.painel{display:none;background:#0b1324;border-top:1px solid #1e293b}
+.painel.aberto{display:block}
+#mapa{height:420px;width:100%;background:#0f172a}
+#graficoBox{padding:14px}
+footer{padding:14px;background:#0f172a;border-top:1px solid #1e293b;text-align:center;line-height:1.5}
+footer small{display:block;font-size:11px}
+#inpArea{display:flex;gap:8px;padding:10px;background:#0f172a;border-top:1px solid #1e293b}
+#inp{flex:1;padding:14px;border-radius:10px;border:1px solid #243049;background:#0b1324;color:#fff;outline:none;font-size:16px}
+#env{padding:0 18px;border-radius:10px;border:none;background:#4f46e5;color:#fff;font-weight:bold}
+#modalTermos{display:none;position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:9999;align-items:center;justify-content:center;padding:20px}
+#modalTermos.aberto{display:flex}
+#modalBox{max-width:520px;background:#0f172a;border:1px solid #334155;border-radius:16px;padding:20px;max-height:85vh;overflow-y:auto}
+#modalBox button{width:100%;padding:14px;border-radius:10px;border:none;background:#4f46e5;color:#fff;font-weight:bold;margin-top:12px}
+</style>
+</head>
+<body>
+<header>
+<div><b>CIDADÃO SENSOR</b><br><small id="sauda">Defesa Civil Digital Comunitária</small></div>
+<div style="text-align:right"><small id="hora"></small><br><small style="font-size:10px;opacity:.7">Mesquita - Sebinho - RJ</small></div>
+</header>
+
+<div id="barra">
+<button onclick="togglePainel('painelMapa',this)">Mapa do Tempo</button>
+<button onclick="togglePainel('painelGrafico',this)">Gráfico</button>
+<button onclick="instalarApp()">Instalar App</button>
+<button onclick="compartilhar()">Compartilhar</button>
+</div>
+
+<div id="chat"></div>
+
+<div id="painelMapa" class="painel"><div id="mapa"></div><div style="padding:8px 14px;font-size:11px;opacity:.6">Centro: Comunidade do Sebinho - Jurisdição: Via Light até linha férrea | Fonte: OpenStreetMap</div></div>
+<div id="painelGrafico" class="painel"><div id="graficoBox"><canvas id="chart"></canvas><div id="fonteGrafico" style="font-size:11px;opacity:.6;margin-top:8px"></div></div></div>
+
+<div id="inpArea"><input id="inp" placeholder="Digite sua dúvida..."><button id="env" onclick="enviar()">Enviar</button></div>
+
+<footer>
+<small><b>Todos os direitos reservados 2024-2028 Grupo A Chave da Esperança, Mesquita, Sebinho, RJ</b></small>
+<small>Defesa Civil Comunitária</small>
+<small style="margin-top:4px">Cidadão Sensor, Defesa Civil Digital Comunitária</small>
+</footer>
+
+<div id="modalTermos">
+<div id="modalBox">
+<h3>Termos de Responsabilidade</h3>
+<p><b>Cidadão Sensor - Defesa Civil Digital Comunitária</b></p>
+<p>App comunitário, preventivo e informativo. Não substitui os canais oficiais da Defesa Civil (199).</p>
+<p><b>4 Pilares:</b> 1. Prevenção 2. Monitoramento Comunitário 3. Comunicação 4. Resposta Solidária</p>
+<p><b>LGPD - Lei Federal 13.709/18:</b> Dados de localização aproximada usados só para monitoramento climático local. Sem compartilhamento. Exclusão a qualquer momento.</p>
+<p>Área: Comunidade do Sebinho, Mesquita-RJ, entre Via Light e linha férrea.</p>
+<button onclick="aceitarTermos()">Concordo e Continuar</button>
+</div>
+</div>
+
+<script>
+function getBrasilia(){
+  try{
+    const agora = new Date();
+    const fmt = new Intl.DateTimeFormat('pt-BR',{timeZone:'America/Sao_Paulo',hour:'2-digit',minute:'2-digit',hour12:false});
+    const fmtFull = new Intl.DateTimeFormat('pt-BR',{timeZone:'America/Sao_Paulo',day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'});
+    const partes = fmt.formatToParts(agora);
+    const h = parseInt(partes.find(p=>p.type==='hour').value);
+    let saud='Boa noite'; if(h>=5&&h<12) saud='Bom dia'; else if(h<18) saud='Boa tarde';
+    document.getElementById('sauda').textContent = saud+' • Defesa Civil Digital Comunitária';
+    document.getElementById('hora').textContent = fmtFull.format(agora)+' - Brasília';
+    return saud;
+  }catch(e){ return 'Olá'; }
+}
+const chat=document.getElementById('chat');
+function addMsg(t,c){const d=document.createElement('div');d.className='msg '+c;d.innerHTML=t;chat.appendChild(d);chat.scrollTop=chat.scrollHeight;}
+addMsg(getBrasilia()+'! Meu nome é Sara, sou assistente meteorológica do projeto Cidadão Sensor. Em que posso te ajudar?','bot');
+
+function enviar(){
+  const i=document.getElementById('inp'); if(!i.value.trim()) return;
+  const txt=i.value; addMsg(txt,'user'); i.value='';
+  setTimeout(()=>{ addMsg('Anotado. Monitorando a área central do Sebinho. Abra o Mapa ou Gráfico nos botões acima para ver os dados reais.','bot'); },500);
+}
+document.getElementById('inp').addEventListener('keydown',e=>{if(e.key==='Enter')enviar();});
+
+let mapa=null, mapaOk=false, graficoOk=false, chartInst=null;
+function togglePainel(id,btn){
+  const el=document.getElementById(id);
+  const jaAberto=el.classList.contains('aberto');
+  document.querySelectorAll('.painel').forEach(p=>p.classList.remove('aberto'));
+  document.querySelectorAll('#barra button').forEach(b=>b.classList.remove('ativo'));
+  if(!jaAberto){
+    el.classList.add('aberto'); btn.classList.add('ativo');
+    if(id==='painelMapa') initMapa();
+    if(id==='painelGrafico') initGrafico();
+  }
+}
+function initMapa(){
+  if(mapaOk && mapa){ setTimeout(()=>mapa.invalidateSize(),200); return; }
+  mapaOk=true;
+  const lat=-22.7830, lng=-43.4290;
+  mapa=L.map('mapa').setView([lat,lng],16);
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19,attribution:'© OpenStreetMap'}).addTo(mapa);
+  const area=[[-22.7795,-43.4335],[-22.7795,-43.4240],[-22.7865,-43.4240],[-22.7865,-43.4335]];
+  L.polygon(area,{color:'#4f46e5',weight:2,dashArray:'6 6',fillOpacity:0.12}).addTo(mapa);
+  L.marker([lat,lng]).addTo(mapa).bindPopup('Comunidade do Sebinho<br>Centro').openPopup();
+  setTimeout(()=>{mapa.invalidateSize();},300);
+  setTimeout(()=>{mapa.invalidateSize();},800);
+}
+async function initGrafico(){
+  if(graficoOk) return;
+  graficoOk=true;
+  try{
+    const r=await fetch('https://api.open-meteo.com/v1/forecast?latitude=-22.783&longitude=-43.429&hourly=temperature_2m,precipitation&forecast_days=2&timezone=America%2FSao_Paulo');
+    const d=await r.json();
+    const temps=d.hourly.temperature_2m.slice(0,24);
+    const prec=d.hourly.precipitation.slice(0,24);
+    const horas=d.hourly.time.slice(0,24).map(t=>t.split('T')[1]);
+    const ctx=document.getElementById('chart');
+    if(chartInst) chartInst.destroy();
+    chartInst=new Chart(ctx,{
+      type:'line',
+      data:{labels:horas,datasets:[{label:'Temperatura ºC',data:temps,borderColor:'#4f46e5',tension:0.3},{label:'Chuva mm',data:prec,borderColor:'#22c55e',tension:0.3}]},
+      options:{responsive:true,plugins:{legend:{labels:{color:'#cbd5e1'}}},scales:{x:{ticks:{color:'#94a3b8'}},y:{ticks:{color:'#94a3b8'}}}}
+    });
+    document.getElementById('fonteGrafico').textContent='Fonte: Open-Meteo • Dados reais horário de Brasília - Mesquita Sebinho/RJ';
+  }catch(e){document.getElementById('fonteGrafico').textContent='Erro ao carregar dados reais, tente novamente.'; graficoOk=false;}
+}
+let deferredPrompt=null;
+window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();deferredPrompt=e;});
+function instalarApp(){
+  if(deferredPrompt){
+    deferredPrompt.prompt();
+    deferredPrompt.userChoice.then(c=>{ if(c.outcome==='accepted'){ localStorage.setItem('appInstalado','1'); mostrarTermos(); } });
+  }else{ addMsg('No celular: menu ⋮ > Instalar app. Depois os termos aparecem.','bot'); setTimeout(()=>{localStorage.setItem('appInstalado','1'); mostrarTermos();},800); }
+}
+function mostrarTermos(){document.getElementById('modalTermos').classList.add('aberto');}
+function aceitarTermos(){document.getElementById('modalTermos').classList.remove('aberto');localStorage.setItem('termosAceitos','1');addMsg('Termos aceitos. Bem-vindo à Defesa Civil Comunitária do Sebinho!','bot');}
+if(localStorage.getItem('appInstalado')==='1' && localStorage.getItem('termosAceitos')!=='1'){ setTimeout(mostrarTermos,1000); }
+function compartilhar(){ if(navigator.share){navigator.share({title:'Cidadão Sensor',url:location.href});} else {navigator.clipboard.writeText(location.href); addMsg('Link copiado!','bot');} }
+</script>
+</body>
+</html>
