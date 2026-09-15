@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="pt-BR" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SARAH AI Core v4.0 - Defesa Civil Mesquita</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = { darkMode: 'class', theme: { extend: { colors: { brand: { dark: '#020617', light: '#f8fafc' } } } } }
+    </script>
+    <script src="https://unpkg.com/react@18/umd/react.development.js" crossorigin></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js" crossorigin></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin=""/>
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#020617">
+</head>
+<body class="min-h-screen bg-slate-950 text-slate-100 flex flex-col justify-between">
+    <div id="root"></div>
+    <script type="text/babel">
+        const agenteSarah = { provider: "groq", model: "llama-3.3-70b-versatile", temperature: 0.2 }
+
+        function App() {
+            const [userName, setUserName] = React.useState('Alexander');
+            const [darkMode, setDarkMode] = React.useState(true);
+            const [fontSizeLevel, setFontSizeLevel] = React.useState(1);
+            const [soundEnabled, setSoundEnabled] = React.useState(true);
+            const [isSpeaking, setIsSpeaking] = React.useState(false);
+            const [isListening, setIsListening] = React.useState(false);
+            const [liveWeather, setLiveWeather] = React.useState(null);
+            const [deferredPrompt, setDeferredPrompt] = React.useState(null);
+            const [mapOpen, setMapOpen] = React.useState(false);
+            const [chartOpen, setChartOpen] = React.useState(false);
+            const [termsOpen, setTermsOpen] = React.useState(false);
+            const [hasGreeted, setHasGreeted] = React.useState(false);
+            const [messages, setMessages] = React.useState([]);
+            const [input, setInput] = React.useState('');
+            const [isLoadingChat, setIsLoadingChat] = React.useState(false);
+            const mapRef = React.useRef(null);
+            const mapInstanceRef = React.useRef(null);
+            const chartRef = React.useRef(null);
+            const chartInstanceRef = React.useRef(null);
+
+            React.useEffect(() => {
+                const h = (e) => { e.preventDefault(); setDeferredPrompt(e); };
+                window.addEventListener('beforeinstallprompt', h);
+                return () => window.removeEventListener('beforeinstallprompt', h);
+            }, []);
+
+            const handleInstallApp = async () => {
+                if (deferredPrompt) { deferredPrompt.prompt(); await deferredPrompt.userChoice; setDeferredPrompt(null); }
+                else { alert("Menu do navegador > Adicionar à tela inicial / Instalar aplicativo"); }
+            };
+            const handleShareLink = async () => {
+                if (navigator.share) { try { await navigator.share({ title: 'SARAH Sebinho', text: 'Monitoramento Sebinho / Frigo Eden', url: window.location.href }); } catch {} }
+                else { navigator.clipboard.writeText(window.location.href); alert("📋 Link copiado!"); }
+            };
+
+            React.useEffect(() => {
+                fetch('https://api.open-meteo.com/v1/forecast?latitude=-22.7845&longitude=-43.4140&current=temperature_2m
