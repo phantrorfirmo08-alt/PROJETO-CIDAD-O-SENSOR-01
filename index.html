@@ -1,0 +1,1207 @@
+<!DOCTYPE html>
+<html lang="pt-BR" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SARAH IA Core v4.0 - Defesa Civil Comunitária, Mesquita RJ</title>
+    
+    <!-- Open Graph / Redes Sociais (WhatsApp, Telegram, etc.) -->
+    <meta property="og:title" content="App / Cidadão Sensor - Defesa Civil Comunitária Digital & Sarah IA System">
+    <meta property="og:description" content="Monitoramento Preventivo de Defesa Civil - Mesquita / RJ">
+    <meta property="og:image" content="https://phantrorfirmo08-alt.github.io/PROJETO-CIDAD-O-SENSOR-01/icon.svg">
+    <meta property="og:url" content="https://phantrorfirmo08-alt.github.io/PROJETO-CIDAD-O-SENSOR-01/">
+    <meta property="og:type" content="website">
+
+    <!-- Twitter Cards -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="App / Cidadão Sensor - Defesa Civil Comunitária Digital & Sarah IA System">
+    <meta name="twitter:description" content="Monitoramento Preventivo de Defesa Civil - Mesquita / RJ">
+    <meta name="twitter:image" content="https://phantrorfirmo08-alt.github.io/PROJETO-CIDAD-O-SENSOR-01/icon.svg">
+
+    <!-- Configurações PWA e Manifesto -->
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#020617">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            dark: "#020617",
+                            light: "#f8fafc"
+                        }
+                    }
+                }
+            }
+        };
+    </script>
+    <script src="https://unpkg.com/react@18/umd/react.development.js" crossorigin></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js" crossorigin></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin="">
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        html, body, #root {
+            min-height: 100%;
+            margin: 0;
+        }
+        body {
+            overflow-x: hidden;
+        }
+        .leaflet-container {
+            z-index: 1;
+        }
+        @keyframes marquee {
+            0% { transform: translateX(0%); }
+            100% { transform: translateX(-50%); }
+        }
+        .animate-marquee {
+            display: flex;
+            width: max-content;
+            animation: marquee 25s linear infinite;
+        }
+        .animate-marquee:hover {
+            animation-play-state: paused;
+        }
+    </style>
+</head>
+<body class="min-h-screen bg-slate-950 text-slate-100">
+    <div id="root"></div>
+    <script type="text/babel">
+        const CLOUDFLARE_WORKER_URL = "https://sarah-envelope.phantrorfirmo08.workers.dev/";
+
+        function SarahAvatar({ size = "w-9 h-9", showStatus = true, isLarge = false, riskLevel = "green" }) {
+            const [isBlinking, setIsBlinking] = React.useState(false);
+
+            React.useEffect(() => {
+                let timeoutId;
+                const triggerBlink = () => {
+                    setIsBlinking(true);
+                    setTimeout(() => setIsBlinking(false), 140);
+                    const randomTime = Math.floor(Math.random() * (5000 - 2500 + 1)) + 2500;
+                    timeoutId = setTimeout(triggerBlink, randomTime);
+                };
+                const initialTime = Math.floor(Math.random() * (5000 - 2500 + 1)) + 2500;
+                timeoutId = setTimeout(triggerBlink, initialTime);
+                return () => clearTimeout(timeoutId);
+            }, []);
+
+            const dimensionClass = isLarge ? "w-28 h-28" : size;
+
+            const statusColorClass = 
+                riskLevel === "red" ? "bg-rose-500 shadow-[0_0_12px_rgba(244,63,94,0.9)] border-rose-950" :
+                riskLevel === "yellow" ? "bg-amber-400 shadow-[0_0_12px_rgba(251,191,36,0.9)] border-amber-950" :
+                "bg-emerald-400 shadow-[0_0_12px_rgba(16,185,129,0.9)] border-emerald-950";
+
+            return (
+                <div className="relative inline-flex items-center justify-center shrink-0">
+                    <style>{`
+                        .sarah-hud-container {
+                            position: relative;
+                            background: radial-gradient(circle at 50% 50%, #031324 0%, #01060c 70%, #000205 100%);
+                            border-radius: 50%;
+                            overflow: hidden;
+                            display: flex;
+                            align-items: center;
+                            justify-content: center;
+                            box-shadow: 0 0 25px rgba(0, 242, 255, 0.2), inset 0 0 15px rgba(0, 242, 255, 0.15);
+                            border: 2px solid rgba(0, 242, 255, 0.5);
+                        }
+                        .hud-ring-outer {
+                            position: absolute;
+                            inset: 3px;
+                            border-radius: 50%;
+                            border: 1px dashed rgba(0, 242, 255, 0.35);
+                            animation: spinSlow 20s linear infinite;
+                        }
+                        .hud-ring-inner {
+                            position: absolute;
+                            inset: 8px;
+                            border-radius: 50%;
+                            border: 1.2px solid rgba(0, 242, 255, 0.7);
+                            box-shadow: 0 0 8px rgba(0, 242, 255, 0.4);
+                        }
+                        .hud-ring-pulse {
+                            position: absolute;
+                            inset: 0;
+                            border-radius: 50%;
+                            background: radial-gradient(circle, rgba(0,242,255,0.12) 0%, transparent 70%);
+                            animation: pulseHud 3s ease-in-out infinite;
+                        }
+                        .neural-dots {
+                            position: absolute;
+                            inset: 0;
+                            background-image: radial-gradient(rgba(0, 242, 255, 0.35) 1px, transparent 1px);
+                            background-size: 8px 8px;
+                            opacity: 0.3;
+                        }
+                        @keyframes spinSlow {
+                            0% { transform: rotate(0deg); }
+                            100% { transform: rotate(360deg); }
+                        }
+                        @keyframes pulseHud {
+                            0%, 100% { transform: scale(1); opacity: 0.4; }
+                            50% { transform: scale(1.04); opacity: 0.8; }
+                        }
+                    `}</style>
+
+                    <div className={`${dimensionClass} sarah-hud-container select-none shadow-xl`}>
+                        <div className="neural-dots"></div>
+                        <div className="hud-ring-pulse"></div>
+                        <div className="hud-ring-outer"></div>
+                        <div className="hud-ring-inner"></div>
+
+                        <div className="relative z-10 flex flex-col items-center justify-center w-full h-full">
+                            <div className={`transition-transform duration-75 ${isBlinking ? 'scale-y-[0.08]' : 'scale-y-100'}`}>
+                                <svg className={isLarge ? "w-14 h-10 text-cyan-400" : "w-5 h-3.5 text-cyan-400"} viewBox="0 0 100 60" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                    <path d="M 12 30 Q 50 10 88 30 Q 50 50 12 30 Z" stroke="currentColor" strokeWidth="2.5" fill="rgba(3, 19, 36, 0.85)" className="filter drop-shadow-[0_0_5px_rgba(0,242,255,0.7)]"/>
+                                    <circle cx="50" cy="30" r="10" stroke="currentColor" strokeWidth="2" fill="rgba(0, 242, 255, 0.15)"/>
+                                    <polygon points="50,22 56,26 56,34 50,38 44,34 44,26" fill="#00f2ff" className="animate-pulse shadow-[0_0_6px_#00f2ff]"/>
+                                    <circle cx="50" cy="30" r="2.5" fill="#ffffff" />
+                                </svg>
+                            </div>
+                        </div>
+                    </div>
+
+                    {showStatus && (
+                        <div className={`absolute ${isLarge ? 'bottom-1.5 right-1.5 w-3.5 h-3.5 border-2' : '-bottom-0.5 right-0.5 w-2 h-2 border'} ${statusColorClass} rounded-full animate-ping`} title={`Estado Crítico: ${riskLevel.toUpperCase()}`}></div>
+                    )}
+                    {showStatus && (
+                        <div className={`absolute ${isLarge ? 'bottom-1.5 right-1.5 w-3.5 h-3.5 border-2' : '-bottom-0.5 right-0.5 w-2 h-2 border'} ${statusColorClass} rounded-full`} title={`Estado Crítico: ${riskLevel.toUpperCase()}`}></div>
+                    )}
+                </div>
+            );
+        }
+
+        function App() {
+            const [darkMode, setDarkMode] = React.useState(true);
+            const [fontScale, setFontScale] = React.useState(1.0);
+            const [soundEnabled, setSoundEnabled] = React.useState(true);
+            const [isSpeaking, setIsSpeaking] = React.useState(false);
+            const [isListening, setIsListening] = React.useState(false);
+            const [liveWeather, setLiveWeather] = React.useState(null);
+            const [hourlyForecast, setHourlyForecast] = React.useState(null);
+            
+            const [activeTab, setActiveTab] = React.useState("dashboard");
+
+            const [termsOpen, setTermsOpen] = React.useState(false);
+            const [termsAccepted, setTermsAccepted] = React.useState(
+                () => localStorage.getItem("sarah_terms_accepted") === "1"
+            );
+            const [checkAccepted1, setCheckAccepted1] = React.useState(false);
+            const [checkAccepted2, setCheckAccepted2] = React.useState(false);
+
+            const [deferredPrompt, setDeferredPrompt] = React.useState(null);
+            const [showInstallBtn, setShowInstallBtn] = React.useState(false);
+
+            const [messages, setMessages] = React.useState([]);
+            const [input, setInput] = React.useState("");
+            const [isLoadingChat, setIsLoadingChat] = React.useState(false);
+            const [hasIntroduced, setHasIntroduced] = React.useState(
+                () => localStorage.getItem("sarah_introduced") === "1"
+            );
+
+            const speechIdRef = React.useRef(0);
+            const voiceTimerRef = React.useRef(null);
+            const voicesRef = React.useRef([]);
+            const mapRef = React.useRef(null);
+            const mapInstanceRef = React.useRef(null);
+            const chartRef = React.useRef(null);
+            const chartInstanceRef = React.useRef(null);
+
+            const getRiskLevel = () => {
+                if (!liveWeather) return "green";
+                const precip = liveWeather.precipitation || 0;
+                const wind = liveWeather.wind_speed_10m || 0;
+                const code = liveWeather.weather_code || 0;
+                if (code >= 95 || precip > 10 || wind > 40) return "red";
+                if (code >= 51 || precip > 2 || wind > 25) return "yellow";
+                return "green";
+            };
+
+            const currentRisk = getRiskLevel();
+
+            React.useEffect(() => {
+                const handleBeforeInstall = (e) => {
+                    e.preventDefault();
+                    setDeferredPrompt(e);
+                    setShowInstallBtn(true);
+                };
+                window.addEventListener("beforeinstallprompt", handleBeforeInstall);
+                return () => window.removeEventListener("beforeinstallprompt", handleBeforeInstall);
+            }, []);
+
+            const handleInstallApp = async () => {
+                if (!deferredPrompt) return;
+                deferredPrompt.prompt();
+                const { outcome } = await deferredPrompt.userChoice;
+                if (outcome === "accepted") {
+                    setShowInstallBtn(false);
+                }
+                setDeferredPrompt(null);
+            };
+
+            const carregarVozes = () => {
+                if ("speechSynthesis" in window) {
+                    voicesRef.current = window.speechSynthesis.getVoices();
+                }
+            };
+
+            React.useEffect(() => {
+                if (!("speechSynthesis" in window)) return;
+                carregarVozes();
+                window.speechSynthesis.onvoiceschanged = carregarVozes;
+                return () => {
+                    window.speechSynthesis.cancel();
+                    window.speechSynthesis.onvoiceschanged = null;
+                };
+            }, []);
+
+            const limparTextoParaFala = (text) => {
+                return String(text)
+                    .replace(/[#*_`~]/g, "")
+                    .replace(/\[(.*?)\]\(.*?\)/g, "$1")
+                    .replace(/https?:\/\/\S+/g, "")
+                    .replace(/\s+/g, " ")
+                    .trim();
+            };
+
+            const escolherMelhorVoz = () => {
+                const voices = voicesRef.current.length
+                    ? voicesRef.current
+                    : window.speechSynthesis.getVoices();
+                const preferidas = [
+                    "Google português do Brasil",
+                    "Google Português do Brasil",
+                    "Microsoft Francisca",
+                    "Microsoft Maria"
+                ];
+                return (
+                    voices.find((voice) =>
+                        preferidas.some((name) =>
+                            voice.name.toLowerCase().includes(name.toLowerCase())
+                        )
+                    ) ||
+                    voices.find((voice) => voice.lang.toLowerCase() === "pt-br") ||
+                    voices.find((voice) => voice.lang.toLowerCase().startsWith("pt")) ||
+                    voices[0]
+                );
+            };
+
+            const stopSpeaking = () => {
+                speechIdRef.current += 1;
+                if (voiceTimerRef.current) {
+                    clearTimeout(voiceTimerRef.current);
+                    voiceTimerRef.current = null;
+                }
+                if ("speechSynthesis" in window) {
+                    window.speechSynthesis.cancel();
+                }
+                setIsSpeaking(false);
+            };
+
+            const speakText = (text) => {
+                if (!soundEnabled || !("speechSynthesis" in window)) return;
+                const cleanText = limparTextoParaFala(text);
+                if (!cleanText) return;
+                stopSpeaking();
+                const currentId = speechIdRef.current;
+                voiceTimerRef.current = setTimeout(() => {
+                    if (currentId !== speechIdRef.current) return;
+                    const utterance = new SpeechSynthesisUtterance(cleanText);
+                    const voice = escolherMelhorVoz();
+                    utterance.lang = "pt-BR";
+                    utterance.voice = voice || null;
+                    utterance.rate = 0.92;
+                    utterance.pitch = 1.02;
+                    utterance.volume = 1;
+                    utterance.onstart = () => {
+                        if (currentId === speechIdRef.current) setIsSpeaking(true);
+                    };
+                    utterance.onend = () => {
+                        if (currentId === speechIdRef.current) setIsSpeaking(false);
+                    };
+                    utterance.onerror = () => setIsSpeaking(false);
+                    window.speechSynthesis.speak(utterance);
+                }, 250);
+            };
+
+            React.useEffect(() => {
+                if (!termsAccepted || hasIntroduced) return;
+                const presentation = "Olá! Meu nome é Sarah, assistente meteorológica do Projeto Cidadão Sensor. Em que posso ajudar?";
+                const timer = setTimeout(() => {
+                    if (!soundEnabled) return;
+                    setHasIntroduced(true);
+                    localStorage.setItem("sarah_introduced", "1");
+                    speakText(presentation);
+                }, 700);
+                return () => clearTimeout(timer);
+            }, [termsAccepted, hasIntroduced, soundEnabled]);
+
+            const handleShareLink = async () => {
+                const shareData = {
+                    title: "App / Cidadão Sensor - Defesa Civil Comunitária Digital & Sarah IA System",
+                    text: "Monitoramento Preventivo de Defesa Civil - Mesquita / RJ",
+                    url: "https://phantrorfirmo08-alt.github.io/PROJETO-CIDAD-O-SENSOR-01/"
+                };
+                if (navigator.share) {
+                    try {
+                        await navigator.share(shareData);
+                    } catch (error) {
+                        console.log("Compartilhamento cancelado.");
+                    }
+                } else if (navigator.clipboard) {
+                    await navigator.clipboard.writeText(shareData.url);
+                    alert("Link copiado para a área de transferência.");
+                }
+            };
+
+            React.useEffect(() => {
+                fetch(
+                    "https://api.open-meteo.com/v1/forecast" +
+                    "?latitude=-22.7845&longitude=-43.4140" +
+                    "&current=temperature_2m,relative_humidity_2m,precipitation,weather_code,wind_speed_10m" +
+                    "&hourly=temperature_2m,precipitation_probability,precipitation"
+                )
+                    .then((response) => response.json())
+                    .then((data) => {
+                        if (data && data.current) {
+                            setLiveWeather(data.current);
+                        }
+                        if (data && data.hourly) {
+                            setHourlyForecast(data.hourly);
+                        }
+                    })
+                    .catch((error) => {
+                        console.warn("Clima indisponível:", error);
+                    });
+            }, []);
+
+            React.useEffect(() => {
+                document.documentElement.classList.toggle("dark", darkMode);
+                document.documentElement.classList.toggle("light", !darkMode);
+            }, [darkMode]);
+
+            React.useEffect(() => {
+                if (activeTab === "radar" && mapRef.current && !mapInstanceRef.current) {
+                    const lat = -22.7845;
+                    const lng = -43.4140;
+                    const map = L.map(mapRef.current).setView([lat, lng], 13);
+                    
+                    L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+                        maxZoom: 19,
+                        attribution: "© OpenStreetMap contributors | SARAH IA Core v4.0"
+                    }).addTo(map);
+
+                    fetch('https://api.rainviewer.com/public/weather-maps.json')
+                        .then(res => res.json())
+                        .then(apiData => {
+                            if (apiData && apiData.radar && apiData.radar.past && apiData.radar.past.length > 0) {
+                                const latestFrame = apiData.radar.past[apiData.radar.past.length - 1];
+                                L.tileLayer(`https://tile.rainviewer.com${latestFrame.path}/256/{z}/{x}/{y}/2/1_1.png`, {
+                                    opacity: 0.65,
+                                    attribution: 'Radar © RainViewer'
+                                }).addTo(map);
+                            }
+                        })
+                        .catch(err => console.warn("Camada de radar indisponível:", err));
+
+                    L.marker([lat, lng])
+                        .addTo(map)
+                        .bindPopup("<b>Setor de referência:</b> Sebinho / Rocha Sobrinho, Mesquita - RJ<br><i>Camada de nuvens e radar ativada.</i>")
+                        .openPopup();
+
+                    mapInstanceRef.current = map;
+                }
+                if (activeTab === "radar" && mapInstanceRef.current) {
+                    setTimeout(() => {
+                        mapInstanceRef.current?.invalidateSize();
+                    }, 100);
+                }
+                if (activeTab !== "radar" && mapInstanceRef.current) {
+                    mapInstanceRef.current.remove();
+                    mapInstanceRef.current = null;
+                }
+            }, [activeTab]);
+
+            React.useEffect(() => {
+                if (activeTab !== "charts" || !chartRef.current) return;
+
+                if (chartInstanceRef.current) {
+                    chartInstanceRef.current.destroy();
+                    chartInstanceRef.current = null;
+                }
+
+                const ctx = chartRef.current.getContext("2d");
+                const nowIndex = new Date().getHours();
+                const labels = hourlyForecast && hourlyForecast.time 
+                    ? hourlyForecast.time.slice(nowIndex, nowIndex + 8).map(t => t.split("T")[1]) 
+                    : ["00:00", "03:00", "06:00", "09:00", "12:00", "15:00", "18:00", "21:00"];
+                
+                const tempData = hourlyForecast && hourlyForecast.temperature_2m 
+                    ? hourlyForecast.temperature_2m.slice(nowIndex, nowIndex + 8) 
+                    : [24, 23, 22, 25, 28, 29, 27, 25];
+
+                chartInstanceRef.current = new Chart(ctx, {
+                    type: "line",
+                    data: {
+                        labels: labels,
+                        datasets: [
+                            {
+                                label: "Temperatura (°C)",
+                                data: tempData,
+                                borderColor: "#06b6d4",
+                                backgroundColor: "rgba(6, 182, 212, 0.1)",
+                                borderWidth: 2,
+                                fill: true,
+                                tension: 0.3
+                            }
+                        ]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        scales: {
+                            y: {
+                                beginAtZero: false,
+                                grid: { color: "rgba(148, 163, 184, 0.1)" },
+                                ticks: { color: "#94a3b8", font: { family: "monospace", size: 10 } }
+                            },
+                            x: {
+                                grid: { color: "rgba(148, 163, 184, 0.1)" },
+                                ticks: { color: "#94a3b8", font: { family: "monospace", size: 10 } }
+                            }
+                        },
+                        plugins: {
+                            legend: {
+                                labels: { color: "#e2e8f0", font: { family: "monospace", size: 11 } }
+                            }
+                        }
+                    }
+                });
+
+                return () => {
+                    if (chartInstanceRef.current) {
+                        chartInstanceRef.current.destroy();
+                        chartInstanceRef.current = null;
+                    }
+                };
+            }, [activeTab, hourlyForecast]);
+
+            React.useEffect(() => {
+                return () => {
+                    if (mapInstanceRef.current) {
+                        mapInstanceRef.current.remove();
+                        mapInstanceRef.current = null;
+                    }
+                    if (chartInstanceRef.current) {
+                        chartInstanceRef.current.destroy();
+                        chartInstanceRef.current = null;
+                    }
+                };
+            }, []);
+
+            const toggleListening = () => {
+                const SpeechRec = window.SpeechRecognition || window.webkitSpeechRecognition;
+                if (!SpeechRec) {
+                    alert("Seu navegador não suporta reconhecimento de voz.");
+                    return;
+                }
+                if (isListening) {
+                    setIsListening(false);
+                    return;
+                }
+                const rec = new SpeechRec();
+                rec.lang = "pt-BR";
+                rec.interimResults = false;
+                rec.continuous = false;
+                rec.onstart = () => setIsListening(true);
+                rec.onresult = (event) => {
+                    const text = event.results[0][0].transcript;
+                    setInput(text);
+                    setIsListening(false);
+                    handleSendMessage(text);
+                };
+                rec.onerror = () => setIsListening(false);
+                rec.onend = () => setIsListening(false);
+                rec.start();
+            };
+
+            const handleSendMessage = async (textCustom) => {
+                stopSpeaking();
+                const textToSend = textCustom !== undefined ? textCustom : input;
+                if (!textToSend.trim() || isLoadingChat) return;
+
+                const userMsg = {
+                    id: `${Date.now()}-user`,
+                    sender: "user",
+                    text: textToSend.trim(),
+                    timestamp: new Date().toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })
+                };
+
+                const historico = [...messages, userMsg].slice(-8).map((message) => ({
+                    role: message.sender === "user" ? "user" : "assistant",
+                    content: message.text
+                }));
+
+                setMessages((previous) => [...previous, userMsg]);
+                setInput("");
+                setIsLoadingChat(true);
+
+                const weatherContext = liveWeather
+                    ? `Condições meteorológicas atuais em Mesquita/RJ (Open-Meteo): Temperatura ${liveWeather.temperature_2m}°C, Umidade ${liveWeather.relative_humidity_2m}%, Precipitação ${liveWeather.precipitation} mm, Vento ${liveWeather.wind_speed_10m} km/h.`
+                    : "Dados meteorológicos temporariamente indisponíveis.";
+
+                try {
+                    const response = await fetch(CLOUDFLARE_WORKER_URL, {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({
+                            model: "openai/gpt-oss-120b",
+                            messages: [
+                                {
+                                    role: "system",
+                                    content: `Você é a SARAH IA Core v4.0, assistente de monitoramento meteorológico preventivo e Defesa Civil Comunitária em Mesquita/RJ. ${weatherContext}
+
+Responda em português do Brasil, de forma clara, objetiva e responsável.
+Baseie-se estritamente em dados meteorológicos reais (temperatura, umidade, chuva, vento). Não invente medições hidrológicas ou cotas de rios.
+Não solicite nem revele chaves, senhas ou dados pessoais.
+Em situações de risco meteorológico severo, oriente o usuário a procurar um local seguro e acionar a Defesa Civil Comunitária pelo número 199.`
+                                },
+                                ...historico
+                            ],
+                            temperature: 0.6,
+                            max_tokens: 900
+                        })
+                    });
+
+                    const responseText = await response.text();
+                    let data;
+                    try {
+                        data = JSON.parse(responseText);
+                    } catch {
+                        throw new Error("O Worker retornou uma resposta inválida.");
+                    }
+
+                    if (!response.ok) {
+                        throw new Error(data?.error || `Erro do servidor (${response.status}).`);
+                    }
+
+                    const reply = data?.choices?.[0]?.message?.content || data?.message || data?.reply;
+                    if (!reply) {
+                        throw new Error("A IA não retornou uma mensagem.");
+                    }
+
+                    const assistantMsg = {
+                        id: `${Date.now()}-assistant`,
+                        sender: "sarah",
+                        text: reply,
+                        timestamp: new Date().toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })
+                    };
+
+                    setMessages((previous) => [...previous, assistantMsg]);
+                    speakText(reply);
+                } catch (error) {
+                    console.error("Erro na comunicação com Cloudflare/Groq:", error);
+                    const fallbackReply = "Não foi possível conectar ao agente de inteligência artificial através do cofre seguro. Verifique a conexão.";
+                    const errorMsg = {
+                        id: `${Date.now()}-error`,
+                        sender: "sarah",
+                        text: fallbackReply,
+                        timestamp: new Date().toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })
+                    };
+                    setMessages((previous) => [...previous, errorMsg]);
+                    speakText(fallbackReply);
+                } finally {
+                    setIsLoadingChat(false);
+                }
+            };
+
+            return (
+                <div 
+                    className={`min-h-screen ${darkMode ? "bg-slate-950 text-slate-100" : "bg-slate-100 text-slate-900"} transition-colors duration-300 flex flex-col`}
+                    style={{ fontSize: `${fontScale}rem` }}
+                >
+                    
+                    {!termsAccepted && (
+                        <div className="fixed inset-0 bg-slate-950/95 backdrop-blur-md z-50 flex items-center justify-center p-4">
+                            <div className="bg-slate-900 border border-cyan-500/40 w-full max-w-lg rounded-3xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
+                                <div className="bg-slate-950 px-6 py-4 border-b border-slate-800 flex items-center justify-between">
+                                    <h3 className="font-mono text-cyan-400 text-sm font-bold flex items-center gap-2">
+                                        <span>🛡️</span> Termos de Responsabilidade & LGPD
+                                    </h3>
+                                    <span className="text-xs font-mono text-slate-500">v4.0</span>
+                                </div>
+                                <div className="p-6 overflow-y-auto space-y-4 text-xs text-slate-300 font-sans leading-relaxed">
+                                    <p className="font-mono text-slate-200">
+                                        Em conformidade com a Lei Geral de Proteção de Dados (LGPD - Lei nº 13.709/2018), o sistema <strong>SARAH IA Core v4.0</strong> opera com total salvaguarda através de 3 pilares fundamentais:
+                                    </p>
+                                    
+                                    <div className="space-y-3 bg-slate-950/60 p-4 rounded-xl border border-slate-800 font-mono text-[11px]">
+                                        <div>
+                                            <span className="text-cyan-400 font-bold">1. Minimização e Tratamento Local (Edge-First):</span> Dados processados com armazenamento seguro e local no seu navegador.
+                                        </div>
+                                        <div>
+                                            <span className="text-cyan-400 font-bold">2. Finalidade Exclusiva Comunitária:</span> Uso estrito para monitoramento meteorológico preventivo em Mesquita - RJ.
+                                        </div>
+                                        <div>
+                                            <span className="text-cyan-400 font-bold">3. Segurança e Confidencialidade:</span> Não há comercialização ou compartilhamento de dados com terceiros.
+                                        </div>
+                                    </div>
+
+                                    <div className="pt-2 border-t border-slate-800 space-y-3">
+                                        <label className="flex items-start gap-2.5 cursor-pointer">
+                                            <input 
+                                                type="checkbox" 
+                                                checked={checkAccepted1} 
+                                                onChange={(e) => setCheckAccepted1(e.target.checked)}
+                                                className="mt-0.5 w-4 h-4 rounded border-slate-700 bg-slate-950 text-cyan-500 focus:ring-cyan-500 shrink-0" 
+                                            />
+                                            <span className="text-[11px] text-slate-300">
+                                                Li e concordo com os Termos de Responsabilidade e os 3 pilares de proteção de dados (LGPD).
+                                            </span>
+                                        </label>
+
+                                        <label className="flex items-start gap-2.5 cursor-pointer">
+                                            <input 
+                                                type="checkbox" 
+                                                checked={checkAccepted2} 
+                                                onChange={(e) => setCheckAccepted2(e.target.checked)}
+                                                className="mt-0.5 w-4 h-4 rounded border-slate-700 bg-slate-950 text-cyan-500 focus:ring-cyan-500 shrink-0" 
+                                            />
+                                            <span className="text-[11px] text-slate-300">
+                                                Compreendo e autorizo as diretrizes do plano de ação de redução de riscos da Defesa Civil Comunitária.
+                                            </span>
+                                        </label>
+                                    </div>
+                                </div>
+                                <div className="bg-slate-950 px-6 py-4 border-t border-slate-800 flex justify-end">
+                                    <button
+                                        disabled={!checkAccepted1 || !checkAccepted2}
+                                        onClick={() => {
+                                            setTermsAccepted(true);
+                                            localStorage.setItem("sarah_terms_accepted", "1");
+                                        }}
+                                        className="w-full py-3 bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-mono text-xs font-bold rounded-xl transition disabled:opacity-40 disabled:cursor-not-allowed shadow-lg"
+                                    >
+                                        Aceitar e Entrar no Sistema
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
+                    <div className="flex-1 flex flex-col">
+                        
+                        <header className="bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 px-4 py-3 sticky top-0 z-40 shadow-sm">
+                            <div className="max-w-4xl mx-auto flex items-center justify-between gap-2">
+                                <div className="flex items-center gap-3">
+                                    <SarahAvatar size="w-8 h-8" showStatus={false} riskLevel={currentRisk} />
+                                    <div>
+                                        <h1 className="text-sm font-bold text-slate-900 dark:text-slate-100 font-sans tracking-tight">
+                                            Projeto Cidadão Sensor
+                                        </h1>
+                                        <div className="flex items-center gap-1.5 flex-wrap mt-0.5">
+                                            <span className="px-1.5 py-0.5 bg-cyan-50 dark:bg-cyan-950/60 border border-cyan-200 dark:border-cyan-500/30 text-cyan-700 dark:text-cyan-300 rounded font-mono text-[10px] font-bold">
+                                                SARAH IA
+                                            </span>
+                                            <span className="text-[11px] text-slate-500 dark:text-slate-400 font-mono">
+                                                Monitoramento de Defesa Civil Comunitária, Mesquita RJ
+                                            </span>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div className="flex items-center gap-2">
+                                    {showInstallBtn && (
+                                        <button
+                                            onClick={handleInstallApp}
+                                            className="px-3 py-1.5 rounded-xl bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-mono text-xs font-bold transition flex items-center gap-1.5 shadow-md animate-pulse"
+                                            title="Instalar Aplicativo PWA"
+                                        >
+                                            <span>📲</span> Instalar App
+                                        </button>
+                                    )}
+
+                                    {/* Controles de Tamanho de Fonte (A- / A+) */}
+                                    <div className="flex items-center bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-full overflow-hidden shadow-sm">
+                                        <button
+                                            onClick={() => setFontScale((val) => Math.max(0.85, val - 0.08))}
+                                            className="px-2.5 py-1 text-xs font-mono font-bold text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 transition"
+                                            title="Diminuir Letra (A-)"
+                                        >
+                                            A-
+                                        </button>
+                                        <span className="text-[10px] font-mono text-slate-400 px-1 border-x border-slate-200 dark:border-slate-700">
+                                            {Math.round(fontScale * 100)}%
+                                        </span>
+                                        <button
+                                            onClick={() => setFontScale((val) => Math.min(1.4, val + 0.08))}
+                                            className="px-2.5 py-1 text-xs font-mono font-bold text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 transition"
+                                            title="Aumentar Letra (A+)"
+                                        >
+                                            A+
+                                        </button>
+                                    </div>
+
+                                    <button
+                                        onClick={handleShareLink}
+                                        className="w-9 h-9 rounded-full bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700 flex items-center justify-center text-slate-700 dark:text-slate-300 transition shadow-sm"
+                                        title="Compartilhar"
+                                    >
+                                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3.316 3.316 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3.316 3.316 0 00-5.368-2.684z"></path>
+                                        </svg>
+                                    </button>
+
+                                    <button
+                                        onClick={() => setDarkMode((val) => !val)}
+                                        className="w-9 h-9 rounded-full bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700 flex items-center justify-center text-amber-500 dark:text-cyan-400 transition shadow-sm"
+                                        title="Alternar Modo Dia / Noite"
+                                    >
+                                        {darkMode ? "☀️" : "🌙"}
+                                    </button>
+                                </div>
+                            </div>
+                        </header>
+
+                        <div className="bg-slate-900 border-b border-slate-800 px-4 py-2">
+                            <div className="max-w-4xl mx-auto flex items-center justify-between gap-2 overflow-x-auto">
+                                <div className="flex items-center gap-1.5 font-mono text-xs">
+                                    <button
+                                        onClick={() => setActiveTab("dashboard")}
+                                        className={`px-3 py-1.5 rounded-xl transition flex items-center gap-1.5 ${
+                                            activeTab === "dashboard"
+                                                ? "bg-cyan-500 text-slate-950 font-bold shadow-md"
+                                                : "bg-slate-800 text-slate-300 hover:bg-slate-700"
+                                        }`}
+                                    >
+                                        <span>🏠</span> Início
+                                    </button>
+                                    <button
+                                        onClick={() => setActiveTab("chat")}
+                                        className={`px-3 py-1.5 rounded-xl transition flex items-center gap-1.5 ${
+                                            activeTab === "chat"
+                                                ? "bg-cyan-500 text-slate-950 font-bold shadow-md"
+                                                : "bg-slate-800 text-slate-300 hover:bg-slate-700"
+                                        }`}
+                                    >
+                                        <span>💬</span> Chat SARAH IA
+                                    </button>
+                                    <button
+                                        onClick={() => setActiveTab("radar")}
+                                        className={`px-3 py-1.5 rounded-xl transition flex items-center gap-1.5 ${
+                                            activeTab === "radar"
+                                                ? "bg-cyan-500 text-slate-950 font-bold shadow-md"
+                                                : "bg-slate-800 text-slate-300 hover:bg-slate-700"
+                                        }`}
+                                    >
+                                        <span>🛰️</span> Radar e Nuvens
+                                    </button>
+                                    <button
+                                        onClick={() => setActiveTab("charts")}
+                                        className={`px-3 py-1.5 rounded-xl transition flex items-center gap-1.5 ${
+                                            activeTab === "charts"
+                                                ? "bg-cyan-500 text-slate-950 font-bold shadow-md"
+                                                : "bg-slate-800 text-slate-300 hover:bg-slate-700"
+                                        }`}
+                                    >
+                                        <span>📈</span> Gráficos Horários
+                                    </button>
+                                </div>
+
+                                <div className="hidden sm:flex items-center gap-2">
+                                    <button
+                                        onClick={() => setTermsOpen(true)}
+                                        className="text-cyan-400 hover:underline text-[11px] font-mono"
+                                    >
+                                        Termos LGPD
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div className="bg-slate-900/60 border-b border-slate-800 px-4 py-2 text-xs font-mono text-slate-400 flex flex-wrap items-center justify-between gap-2 max-w-4xl mx-auto w-full">
+                            <div className="flex items-center gap-3">
+                                <span className="flex items-center gap-1 text-cyan-400">
+                                    <span className={`w-2 h-2 rounded-full ${currentRisk === 'red' ? 'bg-rose-500' : currentRisk === 'yellow' ? 'bg-amber-400' : 'bg-emerald-400'} animate-pulse`}></span>
+                                    Open-Meteo • Mesquita / RJ ({currentRisk.toUpperCase()})
+                                </span>
+                                {liveWeather && (
+                                    <span className="hidden sm:inline text-slate-300">
+                                        🌡️ {liveWeather.temperature_2m}°C | 💧 {liveWeather.relative_humidity_2m}% | 🌧️ {liveWeather.precipitation} mm | 💨 {liveWeather.wind_speed_10m} km/h
+                                    </span>
+                                )}
+                            </div>
+
+                            <div className="flex items-center gap-3">
+                                <button
+                                    onClick={isSpeaking ? stopSpeaking : () => setSoundEnabled((value) => !value)}
+                                    className={`px-2.5 py-1 rounded text-xs font-mono border ${
+                                        isSpeaking
+                                            ? "bg-amber-500/20 text-amber-300 border-amber-500/40 animate-pulse"
+                                            : soundEnabled
+                                            ? "bg-cyan-500/20 text-cyan-400 border-cyan-500/30"
+                                            : "bg-slate-800 text-slate-500 border-slate-700"
+                                    }`}
+                                >
+                                    {isSpeaking ? "⏹ Parar fala" : soundEnabled ? "🔊 Voz ativa" : "🔇 Voz desligada"}
+                                </button>
+                            </div>
+                        </div>
+
+                        <main className="max-w-4xl mx-auto p-3 sm:p-4 w-full flex-1 flex flex-col">
+                            
+                            {activeTab === "dashboard" && (
+                                <div className="space-y-4 my-auto">
+                                    <div className="bg-slate-900/90 border border-cyan-500/30 rounded-3xl p-6 shadow-2xl flex flex-col items-center text-center backdrop-blur-md">
+                                        <div className="relative mb-4">
+                                            <SarahAvatar showStatus={true} isLarge={true} riskLevel={currentRisk} />
+                                        </div>
+
+                                        <h2 className="font-mono text-lg font-bold text-slate-100 tracking-wide mb-2">
+                                            SARAH IA • Sebinho Core v4.0
+                                        </h2>
+
+                                        <div className="px-4 py-1.5 bg-cyan-950/60 border border-cyan-500/40 rounded-full text-cyan-300 font-mono text-xs mb-6 shadow-inner">
+                                            Monitoramento de Defesa Civil Comunitária, Mesquita RJ
+                                        </div>
+
+                                        <div className="w-full grid grid-cols-1 sm:grid-cols-3 gap-3 my-4">
+                                            <button 
+                                                onClick={() => setActiveTab("chat")}
+                                                className="p-4 bg-cyan-500/10 hover:bg-cyan-500/20 border border-cyan-500/30 rounded-2xl text-left transition flex flex-col gap-2 group"
+                                            >
+                                                <span className="text-xl">💬</span>
+                                                <span className="font-mono text-xs font-bold text-cyan-300 group-hover:underline">Chat com SARAH IA</span>
+                                                <span className="text-[11px] text-slate-400">Conversar com a assistente virtual e tirar dúvidas.</span>
+                                            </button>
+
+                                            <button 
+                                                onClick={() => setActiveTab("radar")}
+                                                className="p-4 bg-cyan-500/10 hover:bg-cyan-500/20 border border-cyan-500/30 rounded-2xl text-left transition flex flex-col gap-2 group"
+                                            >
+                                                <span className="text-xl">🛰️</span>
+                                                <span className="font-mono text-xs font-bold text-cyan-300 group-hover:underline">Radar de Nuvens</span>
+                                                <span className="text-[11px] text-slate-400">Acompanhe as condições de chuva em tempo real.</span>
+                                            </button>
+
+                                            <button 
+                                                onClick={() => setActiveTab("charts")}
+                                                className="p-4 bg-cyan-500/10 hover:bg-cyan-500/20 border border-cyan-500/30 rounded-2xl text-left transition flex flex-col gap-2 group"
+                                            >
+                                                <span className="text-xl">📈</span>
+                                                <span className="font-mono text-xs font-bold text-cyan-300 group-hover:underline">Gráficos Climáticos</span>
+                                                <span className="text-[11px] text-slate-400">Previsão horária de temperatura e umidade.</span>
+                                            </button>
+                                        </div>
+
+                                        <div className="w-full pt-4 border-t border-slate-800 flex justify-between items-center text-xs font-mono text-slate-400">
+                                            <span>Setor: Rocha Sobrinho</span>
+                                            <button onClick={() => setTermsOpen(true)} className="text-cyan-400 hover:underline">Ver Termos LGPD</button>
+                                        </div>
+                                    </div>
+                                </div>
+                            )}
+
+                            {activeTab === "chat" && (
+                                <div
+                                    className="bg-slate-900/80 border border-cyan-500/30 rounded-xl shadow-xl flex flex-col overflow-hidden backdrop-blur-md flex-1"
+                                    style={{ minHeight: "450px" }}
+                                >
+                                    <div className="flex-1 overflow-y-auto p-4 space-y-4">
+                                        {messages.length === 0 && (
+                                            <div className="h-full flex flex-col items-center justify-center p-4 my-auto">
+                                                <div className="w-full max-w-md bg-slate-900/90 border border-cyan-500/30 rounded-3xl p-6 shadow-2xl flex flex-col items-center text-center backdrop-blur-md">
+                                                    
+                                                    <div className="relative mb-4">
+                                                        <SarahAvatar showStatus={true} isLarge={true} riskLevel={currentRisk} />
+                                                    </div>
+
+                                                    <h2 className="font-mono text-lg font-bold text-slate-100 tracking-wide mb-2">
+                                                        SARAH IA • Sebinho Core
+                                                    </h2>
+
+                                                    <div className="px-4 py-1.5 bg-cyan-950/60 border border-cyan-500/40 rounded-full text-cyan-300 font-mono text-xs mb-6 shadow-inner">
+                                                        Monitoramento de Defesa Civil Comunitária, Mesquita RJ
+                                                    </div>
+
+                                                    <div className="w-full space-y-2 text-xs font-mono border-t border-slate-800 pt-4 mb-6 text-slate-300">
+                                                        <div className="flex justify-between px-2">
+                                                            <span className="text-slate-400">Modelo Neural:</span>
+                                                            <span className="text-cyan-400 font-bold">GPT OSS 120B (Groq)</span>
+                                                        </div>
+                                                        <div className="flex justify-between px-2">
+                                                            <span className="text-slate-400">Setor Referência:</span>
+                                                            <span className="text-slate-200">Rocha Sobrinho / Sebinho</span>
+                                                        </div>
+                                                    </div>
+
+                                                    <div className="w-full space-y-2.5">
+                                                        <div className="text-left font-mono text-xs text-cyan-400 font-semibold mb-1 flex items-center gap-1.5">
+                                                            <span>⚡</span> Atalhos Rápidos
+                                                        </div>
+                                                        <button 
+                                                            onClick={() => setActiveTab("radar")}
+                                                            className="w-full py-2.5 px-4 bg-cyan-500/10 hover:bg-cyan-500/20 border border-cyan-500/30 text-cyan-300 rounded-xl text-xs font-mono transition flex items-center justify-center gap-2"
+                                                        >
+                                                            <span>🛰️</span> Ir para o Radar de Nuvens
+                                                        </button>
+                                                        <button 
+                                                            onClick={() => setActiveTab("charts")}
+                                                            className="w-full py-2.5 px-4 bg-cyan-500/10 hover:bg-cyan-500/20 border border-cyan-500/30 text-cyan-300 rounded-xl text-xs font-mono transition flex items-center justify-center gap-2"
+                                                        >
+                                                            <span>📈</span> Ir para Gráficos Meteorológicos
+                                                        </button>
+                                                    </div>
+
+                                                </div>
+                                            </div>
+                                        )}
+
+                                        {messages.map((message) => (
+                                            <div
+                                                key={message.id}
+                                                className={`flex items-start gap-3 ${
+                                                    message.sender === "user" ? "flex-row-reverse" : "flex-row"
+                                                }`}
+                                            >
+                                                {message.sender === "user" ? (
+                                                    <div className="w-8 h-8 rounded-xl flex items-center justify-center shrink-0 shadow-md bg-slate-700 text-cyan-300">
+                                                        👤
+                                                    </div>
+                                                ) : (
+                                                    <SarahAvatar size="w-8 h-8" showStatus={false} riskLevel={currentRisk} />
+                                                )}
+
+                                                <div
+                                                    className={`p-3.5 rounded-2xl max-w-[85%] leading-relaxed shadow-md font-sans ${
+                                                        message.sender === "user"
+                                                            ? "bg-cyan-600 text-white rounded-tr-none"
+                                                            : "bg-slate-800/90 text-slate-100 border border-slate-700/60 rounded-tl-none"
+                                                    }`}
+                                                >
+                                                    <div className="flex items-center justify-between gap-4 mb-1 text-[10px] opacity-75 font-mono">
+                                                        <span>{message.sender === "user" ? "Você" : "SARAH IA • Defesa Civil Comunitária"}</span>
+                                                        <span>{message.timestamp}</span>
+                                                    </div>
+                                                    <div className="whitespace-pre-wrap break-words">
+                                                        {message.text}
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        ))}
+
+                                        {isLoadingChat && (
+                                            <div className="flex items-center gap-3">
+                                                <SarahAvatar size="w-8 h-8" showStatus={false} riskLevel={currentRisk} />
+                                                <div className="bg-slate-800 p-3 rounded-2xl text-xs font-mono text-cyan-400 animate-pulse border border-cyan-500/30">
+                                                    SARAH IA está processando...
+                                                </div>
+                                            </div>
+                                        )}
+                                    </div>
+
+                                    <div className="p-3 bg-slate-950/95 border-t border-slate-800">
+                                        <div className="w-full bg-slate-950 border border-cyan-500/30 rounded-3xl p-3 shadow-2xl backdrop-blur-md flex flex-col gap-2 font-mono">
+                                            <div className="flex items-center justify-between px-2 text-[10px] text-cyan-400">
+                                                <span className="flex items-center gap-1.5 bg-cyan-950/80 px-2 py-0.5 rounded-full border border-cyan-500/30">
+                                                    <span className={`w-1.5 h-1.5 rounded-full ${currentRisk === 'red' ? 'bg-rose-500' : currentRisk === 'yellow' ? 'bg-amber-400' : 'bg-emerald-400'} animate-pulse`}></span>
+                                                    SARAH IA • Live Voice
+                                                </span>
+                                                <span className="text-slate-500">VOICE MODE • LIVE • 48kHz</span>
+                                            </div>
+
+                                            <div className="flex items-center gap-3 bg-slate-900/90 border border-slate-800 rounded-2xl p-2 relative overflow-hidden">
+                                                <button
+                                                    onClick={toggleListening}
+                                                    className={`w-11 h-11 rounded-full flex items-center justify-center shrink-0 transition shadow-lg ${
+                                                        isListening
+                                                            ? "bg-cyan-500 text-slate-950 border-2 border-cyan-300 animate-pulse shadow-[0_0_20px_rgba(6,182,212,0.6)]"
+                                                            : "bg-slate-950 hover:bg-slate-800 text-cyan-400 border border-cyan-500/30"
+                                                    }`}
+                                                    title="Ativar Microfone / Modo Voz"
+                                                >
+                                                    🎤
+                                                </button>
+
+                                                <div className="flex-1 flex flex-col justify-center relative">
+                                                    <input
+                                                        type="text"
+                                                        value={input}
+                                                        onChange={(event) => setInput(event.target.value)}
+                                                        onKeyDown={(event) => {
+                                                            if (event.key === "Enter") handleSendMessage();
+                                                        }}
+                                                        placeholder="Fale ou digite sua mensagem..."
+                                                        className="w-full bg-transparent text-slate-100 text-sm font-sans focus:outline-none placeholder-slate-500 px-1"
+                                                    />
+                                                    
+                                                    <div className="flex items-center gap-1 px-1 mt-1 h-3">
+                                                        {[45, 80, 30, 90, 60, 40, 100, 70, 50, 85, 40, 95, 60, 30, 75, 50, 90, 40, 65, 30].map((height, i) => (
+                                                            <div
+                                                                key={i}
+                                                                className={`w-1 rounded-full transition-all duration-150 ${
+                                                                    isListening || isSpeaking
+                                                                        ? "bg-cyan-400 animate-pulse"
+                                                                        : "bg-slate-700 opacity-50"
+                                                                }`}
+                                                                style={{ height: `${isListening || isSpeaking ? Math.max(20, Math.random() * 100) : height * 0.3}%` }}
+                                                            ></div>
+                                                        ))}
+                                                    </div>
+                                                </div>
+
+                                                <button
+                                                    onClick={() => handleSendMessage()}
+                                                    disabled={isLoadingChat || !input.trim()}
+                                                    className="w-10 h-10 rounded-full bg-cyan-500 hover:bg-cyan-400 text-slate-950 flex items-center justify-center transition shadow-lg shrink-0 disabled:opacity-40 disabled:cursor-not-allowed"
+                                                    title="Enviar Mensagem"
+                                                >
+                                                    <svg className="w-4 h-4 translate-x-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"></path>
+                                                    </svg>
+                                                </button>
+                                            </div>
+
+                                            <div className="flex items-center justify-between px-2 text-[11px] text-slate-400">
+                                                <span>Proteção de Dados Ativa</span>
+                                                <button onClick={() => setActiveTab("dashboard")} className="text-cyan-400 hover:underline">🏠 Voltar ao Início</button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            )}
+
+                            {activeTab === "radar" && (
+                                <div className="bg-slate-900 border border-cyan-500/40 w-full rounded-2xl shadow-2xl overflow-hidden flex flex-col flex-1">
+                                    <div className="bg-slate-950 px-4 py-3 border-b border-slate-800 flex justify-between items-center">
+                                        <h3 className="font-mono text-cyan-400 text-sm font-bold">
+                                            🛰️ Radar e Nuvens em Tempo Real • Mesquita
+                                        </h3>
+                                        <button
+                                            onClick={() => setActiveTab("dashboard")}
+                                            className="text-slate-400 hover:text-white font-mono text-xs px-3 py-1 rounded bg-slate-800"
+                                        >
+                                            ✕ Voltar
+                                        </button>
+                                    </div>
+                                    <div className="p-4 bg-slate-900 flex-1 flex flex-col">
+                                        <div ref={mapRef} className="w-full h-96 rounded-xl border border-cyan-500/30 flex-1 min-h-[350px]"></div>
+                                        <p className="text-xs text-slate-400 font-mono mt-3">
+                                            📍 Camada via satélite/radar integrada sobre Mesquita - RJ (Sebinho / Rocha Sobrinho).
+                                        </p>
+                                    </div>
+                                </div>
+                            )}
+
+                            {activeTab === "charts" && (
+                                <div className="bg-slate-900 border border-cyan-500/40 w-full rounded-2xl shadow-2xl overflow-hidden flex flex-col flex-1">
+                                    <div className="bg-slate-950 px-4 py-3 border-b border-slate-800 flex justify-between items-center">
+                                        <h3 className="font-mono text-cyan-400 text-sm font-bold">
+                                            📈 Monitoramento Meteorológico de Mesquita
+                                        </h3>
+                                        <button
+                                            onClick={() => setActiveTab("dashboard")}
+                                            className="text-slate-400 hover:text-white font-mono text-xs px-3 py-1 rounded bg-slate-800"
+                                        >
+                                            ✕ Voltar
+                                        </button>
+                                    </div>
+                                    <div className="p-4 bg-slate-900 flex-1 flex flex-col">
+                                        <div className="w-full h-80 flex-1 min-h-[300px]">
+                                            <canvas ref={chartRef}></canvas>
+                                        </div>
+                                        <p className="text-xs text-slate-400 font-mono mt-3">
+                                            📊 Previsão horária de temperatura e condições meteorológicas (Open-Meteo).
+                                        </p>
+                                    </div>
+                                </div>
+                            )}
+
+                        </main>
+                    </div>
+
+                    {termsOpen && (
+                        <div className="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+                            <div className="bg-slate-900 border border-cyan-500/40 w-full max-w-xl rounded-2xl shadow-2xl overflow-hidden">
+                                <div className="bg-slate-950 px-4 py-3 border-b border-slate-800 flex justify-between items-center">
+                                    <h3 className="font-mono text-cyan-400 text-sm font-bold">
+                                        ⚖️ Conformidade LGPD & Termos
+                                    </h3>
+                                    <button
+                                        onClick={() => setTermsOpen(false)}
+                                        className="text-slate-400 hover:text-white font-mono text-sm px-2 py-1 rounded bg-slate-800"
+                                    >
+                                        ✕ Fechar
+                                    </button>
+                                </div>
+                                <div className="p-5 bg-slate-900 text-xs text-slate-300 space-y-3 leading-relaxed font-sans">
+                                    <p>
+                                        <strong>SARAH IA Core v4.0</strong> opera sob os preceitos da Lei Geral de Proteção de Dados (LGPD - Lei nº 13.709/2018), assegurando total privacidade dos registros locais em Mesquita/RJ através de 3 pilares fundamentais:
+                                    </p>
+                                    <ul className="list-disc pl-5 space-y-1 font-mono text-[11px]">
+                                        <li>Minimização e tratamento local de dados.</li>
+                                        <li>Finalidade exclusiva para apoio preventivo comunitário.</li>
+                                        <li>Segurança e confidencialidade sem repasse a terceiros.</li>
+                                    </ul>
+                                    <p>
+                                        Em caso de emergência real, acione imediatamente a Defesa Civil Comunitária pelo número 199.
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
+                    <footer className="bg-slate-950 border-t border-slate-900 py-3 overflow-hidden">
+                        <div className="whitespace-nowrap flex items-center text-xs font-mono text-cyan-400 animate-marquee space-x-12 px-4">
+                            <span>🛡️ Plano de ação Redução de Riscos Defesa Civil Comunitária Digital</span>
+                            <span>•</span>
+                            <span>🚨 ZAP Alertas: (21) 97299-3223</span>
+                            <span>•</span>
+                            <span>📞 Ocorrências: (21) 4042-1772</span>
+                            <span>•</span>
+                            <span>🏢 CRAS Rocha Sobrinho: (21) 2042-8931</span>
+                            <span>•</span>
+                            <span>🛡️ Plano de ação Redução de Riscos Defesa Civil Comunitária Digital</span>
+                            <span>•</span>
+                            <span>🚨 ZAP Alertas: (21) 97299-3223</span>
+                            <span>•</span>
+                            <span>📞 Ocorrências: (21) 4042-1772</span>
+                            <span>•</span>
+                            <span>🏢 CRAS Rocha Sobrinho: (21) 2042-8931</span>
+                        </div>
+                        <div className="text-center text-[10px] font-mono text-slate-500 mt-2">
+                            Todos os direitos reservados 2024–2028 Grupo a Chave da Esperança Sebinho Mesquita RJ • Defesa Civil Comunitária Digital
+                        </div>
+                    </footer>
+                </div>
+            );
+        }
+
+        const root = ReactDOM.createRoot(document.getElementById("root"));
+        root.render(<App />);
+    </script>
+
+    <!-- Script de registro do Service Worker para PWA -->
+    <script>
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('./sw.js')
+                    .then((registration) => {
+                        console.log('SARAH PWA ServiceWorker registrado com sucesso:', registration.scope);
+                    })
+                    .catch((error) => {
+                        console.log('Falha ao registrar o ServiceWorker do PWA:', error);
+                    });
+            });
+        }
+    </script>
+</body>
+</html>
