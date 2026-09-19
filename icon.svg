@@ -1,0 +1,77 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <defs>
+    <!-- Gradientes e Filtros -->
+    <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#090d16"/>
+      <stop offset="100%" stop-color="#020617"/>
+    </linearGradient>
+    <linearGradient id="shieldOuter" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#2563eb"/>
+      <stop offset="100%" stop-color="#1e40af"/>
+    </linearGradient>
+    <linearGradient id="accentOrange" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#f97316"/>
+      <stop offset="100%" stop-color="#c2410c"/>
+    </linearGradient>
+    <filter id="neonGlow" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur stdDeviation="6" result="blur"/>
+      <feComposite in="SourceGraphic" in2="blur" operator="over"/>
+    </filter>
+    <filter id="dropShadow" x="-10%" y="-10%" width="120%" height="120%">
+      <feDropShadow dx="0" dy="4" stdDeviation="3" flood-color="#000000" flood-opacity="0.7"/>
+    </filter>
+
+    <!-- Caminhos para os textos curvados -->
+    <path id="topArch" d="M 120,155 A 150,150 0 0,1 392,155" fill="none"/>
+    <path id="bottomArch" d="M 125,375 A 155,155 0 0,0 387,375" fill="none"/>
+  </defs>
+
+  <!-- Fundo do Ícone -->
+  <rect width="512" height="512" rx="112" fill="url(#bgGrad)"/>
+
+  <!-- Anéis de Radar / Automação Tecnológica -->
+  <circle cx="256" cy="240" r="210" fill="none" stroke="#1e293b" stroke-width="2" stroke-dasharray="6 6"/>
+  <circle cx="256" cy="240" r="175" fill="none" stroke="#3b82f6" stroke-width="1.5" opacity="0.3"/>
+
+  <!-- Escudo Principal (Defesa Civil) -->
+  <path d="M256 35 L445 95 C445 270 355 405 256 485 C157 405 67 270 67 95 Z" 
+        fill="url(#shieldOuter)" stroke="#38bdf8" stroke-width="6" filter="url(#dropShadow)"/>
+
+  <!-- Núcleo Interno Escuro do Escudo -->
+  <path d="M256 60 L415 112 C415 250 335 375 256 450 C177 375 97 250 97 112 Z" 
+        fill="#0f172a" stroke="#60a5fa" stroke-width="2" opacity="0.95"/>
+
+  <!-- Texto Superior: DEFESA CIVIL COMUNITÁRIA -->
+  <text font-family="Arial, sans-serif" font-weight="900" font-size="19" fill="#ffffff" letter-spacing="1.5" filter="url(#dropShadow)">
+    <textPath href="#topArch" startOffset="50%" text-anchor="middle">DEFESA CIVIL COMUNITÁRIA</textPath>
+  </text>
+
+  <!-- Emblema Central Moderno (Escudo Laranja proporcional + Sensor de Radar/IA) -->
+  <g transform="translate(0, 10)">
+    <!-- Escudo Laranja Interno -->
+    <path d="M256 120 L335 170 C335 250 295 300 256 335 C217 300 177 250 177 170 Z" 
+          fill="url(#accentOrange)" stroke="#ffffff" stroke-width="3" filter="url(#dropShadow)"/>
+    
+    <!-- Linhas de Conexão Tecnológica -->
+    <line x1="256" y1="170" x2="256" y2="300" stroke="#ffffff" stroke-width="2" opacity="0.4" stroke-dasharray="4 4"/>
+    <line x1="210" y1="210" x2="302" y2="210" stroke="#ffffff" stroke-width="2" opacity="0.4" stroke-dasharray="4 4"/>
+
+    <!-- Núcleo Sensor / Olho Tecnológico Central -->
+    <circle cx="256" cy="220" r="32" fill="#0f172a" stroke="#38bdf8" stroke-width="4" filter="url(#dropShadow)"/>
+    <circle cx="256" cy="220" r="16" fill="#38bdf8" filter="url(#neonGlow)"/>
+    <circle cx="256" cy="220" r="6" fill="#ffffff"/>
+    
+    <!-- Ondas de Radar do Sensor -->
+    <path d="M236 195 A 30 30 0 0 1 276 195" fill="none" stroke="#38bdf8" stroke-width="3" stroke-linecap="round"/>
+    <path d="M226 185 A 45 45 0 0 1 286 185" fill="none" stroke="#22c55e" stroke-width="2.5" stroke-linecap="round" opacity="0.8"/>
+  </g>
+
+  <!-- Texto Inferior: CIDADÃO SENSOR (Grafia correta com 'S') -->
+  <text font-family="Arial, sans-serif" font-weight="900" font-size="24" fill="#38bdf8" letter-spacing="2.5" filter="url(#dropShadow)">
+    <textPath href="#bottomArch" startOffset="50%" text-anchor="middle">CIDADÃO SENSOR</textPath>
+  </text>
+
+  <!-- Indicador Verde de Automação Ativa (Canto Superior Direito) -->
+  <circle cx="410" cy="100" r="18" fill="#0f172a" stroke="#22c55e" stroke-width="4" filter="url(#dropShadow)"/>
+  <circle cx="410" cy="100" r="8" fill="#22c55e" filter="url(#neonGlow)"/>
+</svg>
