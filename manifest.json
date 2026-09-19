@@ -1,0 +1,21 @@
+{
+  "name": "SARAH IA Core v4.0 - Defesa Civil Comunitária",
+  "short_name": "SARAH IA",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#0d1b2a",
+  "theme_color": "#1b263b",
+  "icons": [
+    {
+      "src": "https://i.supaimg.com/414941c8-7ba3-4cfa-824e-814bae9c2934/4820964d-9c77-417c-b1c3-033df43a914e.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "https://i.supaimg.com/414941c8-7ba3-4cfa-824e-814bae9c2934/4820964d-9c77-417c-b1c3-033df43a914e.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}
