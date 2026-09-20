@@ -1,0 +1,1032 @@
+<!DOCTYPE html>
+<html lang="pt-BR" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SARAH AI Core v4.0 PRO - Defesa Civil Mesquita</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            dark: "#010409",
+                            light: "#f8fafc"
+                        }
+                    },
+                    animation: {
+                        'scanline': 'scan 6s linear infinite',
+                        'pulse-glow': 'pulseGlow 3s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+                        'radar-sweep': 'radarSweep 4s linear infinite',
+                    },
+                    keyframes: {
+                        scan: {
+                            '0%': { transform: 'translateY(-100%)' },
+                            '100%': { transform: 'translateY(100%)' },
+                        },
+                        pulseGlow: {
+                            '0%, 100%': { opacity: '1', filter: 'drop-shadow(0 0 20px rgba(6, 182, 212, 0.4))' },
+                            '50%': { opacity: '0.7', filter: 'drop-shadow(0 0 8px rgba(6, 182, 212, 0.2))' },
+                        },
+                        radarSweep: {
+                            '0%': { transform: 'rotate(0deg)' },
+                            '100%': { transform: 'rotate(360deg)' },
+                        }
+                    }
+                }
+            }
+        };
+    </script>
+    <script src="https://unpkg.com/react@18/umd/react.development.js" crossorigin></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js" crossorigin></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin="">
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <meta name="theme-color" content="#010409">
+    <link rel="manifest" href="manifest.json">
+    <style>
+        html, body, #root {
+            min-height: 100%;
+            margin: 0;
+        }
+        body {
+            overflow-x: hidden;
+            background-color: #010409;
+            font-family: system-ui, -apple-system, sans-serif;
+        }
+        .leaflet-container {
+            z-index: 10 !important;
+            background-color: #090d16 !important;
+        }
+        .glass-panel {
+            background: rgba(3, 7, 18, 0.85);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(6, 182, 212, 0.25);
+        }
+        .glass-hud {
+            background: rgba(15, 23, 42, 0.7);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(56, 189, 248, 0.15);
+        }
+    </style>
+</head>
+<body class="min-h-screen bg-[#010409] text-slate-100 selection:bg-cyan-500 selection:text-slate-950">
+    <div id="root"></div>
+    <script type="text/babel">
+        const CLOUDFLARE_WORKER_URL = "https://sarah-envelope.phantrorfirmo08.workers.dev/";
+
+        const getBrasiliaGreeting = () => {
+            const hour = parseInt(
+                new Intl.DateTimeFormat("pt-BR", {
+                    timeZone: "America/Sao_Paulo",
+                    hour: "numeric",
+                    hour12: false
+                }).format(new Date()),
+                10
+            );
+            if (hour >= 0 && hour < 5) return "Boa madrugada";
+            if (hour >= 5 && hour < 12) return "Bom dia";
+            if (hour >= 12 && hour < 18) return "Boa tarde";
+            return "Boa noite";
+        };
+
+        function SarahAvatar({ size = "w-11 h-11", showStatus = true, isLarge = false }) {
+            const [isBlinking, setIsBlinking] = React.useState(false);
+
+            React.useEffect(() => {
+                let timeoutId;
+                const triggerBlink = () => {
+                    setIsBlinking(true);
+                    setTimeout(() => setIsBlinking(false), 90);
+                    const randomTime = Math.floor(Math.random() * (4000 - 2000 + 1)) + 2000;
+                    timeoutId = setTimeout(triggerBlink, randomTime);
+                };
+                const initialTime = Math.floor(Math.random() * (4000 - 2000 + 1)) + 2000;
+                timeoutId = setTimeout(triggerBlink, initialTime);
+                return () => clearTimeout(timeoutId);
+            }, []);
+
+            const dimensionClass = isLarge ? "w-32 h-32" : size;
+
+            return (
+                <div className="relative inline-flex items-center justify-center shrink-0">
+                    <div className={`${dimensionClass} rounded-2xl bg-gradient-to-br from-slate-950 via-slate-900 to-cyan-950 border-2 border-cyan-400/60 shadow-[0_0_30px_rgba(6,182,212,0.4)] flex flex-col items-center justify-center relative overflow-hidden select-none animate-pulse-glow`}>
+                        {/* Grid tecnológico de alta precisão */}
+                        <div className="absolute inset-0 opacity-25 bg-[radial-gradient(#38bdf8_1px,transparent_1px)] [background-size:6px_6px]"></div>
+                        
+                        {/* Ícone Cibernético Avançado - Sério e Focado em Monitoramento */}
+                        <svg className="w-[85%] h-[85%] text-cyan-400 relative z-10" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            {/* Anéis neurais externos */}
+                            <circle cx="32" cy="32" r="26" stroke="currentColor" strokeWidth="1" strokeDasharray="6 3" className="opacity-40" />
+                            <circle cx="32" cy="32" r="20" stroke="currentColor" strokeWidth="1.5" className="opacity-60" />
+                            
+                            {/* Óptica de alta seriedade (Olhos analíticos com micro-shutter) */}
+                            <g className="transition-all duration-75">
+                                <rect x="15" y="23" width="12" height={isBlinking ? "1" : "8"} rx="4" fill="currentColor" className="shadow-[0_0_12px_#22d3ee]" />
+                                <rect x="37" y="23" width="12" height={isBlinking ? "1" : "8"} rx="4" fill="currentColor" className="shadow-[0_0_12px_#22d3ee]" />
+                            </g>
+
+                            {/* Feixe de calibração focado */}
+                            <line x1="21" y1="27" x2="43" y2="27" stroke="#010409" strokeWidth="1.5" className="opacity-80" />
+
+                            {/* Node de comunicação analítica frontal */}
+                            <path d="M 22 43 Q 32 48 42 43" stroke="currentColor" strokeWidth="3" strokeLinecap="round" className="opacity-90" />
+                            <circle cx="32" cy="32" r="2.5" fill="#38bdf8" className="animate-ping" />
+                        </svg>
+
+                        {/* Linha de varredura limpa (não afeta mapas pois fica restrita ao avatar) */}
+                        <div className="absolute inset-x-0 h-0.5 bg-cyan-300/60 shadow-[0_0_10px_#22d3ee] animate-scanline pointer-events-none"></div>
+                    </div>
+                    {showStatus && (
+                        <div className={`absolute ${isLarge ? 'bottom-1.5 right-1.5 w-4 h-4 border-2' : '-bottom-0.5 right-0.5 w-3.5 h-3.5 border-2'} bg-emerald-400 rounded-full border-slate-950 shadow-[0_0_12px_#34d399] animate-pulse`} title="Neural Core Ativo"></div>
+                    )}
+                </div>
+            );
+        }
+
+        function App() {
+            const [darkMode, setDarkMode] = React.useState(true);
+            const [soundEnabled, setSoundEnabled] = React.useState(true);
+            const [isSpeaking, setIsSpeaking] = React.useState(false);
+            const [isListening, setIsListening] = React.useState(false);
+            const [liveWeather, setLiveWeather] = React.useState(null);
+            const [hourlyForecast, setHourlyForecast] = React.useState(null);
+            const [mapOpen, setMapOpen] = React.useState(false);
+            const [chartOpen, setChartOpen] = React.useState(false);
+            const [termsOpen, setTermsOpen] = React.useState(false);
+            const [toastMessage, setToastMessage] = React.useState(null);
+            
+            const [termsAccepted, setTermsAccepted] = React.useState(
+                () => localStorage.getItem("sarah_terms_accepted_v4_pro") === "1"
+            );
+            const [check1, setCheck1] = React.useState(false);
+            const [check2, setCheck2] = React.useState(false);
+
+            const [messages, setMessages] = React.useState([]);
+            const [input, setInput] = React.useState("");
+            const [isLoadingChat, setIsLoadingChat] = React.useState(false);
+            const [hasIntroduced, setHasIntroduced] = React.useState(
+                () => localStorage.getItem("sarah_introduced_v4_pro") === "1"
+            );
+
+            const speechIdRef = React.useRef(0);
+            const voiceTimerRef = React.useRef(null);
+            const voicesRef = React.useRef([]);
+            const mapRef = React.useRef(null);
+            const mapInstanceRef = React.useRef(null);
+            const chartRef = React.useRef(null);
+            const chartInstanceRef = React.useRef(null);
+
+            const showToast = (msg) => {
+                setToastMessage(msg);
+                setTimeout(() => setToastMessage(null), 3500);
+            };
+
+            const carregarVozes = () => {
+                if ("speechSynthesis" in window) {
+                    voicesRef.current = window.speechSynthesis.getVoices();
+                }
+            };
+
+            React.useEffect(() => {
+                if (!("speechSynthesis" in window)) return;
+                carregarVozes();
+                window.speechSynthesis.onvoiceschanged = carregarVozes;
+                return () => {
+                    window.speechSynthesis.cancel();
+                    window.speechSynthesis.onvoiceschanged = null;
+                };
+            }, []);
+
+            const limparTextoParaFala = (text) => {
+                return String(text)
+                    .replace(/[#*_`~]/g, "")
+                    .replace(/\[(.*?)\]\(.*?\)/g, "$1")
+                    .replace(/https?:\/\/\S+/g, "")
+                    .replace(/\s+/g, " ")
+                    .trim();
+            };
+
+            const escolherMelhorVoz = () => {
+                const voices = voicesRef.current.length
+                    ? voicesRef.current
+                    : window.speechSynthesis.getVoices();
+                const preferidas = [
+                    "Google português do Brasil",
+                    "Google Português do Brasil",
+                    "Microsoft Francisca",
+                    "Microsoft Maria"
+                ];
+                return (
+                    voices.find((voice) =>
+                        preferidas.some((name) =>
+                            voice.name.toLowerCase().includes(name.toLowerCase())
+                        )
+                    ) ||
+                    voices.find((voice) => voice.lang.toLowerCase() === "pt-br") ||
+                    voices.find((voice) => voice.lang.toLowerCase().startsWith("pt")) ||
+                    voices[0]
+                );
+            };
+
+            const stopSpeaking = () => {
+                speechIdRef.current += 1;
+                if (voiceTimerRef.current) {
+                    clearTimeout(voiceTimerRef.current);
+                    voiceTimerRef.current = null;
+                }
+                if ("speechSynthesis" in window) {
+                    window.speechSynthesis.cancel();
+                }
+                setIsSpeaking(false);
+            };
+
+            const speakText = (text) => {
+                if (!soundEnabled || !("speechSynthesis" in window)) return;
+                const cleanText = limparTextoParaFala(text);
+                if (!cleanText) return;
+                stopSpeaking();
+                const currentId = speechIdRef.current;
+                voiceTimerRef.current = setTimeout(() => {
+                    if (currentId !== speechIdRef.current) return;
+                    const utterance = new SpeechSynthesisUtterance(cleanText);
+                    const voice = escolherMelhorVoz();
+                    utterance.lang = "pt-BR";
+                    utterance.voice = voice || null;
+                    utterance.rate = 0.95;
+                    utterance.pitch = 1.0;
+                    utterance.volume = 1;
+                    utterance.onstart = () => {
+                        if (currentId === speechIdRef.current) setIsSpeaking(true);
+                    };
+                    utterance.onend = () => {
+                        if (currentId === speechIdRef.current) setIsSpeaking(false);
+                    };
+                    utterance.onerror = () => setIsSpeaking(false);
+                    window.speechSynthesis.speak(utterance);
+                }, 250);
+            };
+
+            React.useEffect(() => {
+                if (!termsAccepted || hasIntroduced) return;
+                const greeting = getBrasiliaGreeting();
+                const presentation = `${greeting}, meu nome é Sara, núcleo de inteligência artificial e monitoramento meteorológico preventivo da Defesa Civil de Mesquita. Sistemas operacionais em capacidade máxima.`;
+                const timer = setTimeout(() => {
+                    if (!soundEnabled) return;
+                    setHasIntroduced(true);
+                    localStorage.setItem("sarah_introduced_v4_pro", "1");
+                    speakText(presentation);
+                }, 800);
+                return () => clearTimeout(timer);
+            }, [termsAccepted, hasIntroduced, soundEnabled]);
+
+            const handleShareLink = async () => {
+                const shareData = {
+                    title: "SARAH AI Core v4.0 PRO - Defesa Civil Mesquita",
+                    text: "Núcleo avançado de monitoramento meteorológico e Defesa Civil Comunitária - Sebinho / Mesquita RJ.",
+                    url: window.location.href
+                };
+                if (navigator.share) {
+                    try {
+                        await navigator.share(shareData);
+                        showToast("Aplicativo compartilhado com sucesso!");
+                    } catch (error) {
+                        console.log("Compartilhamento cancelado.");
+                    }
+                } else if (navigator.clipboard) {
+                    await navigator.clipboard.writeText(window.location.href);
+                    showToast("🔗 Link oficial copiado para a área de transferência!");
+                }
+            };
+
+            React.useEffect(() => {
+                fetch(
+                    "https://api.open-meteo.com/v1/forecast" +
+                    "?latitude=-22.7845&longitude=-43.4140" +
+                    "&current=temperature_2m,relative_humidity_2m,precipitation,weather_code,wind_speed_10m" +
+                    "&hourly=temperature_2m,precipitation_probability,precipitation"
+                )
+                    .then((response) => response.json())
+                    .then((data) => {
+                        if (data && data.current) {
+                            setLiveWeather(data.current);
+                        }
+                        if (data && data.hourly) {
+                            setHourlyForecast(data.hourly);
+                        }
+                    })
+                    .catch((error) => {
+                        console.warn("Clima indisponível:", error);
+                    });
+            }, []);
+
+            React.useEffect(() => {
+                document.documentElement.classList.toggle("dark", darkMode);
+                document.documentElement.classList.toggle("light", !darkMode);
+            }, [darkMode]);
+
+            // MAPA 100% LIMPO E LIVRE DE QUAISQUER ANIMAÇÕES SOBREPOSTAS
+            React.useEffect(() => {
+                if (mapOpen && mapRef.current && !mapInstanceRef.current) {
+                    const lat = -22.7845;
+                    const lng = -43.4140;
+                    
+                    const map = L.map(mapRef.current, {
+                        zoomControl: true,
+                        attributionControl: false
+                    }).setView([lat, lng], 14);
+                    
+                    // Camada de tiles escura de alta nitidez
+                    L.tileLayer("https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png", {
+                        maxZoom: 19,
+                        subdomains: 'abcd',
+                    }).addTo(map);
+
+                    // Adicionar radar meteorológico limpo da RainViewer
+                    fetch('https://api.rainviewer.com/public/weather-maps.json')
+                        .then(res => res.json())
+                        .then(apiData => {
+                            if (apiData && apiData.radar && apiData.radar.past && apiData.radar.past.length > 0) {
+                                const latestFrame = apiData.radar.past[apiData.radar.past.length - 1];
+                                L.tileLayer(`https://tile.rainviewer.com${latestFrame.path}/256/{z}/{x}/{y}/2/1_1.png`, {
+                                    opacity: 0.65,
+                                }).addTo(map);
+                            }
+                        })
+                        .catch(err => console.warn("Camada de radar indisponível:", err));
+
+                    // Marcador customizado da Defesa Civil
+                    const customIcon = L.divIcon({
+                        className: 'custom-div-icon',
+                        html: "<div style='background-color:#06b6d4; width:14px; height:14px; border-radius:50%; border:2px solid #ffffff; box-shadow:0 0 12px #22d3ee;'></div>",
+                        iconSize: [14, 14],
+                        iconPoint: [7, 7]
+                    });
+
+                    L.marker([lat, lng], { icon: customIcon })
+                        .addTo(map)
+                        .bindPopup("<div style='font-family:monospace; color:#0f172a; padding:4px;'><b>Setor Neural:</b> Sebinho / Rocha Sobrinho, Mesquita<br><i>Monitoramento Atmosférico Ativo.</i></div>")
+                        .openPopup();
+
+                    mapInstanceRef.current = map;
+                }
+                if (mapOpen && mapInstanceRef.current) {
+                    setTimeout(() => {
+                        mapInstanceRef.current?.invalidateSize();
+                    }, 150);
+                }
+                if (!mapOpen && mapInstanceRef.current) {
+                    mapInstanceRef.current.remove();
+                    mapInstanceRef.current = null;
+                }
+            }, [mapOpen]);
+
+            React.useEffect(() => {
+                return () => {
+                    if (mapInstanceRef.current) {
+                        mapInstanceRef.current.remove();
+                        mapInstanceRef.current = null;
+                    }
+                    if (chartInstanceRef.current) {
+                        chartInstanceRef.current.destroy();
+                        chartInstanceRef.current = null;
+                    }
+                };
+            }, []);
+
+            React.useEffect(() => {
+                if (!chartOpen || !chartRef.current) return;
+
+                if (chartInstanceRef.current) {
+                    chartInstanceRef.current.destroy();
+                    chartInstanceRef.current = null;
+                }
+
+                const ctx = chartRef.current.getContext("2d");
+                const nowIndex = new Date().getHours();
+                const labels = hourlyForecast && hourlyForecast.time 
+                    ? hourlyForecast.time.slice(nowIndex, nowIndex + 8).map(t => t.split("T")[1]) 
+                    : ["00:00", "03:00", "06:00", "09:00", "12:00", "15:00", "18:00", "21:00"];
+                
+                const tempData = hourlyForecast && hourlyForecast.temperature_2m 
+                    ? hourlyForecast.temperature_2m.slice(nowIndex, nowIndex + 8) 
+                    : [24, 23, 22, 25, 28, 29, 27, 25];
+
+                chartInstanceRef.current = new Chart(ctx, {
+                    type: "line",
+                    data: {
+                        labels: labels,
+                        datasets: [
+                            {
+                                label: "Temperatura (°C)",
+                                data: tempData,
+                                borderColor: "#22d3ee",
+                                backgroundColor: "rgba(34, 211, 238, 0.12)",
+                                borderWidth: 3,
+                                fill: true,
+                                tension: 0.4,
+                                pointBackgroundColor: "#010409",
+                                pointBorderColor: "#22d3ee",
+                                pointBorderWidth: 2.5,
+                                pointRadius: 5,
+                                pointHoverRadius: 7
+                            }
+                        ]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        scales: {
+                            y: {
+                                grid: { color: "rgba(56, 189, 248, 0.08)" },
+                                ticks: { color: "#94a3b8", font: { family: "monospace", size: 11 } }
+                            },
+                            x: {
+                                grid: { color: "rgba(56, 189, 248, 0.08)" },
+                                ticks: { color: "#94a3b8", font: { family: "monospace", size: 11 } }
+                            }
+                        },
+                        plugins: {
+                            legend: {
+                                labels: { color: "#e2e8f0", font: { family: "monospace", size: 12, weight: 'bold' } }
+                            }
+                        }
+                    }
+                });
+
+                return () => {
+                    if (chartInstanceRef.current) {
+                        chartInstanceRef.current.destroy();
+                        chartInstanceRef.current = null;
+                    }
+                };
+            }, [chartOpen, hourlyForecast]);
+
+            const toggleListening = () => {
+                const SpeechRec = window.SpeechRecognition || window.webkitSpeechRecognition;
+                if (!SpeechRec) {
+                    showToast("⚠️ Reconhecimento de voz não suportado neste navegador.");
+                    return;
+                }
+                if (isListening) {
+                    setIsListening(false);
+                    return;
+                }
+                const rec = new SpeechRec();
+                rec.lang = "pt-BR";
+                rec.interimResults = false;
+                rec.continuous = false;
+                rec.onstart = () => setIsListening(true);
+                rec.onresult = (event) => {
+                    const text = event.results[0][0].transcript;
+                    setInput(text);
+                    setIsListening(false);
+                    handleSendMessage(text);
+                };
+                rec.onerror = () => setIsListening(false);
+                rec.onend = () => setIsListening(false);
+                rec.start();
+            };
+
+            const handleSendMessage = async (textCustom) => {
+                stopSpeaking();
+                const textToSend = textCustom !== undefined ? textCustom : input;
+                if (!textToSend.trim() || isLoadingChat) return;
+
+                const userMsg = {
+                    id: `${Date.now()}-user`,
+                    sender: "user",
+                    text: textToSend.trim(),
+                    timestamp: new Date().toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })
+                };
+
+                const historico = [...messages, userMsg].slice(-8).map((message) => ({
+                    role: message.sender === "user" ? "user" : "assistant",
+                    content: message.text
+                }));
+
+                setMessages((previous) => [...previous, userMsg]);
+                setInput("");
+                setIsLoadingChat(true);
+
+                const weatherContext = liveWeather
+                    ? `Condições meteorológicas atuais em Mesquita/RJ (Open-Meteo): Temperatura ${liveWeather.temperature_2m}°C, Umidade ${liveWeather.relative_humidity_2m}%, Precipitação ${liveWeather.precipitation} mm, Vento ${liveWeather.wind_speed_10m} km/h.`
+                    : "Dados meteorológicos temporariamente indisponíveis.";
+
+                try {
+                    const response = await fetch(CLOUDFLARE_WORKER_URL, {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({
+                            model: "openai/gpt-oss-120b",
+                            messages: [
+                                {
+                                    role: "system",
+                                    content: `Você é a SARAH AI Core v4.0 PRO, núcleo cibernético de alta precisão para monitoramento meteorológico preventivo e Defesa Civil Comunitária em Mesquita/RJ. ${weatherContext}
+
+Responda em português do Brasil, de forma estritamente técnica, objetiva, executiva, séria e responsável.
+Baseie-se rigorosamente em dados meteorológicos reais. Não invente medições.
+Em situações de risco iminente, oriente o usuário com firmeza a procurar um local seguro e acionar a Defesa Civil pelo número 199.`
+                                },
+                                ...historico
+                            ],
+                            temperature: 0.4,
+                            max_tokens: 900
+                        })
+                    });
+
+                    const responseText = await response.text();
+                    let data;
+                    try {
+                        data = JSON.parse(responseText);
+                    } catch {
+                        throw new Error("O Worker retornou uma resposta inválida.");
+                    }
+
+                    if (!response.ok) {
+                        throw new Error(data?.error || `Erro do servidor (${response.status}).`);
+                    }
+
+                    const reply = data?.choices?.[0]?.message?.content || data?.message || data?.reply;
+                    if (!reply) {
+                        throw new Error("A IA não retornou uma mensagem.");
+                    }
+
+                    const assistantMsg = {
+                        id: `${Date.now()}-assistant`,
+                        sender: "sarah",
+                        text: reply,
+                        timestamp: new Date().toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })
+                    };
+
+                    setMessages((previous) => [...previous, assistantMsg]);
+                    speakText(reply);
+                } catch (error) {
+                    console.error("Erro na comunicação com Cloudflare/Groq:", error);
+                    const fallbackReply = "Falha de enlace com o cofre de segurança neural. Verifique sua conexão com a rede.";
+                    const errorMsg = {
+                        id: `${Date.now()}-error`,
+                        sender: "sarah",
+                        text: fallbackReply,
+                        timestamp: new Date().toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })
+                    };
+                    setMessages((previous) => [...previous, errorMsg]);
+                    speakText(fallbackReply);
+                } finally {
+                    setIsLoadingChat(false);
+                }
+            };
+
+            return (
+                <div className="min-h-screen bg-[#010409] text-slate-100 flex flex-col relative selection:bg-cyan-500 selection:text-slate-950">
+                    
+                    {/* Toast Notification */}
+                    {toastMessage && (
+                        <div className="fixed top-20 left-1/2 -translate-x-1/2 z-50 bg-cyan-400 text-slate-950 px-5 py-2.5 rounded-xl font-mono text-xs font-bold shadow-[0_0_25px_rgba(6,182,212,0.6)] border border-cyan-200 animate-bounce">
+                            {toastMessage}
+                        </div>
+                    )}
+
+                    {/* Modal Termos & LGPD */}
+                    {!termsAccepted && (
+                        <div className="fixed inset-0 bg-slate-950/90 backdrop-blur-xl z-50 flex items-center justify-center p-4">
+                            <div className="glass-panel w-full max-w-lg rounded-3xl shadow-[0_0_60px_rgba(6,182,212,0.3)] overflow-hidden flex flex-col max-h-[92vh]">
+                                <div className="bg-slate-950/95 px-6 py-4 border-b border-cyan-500/30 flex items-center justify-between">
+                                    <h3 className="font-mono text-cyan-400 text-sm font-bold flex items-center gap-2">
+                                        <span>🛡️</span> Protocolo de Segurança & LGPD • SARAH AI
+                                    </h3>
+                                    <span className="text-xs font-mono text-cyan-400 bg-cyan-950 px-2.5 py-0.5 rounded border border-cyan-500/30">v4.0 PRO</span>
+                                </div>
+                                <div className="p-6 overflow-y-auto space-y-4 text-xs text-slate-300 font-sans leading-relaxed">
+                                    <p className="font-mono text-slate-200">
+                                        Bem-vindo ao <strong>SARAH AI Core v4.0 PRO • Defesa Civil Mesquita</strong>. Este sistema opera sob rigorosos padrões de segurança cibernética e em estrita conformidade com a LGPD (Lei nº 13.709/2018):
+                                    </p>
+                                    
+                                    <div className="space-y-3 bg-slate-950/80 p-4 rounded-2xl border border-cyan-500/20 font-mono shadow-inner">
+                                        <div>
+                                            <span className="text-cyan-400 font-bold">1. Arquitetura Edge-First:</span> Processamento local e seguro, priorizando a privacidade total dos registros comunitários.
+                                        </div>
+                                        <div>
+                                            <span className="text-cyan-400 font-bold">2. Finalidade Preventiva:</span> Monitoramento meteorológico estrito para suporte em tempo real em Mesquita - RJ.
+                                        </div>
+                                        <div>
+                                            <span className="text-cyan-400 font-bold">3. Integridade e Sigilo:</span> Criptografia ativa de ponta a ponta sem retenção indevida de dados pessoais.
+                                        </div>
+                                    </div>
+
+                                    <div className="space-y-3 pt-2 border-t border-slate-800">
+                                        <label className="flex items-start gap-3 cursor-pointer group">
+                                            <input 
+                                                type="checkbox" 
+                                                checked={check1} 
+                                                onChange={(e) => setCheck1(e.target.checked)}
+                                                className="mt-0.5 w-4 h-4 rounded border-cyan-500/40 bg-slate-950 text-cyan-500 focus:ring-cyan-500 shrink-0 cursor-pointer" 
+                                            />
+                                            <span className="text-[11px] text-slate-300 group-hover:text-cyan-200 transition">
+                                                Compreendi e aceito os protocolos de governança de dados e diretrizes da LGPD.
+                                            </span>
+                                        </label>
+                                        <label className="flex items-start gap-3 cursor-pointer group">
+                                            <input 
+                                                type="checkbox" 
+                                                checked={check2} 
+                                                onChange={(e) => setCheck2(e.target.checked)}
+                                                className="mt-0.5 w-4 h-4 rounded border-cyan-500/40 bg-slate-950 text-cyan-500 focus:ring-cyan-500 shrink-0 cursor-pointer" 
+                                            />
+                                            <span className="text-[11px] text-slate-300 group-hover:text-cyan-200 transition">
+                                                Autorizo a ativação dos sensores de monitoramento meteorológico comunitário.
+                                            </span>
+                                        </label>
+                                    </div>
+                                </div>
+                                <div className="bg-slate-950/95 px-6 py-4 border-t border-cyan-500/30 flex justify-end">
+                                    <button
+                                        disabled={!check1 || !check2}
+                                        onClick={() => {
+                                            setTermsAccepted(true);
+                                            localStorage.setItem("sarah_terms_accepted_v4_pro", "1");
+                                            showToast("Protocolo aceito. Inicializando núcleo operacional...");
+                                        }}
+                                        className="w-full py-3.5 bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-slate-950 font-mono text-xs font-bold rounded-xl transition-all duration-300 disabled:opacity-30 disabled:cursor-not-allowed shadow-[0_0_25px_rgba(6,182,212,0.4)]"
+                                    >
+                                        AUTORIZAR E INICIALIZAR SARAH AI
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
+                    <div className="flex-1 flex flex-col">
+                        
+                        {/* Header Futurista Pro */}
+                        <header className="glass-panel border-b border-cyan-500/25 px-4 py-3 sticky top-0 z-40 shadow-2xl">
+                            <div className="max-w-4xl mx-auto flex items-center justify-between gap-2">
+                                <div className="flex items-center gap-3">
+                                    <div className="w-11 h-11 rounded-2xl bg-cyan-500/10 border border-cyan-500/50 flex items-center justify-center text-cyan-400 text-lg shadow-[0_0_20px_rgba(6,182,212,0.3)]">
+                                        🛡️
+                                    </div>
+                                    <div>
+                                        <h1 className="text-sm font-bold text-slate-100 font-sans tracking-tight flex items-center gap-2">
+                                            Projeto Cidadão Sensor
+                                            <span className="px-2 py-0.5 bg-cyan-500/20 border border-cyan-500/40 text-cyan-300 rounded font-mono text-[9px] font-bold">
+                                                v4.0 PRO
+                                            </span>
+                                        </h1>
+                                        <div className="flex items-center gap-1.5 flex-wrap mt-0.5">
+                                            <span className="text-[11px] text-cyan-400/90 font-mono">
+                                                Mesquita - RJ • Sebinho / Rocha Sobrinho
+                                            </span>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div className="flex items-center gap-2">
+                                    <button
+                                        onClick={handleShareLink}
+                                        className="w-10 h-10 rounded-xl bg-slate-900/90 hover:bg-cyan-500/20 border border-cyan-500/30 flex items-center justify-center text-cyan-400 transition-all duration-300 shadow-sm group"
+                                        title="Compartilhar Link Oficial"
+                                    >
+                                        <svg className="w-4 h-4 group-hover:scale-110 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3.316 3.316 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3.316 3.316 0 00-5.368-2.684z"></path>
+                                        </svg>
+                                    </button>
+
+                                    <button
+                                        onClick={() => showToast("🔑 Cofre Cloudflare Worker ativo com criptografia neural.")}
+                                        className="w-10 h-10 rounded-xl bg-slate-900/90 hover:bg-amber-500/20 border border-amber-500/30 flex items-center justify-center text-amber-400 transition-all duration-300 shadow-sm"
+                                        title="Cofre de Segurança Neural"
+                                    >
+                                        🔑
+                                    </button>
+
+                                    <button
+                                        onClick={() => setDarkMode((val) => !val)}
+                                        className="w-10 h-10 rounded-xl bg-slate-900/90 hover:bg-cyan-500/20 border border-cyan-500/30 flex items-center justify-center text-cyan-400 transition-all duration-300 shadow-sm"
+                                        title="Alternar Modo Interface"
+                                    >
+                                        {darkMode ? "☀️" : "🌙"}
+                                    </button>
+                                </div>
+                            </div>
+                        </header>
+
+                        {/* Telemetria Rápida Top Bar */}
+                        <div className="bg-slate-900/95 border-b border-cyan-500/20 px-4 py-2 text-xs font-mono text-slate-300 flex flex-wrap items-center justify-between gap-2 max-w-4xl mx-auto w-full shadow-inner">
+                            <div className="flex items-center gap-3">
+                                <span className="flex items-center gap-1.5 text-cyan-400 font-bold">
+                                    <span className="w-2 h-2 rounded-full bg-cyan-400 animate-ping"></span>
+                                    Open-Meteo • Mesquita / RJ
+                                </span>
+                                {liveWeather && (
+                                    <span className="hidden sm:inline text-slate-200">
+                                        🌡️ {liveWeather.temperature_2m}°C | 💧 {liveWeather.relative_humidity_2m}% | 🌧️ {liveWeather.precipitation} mm | 💨 {liveWeather.wind_speed_10m} km/h
+                                    </span>
+                                )}
+                            </div>
+
+                            <div className="flex items-center gap-3">
+                                <button
+                                    onClick={isSpeaking ? stopSpeaking : () => setSoundEnabled((value) => !value)}
+                                    className={`px-3.5 py-1 rounded-lg text-xs font-mono border transition-all duration-300 ${
+                                        isSpeaking
+                                            ? "bg-amber-500/20 text-amber-300 border-amber-500/50 animate-pulse shadow-[0_0_12px_rgba(245,158,11,0.4)]"
+                                            : soundEnabled
+                                            ? "bg-cyan-500/20 text-cyan-300 border-cyan-500/40 hover:bg-cyan-500/30"
+                                            : "bg-slate-800 text-slate-500 border-slate-700"
+                                    }`}
+                                >
+                                    {isSpeaking ? "⏹ Parar Voz" : soundEnabled ? "🔊 Voz Ativa" : "🔇 Mudo"}
+                                </button>
+                                <button
+                                    onClick={() => setTermsOpen(true)}
+                                    className="text-cyan-400 hover:text-cyan-300 hover:underline text-[11px]"
+                                >
+                                    Termos LGPD
+                                </button>
+                            </div>
+                        </div>
+
+                        {/* Container Principal do Chat e Módulos */}
+                        <main className="max-w-4xl mx-auto p-3 sm:p-4 w-full flex-1 flex flex-col">
+                            <div
+                                className="glass-panel rounded-2xl shadow-[0_0_40px_rgba(0,0,0,0.6)] flex flex-col overflow-hidden backdrop-blur-2xl flex-1 border border-cyan-500/30"
+                                style={{ minHeight: "500px" }}
+                            >
+                                <div className="flex-1 overflow-y-auto p-4 space-y-4">
+                                    {messages.length === 0 && (
+                                        <div className="h-full flex flex-col items-center justify-center p-4 my-auto">
+                                            <div className="w-full max-w-md bg-slate-900/95 border border-cyan-500/40 rounded-3xl p-6 shadow-[0_0_50px_rgba(6,182,212,0.25)] flex flex-col items-center text-center backdrop-blur-xl">
+                                                
+                                                <div className="relative mb-4">
+                                                    <SarahAvatar showStatus={true} isLarge={true} />
+                                                </div>
+
+                                                <h2 className="font-mono text-base font-bold text-slate-100 tracking-wider mb-1">
+                                                    SARAH • Neural Core v4.0 PRO
+                                                </h2>
+
+                                                <div className="px-3 py-1 bg-cyan-950/90 border border-cyan-500/40 rounded-full text-cyan-300 font-mono text-[11px] mb-5 shadow-inner">
+                                                    Monitoramento Meteorológico Ativo
+                                                </div>
+
+                                                <div className="w-full space-y-2 text-xs font-mono border-t border-slate-800/80 pt-4 mb-5 text-slate-300">
+                                                    <div className="flex justify-between px-2">
+                                                        <span className="text-slate-400">Modelo Neural:</span>
+                                                        <span className="text-cyan-400 font-bold">GPT OSS 120B (Groq)</span>
+                                                    </div>
+                                                    <div className="flex justify-between px-2">
+                                                        <span className="text-slate-400">Setor Referência:</span>
+                                                        <span className="text-slate-200">Rocha Sobrinho / Sebinho</span>
+                                                    </div>
+                                                </div>
+
+                                                <div className="w-full space-y-2.5">
+                                                    <div className="text-left font-mono text-xs text-cyan-400 font-semibold mb-1 flex items-center gap-1.5">
+                                                        <span>⚡</span> Ferramentas de Alta Tecnologia
+                                                    </div>
+                                                    <button 
+                                                        onClick={() => setMapOpen(true)}
+                                                        className="w-full py-3 px-4 bg-cyan-500/10 hover:bg-cyan-500/20 border border-cyan-500/40 text-cyan-300 rounded-xl text-xs font-mono transition-all duration-300 flex items-center justify-center gap-2 shadow-sm hover:shadow-[0_0_20px_rgba(6,182,212,0.4)] group"
+                                                    >
+                                                        <span className="group-hover:scale-110 transition-transform">🛰️</span> Abrir Radar Meteorológico (Sem Interferências)
+                                                    </button>
+                                                    <button 
+                                                        onClick={() => setChartOpen(true)}
+                                                        className="w-full py-3 px-4 bg-cyan-500/10 hover:bg-cyan-500/20 border border-cyan-500/40 text-cyan-300 rounded-xl text-xs font-mono transition-all duration-300 flex items-center justify-center gap-2 shadow-sm hover:shadow-[0_0_20px_rgba(6,182,212,0.4)] group"
+                                                    >
+                                                        <span className="group-hover:scale-110 transition-transform">📈</span> Gráfico de Monitoramento Atmosférico
+                                                    </button>
+                                                </div>
+
+                                            </div>
+                                        </div>
+                                    )}
+
+                                    {messages.map((message) => (
+                                        <div
+                                            key={message.id}
+                                            className={`flex items-start gap-3 ${
+                                                message.sender === "user" ? "flex-row-reverse" : "flex-row"
+                                            }`}
+                                        >
+                                            {message.sender === "user" ? (
+                                                <div className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0 shadow-md bg-slate-800 border border-slate-700 text-cyan-400 font-mono text-xs">
+                                                    👤
+                                                </div>
+                                            ) : (
+                                                <SarahAvatar size="w-9 h-9" showStatus={false} />
+                                            )}
+
+                                            <div
+                                                className={`p-4 rounded-2xl max-w-[85%] leading-relaxed shadow-lg font-sans ${
+                                                    message.sender === "user"
+                                                        ? "bg-gradient-to-r from-cyan-600 to-blue-600 text-white rounded-tr-none shadow-[0_0_20px_rgba(6,182,212,0.3)]"
+                                                        : "bg-slate-900/95 text-slate-100 border border-cyan-500/35 rounded-tl-none shadow-[0_0_25px_rgba(0,0,0,0.5)]"
+                                                }`}
+                                            >
+                                                <div className="flex items-center justify-between gap-4 mb-1.5 text-[10px] opacity-75 font-mono">
+                                                    <span>{message.sender === "user" ? "Você" : "SARAH AI • Defesa Civil"}</span>
+                                                    <span>{message.timestamp}</span>
+                                                </div>
+                                                <div className="whitespace-pre-wrap break-words text-sm">
+                                                    {message.text}
+                                                </div>
+                                            </div>
+                                        </div>
+                                    ))}
+
+                                    {isLoadingChat && (
+                                        <div className="flex items-center gap-3">
+                                            <SarahAvatar size="w-9 h-9" showStatus={false} />
+                                            <div className="bg-slate-900/95 p-3.5 rounded-2xl text-xs font-mono text-cyan-400 animate-pulse border border-cyan-500/40 shadow-[0_0_20px_rgba(6,182,212,0.3)]">
+                                                SARAH analisando telemetria neural...
+                                            </div>
+                                        </div>
+                                    )}
+                                </div>
+
+                                {/* Barra de Envio e Voz Futurista PRO */}
+                                <div className="p-3 bg-slate-950/95 border-t border-cyan-500/30">
+                                    <div className="w-full bg-slate-950 border border-cyan-500/40 rounded-3xl p-3 shadow-2xl backdrop-blur-md flex flex-col gap-2 font-mono">
+                                        <div className="flex items-center justify-between px-2 text-[10px] text-cyan-400">
+                                            <span className="flex items-center gap-1.5 bg-cyan-950/90 px-2 py-0.5 rounded-full border border-cyan-500/40">
+                                                <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-ping"></span>
+                                                SARAH AI • Live Voice Link PRO
+                                            </span>
+                                            <span className="text-slate-500">SECURE 120B • 48kHz</span>
+                                        </div>
+
+                                        <div className="flex items-center gap-3 bg-slate-900/95 border border-cyan-500/35 rounded-2xl p-2 relative overflow-hidden shadow-inner">
+                                            <button
+                                                onClick={toggleListening}
+                                                className={`w-12 h-12 rounded-xl flex items-center justify-center shrink-0 transition-all duration-300 shadow-lg ${
+                                                    isListening
+                                                        ? "bg-cyan-400 text-slate-950 border-2 border-cyan-200 animate-pulse shadow-[0_0_30px_rgba(6,182,212,0.9)] scale-105"
+                                                        : "bg-slate-950 hover:bg-cyan-500/20 text-cyan-400 border border-cyan-500/40"
+                                                }`}
+                                                title="Ativar Reconhecimento de Voz"
+                                            >
+                                                🎤
+                                            </button>
+
+                                            <div className="flex-1 flex flex-col justify-center relative">
+                                                <input
+                                                    type="text"
+                                                    value={input}
+                                                    onChange={(event) => setInput(event.target.value)}
+                                                    onKeyDown={(event) => {
+                                                        if (event.key === "Enter") handleSendMessage();
+                                                    }}
+                                                    placeholder="Comande a SARAH ou digite sua consulta..."
+                                                    className="w-full bg-transparent text-slate-100 text-sm font-sans focus:outline-none placeholder-slate-500 px-1"
+                                                />
+                                                
+                                                <div className="flex items-center gap-1 px-1 mt-1 h-3">
+                                                    {[45, 80, 30, 90, 60, 40, 100, 70, 50, 85, 40, 95, 60, 30, 75, 50, 90, 40, 65, 30].map((height, i) => (
+                                                        <div
+                                                            key={i}
+                                                            className={`w-1 rounded-full transition-all duration-150 ${
+                                                                isListening || isSpeaking
+                                                                    ? "bg-cyan-400 animate-pulse shadow-[0_0_10px_#22d3ee]"
+                                                                    : "bg-slate-700 opacity-50"
+                                                            }`}
+                                                            style={{ height: `${isListening || isSpeaking ? Math.max(20, Math.random() * 100) : height * 0.3}%` }}
+                                                        ></div>
+                                                    ))}
+                                                </div>
+                                            </div>
+
+                                            <button
+                                                onClick={() => handleSendMessage()}
+                                                disabled={isLoadingChat || !input.trim()}
+                                                className="w-11 h-11 rounded-xl bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-slate-950 flex items-center justify-center transition-all duration-300 shadow-[0_0_20px_rgba(6,182,212,0.5)] shrink-0 disabled:opacity-30 disabled:cursor-not-allowed group"
+                                                title="Enviar Comando"
+                                            >
+                                                <svg className="w-5 h-5 translate-x-0.5 group-hover:scale-110 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"></path>
+                                                </svg>
+                                            </button>
+                                        </div>
+
+                                        <div className="flex items-center justify-between px-2 text-[11px] text-slate-400">
+                                            <div className="flex items-center gap-3">
+                                                <button onClick={() => showToast("📎 Protocolo de anexo seguro pronto.")} className="hover:text-cyan-400 transition flex items-center gap-1">
+                                                    📎 Anexo
+                                                </button>
+                                                <button onClick={() => showToast("✨ Módulos de Defesa Civil em operação.")} className="hover:text-cyan-400 transition flex items-center gap-1">
+                                                    ✨ Ferramentas
+                                                </button>
+                                            </div>
+                                            <span>SARAH Core v4.0 PRO</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </main>
+                    </div>
+
+                    {/* Modal Radar Map (SEM ANIMAÇÕES SOBREPOSTAS PARA VISIBILIDADE PERFEITA) */}
+                    {mapOpen && (
+                        <div className="fixed inset-0 bg-slate-950/85 backdrop-blur-md z-50 flex items-center justify-center p-4">
+                            <div className="glass-panel border border-cyan-500/40 w-full max-w-2xl rounded-3xl shadow-[0_0_50px_rgba(6,182,212,0.35)] overflow-hidden">
+                                <div className="bg-slate-950 px-5 py-3.5 border-b border-cyan-500/30 flex justify-between items-center">
+                                    <h3 className="font-mono text-cyan-400 text-sm font-bold flex items-center gap-2">
+                                        <span>🛰️</span> Radar Meteorológico em Tempo Real • Mesquita
+                                    </h3>
+                                    <button
+                                        onClick={() => setMapOpen(false)}
+                                        className="text-slate-400 hover:text-white font-mono text-xs px-3 py-1.5 rounded-lg bg-slate-900 border border-slate-700 transition"
+                                    >
+                                        ✕ Fechar
+                                    </button>
+                                </div>
+                                <div className="p-4 bg-slate-900/90">
+                                    <div ref={mapRef} className="w-full h-80 rounded-2xl border border-cyan-500/30 shadow-inner"></div>
+                                    <p className="text-xs text-slate-400 font-mono mt-3">
+                                        📍 Telemetria via satélite e radar integrada sobre Mesquita - RJ (Sebinho / Rocha Sobrinho). Visualização limpa garantida.
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
+                    {/* Modal Gráfico */}
+                    {chartOpen && (
+                        <div className="fixed inset-0 bg-slate-950/85 backdrop-blur-md z-50 flex items-center justify-center p-4">
+                            <div className="glass-panel border border-cyan-500/40 w-full max-w-2xl rounded-3xl shadow-[0_0_50px_rgba(6,182,212,0.35)] overflow-hidden">
+                                <div className="bg-slate-950 px-5 py-3.5 border-b border-cyan-500/30 flex justify-between items-center">
+                                    <h3 className="font-mono text-cyan-400 text-sm font-bold flex items-center gap-2">
+                                        <span>📈</span> Monitoramento Atmosférico • Mesquita
+                                    </h3>
+                                    <button
+                                        onClick={() => setChartOpen(false)}
+                                        className="text-slate-400 hover:text-white font-mono text-xs px-3 py-1.5 rounded-lg bg-slate-900 border border-slate-700 transition"
+                                    >
+                                        ✕ Fechar
+                                    </button>
+                                </div>
+                                <div className="p-4 bg-slate-900/90">
+                                    <div className="w-full h-72">
+                                        <canvas ref={chartRef}></canvas>
+                                    </div>
+                                    <p className="text-xs text-slate-400 font-mono mt-3">
+                                        📊 Projeção horária de temperatura e variação atmosférica (Open-Meteo).
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
+                    {/* Modal Termos LGPD */}
+                    {termsOpen && (
+                        <div className="fixed inset-0 bg-slate-950/85 backdrop-blur-md z-50 flex items-center justify-center p-4">
+                            <div className="glass-panel border border-cyan-500/40 w-full max-w-xl rounded-3xl shadow-[0_0_50px_rgba(6,182,212,0.35)] overflow-hidden">
+                                <div className="bg-slate-950 px-5 py-3.5 border-b border-cyan-500/30 flex justify-between items-center">
+                                    <h3 className="font-mono text-cyan-400 text-sm font-bold flex items-center gap-2">
+                                        <span>⚖️</span> Conformidade LGPD & Governança
+                                    </h3>
+                                    <button
+                                        onClick={() => setTermsOpen(false)}
+                                        className="text-slate-400 hover:text-white font-mono text-xs px-3 py-1.5 rounded-lg bg-slate-900 border border-slate-700 transition"
+                                    >
+                                        ✕ Fechar
+                                    </button>
+                                </div>
+                                <div className="p-6 bg-slate-900/90 text-xs text-slate-300 space-y-3 leading-relaxed font-sans">
+                                    <p>
+                                        <strong>SARAH AI Core v4.0 PRO</strong> opera estritamente sob os preceitos da Lei Federal de Proteção de Dados (LGPD - Lei nº 13.709/2018), garantindo criptografia e privacidade aos registros comunitários em Mesquita/RJ.
+                                    </p>
+                                    <p>
+                                        O sistema fornece suporte preventivo de Defesa Civil em tempo real com base meteorológica aberta e segura.
+                                    </p>
+                                    <p className="text-cyan-400 font-mono font-bold">
+                                        🚨 Em caso de emergência iminente, acione imediatamente a Defesa Civil pelo número 199.
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
+                    <footer className="bg-[#010409] border-t border-cyan-500/20 py-4 px-4 text-center text-xs font-mono text-slate-400 space-y-1 shadow-inner">
+                        <div>Todos os direitos reservados 2024–2028 Grupo a Chave da Esperança Sebinho Mesquita RJ</div>
+                        <div className="text-cyan-400 font-bold">Defesa Civil Comunitária Digital • SARAH AI Core v4.0 PRO</div>
+                    </footer>
+                </div>
+            );
+        }
+
+        const root = ReactDOM.createRoot(document.getElementById("root"));
+        root.render(<App />);
+
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('sw.js').catch(() => {});
+            });
+        }
+    </script>
+</body>
+</html>
