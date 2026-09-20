@@ -1,0 +1,17 @@
+{
+  "name": "SARAH IA Core v4.0 - Defesa Civil Comunitária, Mesquita RJ",
+  "short_name": "SARAH IA",
+  "description": "App/ Prevenção & suporte comunitário automatizado, Sarah IA System Group",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#020617",
+  "theme_color": "#020617",
+  "icons": [
+    {
+      "src": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAgAAAAIACAYAAAD0eNT6AAAWEElEQVR4nO3df3TU950H8Peu8S9eS6uBggj4Z2QYwY8I8bC9h1aU+qP96W/u/W1V50oKvdT66bKtdF116m63V1111a0b3Wp1lU7n6fV1d+v31qWjXb/3t5QdE1bW1bVtbW/t0iEaVw2aCqXqqtLqj3/0q//7sX8Xj3vN0xL4l7Z9+vzv//4dZ+5/5uF3JtH1mIuLw40+c0e4kP7PnxrOAP8Pz9f8eFvP8gAAAAASUVORK5CYII=",
+      "sizes": "192x192 512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}
