@@ -1,0 +1,19 @@
+{
+  "name": "SARAH IA Core - Defesa Civil Mesquita",
+  "short_name": "SARAH IA",
+  "description": "Sistema de Prevenção, Alerta Comunitário e Suporte Inteligente",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#020617",
+  "theme_color": "#020617",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'><rect width='512' height='512' rx='110' fill='%23020617'/><path d='M256 48 L416 112 V240 C416 352 352 432 256 464 C160 432 96 352 96 240 V112 L256 48 Z' fill='none' stroke='%2300f2ff' stroke-width='16'/><circle cx='256' cy='256' r='64' fill='rgba(0,242,255,0.15)' stroke='%2300f2ff' stroke-width='6'/><polygon points='256,216 288,236 288,276 256,296 224,276 224,236' fill='%2300f2ff'/><circle cx='256' cy='256' r='16' fill='%23ffffff'/></svg>",
+      "sizes": "192x192 512x512",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}
