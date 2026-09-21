@@ -1,0 +1,23 @@
+{
+  "name": "SARAH IA • Defesa Civil Comunitária Cidadão Sensor",
+  "short_name": "SARAH IA",
+  "description": "Núcleo de Monitoramento Preventivo e Defesa Civil - Sebinho, Mesquita/RJ",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#020617",
+  "theme_color": "#020617",
+  "icons": [
+    {
+      "src": "https://cdn.imagetourls.com/uploads/tyImg/0zVus0Dg.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "https://cdn.imagetourls.com/uploads/tyImg/0zVus0Dg.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}
