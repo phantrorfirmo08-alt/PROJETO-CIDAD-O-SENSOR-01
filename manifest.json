@@ -1,0 +1,23 @@
+{
+  "name": "SARAH IA Core PRO - Defesa Civil Comunitária",
+  "short_name": "SARAH IA",
+  "description": "Sistema inteligente de prevenção de riscos, suporte comunitário e monitoramento em Mesquita - RJ.",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#020617",
+  "theme_color": "#020617",
+  "icons": [
+    {
+      "src": "https://cdn.imagetourls.com/uploads/tyImg/Iy6iGSnK.jpg",
+      "sizes": "192x192",
+      "type": "image/jpeg",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "https://cdn.imagetourls.com/uploads/tyImg/Iy6iGSnK.jpg",
+      "sizes": "512x512",
+      "type": "image/jpeg",
+      "purpose": "any maskable"
+    }
+  ]
+}
