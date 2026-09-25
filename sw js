@@ -1,0 +1,152 @@
+// ==========================================
+// MÓDULO DE RADAR RAINVIEWER (OTIMIZADO & ZOOM CORRIGIDO)
+// SARAH IA Core v5.2 PRO - Defesa Civil Comunitária
+// ==========================================
+
+const initRadarModule = (mapInstance, setRadarSliderMax, setRadarSliderValue, setRadarTimeLabel, setZoomWarningVisible) => {
+    let radarLayers = [];
+    let mapFrames = [];
+    let currentFrameIndex = 0;
+    let playInterval = null;
+    let isPlaying = false;
+    let radarHost = "https://tilecache.rainviewer.com";
+
+    const carregarCamadaRadar = () => {
+        if (!mapInstance) {
+            console.error("Instância do mapa Leaflet não encontrada.");
+            return;
+        }
+
+        // Configuração ideal de limites para a região de Mesquita / Serra do Mendanha
+        mapInstance.setMinZoom(10);
+        mapInstance.setMaxZoom(19);
+
+        fetch('https://api.rainviewer.com/public/weather-maps.json')
+            .then(response => response.json())
+            .then(data => {
+                if (!data || !data.radar || !data.radar.past) {
+                    console.error("Estrutura de dados do RainViewer inválida.");
+                    return;
+                }
+
+                mapFrames = data.radar.past;
+                radarHost = data.host || "https://tilecache.rainviewer.com";
+
+                setRadarSliderMax(mapFrames.length - 1);
+                setRadarSliderValue(mapFrames.length - 1);
+
+                prepararCamadasRadar();
+                showFrame(mapFrames.length - 1);
+
+                mapInstance.off('zoomend', verificarZoomRadar);
+                mapInstance.on('zoomend', verificarZoomRadar);
+                verificarZoomRadar();
+            })
+            .catch(err => {
+                console.error("Falha ao sincronizar com API do RainViewer:", err);
+                setRadarTimeLabel("Erro no Radar");
+            });
+    };
+
+    const prepararCamadasRadar = () => {
+        radarLayers.forEach(layer => {
+            if (mapInstance.hasLayer(layer)) mapInstance.removeLayer(layer);
+        });
+        radarLayers = [];
+
+        mapFrames.forEach((frame) => {
+            // CORREÇÃO DE ZOOM: Utiliza o padrão 256 com suporte a maxNativeZoom para evitar sumiço da imagem
+            const tileUrl = `${radarHost}${frame.path}/256/{z}/{x}/{y}/2/1_1.png`;
+            const layer = L.tileLayer(tileUrl, {
+                tileSize: 256,
+                opacity: 0.80,
+                maxZoom: 19,
+                maxNativeZoom: 18,
+                attribution: 'Radar &copy; <a href="https://rainviewer.com" target="_blank">RainViewer</a>',
+                zIndex: 100
+            });
+            radarLayers.push(layer);
+        });
+    };
+
+    const showFrame = (index) => {
+        if (mapFrames.length === 0 || index < 0 || index >= mapFrames.length) return;
+
+        currentFrameIndex = parseInt(index);
+        setRadarSliderValue(currentFrameIndex);
+
+        // Remove camadas anteriores para evitar sobreposição fantasma
+        radarLayers.forEach(layer => {
+            if (mapInstance.hasLayer(layer)) {
+                mapInstance.removeLayer(layer);
+            }
+        });
+
+        const currentZoom = mapInstance.getZoom();
+        // Se o zoom estiver dentro da faixa de operação, renderiza a camada ativa perfeitamente
+        if (currentZoom >= 10) {
+            const activeLayer = radarLayers[currentFrameIndex];
+            if (activeLayer && !mapInstance.hasLayer(activeLayer)) {
+                activeLayer.addTo(mapInstance);
+            }
+        }
+
+        const frameTime = new Date(mapFrames[currentFrameIndex].time * 1000);
+        const timeString = frameTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+        const suffix = currentFrameIndex === mapFrames.length - 1 ? " [AGORA]" : " [HISTÓRICO]";
+        setRadarTimeLabel(`${timeString}${suffix} (${currentFrameIndex + 1}/${mapFrames.length})`);
+    };
+
+    const verificarZoomRadar = () => {
+        const zoom = mapInstance.getZoom();
+        
+        // Alerta dinâmico se o usuário afastar demais o mapa
+        if (zoom < 11) {
+            setZoomWarningVisible(true);
+        } else {
+            setZoomWarningVisible(false);
+        }
+
+        // Garante que o frame atual continue visível ao dar zoom in/out
+        if (radarLayers[currentFrameIndex] && !mapInstance.hasLayer(radarLayers[currentFrameIndex])) {
+            radarLayers[currentFrameIndex].addTo(mapInstance);
+        }
+    };
+
+    const pauseRadarAnimation = () => {
+        isPlaying = false;
+        if (playInterval) {
+            clearInterval(playInterval);
+            playInterval = null;
+        }
+    };
+
+    const toggleRadarAnimation = (setRadarPlayingState) => {
+        if (isPlaying) {
+            pauseRadarAnimation();
+            setRadarPlayingState(false);
+        } else {
+            if (mapFrames.length === 0) return;
+            isPlaying = true;
+            setRadarPlayingState(true);
+
+            playInterval = setInterval(() => {
+                currentFrameIndex = (currentFrameIndex + 1) % mapFrames.length;
+                showFrame(currentFrameIndex);
+            }, 700);
+        }
+    };
+
+    const onSliderChange = (value) => {
+        pauseRadarAnimation();
+        showFrame(value);
+    };
+
+    carregarCamadaRadar();
+
+    return {
+        onSliderChange,
+        toggleRadarAnimation,
+        pauseRadarAnimation
+    };
+};
