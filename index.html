@@ -1,0 +1,791 @@
+<!DOCTYPE html>
+<html lang="pt-PT" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SARAH IA Core v5.2 PRO - Defesa Civil Comunitária Cidadão Sensor</title>
+    
+    <meta property="og:title" content="SARAH IA Core v5.2 PRO - Defesa Civil Comunitária Cidadão Sensor">
+    <meta property="og:description" content="App de Prevenção e apoio meteorológico comunitário automatizado. Prevenção não é mídia: é gente atenta.">
+    <meta property="og:image" content="https://www.image2url.com/r2/default/images/1790084936078-de3b77c5-fa9f-4b89-a02a-560b09e8b5a0.png">
+    <meta property="og:url" content="https://phantrorfirmo08-alt.github.io/PROJETO-CIDAD-O-SENSOR-01/?v=5.2">
+    <meta property="og:type" content="website">
+
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#030712">
+    <link rel="apple-touch-icon" href="https://www.image2url.com/r2/default/images/1790084936078-de3b77c5-fa9f-4b89-a02a-560b09e8b5a0.png">
+
+    <!-- CSS do Leaflet -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+
+    <!-- Tailwind CSS v4 -->
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- React e ReactDOM -->
+    <script src="https://unpkg.com/react@18/umd/react.development.js" crossorigin></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js" crossorigin></script>
+    <!-- Babel Standalone -->
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+    <style>
+        html, body, #root {
+            min-height: 100%;
+            margin: 0;
+            background-color: #030712;
+            color: #f8fafc;
+        }
+        body {
+            overflow-x: hidden;
+            font-family: system-ui, -apple-system, sans-serif;
+        }
+        .glass-dark {
+            background: rgba(6, 15, 30, 0.90);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(0, 243, 255, 0.35);
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+        }
+    </style>
+</head>
+<body class="bg-[#030712] text-slate-100 selection:bg-cyan-400 selection:text-slate-950">
+    <div id="root"></div>
+
+    <!-- JS do Leaflet -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+    <script type="text/babel">
+        const CLOUDFLARE_WORKER_URL = "https://sarah-envelope.phantrorfirmo08.workers.dev/";
+
+        function CyberShieldIcon({ className = "w-6 h-6" }) {
+            return (
+                <svg className={className} viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M12 2L3 6V11C3 16.55 6.84 21.74 12 23C17.16 21.74 21 16.55 21 11V6L12 2Z" fill="url(#shieldGrad)" stroke="#00f3ff" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
+                    <path d="M12 7C9.79 7 8 8.79 8 11C8 12.1 8.44 13.09 9.14 13.8L9 18H11V20H13V18H15V14.8C15.56 14.09 16 13.1 16 11C16 8.79 14.21 7 12 7ZM12 9C13.1 9 14 9.9 14 11C14 12.1 13.1 13 12 13C10.9 13 10 12.1 10 11C10 9.9 10.9 9 12 9Z" fill="#030712"/>
+                    <defs>
+                        <linearGradient id="shieldGrad" x1="3" y1="2" x2="21" y2="23" gradientUnits="userSpaceOnUse">
+                            <stop stopColor="#00f3ff" />
+                            <stop offset="1" stopColor="#00ff88" />
+                        </linearGradient>
+                    </defs>
+                </svg>
+            );
+        }
+
+        function SarahAvatar({ size = "w-10 h-10", showStatus = true, isLarge = false }) {
+            const [isBlinking, setIsBlinking] = React.useState(false);
+
+            React.useEffect(() => {
+                let timeoutId;
+                const triggerBlink = () => {
+                    setIsBlinking(true);
+                    setTimeout(() => setIsBlinking(false), 120);
+                    const randomTime = Math.floor(Math.random() * (4500 - 2200 + 1)) + 2200;
+                    timeoutId = setTimeout(triggerBlink, randomTime);
+                };
+                const initialTime = Math.floor(Math.random() * (4500 - 2200 + 1)) + 2200;
+                timeoutId = setTimeout(triggerBlink, initialTime);
+                return () => clearTimeout(timeoutId);
+            }, []);
+
+            const dimensionClass = isLarge ? "w-32 h-32 sm:w-36 sm:h-36" : size;
+
+            return (
+                <div className="relative inline-flex items-center justify-center shrink-0">
+                    <div className={`${dimensionClass} rounded-3xl bg-gradient-to-br from-slate-950 via-[#060f1e] to-emerald-950 border-2 border-cyan-400/70 shadow-[0_0_30px_rgba(0,243,255,0.35)] flex flex-col items-center justify-center relative overflow-hidden select-none`}>
+                        <svg className="w-4/5 h-4/5 text-cyan-400 relative z-10" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <circle cx="50" cy="5" r="2" fill="#00f3ff" />
+                            <path d="M 50 7 L 50 12" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"/>
+                            <path d="M 22 36 C 22 24, 34 20, 50 20 C 66 20, 78 24, 78 36 C 78 54, 68 74, 50 74 C 32 74, 22 54, 22 36 Z" fill="#061a24" stroke="currentColor" strokeWidth="2.2"/>
+                            <rect x="28" y="32" width="44" height="28" rx="10" fill="#030712" stroke="currentColor" strokeWidth="1.5"/>
+                            <ellipse cx="39" cy="46" rx="5.5" ry={isBlinking ? "0.6" : "4.5"} fill="#4cc9f0" />
+                            <ellipse cx="61" cy="46" rx="5.5" ry={isBlinking ? "0.6" : "4.5"} fill="#4cc9f0" />
+                            <path d="M 43 59 C 46 62, 54 62, 57 59" stroke="#00f3ff" strokeWidth="1.8" strokeLinecap="round" fill="none"/>
+                        </svg>
+                    </div>
+                    {showStatus && (
+                        <div className={`absolute ${isLarge ? 'bottom-1.5 right-1.5 w-4.5 h-4.5 border-2' : '-bottom-0.5 right-0.5 w-3.5 h-3.5 border'} bg-emerald-400 rounded-full border-slate-950 shadow-[0_0_12px_#00ff88] animate-ping`} title="Core Neural Operacional"></div>
+                    )}
+                </div>
+            );
+        }
+
+        function LeafletHydroWindRadar() {
+            const mapRef = React.useRef(null);
+            const mapInstanceRef = React.useRef(null);
+            const radarLayersRef = React.useRef([]);
+            const [timestampText, setTimestampText] = React.useState("Varrendo...");
+            const [isPlaying, setIsPlaying] = React.useState(false);
+            const intervalRef = React.useRef(null);
+
+            React.useEffect(() => {
+                if (!window.L || mapInstanceRef.current) return;
+
+                const centerLat = -22.8100;
+                const centerLng = -43.4200;
+
+                const map = window.L.map(mapRef.current, {
+                    zoomControl: true,
+                    attributionControl: false
+                }).setView([centerLat, centerLng], 13);
+
+                mapInstanceRef.current = map;
+
+                window.L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_nolabels/{z}/{x}/{y}{r}.png', {
+                    maxZoom: 19
+                }).addTo(map);
+
+                window.L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_only_labels/{z}/{x}/{y}{r}.png', {
+                    maxZoom: 19,
+                    opacity: 0.5
+                }).addTo(map);
+
+                const mendanhaLat = -22.8350;
+                const mendanhaLng = -43.4750;
+                window.L.circleMarker([mendanhaLat, mendanhaLng], {
+                    radius: 7, color: '#38bdf8', fillColor: '#38bdf8', fillOpacity: 0.9, weight: 2
+                }).addTo(map).bindPopup("<b style='color:#38bdf8;'>ORIGEM:</b><br>Serra do Mendanha<br>Cabeceira de escoamento da chuva.");
+
+                const sebinhoLat = -22.7915;
+                const sebinhoLng = -43.4182;
+
+                window.L.circle([sebinhoLat, sebinhoLng], {
+                    color: '#ef4444', fillColor: '#ef4444', fillOpacity: 0.15, radius: 800
+                }).addTo(map);
+
+                window.L.circleMarker([sebinhoLat, sebinhoLng], {
+                    radius: 6, color: '#ffffff', fillColor: '#ef4444', fillOpacity: 1, weight: 2
+                }).addTo(map).bindPopup("<b style='color:red;'>ÁREA CRÍTICA:</b><br>Sebinho / Rocha Sobrinho<br>Margem Direta do Rio Sarapuí.");
+
+                window.L.polyline([
+                    [mendanhaLat, mendanhaLng],
+                    [-22.8220, -43.4500],
+                    [-22.8080, -43.4320],
+                    [sebinhoLat, sebinhoLng],
+                    [-22.7750, -43.4100]
+                ], {
+                    color: '#00f2fe', weight: 4, opacity: 0.85
+                }).addTo(map).bindPopup("<b>EIXO MESTRE:</b><br>Rio Sarapuí (Canal Principal de Drenagem e Cheias).");
+
+                window.L.circleMarker([-22.8050, -43.4280], {
+                    radius: 4, color: '#94a3b8', fillColor: '#94a3b8', fillOpacity: 0.7
+                }).addTo(map).bindPopup("Rio Dona Eugênia (Afluente)");
+
+                fetch('https://api.rainviewer.com/public/weather-maps.json')
+                    .then(response => response.json())
+                    .then(data => {
+                        if (!data || !data.radar || !data.radar.past) return;
+                        const radarFrames = data.radar.past;
+                        const layers = [];
+
+                        radarFrames.forEach((frame) => {
+                            const url = `https://tile.rainviewer.com${frame.path}/256/{z}/{x}/{y}/2/1_1.png`;
+                            const layer = window.L.tileLayer(url, { opacity: 0.0 }).addTo(map);
+                            layers.push({ layer: layer, time: frame.time });
+                        });
+
+                        radarLayersRef.current = layers;
+                        if (layers.length > 0) {
+                            showFrame(layers.length - 1);
+                        }
+                    })
+                    .catch(err => {
+                        console.warn("Erro ao carregar radar meteorológico:", err);
+                        setTimestampText("RADAR OFFLINE");
+                    });
+
+            }, []);
+
+            const showFrame = (index) => {
+                const layers = radarLayersRef.current;
+                layers.forEach((obj, idx) => {
+                    if (idx === index) {
+                        obj.layer.setOpacity(0.85);
+                        const date = new Date(obj.time * 1000);
+                        const timeString = date.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+                        if (index === layers.length - 1) {
+                            setTimestampText(timeString + " [AGORA]");
+                        } else {
+                            setTimestampText(timeString + " [HISTÓRICO]");
+                        }
+                    } else {
+                        obj.layer.setOpacity(0.0);
+                    }
+                });
+            };
+
+            const toggleAnimation = () => {
+                const layers = radarLayersRef.current;
+                if (!layers.length) return;
+
+                if (isPlaying) {
+                    clearInterval(intervalRef.current);
+                    setIsPlaying(false);
+                    showFrame(layers.length - 1);
+                } else {
+                    let currentIndex = 0;
+                    setIsPlaying(true);
+                    intervalRef.current = setInterval(() => {
+                        showFrame(currentIndex);
+                        currentIndex++;
+                        if (currentIndex >= layers.length) {
+                            currentIndex = 0;
+                        }
+                    }, 700);
+                }
+            };
+
+            return (
+                <div className="relative w-full h-[400px] rounded-2xl overflow-hidden border-2 border-cyan-400/50 shadow-2xl bg-slate-950 flex flex-col">
+                    <div className="absolute top-3 left-3 z-[1000] bg-[#040811]/95 text-slate-200 p-3 rounded-xl font-mono shadow-xl border border-cyan-500/40 w-64 backdrop-blur-md">
+                        <h3 className="m-0 text-[11px] font-bold text-cyan-400 tracking-wider">RADAR &bull; BACIA DO SARAPUÍ</h3>
+                        <p className="m-0 mb-2 text-[10px] text-slate-400">Eixo Mestre: Rio Sarapuí / Sebinho</p>
+                        
+                        <div className="bg-gradient-to-r from-emerald-400 via-yellow-400 to-red-500 h-2 rounded mb-1"></div>
+                        <div className="flex justify-between text-[9px] text-slate-400 mb-2">
+                            <span>Fraca</span><span>Mod</span><span>Forte</span><span>Extrema</span>
+                        </div>
+
+                        <div className="text-[10px] bg-slate-900 p-1.5 rounded border-l-2 border-red-500 mb-2">
+                            SCANNER: <span className="font-bold text-cyan-300">{timestampText}</span>
+                        </div>
+
+                        <button
+                            onClick={toggleAnimation}
+                            className="w-full bg-slate-900 hover:bg-cyan-400 hover:text-slate-950 text-cyan-400 border border-cyan-400 py-1.5 px-2 rounded font-bold text-[10px] uppercase cursor-pointer transition"
+                        >
+                            {isPlaying ? "Congelar Imagem" : "Iniciar Linha do Tempo"}
+                        </button>
+                    </div>
+
+                    <div ref={mapRef} className="w-full h-full"></div>
+                </div>
+            );
+        }
+
+        function App() {
+            const [soundEnabled, setSoundEnabled] = React.useState(true);
+            const [isSpeaking, setIsSpeaking] = React.useState(false);
+            const [isListening, setIsListening] = React.useState(false);
+            const [hourlyForecast, setHourlyForecast] = React.useState(null);
+            
+            const [isLoadingSplash, setIsLoadingSplash] = React.useState(true);
+            const [activeTab, setActiveTab] = React.useState("dashboard"); 
+            
+            const [actionPlanOpen, setActionPlanOpen] = React.useState(false);
+            
+            const [mediaList, setMediaList] = React.useState(() => {
+                try {
+                    const saved = localStorage.getItem("sarah_media_list_v52_persistent");
+                    return saved ? JSON.parse(saved) : [];
+                } catch {
+                    return [];
+                }
+            });
+
+            React.useEffect(() => {
+                try {
+                    localStorage.setItem("sarah_media_list_v52_persistent", JSON.stringify(mediaList));
+                } catch (e) {
+                    console.warn("Armazenamento local cheio", e);
+                }
+            }, [mediaList]);
+
+            const [selectedCategory, setSelectedCategory] = React.useState("Vídeos / Eventos e Registros");
+            const [toastMessage, setToastMessage] = React.useState(null);
+            
+            const [messages, setMessages] = React.useState([]);
+            const [input, setInput] = React.useState("");
+            const [isLoadingChat, setIsLoadingChat] = React.useState(false);
+
+            const speechIdRef = React.useRef(0);
+            const voiceTimerRef = React.useRef(null);
+            const voicesRef = React.useRef([]);
+            const chartRef = React.useRef(null);
+            const chartInstanceRef = React.useRef(null);
+
+            const showToast = (msg) => {
+                setToastMessage(msg);
+                setTimeout(() => setToastMessage(null), 3500);
+            };
+
+            React.useEffect(() => {
+                const splashTimer = setTimeout(() => setIsLoadingSplash(false), 2000);
+                return () => clearTimeout(splashTimer);
+            }, []);
+
+            const carregarVozes = () => {
+                if ("speechSynthesis" in window) {
+                    voicesRef.current = window.speechSynthesis.getVoices();
+                }
+            };
+
+            React.useEffect(() => {
+                if (!("speechSynthesis" in window)) return;
+                carregarVozes();
+                window.speechSynthesis.onvoiceschanged = carregarVozes;
+                return () => {
+                    window.speechSynthesis.cancel();
+                    window.speechSynthesis.onvoiceschanged = null;
+                };
+            }, []);
+
+            const limparTextoParaFala = (text) => {
+                return String(text)
+                    .replace(/[#*_`~]/g, "")
+                    .replace(/\[(.*?)\]\(.*?\)/g, "$1")
+                    .replace(/https?:\/\/\S+/g, "")
+                    .replace(/\s+/g, " ")
+                    .trim();
+            };
+
+            const escolherMelhorVoz = () => {
+                const voices = voicesRef.current.length ? voicesRef.current : window.speechSynthesis.getVoices();
+                const preferidas = ["Microsoft Francisca Online", "Microsoft Maria", "Google português do Brasil", "Luciana", "Felipe"];
+                for (let pref of preferidas) {
+                    const match = voices.find(v => v.name.toLowerCase().includes(pref.toLowerCase()));
+                    if (match) return match;
+                }
+                return voices.find((v) => v.lang.toLowerCase().includes("pt")) || voices[0];
+            };
+
+            const stopSpeaking = () => {
+                speechIdRef.current += 1;
+                if (voiceTimerRef.current) {
+                    clearTimeout(voiceTimerRef.current);
+                    voiceTimerRef.current = null;
+                }
+                if ("speechSynthesis" in window) window.speechSynthesis.cancel();
+                setIsSpeaking(false);
+            };
+
+            const speakText = (text) => {
+                if (!soundEnabled || !("speechSynthesis" in window)) return;
+                const cleanText = limparTextoParaFala(text);
+                if (!cleanText) return;
+                stopSpeaking();
+                const currentId = speechIdRef.current;
+                voiceTimerRef.current = setTimeout(() => {
+                    if (currentId !== speechIdRef.current) return;
+                    const utterance = new SpeechSynthesisUtterance(cleanText);
+                    utterance.lang = "pt-BR";
+                    utterance.voice = escolherMelhorVoz() || null;
+                    utterance.rate = 0.95;
+                    utterance.onstart = () => { if (currentId === speechIdRef.current) setIsSpeaking(true); };
+                    utterance.onend = () => { if (currentId === speechIdRef.current) setIsSpeaking(false); };
+                    utterance.onerror = () => setIsSpeaking(false);
+                    window.speechSynthesis.speak(utterance);
+                }, 200);
+            };
+
+            React.useEffect(() => {
+                fetch(`https://api.open-meteo.com/v1/forecast?latitude=-22.7819&longitude=-43.4294&current=temperature_2m,relative_humidity_2m,precipitation,weather_code,wind_speed_10m&hourly=temperature_2m,precipitation_probability,precipitation`)
+                    .then((res) => res.json())
+                    .then((data) => {
+                        if (data && data.hourly) setHourlyForecast(data.hourly);
+                    })
+                    .catch((err) => console.warn("Clima indisponível:", err));
+            }, []);
+
+            React.useEffect(() => {
+                if (!chartRef.current || !window.Chart) return;
+                const ctx = chartRef.current.getContext("2d");
+                const nowIndex = new Date().getHours();
+                const labels = hourlyForecast && hourlyForecast.time 
+                    ? hourlyForecast.time.slice(nowIndex, nowIndex + 8).map(t => t.split("T")[1]) 
+                    : ["08h", "10h", "12h", "14h", "16h", "Atual", "20h", "22h"];
+                
+                const tempData = hourlyForecast && hourlyForecast.temperature_2m 
+                    ? hourlyForecast.temperature_2m.slice(nowIndex, nowIndex + 8) 
+                    : [24, 23.5, 23, 22.5, 24, 27, 29, 31];
+
+                const precipData = hourlyForecast && hourlyForecast.precipitation 
+                    ? hourlyForecast.precipitation.slice(nowIndex, nowIndex + 8)
+                    : [2, 5, 12, 28, 15, 8, 3, 1];
+
+                if (chartInstanceRef.current) {
+                    chartInstanceRef.current.data.labels = labels;
+                    chartInstanceRef.current.data.datasets[0].data = tempData;
+                    chartInstanceRef.current.data.datasets[1].data = precipData;
+                    chartInstanceRef.current.update();
+                } else {
+                    chartInstanceRef.current = new window.Chart(ctx, {
+                        type: "bar",
+                        data: {
+                            labels: labels,
+                            datasets: [
+                                {
+                                    type: "line",
+                                    label: "Temperatura (°C)",
+                                    data: tempData,
+                                    borderColor: "#00f3ff",
+                                    backgroundColor: "rgba(0, 243, 255, 0.15)",
+                                    borderWidth: 2,
+                                    fill: true,
+                                    tension: 0.3,
+                                    yAxisID: 'y'
+                                },
+                                {
+                                    type: "bar",
+                                    label: "Precipitação (Sarapuí/Sebinho)",
+                                    data: precipData,
+                                    backgroundColor: '#3498db',
+                                    yAxisID: 'y1'
+                                }
+                            ]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            scales: {
+                                y: { type: 'linear', position: 'left', ticks: { color: "#00f3ff", font: { size: 9 } }, grid: { color: "rgba(148,163,184,0.1)" } },
+                                y1: { type: 'linear', position: 'right', grid: { drawOnChartArea: false }, ticks: { color: "#00ff88", font: { size: 9 } } },
+                                x: { ticks: { color: "#e2e8f0", font: { size: 9 } }, grid: { color: "rgba(148,163,184,0.1)" } }
+                            },
+                            plugins: { legend: { labels: { color: "#f8fafc", font: { size: 10 } } } }
+                        }
+                    });
+                }
+            }, [hourlyForecast]);
+
+            const handleFileUpload = (e) => {
+                const files = Array.from(e.target.files);
+                files.forEach(file => {
+                    const reader = new FileReader();
+                    reader.onload = (uploadEvent) => {
+                        const newRecord = {
+                            id: Date.now() + Math.random(),
+                            name: file.name,
+                            size: (file.size / (1024 * 1024)).toFixed(2) + " MB",
+                            type: file.type.startsWith('video') ? 'video' : 'document',
+                            category: selectedCategory,
+                            date: new Date().toLocaleDateString("pt-BR") + " " + new Date().toLocaleTimeString("pt-BR", {hour: '2-digit', minute:'2-digit'}),
+                            url: uploadEvent.target.result
+                        };
+                        setMediaList(prev => [...prev, newRecord]);
+                        showToast(`📁 Item "${file.name}" guardado com sucesso!`);
+                    };
+                    reader.readAsDataURL(file);
+                });
+            };
+
+            const removeMediaItem = (id) => {
+                setMediaList(prev => prev.filter(item => item.id !== id));
+                showToast("🗑️ Registro removido.");
+            };
+
+            const toggleListening = () => {
+                const SpeechRec = window.SpeechRecognition || window.webkitSpeechRecognition;
+                if (!SpeechRec) { showToast("⚠️ Reconhecimento de voz não suportado."); return; }
+                if (isListening) { setIsListening(false); return; }
+                const rec = new SpeechRec();
+                rec.lang = "pt-BR";
+                rec.onstart = () => setIsListening(true);
+                rec.onresult = (event) => {
+                    const text = event.results[0][0].transcript;
+                    setInput(text);
+                    setIsListening(false);
+                    handleSendMessage(text);
+                };
+                rec.onerror = () => setIsListening(false);
+                rec.onend = () => setIsListening(false);
+                rec.start();
+            };
+
+            const handleSendMessage = async (textCustom) => {
+                stopSpeaking();
+                const textToSend = textCustom !== undefined ? textCustom : input;
+                if (!textToSend.trim() || isLoadingChat) return;
+
+                const userMsg = {
+                    id: `${Date.now()}-user`,
+                    sender: "user",
+                    text: textToSend.trim(),
+                    timestamp: new Date().toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })
+                };
+
+                const historico = [...messages, userMsg].slice(-8).map((m) => ({
+                    role: m.sender === "user" ? "user" : "assistant",
+                    content: m.text
+                }));
+
+                setMessages((prev) => [...prev, userMsg]);
+                setInput("");
+                setIsLoadingChat(true);
+
+                try {
+                    const response = await fetch(CLOUDFLARE_WORKER_URL, {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({
+                            model: "openai/gpt-oss-120b",
+                            messages: [
+                                {
+                                    role: "system",
+                                    content: `Você é a SARAH IA Core v5.2 PRO, Defesa Civil Comunitária (Grupo Comunitário A Chave da Esperança, Mesquita/RJ, Bacia do Rio Sarapuí). Lema: "Prevenção não é mídia: é gente atenta."`
+                                },
+                                ...historico
+                            ],
+                            temperature: 0.4,
+                            max_tokens: 900
+                        })
+                    });
+
+                    const data = await response.json();
+                    const reply = data?.choices?.[0]?.message?.content || data?.message || "Sem resposta do servidor.";
+                    
+                    const assistantMsg = {
+                        id: `${Date.now()}-sarah`,
+                        sender: "sarah",
+                        text: reply,
+                        timestamp: new Date().toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })
+                    };
+
+                    setMessages((prev) => [...prev, assistantMsg]);
+                    speakText(reply);
+                } catch (e) {
+                    const errorMsg = {
+                        id: `${Date.now()}-err`,
+                        sender: "sarah",
+                        text: "Erro de conexão com o cofre neural.",
+                        timestamp: new Date().toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })
+                    };
+                    setMessages((prev) => [...prev, errorMsg]);
+                } finally {
+                    setIsLoadingChat(false);
+                }
+            };
+
+            return (
+                <div className="min-h-screen flex flex-col relative bg-[#030712] text-slate-100">
+                    
+                    {isLoadingSplash && (
+                        <div className="fixed inset-0 bg-[#030712] z-[100] flex flex-col items-center justify-center p-4">
+                            <div className="flex flex-col items-center space-y-6 max-w-sm w-full text-center">
+                                <SarahAvatar showStatus={true} isLarge={true} />
+                                <div className="space-y-2">
+                                    <h2 className="font-mono text-xl font-bold text-cyan-400">SARAH IA Core v5.2 PRO</h2>
+                                    <p className="font-mono text-xs text-slate-300">Defesa Civil Comunitária • Cidadão Sensor</p>
+                                    <p className="font-mono text-[11px] text-emerald-400">Grupo Comunitário A Chave da Esperança</p>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
+                    {toastMessage && (
+                        <div className="fixed top-20 left-1/2 -translate-x-1/2 z-50 bg-cyan-400 text-slate-950 px-6 py-3 rounded-2xl font-mono text-xs font-bold shadow-2xl border-2 border-cyan-200 animate-bounce">
+                            {toastMessage}
+                        </div>
+                    )}
+
+                    <header className="glass-dark border-b border-cyan-400/30 px-4 py-3 sticky top-0 z-40 shadow-xl">
+                        <div className="max-w-5xl mx-auto flex items-center justify-between gap-2">
+                            <div className="flex items-center gap-3">
+                                <div className="w-11 h-11 rounded-2xl bg-cyan-500/10 border border-cyan-400/50 flex items-center justify-center text-cyan-400">
+                                    <CyberShieldIcon className="w-6 h-6" />
+                                </div>
+                                <div>
+                                    <h1 className="text-xs sm:text-sm font-bold tracking-tight flex items-center gap-2">
+                                        Defesa Civil Comunitária Cidadão Sensor
+                                        <span className="px-2 py-0.5 bg-cyan-400/20 border border-cyan-400/40 text-cyan-400 rounded-md font-mono text-[9px]">v5.2 PRO</span>
+                                    </h1>
+                                    <span className="text-[11px] text-cyan-400 font-mono">SARAH IA • Grupo Comunitário A Chave da Esperança (Mesquita/RJ)</span>
+                                </div>
+                            </div>
+
+                            <button
+                                onClick={() => setActionPlanOpen(true)}
+                                className="px-3.5 py-2 rounded-xl font-mono text-xs font-bold bg-gradient-to-r from-cyan-600 to-emerald-600 text-white shadow-md border border-cyan-300 cursor-pointer flex items-center gap-1.5"
+                            >
+                                <span>🎬</span> Apresentações e Registros
+                            </button>
+                        </div>
+                    </header>
+
+                    <div className="bg-[#060f1e]/95 border-b border-cyan-400/25 px-4 py-2.5">
+                        <div className="max-w-5xl mx-auto flex items-center gap-2 overflow-x-auto">
+                            <button
+                                onClick={() => setActiveTab("dashboard")}
+                                className={`px-4 py-2 rounded-xl font-mono text-xs font-bold transition flex items-center gap-2 cursor-pointer ${
+                                    activeTab === "dashboard"
+                                        ? "bg-cyan-400 text-slate-950 shadow-[0_0_15px_rgba(0,243,255,0.5)] border border-cyan-200"
+                                        : "bg-[#030712] text-cyan-400 border border-cyan-400/30 hover:bg-cyan-400/10"
+                                }`}
+                            >
+                                <span>🛰️</span> Radar Tático & Gráfico
+                            </button>
+                            <button
+                                onClick={() => setActiveTab("chat")}
+                                className={`px-4 py-2 rounded-xl font-mono text-xs font-bold transition flex items-center gap-2 cursor-pointer ${
+                                    activeTab === "chat"
+                                        ? "bg-cyan-400 text-slate-950 shadow-[0_0_15px_rgba(0,243,255,0.5)] border border-cyan-200"
+                                        : "bg-[#030712] text-cyan-400 border border-cyan-400/30 hover:bg-cyan-400/10"
+                                }`}
+                            >
+                                <span>💬</span> Central Neural (Chat)
+                            </button>
+                        </div>
+                    </div>
+
+                    <main className="max-w-5xl mx-auto p-3 sm:p-4 w-full flex-1 flex flex-col">
+                        
+                        {activeTab === "dashboard" && (
+                            <div className="space-y-4 flex-1 flex flex-col">
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <div className="glass-dark rounded-3xl p-4 border border-cyan-400/40 shadow-2xl flex flex-col justify-between">
+                                        <div className="flex items-center justify-between mb-3 pb-2 border-b border-cyan-400/30">
+                                            <h3 className="font-mono text-cyan-400 text-xs font-bold flex items-center gap-2">
+                                                <span>🌧️</span> Radar Hidrográfico & Nebulosidade (Rio Sarapuí)
+                                            </h3>
+                                            <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse"></span>
+                                        </div>
+                                        <LeafletHydroWindRadar />
+                                    </div>
+
+                                    <div className="glass-dark rounded-3xl p-4 border border-cyan-400/40 shadow-2xl flex flex-col justify-between">
+                                        <div className="flex items-center justify-between mb-3 pb-2 border-b border-cyan-400/30">
+                                            <h3 className="font-mono text-cyan-400 text-xs font-bold flex items-center gap-2">
+                                                <span>📈</span> Nível & Precipitação (Tempo Real)
+                                            </h3>
+                                            <span className="text-[10px] font-mono text-slate-400">Open-Meteo API</span>
+                                        </div>
+                                        <div className="w-full h-[400px] p-2 bg-slate-950/90 rounded-2xl border border-cyan-400/40 shadow-inner flex items-center justify-center">
+                                            <canvas ref={chartRef}></canvas>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+
+                        {activeTab === "chat" && (
+                            <div className="glass-dark rounded-3xl shadow-2xl flex flex-col overflow-hidden flex-1 border border-cyan-400/40" style={{ minHeight: "520px" }}>
+                                <div className="bg-[#030712]/90 px-4 py-2 border-b border-cyan-400/30 flex items-center justify-between text-xs font-mono">
+                                    <span className="text-cyan-400 font-bold">Chat Ativo • Grupo Comunitário A Chave da Esperança</span>
+                                    <button onClick={() => setMessages([])} className="px-3 py-1 bg-slate-900 text-cyan-300 rounded-xl border border-cyan-400/30 cursor-pointer">🧹 Limpar</button>
+                                </div>
+
+                                <div className="flex-1 overflow-y-auto p-4 space-y-4">
+                                    {messages.length === 0 && (
+                                        <div className="h-full flex flex-col items-center justify-center p-4">
+                                            <div className="max-w-md bg-[#060f1e] border border-cyan-400/40 rounded-3xl p-6 text-center shadow-xl">
+                                                <SarahAvatar showStatus={true} isLarge={true} />
+                                                <h2 className="font-mono text-base font-bold text-slate-100 mt-4 mb-2">SARAH IA • Nexus Core v5.2</h2>
+                                                <p className="text-xs font-mono text-cyan-400">"Prevenção não é mídia: é gente atenta."</p>
+                                            </div>
+                                        </div>
+                                    )}
+
+                                    {messages.map((m) => (
+                                        <div key={m.id} className={`flex items-start gap-3 ${m.sender === "user" ? "flex-row-reverse" : "flex-row"}`}>
+                                            {m.sender === "user" ? <div className="w-10 h-10 rounded-2xl bg-slate-800 border border-slate-700 flex items-center justify-center text-cyan-400">👤</div> : <SarahAvatar size="w-10 h-10" showStatus={false} />}
+                                            <div className={`p-4 rounded-3xl max-w-[85%] text-sm ${m.sender === "user" ? "bg-gradient-to-r from-cyan-600 to-emerald-600 text-white" : "bg-[#060f1e] text-slate-100 border border-cyan-400/35"}`}>
+                                                <div className="text-[10px] opacity-75 font-mono mb-1">{m.sender === "user" ? "Você" : "SARAH IA"} • {m.timestamp}</div>
+                                                <div className="whitespace-pre-wrap">{m.text}</div>
+                                            </div>
+                                        </div>
+                                    ))}
+
+                                    {isLoadingChat && (
+                                        <div className="flex items-center gap-3">
+                                            <SarahAvatar size="w-10 h-10" showStatus={false} />
+                                            <div className="bg-[#060f1e] p-3 rounded-2xl text-xs font-mono text-cyan-400 border border-cyan-400/40 animate-pulse">SARAH IA a processar telemetria...</div>
+                                        </div>
+                                    )}
+                                </div>
+
+                                <div className="p-3 bg-[#030712] border-t border-cyan-400/30 flex items-center gap-3">
+                                    <button onClick={toggleListening} className={`w-12 h-12 rounded-xl flex items-center justify-center cursor-pointer ${isListening ? "bg-cyan-400 text-slate-950 animate-pulse" : "bg-[#060f1e] text-cyan-400 border border-cyan-400/40"}`}>🎤</button>
+                                    <input
+                                        type="text"
+                                        value={input}
+                                        onChange={(e) => setInput(e.target.value)}
+                                        onKeyDown={(e) => { if (e.key === "Enter") handleSendMessage(); }}
+                                        placeholder="Digite seu comando para a SARAH IA..."
+                                        className="flex-1 bg-[#060f1e] border border-cyan-400/40 rounded-2xl px-4 py-3 text-sm text-slate-100 font-sans focus:outline-none"
+                                    />
+                                    <button onClick={() => handleSendMessage()} disabled={isLoadingChat || !input.trim()} className="w-12 h-12 rounded-xl bg-gradient-to-r from-cyan-400 to-emerald-400 text-slate-950 flex items-center justify-center font-bold cursor-pointer disabled:opacity-30">➤</button>
+                                </div>
+                            </div>
+                        )}
+
+                    </main>
+
+                    {actionPlanOpen && (
+                        <div className="fixed inset-0 bg-[#030712]/90 backdrop-blur-md z-50 flex items-center justify-center p-4">
+                            <div className="glass-dark border border-cyan-400/40 w-full max-w-3xl rounded-3xl shadow-2xl overflow-hidden flex flex-col max-h-[92vh]">
+                                <div className="bg-[#030712] px-6 py-4 border-b border-cyan-400/30 flex justify-between items-center">
+                                    <h3 className="font-mono text-cyan-400 text-sm font-bold flex items-center gap-2">
+                                        <span>🎬</span> Apresentações e Registros de Campo
+                                    </h3>
+                                    <button onClick={() => setActionPlanOpen(false)} className="text-slate-400 hover:text-white font-mono text-xs px-3 py-1 rounded-lg bg-[#030712] border border-slate-700 cursor-pointer">✕ Fechar</button>
+                                </div>
+
+                                <div className="p-6 space-y-5 overflow-y-auto font-sans text-xs">
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 bg-[#060f1e]/80 p-4 rounded-2xl border border-cyan-400/30">
+                                        <div className="space-y-2">
+                                            <label className="block font-mono text-slate-300 text-[11px]">🏷️ Categoria:</label>
+                                            <select
+                                                value={selectedCategory}
+                                                onChange={(e) => setSelectedCategory(e.target.value)}
+                                                className="w-full bg-[#030712] border border-cyan-400/40 rounded-xl p-2.5 text-xs text-cyan-300 font-mono focus:outline-none"
+                                            >
+                                                <option value="Vídeos / Eventos e Registros">🎬 Vídeos e Registros de Campo</option>
+                                                <option value="Ação Comunitária GACE">🤝 Ação Comunitária (GACE)</option>
+                                                <option value="Nota Técnica Universitária">🎓 Nota Técnica Universitária</option>
+                                            </select>
+                                        </div>
+
+                                        <div className="space-y-2">
+                                            <label className="block font-mono text-slate-300 text-[11px]">📥 Enviar Arquivo / Vídeo:</label>
+                                            <input
+                                                type="file"
+                                                multiple
+                                                accept="video/*,image/*,.pdf"
+                                                onChange={handleFileUpload}
+                                                className="w-full text-xs text-slate-400 file:mr-3 file:py-2 file:px-3 file:rounded-xl file:border-0 file:text-xs file:font-mono file:font-bold file:bg-cyan-400 file:text-slate-950 hover:file:bg-cyan-300 file:cursor-pointer bg-[#030712] p-2 rounded-xl border border-cyan-400/30"
+                                            />
+                                        </div>
+                                    </div>
+
+                                    <div className="space-y-3">
+                                        <h4 className="font-mono text-xs font-bold text-slate-200">🎬 Registros Salvos ({mediaList.length}):</h4>
+                                        {mediaList.length === 0 ? (
+                                            <div className="p-8 text-center text-slate-500 font-mono text-xs bg-[#060f1e]/50 rounded-2xl border border-slate-800">
+                                                Nenhum registro adicionado ainda.
+                                            </div>
+                                        ) : (
+                                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 max-h-[50vh] overflow-y-auto p-1">
+                                                {mediaList.map(item => (
+                                                    <div key={item.id} className="bg-[#060f1e] border-2 border-cyan-400/50 rounded-2xl p-3 flex flex-col justify-between shadow-lg">
+                                                        <div className="flex items-center justify-between mb-2">
+                                                            <span className="px-2 py-0.5 rounded-md bg-[#030712] border border-cyan-400/40 font-mono text-[10px] text-cyan-300 truncate max-w-[180px]">{item.category}</span>
+                                                            <button onClick={() => removeMediaItem(item.id)} className="text-slate-400 hover:text-red-400 font-mono text-xs cursor-pointer">🗑️ Excluir</button>
+                                                        </div>
+                                                        <div className="w-full bg-black rounded-xl overflow-hidden border border-cyan-400/30 aspect-video mb-2 flex items-center justify-center">
+                                                            {item.type === 'video' ? <video src={item.url} className="w-full h-full object-contain" controls playsInline /> : <div className="text-cyan-300 font-mono text-xs">📄 Documento Salvo</div>}
+                                                        </div>
+                                                        <div className="font-mono text-[10px] text-slate-300 truncate font-bold text-cyan-200">{item.name}</div>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        )}
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+                    )}
+
+                    <div className="bg-purple-900 border-t-2 border-purple-500 py-2.5 overflow-hidden whitespace-nowrap">
+                        <marquee behavior="scroll" direction="left" scrollamount="5" className="font-mono text-xs text-purple-200 font-bold">
+                            🛡️ Grupo Comunitário A Chave da Esperança • Plano de Ação: Todos Unidos, Todos Protegidos • EMERGÊNCIAS: Defesa Civil (199 / 21 4040-1772) • Alertas ZAP 📲 (21) 97299-3223 • Seja voluntário servir é prevenir sempre
+                        </marquee>
+                    </div>
+                </div>
+            );
+        }
+
+        const root = ReactDOM.createRoot(document.getElementById("root"));
+        root.render(<App />);
+    </script>
+</body>
+</html>
