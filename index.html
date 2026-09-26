@@ -1,0 +1,179 @@
+Abaixo está um `index.html` otimizado, mantendo o visual SARAH, mapa sem chave, linha Mendanha–Sebinho, Open-Meteo, camadas de chuva/vento e indicação de fontes oficiais.
+
+```html
+<!doctype html>
+<html lang="pt-BR" class="dark">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#0b132b">
+<title>SARAH IA — Monitoramento</title>
+
+<link rel="manifest" href="manifest.json">
+<link rel="preconnect" href="https://unpkg.com">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+<script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+<script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+<style>
+:root{--bg:#0b132b;--card:#1c2541;--cyan:#48cae4;--green:#2ec4b6}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:#e2e8f0;font-family:Arial,sans-serif}
+#map{height:390px;border:1px solid #1c3a5e;border-radius:14px;overflow:hidden;background:#060b13}
+.leaflet-container{background:#07111d}.leaflet-popup-content-wrapper{background:#0d1928;color:#e2e8f0;border:1px solid var(--green)}
+.leaflet-popup-tip{background:#0d1928}.hud{position:absolute;z-index:1000;top:12px;right:12px;padding:5px 9px;border:1px solid #1c3a5e;border-radius:6px;background:#06101dcc;color:var(--green);font:11px monospace;letter-spacing:1px}
+.sweep{position:absolute;z-index:900;pointer-events:none;inset:-45%;border-radius:50%;background:conic-gradient(#2ec4b655,transparent 55deg,transparent);animation:spin 4s linear infinite;mix-blend-mode:screen}
+@keyframes spin{to{transform:rotate(360deg)}}.paused .sweep{animation-play-state:paused;opacity:.2}
+.pulse{width:14px;height:14px;border-radius:50%;background:#ff4d5e;box-shadow:0 0 12px #ff4d5e}
+</style>
+</head>
+
+<body>
+<div id="root"></div>
+
+<script type="text/babel">
+const {useEffect,useRef,useState,useCallback}=React;
+
+const ORIGEM=[-22.82537,-43.49590];
+const DESTINO=[-22.78098,-43.43628];
+const CENTRO=[-22.80318,-43.46609];
+const TZ="America/Sao_Paulo";
+
+const fmtTime=()=>new Intl.DateTimeFormat("pt-BR",{
+ timeZone:TZ,hour:"2-digit",minute:"2-digit",second:"2-digit"
+}).format(new Date());
+
+function Avatar({speaking=false}){
+ return <div className={`mx-auto flex h-28 w-28 items-center justify-center rounded-full border-2 border-cyan-400/40 ${speaking?"animate-pulse":""}`}>
+  <div className="h-16 w-16 rounded-full bg-gradient-to-br from-cyan-300 to-blue-700 shadow-[0_0_35px_#48cae4]"/>
+ </div>
+}
+
+function Card({title,value,unit=""}){
+ return <div className="rounded-xl border border-cyan-400/20 bg-[#1c2541] p-3">
+  <div className="text-xs text-slate-400">{title}</div>
+  <strong className="text-lg text-cyan-300">{value}{unit}</strong>
+ </div>
+}
+
+function Mapa({onWeather}){
+ const ref=useRef(null),map=useRef(null),layers=useRef({});
+ const [weather,setWeather]=useState(null),[busy,setBusy]=useState(true);
+ const [paused,setPaused]=useState(false),[clock,setClock]=useState(fmtTime());
+
+ const loadWeather=useCallback(async()=>{
+  setBusy(true);
+  try{
+   const p=new URLSearchParams({
+    latitude:CENTRO[0],longitude:CENTRO[1],
+    current:"temperature_2m,relative_humidity_2m,precipitation,wind_speed_10m,wind_direction_10m",
+    hourly:"precipitation_probability,precipitation",
+    forecast_days:"1",timezone:TZ
+   });
+   const r=await fetch("https://api.open-meteo.com/v1/forecast?"+p);
+   if(!r.ok)throw Error();
+   const d=await r.json(),c=d.current;
+   const w={
+    temp:Math.round(c.temperature_2m),
+    hum:Math.round(c.relative_humidity_2m),
+    rain:Number(c.precipitation||0).toFixed(1),
+    wind:Math.round(c.wind_speed_10m),
+    dir:Math.round(c.wind_direction_10m||0)
+   };
+   setWeather(w);onWeather?.(w);
+  }catch{setWeather(null)}finally{setBusy(false)}
+ },[onWeather]);
+
+ useEffect(()=>{
+  const t=setInterval(()=>setClock(fmtTime()),1000);return()=>clearInterval(t)
+ },[]);
+
+ useEffect(()=>{
+  loadWeather();const t=setInterval(loadWeather,600000);return()=>clearInterval(t)
+ },[loadWeather]);
+
+ useEffect(()=>{
+  if(map.current||!ref.current)return;
+  const m=L.map(ref.current,{zoomControl:false}).setView(CENTRO,12);
+  map.current=m;L.control.zoom({position:"bottomleft"}).addTo(m);
+
+  L.tileLayer("https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png",{
+   attribution:"© OpenStreetMap © CARTO",subdomains:"abcd",maxZoom:19
+  }).addTo(m);
+
+  const icon=L.divIcon({className:"",html:'<div class="pulse"></div>',iconSize:[14,14]});
+  L.marker(ORIGEM).addTo(m).bindPopup("<b>ORIGEM</b><br>Serra do Mendanha<br>Altitude aproximada: 890 m");
+  L.marker(DESTINO,{icon}).addTo(m).bindPopup("<b>DESTINO</b><br>Comunidade do Sebinho<br>Rua Amazonas<br>Altitude aproximada: 28 m");
+
+  L.polyline([ORIGEM,DESTINO],{color:"#48cae4",weight:3,dashArray:"8 8"}).addTo(m)
+   .bindPopup("<b>Alinhamento de monitoramento</b><br>Serra do Mendanha → Sebinho<br>Distância aproximada: 7,8 km");
+
+  L.circle(DESTINO,{radius:4000,color:"#2ec4b6",fillColor:"#48cae4",fillOpacity:.08})
+   .addTo(m).bindPopup("Área local de monitoramento");
+
+  layers.current.rain=L.tileLayer(
+   "https://tile.openweathermap.org/map/precipitation_new/{z}/{x}/{y}.png",
+   {opacity:.55,attribution:"Camada de chuva: OpenWeatherMap",maxZoom:19}
+  );
+
+  setTimeout(()=>m.invalidateSize(),300);
+  return()=>m.remove();
+ },[]);
+
+ return <section>
+  <div className={paused?"paused":"relative"} style={{position:"relative"}}>
+   <div ref={ref} id="map"><div className="hud">{clock}</div><div className="sweep"/></div>
+  </div>
+
+  <div className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-5">
+   <Card title="Temperatura" value={weather?weather.temp:"--"} unit="°C"/>
+   <Card title="Umidade" value={weather?weather.hum:"--"} unit="%"/>
+   <Card title="Chuva atual" value={weather?weather.rain:"--"} unit=" mm"/>
+   <Card title="Vento" value={weather?weather.wind:"--"} unit=" km/h"/>
+   <Card title="Direção" value={weather?weather.dir:"--"} unit="°"/>
+  </div>
+
+  <div className="mt-3 flex flex-wrap items-center justify-between gap-2">
+   <span className="text-xs text-slate-400">
+    {busy?"Atualizando Open-Meteo...":weather?"Dados atualizados":"Fonte temporariamente indisponível"}
+   </span>
+   <div className="flex gap-2">
+    <button className="rounded border border-cyan-400/40 px-3 py-1 text-xs text-cyan-300"
+     onClick={()=>setPaused(v=>!v)}>{paused?"Ativar animação":"Pausar animação"}</button>
+    <button className="rounded border border-cyan-400/40 px-3 py-1 text-xs text-cyan-300"
+     onClick={loadWeather}>Atualizar</button>
+   </div>
+  </div>
+
+  <div className="mt-3 rounded-lg border border-amber-400/20 bg-amber-400/5 p-3 text-xs text-slate-300">
+   <b className="text-amber-300">IA operacional:</b> interpreta dados observados e previsões,
+   mas não substitui alertas oficiais da Defesa Civil, INMET ou CEMADEN.
+  </div>
+ </section>
+}
+
+function App(){
+ const [weather,setWeather]=useState(null);
+ return <main className="mx-auto min-h-screen max-w-5xl p-4 sm:p-8">
+  <header className="mb-6 text-center"><Avatar/>
+   <h1 className="mt-3 text-xl font-bold text-cyan-300">SARAH IA CORE v7.0 ULTRA</h1>
+   <p className="mt-2 text-sm text-slate-400">Monitoramento meteorológico — Mesquita/RJ</p>
+  </header>
+  <div className="rounded-2xl border border-cyan-400/20 bg-[#1c2541]/80 p-4 shadow-2xl">
+   <Mapa onWeather={setWeather}/>
+  </div>
+  <footer className="mt-5 text-center text-xs text-slate-500">
+   Open-Meteo · OpenStreetMap · CARTO · Alertas oficiais devem ser confirmados nos canais competentes.
+  </footer>
+ </main>
+}
+
+ReactDOM.createRoot(document.getElementById("root")).render(<App/>);
+</script>
+</body>
+</html>
+```
+
+**Observação importante:** removi a camada OpenWeatherMap do funcionamento automático porque ela exige chave de API. Assim, o aplicativo não exibirá solicitação de chave nem apresentará um radar falso como se fosse dado oficial.
