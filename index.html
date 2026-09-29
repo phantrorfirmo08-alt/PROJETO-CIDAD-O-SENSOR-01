@@ -1,0 +1,567 @@
+<!DOCTYPE html>
+<html lang="pt-PT" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>SARAH IA NEXUS v5.2 PRO - Defesa Civil Comunitária</title>
+    
+    <meta property="og:title" content="SARAH IA NEXUS v5.2 PRO - Defesa Civil Comunitária">
+    <meta property="og:description" content="App de Prevenção e apoio meteorológico comunitário automatizado. Prevenção não é mídia: é gente atenta.">
+    <meta property="og:image" content="https://www.image2url.com/r2/default/images/1790084936078-de3b77c5-fa9f-4b89-a02a-560b09e8b5a0.png">
+    <meta property="og:url" content="https://phantrorfirmo08-alt.github.io/PROJETO-CIDAD-O-SENSOR-01/?v=5.2">
+    <meta property="og:type" content="website">
+
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#020617">
+    <link rel="apple-touch-icon" href="https://www.image2url.com/r2/default/images/1790084936078-de3b77c5-fa9f-4b89-a02a-560b09e8b5a0.png">
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <script>
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'system-ui', '-apple-system', 'sans-serif'],
+                    },
+                    colors: {
+                        nightBlue: "#020617",
+                        petroleumPanel: "#0D1B2A",
+                        sophisticatedViolet: "#9B7EDE",
+                        orchidPink: "#E58AC7",
+                        softCyan: "#00E5CC",
+                        mintGreen: "#72E6B2",
+                        lightLavender: "#EDE9FE",
+                        coralAlert: "#FF7A90",
+                        vibrantLilac: "#4a154b",
+                        footerOrange: "#FF7A00"
+                    }
+                }
+            }
+        };
+    </script>
+    <script src="https://unpkg.com/react@18/umd/react.development.js" crossorigin></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js" crossorigin></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <style>
+        html, body, #root {
+            min-height: 100%;
+            margin: 0;
+            font-family: 'Inter', system-ui, -apple-system, sans-serif;
+            touch-action: pan-x pan-y;
+        }
+        body {
+            overflow-x: hidden;
+            background-color: #020617;
+            color: #EDE9FE;
+        }
+        .glass-dark {
+            background: rgba(13, 27, 42, 0.92);
+            backdrop-filter: blur(22px);
+            -webkit-backdrop-filter: blur(22px);
+            border: 1px solid rgba(155, 126, 222, 0.4);
+            box-shadow: 0 10px 35px 0 rgba(2, 6, 23, 0.65);
+        }
+        .btn-animated {
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
+        }
+        .btn-animated:hover {
+            transform: translateY(-3px) scale(1.02);
+            box-shadow: 0 0 25px rgba(155, 126, 222, 0.7);
+            border-color: #9B7EDE;
+        }
+
+        /* Avatar Holográfico Feminino Roxo/Violeta #sarah-nexus */
+        #sarah-nexus {
+            position: relative;
+            background: radial-gradient(ellipse at center, #2e1065 0%, #1e0b36 65%, #0a0314 100%);
+            border-radius: 24px; border: 1.5px solid rgba(155,126,222,.6);
+            box-shadow: 0 0 40px rgba(155,126,222,.35), inset 0 0 30px rgba(192,132,252,.15);
+            overflow: hidden; font-family: 'Inter', sans-serif;
+        }
+        #sarah-nexus .hud { position: absolute; inset: 0; pointer-events: none; }
+        #sarah-nexus .ring {
+            position: absolute; left: 50%; top: 38%; width: 78%; aspect-ratio: 1;
+            transform: translate(-50%,-50%); border-radius: 50%;
+            border: 1px dashed rgba(192,132,252,.4);
+            animation: spinSlow 15s linear infinite;
+        }
+        #sarah-nexus .avatar-img {
+            position: absolute; left: 50%; top: 46%; width: 62%; height: 72%;
+            transform: translate(-50%,-50%); z-index: 2;
+            background: radial-gradient(ellipse at 50% 30%, rgba(216,180,254,.9) 0%, rgba(168,85,247,.8) 25%, rgba(45,10,80,.2) 75%);
+            -webkit-mask-image: radial-gradient(ellipse at center, black 65%, transparent 96%);
+            mask-image: radial-gradient(ellipse at center, black 65%, transparent 96%);
+            filter: drop-shadow(0 0 15px #c084fc);
+        }
+        #sarah-nexus svg.head { width: 100%; height: 100%; }
+        #sarah-nexus .title {
+            position: absolute; bottom: 10%; width: 100%; text-align: center; z-index: 5;
+        }
+        #sarah-nexus .title h1 {
+            margin: 0; color: #fff; font-size: 16px; font-weight: 800; letter-spacing: .5px;
+            text-shadow: 0 0 12px rgba(192,132,252,.9); text-transform: uppercase;
+        }
+        #sarah-nexus .title p {
+            margin: 4px 0 0; color: #d8b4fe; font-size: 12px; font-style: italic; opacity: .9;
+        }
+        @keyframes spinSlow { to { transform: translate(-50%,-50%) rotate(360deg); } }
+        @keyframes blinkHolo { 0%,85%,100%{ transform:scaleY(1); } 90%,95%{ transform:scaleY(0.08); } }
+        #sarah-nexus #eyes { transform-origin: 100px 86px; animation: blinkHolo 3.8s infinite; }
+    </style>
+</head>
+<body class="bg-nightBlue text-lightLavender">
+    <div id="root"></div>
+    <script type="text/babel">
+        document.addEventListener('gesturestart', function(e) { e.preventDefault(); });
+
+        const CLOUDFLARE_WORKER_URL = "https://sarah-envelope.phantrorfirmo08.workers.dev/";
+
+        const getBrasiliaGreeting = () => {
+            const hour = parseInt(
+                new Intl.DateTimeFormat("pt-BR", {
+                    timeZone: "America/Sao_Paulo",
+                    hour: "numeric",
+                    hour12: false
+                }).format(new Date()),
+                10
+            );
+            if (hour >= 0 && hour < 5) return "Boa madrugada";
+            if (hour >= 5 && hour < 12) return "Bom dia";
+            if (hour >= 12 && hour < 18) return "Boa tarde";
+            return "Boa noite";
+        };
+
+        function CyberShieldIcon({ className = "w-6 h-6" }) {
+            return (
+                <svg className={className} viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M12 2L3 6V11C3 16.55 6.84 21.74 12 23C17.16 21.74 21 16.55 21 11V6L12 2Z" fill="url(#shieldGrad)" stroke="#9B7EDE" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
+                    <path d="M12 7C9.79 7 8 8.79 8 11C8 12.1 8.44 13.09 9.14 13.8L9 18H11V20H13V18H15V14.8C15.56 14.09 16 13.1 16 11C16 8.79 14.21 7 12 7ZM12 9C13.1 9 14 9.9 14 11C14 12.1 13.1 13 12 13C10.9 13 10 12.1 10 11C10 9.9 10.9 9 12 9Z" fill="#020617"/>
+                    <defs>
+                        <linearGradient id="shieldGrad" x1="3" y1="2" x2="21" y2="23" gradientUnits="userSpaceOnUse">
+                            <stop stopColor="#9B7EDE" />
+                            <stop offset="0.5" stopColor="#c084fc" />
+                            <stop offset="1" stopColor="#E58AC7" />
+                        </linearGradient>
+                    </defs>
+                </svg>
+            );
+        }
+
+        function SarahHologramAvatar({ isLarge = false, isSpeaking = false }) {
+            const mouthRef = React.useRef(null);
+
+            React.useEffect(() => {
+                let mouthTimer;
+                const visemes = [
+                    "M92 118 Q100 120 108 118 Q100 122 92 118 Z", 
+                    "M88 115 Q100 128 112 115 Q100 132 88 115 Z", 
+                    "M90 117 Q100 123 110 117 Q100 126 90 117 Z"
+                ];
+
+                if (isSpeaking) {
+                    mouthTimer = setInterval(() => {
+                        if (mouthRef.current) {
+                            const randomViseme = visemes[Math.floor(Math.random() * visemes.length)];
+                            mouthRef.current.setAttribute('d', randomViseme);
+                        }
+                    }, 100);
+                } else {
+                    if (mouthRef.current) {
+                        mouthRef.current.setAttribute('d', visemes[0]);
+                    }
+                }
+
+                return () => {
+                    if (mouthTimer) clearInterval(mouthTimer);
+                };
+            }, [isSpeaking]);
+
+            return (
+                <div id="sarah-nexus" className={isLarge ? "w-full max-w-[340px] aspect-square mx-auto shadow-2xl" : "w-12 h-12 rounded-full overflow-hidden shrink-0 border border-purple-400"}>
+                    <div className="ring"></div>
+
+                    <div className="avatar-img">
+                        <svg className="head" viewBox="0 0 200 260" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M70 120 Q60 70 85 45 Q100 30 115 45 Q140 70 130 120 Q135 150 125 180 Q100 195 75 180 Q65 150 70 120 Z" fill="none" stroke="#c084fc" strokeWidth="0.8" opacity="0.6"/>
+                            <ellipse cx="100" cy="90" rx="46" ry="56" fill="none" stroke="#e879f9" strokeWidth="0.8" opacity="0.9"/>
+                            
+                            <path d="M85 45 Q65 30 50 60 Q40 90 45 130 Q50 90 75 55 Z" fill="#c084fc" opacity="0.4"/>
+                            <path d="M115 45 Q135 30 150 60 Q160 90 155 130 Q150 90 125 55 Z" fill="#c084fc" opacity="0.4"/>
+
+                            <g id="eyes">
+                                <ellipse cx="76" cy="86" rx="10" ry="5.5" fill="rgba(216,180,254,.2)" stroke="#e879f9" strokeWidth="0.8"/>
+                                <circle cx="76" cy="86" r="3" fill="#fff"/>
+                                <ellipse cx="124" cy="86" rx="10" ry="5.5" fill="rgba(216,180,254,.2)" stroke="#e879f9" strokeWidth="0.8"/>
+                                <circle cx="124" cy="86" r="3" fill="#fff"/>
+                            </g>
+
+                            <path d="M100 90 L97 108 Q100 111 103 108 Z" fill="none" stroke="#c084fc" strokeWidth="0.6" opacity="0.7"/>
+                            <path ref={mouthRef} d="M92 118 Q100 120 108 118 Q100 122 92 118 Z" fill="#e879f9" stroke="#e879f9" strokeWidth="0.8" />
+                        </svg>
+                    </div>
+
+                    {isLarge && (
+                        <div className="title">
+                            <h1>SARAH IA NEXUS v5.2 PRO</h1>
+                            <p>"Prevenção não é mídia: é gente atenta."</p>
+                        </div>
+                    )}
+                </div>
+            );
+        }
+
+        function NativeHydroWindRadar({ liveWeather }) {
+            const canvasRef = React.useRef(null);
+            const [brasiliaTime, setBrasiliaTime] = React.useState("");
+
+            React.useEffect(() => {
+                const timer = setInterval(() => {
+                    const now = new Date();
+                    const timeStr = new Intl.DateTimeFormat("pt-BR", {
+                        timeZone: "America/Sao_Paulo",
+                        hour: "2-digit",
+                        minute: "2-digit",
+                        second: "2-digit",
+                        hour12: false
+                    }).format(now);
+                    setBrasiliaTime(timeStr);
+                }, 1000);
+                return () => clearInterval(timer);
+            }, []);
+
+            React.useEffect(() => {
+                const canvas = canvasRef.current;
+                if (!canvas) return;
+                const ctx = canvas.getContext('2d');
+                let animationFrameId;
+                let angle = 0;
+
+                const render = () => {
+                    ctx.clearRect(0, 0, canvas.width, canvas.height);
+                    ctx.fillStyle = '#020617';
+                    ctx.fillRect(0, 0, canvas.width, canvas.height);
+                    const centerX = canvas.width / 2;
+                    const centerY = canvas.height / 2;
+
+                    [40, 75, 110, 145].forEach((r) => {
+                        ctx.strokeStyle = 'rgba(155,126,222,0.3)';
+                        ctx.lineWidth = 1;
+                        ctx.beginPath(); ctx.arc(centerX, centerY, r, 0, Math.PI * 2); ctx.stroke();
+                    });
+
+                    ctx.save();
+                    ctx.translate(centerX, centerY);
+                    ctx.rotate(angle);
+                    const grad = ctx.createLinearGradient(0, 0, 130, -130);
+                    grad.addColorStop(0, 'rgba(192,132,252,0.4)');
+                    grad.addColorStop(1, 'transparent');
+                    ctx.fillStyle = grad;
+                    ctx.beginPath(); ctx.moveTo(0, 0); ctx.arc(0, 0, 145, -Math.PI/2, 0); ctx.lineTo(0, 0); ctx.fill();
+                    ctx.restore();
+
+                    angle += 0.03;
+                    animationFrameId = requestAnimationFrame(render);
+                };
+                render();
+                return () => cancelAnimationFrame(animationFrameId);
+            }, []);
+
+            return (
+                <div className="relative w-full h-[320px] rounded-3xl overflow-hidden border-2 border-purple-500/50 shadow-2xl bg-[#120921] flex flex-col justify-between p-3">
+                    <div className="flex items-center justify-between z-10 bg-nightBlue/90 border border-purple-500/50 px-4 py-2 rounded-2xl shadow-lg">
+                        <div className="flex items-center gap-2 font-bold text-xs text-purple-300">
+                            <span className="w-2.5 h-2.5 rounded-full bg-purple-400 animate-ping"></span>
+                            RADAR HIDROGRÁFICO (SARAPUÍ / DONA EUGÊNIA)
+                        </div>
+                        <div className="font-mono text-xs font-bold text-orchidPink">
+                            <span>🕒 {brasiliaTime || "00:00:00"}</span>
+                        </div>
+                    </div>
+                    <div className="absolute inset-0 flex items-center justify-center pt-8">
+                        <canvas ref={canvasRef} width="360" height="240" className="w-full h-full object-contain"></canvas>
+                    </div>
+                </div>
+            );
+        }
+
+        function FieldReportModule({ onBackToChat, showToast }) {
+            const [tecnico, setTecnico] = React.useState("");
+            const [localidade, setLocalidade] = React.useState("");
+            const [descricao, setDescdescricao] = React.useState("");
+
+            const gerarPDF = () => {
+                const elemento = document.getElementById('conteudoRelatorioPDF');
+                const opcoes = {
+                    margin: 10,
+                    filename: 'relatorio_tecnico_campo_sarah.pdf',
+                    image: { type: 'jpeg', quality: 0.98 },
+                    html2canvas: { scale: 2, useCORS: true },
+                    jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+                };
+                html2pdf().from(elemento).set(opcoes).save();
+                showToast("📥 Relatório PDF gerado e baixado!");
+            };
+
+            return (
+                <div className="space-y-4">
+                    <div className="flex items-center justify-between glass-dark px-4 py-3 rounded-2xl border border-purple-500/40">
+                        <span className="text-xs font-bold text-purple-300">📋 Gerador de Laudos Técnicos (PDF)</span>
+                        <button onClick={onBackToChat} className="px-3 py-1 bg-red-950/40 text-red-400 border border-red-500/40 rounded-xl text-xs font-bold cursor-pointer">✕ Voltar</button>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div className="glass-dark rounded-3xl p-6 space-y-3 border border-purple-500/40 shadow-xl">
+                            <h2 className="text-xs font-bold text-purple-300 border-b border-purple-500/30 pb-2">Dados da Vistoria</h2>
+                            <div>
+                                <label className="block text-xs text-lightLavender mb-1">Técnico Responsável:</label>
+                                <input type="text" value={tecnico} onChange={(e) => setTecnico(e.target.value)} placeholder="Alexander da Silva Firmo" className="w-full bg-[#120921] border border-purple-500/40 rounded-xl p-2.5 text-xs text-white" />
+                            </div>
+                            <div>
+                                <label className="block text-xs text-lightLavender mb-1">Localidade / Comunidade:</label>
+                                <input type="text" value={localidade} onChange={(e) => setLocalidade(e.target.value)} placeholder="Rocha Sobrinho / Mesquita" className="w-full bg-[#120921] border border-purple-500/40 rounded-xl p-2.5 text-xs text-white" />
+                            </div>
+                            <div>
+                                <label className="block text-xs text-lightLavender mb-1">Relato / Ocorrência:</label>
+                                <textarea rows="4" value={descricao} onChange={(e) => setDescdescricao(e.target.value)} placeholder="Descreva a vistoria..." className="w-full bg-[#120921] border border-purple-500/40 rounded-xl p-2.5 text-xs text-white resize-none"></textarea>
+                            </div>
+                        </div>
+
+                        <div className="glass-dark rounded-3xl p-6 flex flex-col justify-between border border-purple-500/40 shadow-xl">
+                            <div>
+                                <h2 className="text-xs font-bold text-purple-300 border-b border-purple-500/30 pb-2 mb-3">Pré-visualização</h2>
+                                <div id="conteudoRelatorioPDF" className="border border-purple-500/40 rounded-2xl p-4 bg-[#120921] space-y-2 text-xs text-lightLavender">
+                                    <h3 className="font-bold text-purple-300">LAUDO TÉCNICO - CHAVE DA ESPERANÇA</h3>
+                                    <p><strong>Técnico:</strong> {tecnico || '-'}</p>
+                                    <p><strong>Local:</strong> {localidade || '-'}</p>
+                                    <p><strong>Relato:</strong> {descricao || '-'}</p>
+                                </div>
+                            </div>
+                            <button onClick={gerarPDF} className="mt-4 w-full bg-gradient-to-r from-purple-500 to-pink-500 text-white font-bold py-3 rounded-xl text-xs shadow-lg cursor-pointer">📥 Baixar Laudo PDF</button>
+                        </div>
+                    </div>
+                </div>
+            );
+        }
+
+        function VideoVaultModule({ showToast }) {
+            const [pinInput, setPinInput] = React.useState("");
+            const [isUnlocked, setIsUnlocked] = React.useState(false);
+            const [videos, setVideos] = React.useState([
+                { id: 1, title: "Monitoramento Rio Sarapuí", url: "https://www.w3schools.com/html/mov_bbb.mp4" },
+                { id: 2, title: "Ação Chave da Esperança", url: "https://www.w3schools.com/html/movie.mp4" }
+            ]);
+
+            const handleUpload = (e) => {
+                const file = e.target.files[0];
+                if (file) {
+                    const url = URL.createObjectURL(file);
+                    setVideos(prev => [{ id: Date.now(), title: file.name, url }, ...prev]);
+                    showToast(`📹 Vídeo "${file.name}" carregado!`);
+                }
+            };
+
+            return (
+                <div className="glass-dark p-6 rounded-3xl border border-purple-500/40 shadow-xl space-y-4">
+                    <h2 className="text-sm font-bold text-purple-300 border-b border-purple-500/30 pb-2">🎥 Cofre de Vídeos & Restrição por PIN</h2>
+                    {!isUnlocked ? (
+                        <div className="bg-[#120921] p-6 rounded-2xl border border-purple-500/40 text-center space-y-3 max-w-sm mx-auto">
+                            <p className="text-xs text-lightLavender">Insira o PIN de Administrador (303500):</p>
+                            <input type="password" maxLength="6" value={pinInput} onChange={e => setPinInput(e.target.value)} placeholder="PIN" className="bg-black border border-purple-500/50 rounded-xl p-2 text-center text-white w-32 text-xs" />
+                            <br />
+                            <button onClick={() => { if (pinInput === "303500") { setIsUnlocked(true); showToast("🔓 Acesso liberado!"); } else { showToast("❌ PIN incorreto."); } }} className="px-4 py-2 bg-purple-600 text-white font-bold rounded-xl text-xs cursor-pointer">Liberar Acesso</button>
+                        </div>
+                    ) : (
+                        <div className="space-y-3">
+                            <div className="flex justify-between items-center bg-purple-950/40 p-3 rounded-xl border border-purple-500/30">
+                                <span className="text-purple-300 font-bold text-xs">🔓 Cofre Liberado</span>
+                                <label className="px-3 py-1.5 bg-purple-600 text-white font-bold rounded-xl text-xs cursor-pointer">
+                                    ➕ Enviar Vídeo
+                                    <input type="file" accept="video/*" onChange={handleUpload} className="hidden" />
+                                </label>
+                            </div>
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                {videos.map(v => (
+                                    <div key={v.id} className="bg-[#120921] p-3 rounded-2xl border border-purple-500/30 space-y-2">
+                                        <p className="font-bold text-purple-300 text-xs">{v.title}</p>
+                                        <video src={v.url} controls className="w-full h-32 rounded-xl bg-black"></video>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    )}
+                </div>
+            );
+        }
+
+        function RegionalHubModule({ showToast }) {
+            const [lote, setLote] = React.useState("Lote 1: Novo PAC");
+            const [equipe, setEquipe] = React.useState("");
+            const [zap, setZap] = React.useState("");
+            const [relato, setRelato] = React.useState("");
+
+            const enviarZap = () => {
+                if (!zap.trim()) { alert("Digite o número do WhatsApp com DDD!"); return; }
+                const msg = encodeURIComponent(`[HUB REGIONAL - ${lote}] Equipe: ${equipe || 'G.C.E.'} | Relato: ${relato || 'Vistoria'}`);
+                window.open(`https://wa.me/55${zap.replace(/\D/g, '')}?text=${msg}`, '_blank');
+            };
+
+            return (
+                <div className="glass-dark p-6 rounded-3xl border border-purple-500/40 shadow-xl space-y-3 max-w-lg mx-auto w-full">
+                    <h2 className="text-sm font-bold text-purple-300 border-b border-purple-500/30 pb-2">📑 Hub Regional & Lotes</h2>
+                    <select value={lote} onChange={e => setLote(e.target.value)} className="w-full bg-[#120921] border border-purple-500/30 rounded-xl p-2 text-white text-xs">
+                        <option>Lote 1: Novo PAC</option>
+                        <option>Lote 2: Defesa Civil</option>
+                        <option>Lote 3: Universidades</option>
+                        <option>Lote 6: Grupos Comunitários / OSC</option>
+                    </select>
+                    <input type="text" value={equipe} onChange={e => setEquipe(e.target.value)} placeholder="Nome da Equipe / Grupo" className="w-full bg-[#120921] border border-purple-500/30 rounded-xl p-2 text-white text-xs" />
+                    <input type="text" value={zap} onChange={e => setZap(e.target.value)} placeholder="WhatsApp (Ex: 21983625875)" className="w-full bg-[#120921] border border-purple-500/30 rounded-xl p-2 text-white text-xs" />
+                    <textarea rows="3" value={relato} onChange={e => setRelato(e.target.value)} placeholder="Laudo do setor..." className="w-full bg-[#120921] border border-purple-500/30 rounded-xl p-2 text-white text-xs resize-none"></textarea>
+                    <button onClick={enviarZap} className="w-full py-2.5 bg-emerald-600 text-white font-bold rounded-xl shadow text-xs cursor-pointer">💬 Enviar via WhatsApp</button>
+                </div>
+            );
+        }
+
+        function App() {
+            const [darkMode, setDarkMode] = React.useState(true);
+            const [soundEnabled, setSoundEnabled] = React.useState(true);
+            const [isSpeaking, setIsSpeaking] = React.useState(false);
+            const [activeTab, setActiveTab] = React.useState("chat");
+            const [toastMessage, setToastMessage] = React.useState(null);
+            const [messages, setMessages] = React.useState([]);
+            const [input, setInput] = React.useState("");
+            const [isLoadingChat, setIsLoadingChat] = React.useState(false);
+
+            const showToast = (msg) => {
+                setToastMessage(msg);
+                setTimeout(() => setToastMessage(null), 3500);
+            };
+
+            const speakText = (text) => {
+                if (!soundEnabled || !("speechSynthesis" in window)) return;
+                window.speechSynthesis.cancel();
+                const utterance = new SpeechSynthesisUtterance(text);
+                utterance.lang = "pt-BR";
+                utterance.onstart = () => setIsSpeaking(true);
+                utterance.onend = () => setIsSpeaking(false);
+                utterance.onerror = () => setIsSpeaking(false);
+                window.speechSynthesis.speak(utterance);
+            };
+
+            const handleSendMessage = async () => {
+                if (!input.trim() || isLoadingChat) return;
+                const userMsg = { id: Date.now(), sender: "user", text: input.trim(), timestamp: new Date().toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" }) };
+                setMessages(prev => [...prev, userMsg]);
+                setInput("");
+                setIsLoadingChat(true);
+
+                try {
+                    const response = await fetch(CLOUDFLARE_WORKER_URL, {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({
+                            model: "openai/gpt-oss-120b",
+                            messages: [{ role: "system", content: "SARAH IA NEXUS v5.2 PRO - Defesa Civil Comunitária (A Chave da Esperança, Mesquita/RJ)." }, { role: "user", content: userMsg.text }]
+                        })
+                    });
+                    const data = await response.json();
+                    const reply = data?.choices?.[0]?.message?.content || data?.message || "Sistemas operando normalmente.";
+                    setMessages(prev => [...prev, { id: Date.now() + 1, sender: "sarah", text: reply, timestamp: new Date().toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" }) }]);
+                    speakText(reply);
+                } catch {
+                    setMessages(prev => [...prev, { id: Date.now(), sender: "sarah", text: "Falha de enlace com a internet.", timestamp: "00:00" }]);
+                } finally {
+                    setIsLoadingChat(false);
+                }
+            };
+
+            return (
+                <div className="min-h-screen flex flex-col relative bg-nightBlue text-lightLavender">
+                    {toastMessage && (
+                        <div className="fixed top-20 left-1/2 -translate-x-1/2 z-50 bg-purple-600 text-white px-6 py-3 rounded-2xl text-xs font-bold shadow-2xl border-2 border-pink-400">
+                            {toastMessage}
+                        </div>
+                    )}
+
+                    <header className="glass-dark border-b border-purple-500/30 px-4 py-3 sticky top-0 z-40 shadow-xl">
+                        <div className="max-w-5xl mx-auto flex items-center justify-between">
+                            <div className="flex items-center gap-3">
+                                <div className="w-11 h-11 rounded-2xl bg-purple-500/15 border border-purple-500/60 flex items-center justify-center text-purple-300">
+                                    <CyberShieldIcon className="w-6 h-6" />
+                                </div>
+                                <div>
+                                    <h1 className="text-sm font-bold text-white">SARAH IA NEXUS v5.2 PRO</h1>
+                                    <span className="text-xs text-purple-300">Grupo Comunitário A Chave da Esperança (Mesquita/RJ)</span>
+                                </div>
+                            </div>
+                        </div>
+                    </header>
+
+                    <div className="bg-[#120921] border-b border-purple-500/30 px-4 py-2">
+                        <div className="max-w-5xl mx-auto flex items-center gap-2 overflow-x-auto">
+                            <button onClick={() => setActiveTab("chat")} className={`px-4 py-2 rounded-xl text-xs font-bold cursor-pointer ${activeTab === "chat" ? "bg-purple-600 text-white" : "bg-nightBlue text-purple-300 border border-purple-500/40"}`}>💬 Chat</button>
+                            <button onClick={() => setActiveTab("dashboard")} className={`px-4 py-2 rounded-xl text-xs font-bold cursor-pointer ${activeTab === "dashboard" ? "bg-purple-600 text-white" : "bg-nightBlue text-purple-300 border border-purple-500/40"}`}>🛰️ Radar</button>
+                            <button onClick={() => setActiveTab("field_report")} className={`px-4 py-2 rounded-xl text-xs font-bold cursor-pointer ${activeTab === "field_report" ? "bg-purple-600 text-white" : "bg-nightBlue text-purple-300 border border-purple-500/40"}`}>📋 Laudos</button>
+                            <button onClick={() => setActiveTab("regional_hub")} className={`px-4 py-2 rounded-xl text-xs font-bold cursor-pointer ${activeTab === "regional_hub" ? "bg-purple-600 text-white" : "bg-nightBlue text-purple-300 border border-purple-500/40"}`}>📑 Hub</button>
+                            <button onClick={() => setActiveTab("videos")} className={`px-4 py-2 rounded-xl text-xs font-bold cursor-pointer ${activeTab === "videos" ? "bg-purple-600 text-white" : "bg-nightBlue text-purple-300 border border-purple-500/40"}`}>🎥 Cofre</button>
+                        </div>
+                    </div>
+
+                    <main className="max-w-5xl mx-auto p-4 w-full flex-1 flex flex-col">
+                        {activeTab === "dashboard" && <NativeHydroWindRadar />}
+                        {activeTab === "field_report" && <FieldReportModule onBackToChat={() => setActiveTab("chat")} showToast={showToast} />}
+                        {activeTab === "regional_hub" && <RegionalHubModule showToast={showToast} />}
+                        {activeTab === "videos" && <VideoVaultModule showToast={showToast} />}
+                        {activeTab === "chat" && (
+                            <div className="glass-dark rounded-3xl shadow-2xl flex flex-col overflow-hidden flex-1 border border-purple-500/40" style={{ minHeight: "500px" }}>
+                                <div className="flex-1 overflow-y-auto p-4 space-y-4">
+                                    {messages.length === 0 && (
+                                        <div className="h-full flex flex-col items-center justify-center p-4 my-auto">
+                                            <SarahHologramAvatar isLarge={true} isSpeaking={isSpeaking} />
+                                            <h2 className="text-base font-bold text-white mt-3">SARAH IA NEXUS v5.2 PRO</h2>
+                                            <p className="text-xs text-purple-300">"Prevenção não é mídia: é gente atenta."</p>
+                                        </div>
+                                    )}
+                                    {messages.map(m => (
+                                        <div key={m.id} className={`flex items-start gap-3 ${m.sender === "user" ? "flex-row-reverse" : "flex-row"}`}>
+                                            {m.sender === "user" ? <div className="w-10 h-10 rounded-2xl bg-[#120921] flex items-center justify-center text-purple-300">👤</div> : <SarahHologramAvatar isSpeaking={isSpeaking} />}
+                                            <div className={`p-4 rounded-3xl max-w-[85%] text-xs ${m.sender === "user" ? "bg-purple-600 text-white" : "bg-[#120921] text-lightLavender border border-purple-500/40"}`}>{m.text}</div>
+                                        </div>
+                                    ))}
+                                </div>
+                                <div className="p-4 bg-nightBlue/95 border-t border-purple-500/30 flex gap-2">
+                                    <input type="text" value={input} onChange={e => setInput(e.target.value)} onKeyDown={e => e.key === "Enter" && handleSendMessage()} placeholder="Digite sua mensagem..." className="flex-1 bg-[#120921] border border-purple-500/40 rounded-xl px-3 py-2 text-xs text-white outline-none" />
+                                    <button onClick={handleSendMessage} className="px-4 py-2 bg-purple-600 text-white font-bold rounded-xl text-xs cursor-pointer">➤</button>
+                                </div>
+                            </div>
+                        )}
+                    </main>
+
+                    <div className="bg-[#4a154b] border-t-2 border-purple-500 py-2.5 overflow-hidden whitespace-nowrap">
+                        <marquee behavior="scroll" direction="left" scrollamount="4" className="text-xs font-bold text-[#FF7A00]">
+                            🛡️ Promovendo ciência cidadã • 1° Edição operacional El Ninõ GACE • Conceitos Mesquita do amanhã e Cidades resilientes (ONU) Grupo Comunitário A Chave da Esperança • Plano de Ação: Todos Unidos, Todos Protegidos • EMERGÊNCIAS: Defesa Civil (199 / 21 4040-1772) • Bombeiros (193) • Alertas ZAP 📲 (21) 97299-3223 • Cras de Rocha Sobrinho 21 2042-8931 • Seja voluntário servir é prevenir sempre +Nupdecs • Participe • "Se o Senhor não guardar a cidade, em vão vigia o sentinela" (Salmos 127:1) • #compartilhe ™ Mesquita RJ 🛡️
+                        </marquee>
+                    </div>
+
+                    <footer className="bg-[#120921] border-t border-purple-500/40 py-3 px-2 text-center text-xs space-y-1 font-bold shadow-inner">
+                        <div style={{ color: "#9B7EDE" }}>Defesa Civil Comunitária Cidadão Sensor • SARAH IA NEXUS v5.2 PRO</div>
+                        <div style={{ color: "#E58AC7" }}>Grupo Comunitário A Chave da Esperança • Mesquita/RJ</div>
+                        <div style={{ color: "#72E6B2" }}>@ &nbsp; Todos os direitos reservados 2024–2026</div>
+                    </footer>
+                </div>
+            );
+        }
+
+        const root = ReactDOM.createRoot(document.getElementById("root"));
+        root.render(<App />);
+    </script>
+</body>
+</html>
