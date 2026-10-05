@@ -1,0 +1,20 @@
+{
+  "name": "Cidadão Sensor",
+  "short_name": "Cidadão Sensor",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#0f172a",
+  "icons": [
+    {
+      "src": "COLE_A_URL_COMPLETA_DA_IMAGEM_192_ AQUI",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "COLE_A_URL_COMPLETA_DA_IMAGEM_512_ AQUI",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}
