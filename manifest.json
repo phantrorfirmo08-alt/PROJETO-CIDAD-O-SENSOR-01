@@ -1,0 +1,24 @@
+{
+  "name": "SARAH IA NEXUS - Defesa Civil Comunitária",
+  "short_name": "SARAH IA",
+  "description": "App de Prevenção e apoio meteorológico comunitário automatizado. Projeto Cidadão Sensor.",
+  "start_url": "./?v=5.2",
+  "display": "standalone",
+  "background_color": "#000000",
+  "theme_color": "#000000",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "https://www.image2url.com/r2/default/images/png-to-jpg-1791259158447-6a93653b-62ea-4f0d-809e-5a2cbfb8d00d.jpg",
+      "sizes": "192x192",
+      "type": "image/jpg",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "https://www.image2url.com/r2/default/images/png-to-jpg-1791259158447-6a93653b-62ea-4f0d-809e-5a2cbfb8d00d.jpg",
+      "sizes": "512x512",
+      "type": "image/jpg",
+      "purpose": "any maskable"
+    }
+  ]
+}
