@@ -1,0 +1,782 @@
+<!DOCTYPE html>
+<html lang="pt-PT" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>SARAH IA NEXUS v5.2.1 PRO - Defesa Civil Comunitária</title>
+    
+    <meta property="og:title" content="APP//MONITORAMENTO COMUNITÁRIO 🛰\nSARAH IA NEXUS V5.2.1 PRO\nProjeto Cidadão Sensor 🛡 • Automatizado com Inteligência Artificial">
+    <meta property="og:description" content="App de Prevenção e apoio meteorológico comunitário automatizado. Prevenção não é mídia: é gente atenta.">
+    <meta property="og:image" content="https://www.image2url.com/r2/default/images/1790084936078-de3b77c5-fa9f-4b89-a02a-560b09e8b5a0.png">
+    <meta property="og:url" content="https://phantrorfirmo08-alt.github.io/PROJETO-CIDAD-O-SENSOR-01/?v=5.2.1">
+    <meta property="og:type" content="website">
+
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#000000">
+    <link rel="apple-touch-icon" href="https://www.image2url.com/r2/default/images/1790084936078-de3b77c5-fa9f-4b89-a02a-560b09e8b5a0.png">
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    
+    <script>
+      (function() {
+        try {
+            const savedTheme = localStorage.getItem('sarah-theme') || 'dark';
+            if (savedTheme === 'warm') {
+                document.documentElement.classList.remove('dark');
+                document.documentElement.classList.add('warm');
+            } else {
+                document.documentElement.classList.add('dark');
+                document.documentElement.classList.remove('warm');
+            }
+        } catch(e) {}
+      })();
+    </script>
+
+    <script>
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Plus Jakarta Sans', 'system-ui', '-apple-system', 'sans-serif'],
+                        mono: ['JetBrains Mono', 'monospace'],
+                    },
+                    colors: {
+                        obsidian: "#000000",
+                        deepPlate: "#0A0F1D",
+                        surfaceCard: "#131C31",
+                        neonCyan: "#00F2FE",
+                        electricIndigo: "#4FACFE",
+                        vibrantPink: "#FF0844",
+                        emeraldMint: "#00F5A0",
+                        alertCoral: "#FF5E62",
+                    },
+                    animation: {
+                        'pulse-glow': 'pulseGlow 3s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+                        'float': 'float 4s ease-in-out infinite',
+                        'avatar-idle': 'avatarIdle 5s ease-in-out infinite',
+                        'avatar-speaking': 'avatarSpeaking 0.35s ease-in-out infinite',
+                        'rolar-faixa': 'rolarFaixa 32s linear infinite'
+                    },
+                    keyframes: {
+                        pulseGlow: {
+                            '0%, 100%': { boxShadow: '0 0 25px rgba(0,242,254,0.25), inset 0 0 15px rgba(0,242,254,0.1)' },
+                            '50%': { boxShadow: '0 0 45px rgba(0,245,160,0.4), inset 0 0 25px rgba(0,245,160,0.2)' },
+                        },
+                        float: {
+                            '0%, 100%': { transform: 'translateY(0)' },
+                            '50%': { transform: 'translateY(-8px)' },
+                        },
+                        avatarIdle: {
+                            '0%, 100%': { transform: 'scale(1)', filter: 'drop-shadow(0 0 20px rgba(0,242,254,0.3))' },
+                            '50%': { transform: 'scale(1.02)', filter: 'drop-shadow(0 0 35px rgba(0,245,160,0.5))' }
+                        },
+                        avatarSpeaking: {
+                            '0%, 100%': { transform: 'scale(1)', filter: 'drop-shadow(0 0 40px rgba(255,8,68,0.8))' },
+                            '50%': { transform: 'scale(1.08)', filter: 'drop-shadow(0 0 70px rgba(0,242,254,0.9))' }
+                        },
+                        rolarFaixa: {
+                            '0%': { transform: 'translateX(100%)' },
+                            '100%': { transform: 'translateX(-100%)' }
+                        }
+                    }
+                }
+            }
+        };
+    </script>
+    <script src="https://unpkg.com/react@18/umd/react.development.js" crossorigin></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js" crossorigin></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <style>
+        html, body, #root {
+            min-height: 100%;
+            margin: 0;
+            font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+            touch-action: pan-x pan-y;
+            -webkit-text-size-adjust: 100%;
+            overscroll-behavior-y: none;
+            background-color: #000000;
+            color: #F1F5F9;
+        }
+        body { overflow-x: hidden; }
+        .glass-panel {
+            background: linear-gradient(135deg, rgba(19, 28, 49, 0.85) 0%, rgba(10, 15, 29, 0.92) 100%);
+            backdrop-filter: blur(28px);
+            -webkit-backdrop-filter: blur(28px);
+            border: 1px solid rgba(0, 242, 254, 0.22);
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.8), inset 0 1px 0 0 rgba(255, 255, 255, 0.1);
+        }
+        .btn-interactive {
+            transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .btn-interactive:active { transform: scale(0.97); }
+        .btn-interactive:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 0 25px rgba(0, 242, 254, 0.4);
+            border-color: #00F2FE;
+        }
+        .input-shadow { box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.6); }
+        ::-webkit-scrollbar { width: 5px; height: 5px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: rgba(0, 242, 254, 0.3); border-radius: 9999px; }
+    </style>
+</head>
+<body class="selection:bg-vibrantPink selection:text-white">
+    <div id="root"></div>
+    <script type="text/babel">
+        document.addEventListener('gesturestart', function(e) { e.preventDefault(); });
+
+        const getBrasiliaGreeting = () => {
+            const hour = parseInt(
+                new Intl.DateTimeFormat("pt-BR", {
+                    timeZone: "America/Sao_Paulo",
+                    hour: "numeric",
+                    hour12: false
+                }).format(new Date()),
+                10
+            );
+            if (hour >= 0 && hour < 5) return "Boa madrugada";
+            if (hour >= 5 && hour < 12) return "Bom dia";
+            if (hour >= 12 && hour < 18) return "Boa tarde";
+            return "Boa noite";
+        };
+
+        function SarahHologramAvatar({ isLarge = false, isSpeaking = false }) {
+            const containerSizeClass = isLarge 
+                ? "w-full max-w-[320px] aspect-square mx-auto p-6 rounded-[36px] border border-neonCyan/30 bg-surfaceCard shadow-[0_0_50px_rgba(0,242,254,0.12)] flex flex-col items-center justify-center relative overflow-hidden transition-all duration-500" 
+                : "w-10 h-10 rounded-2xl p-1.5 border border-neonCyan/40 bg-surfaceCard shrink-0 flex items-center justify-center relative overflow-hidden shadow-md";
+
+            return (
+                <div className={containerSizeClass}>
+                    <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                        <div className={`absolute rounded-full border border-neonCyan/20 bg-neonCyan/5 animate-ping ${isLarge ? 'w-52 h-52' : 'w-14 h-14'}`} style={{ animationDuration: '4s' }}></div>
+                        <div className={`absolute rounded-full border border-emeraldMint/20 bg-emeraldMint/5 animate-pulse ${isLarge ? 'w-72 h-72' : 'w-20 h-20'}`}></div>
+                    </div>
+
+                    <div 
+                        className={`relative rounded-full flex items-center justify-center bg-obsidian border-2 border-neonCyan/80 shadow-[0_0_35px_rgba(0,242,254,0.5)] transition-all duration-300 ease-out z-10 ${                             isLarge ? 'w-36 h-36' : 'w-8 h-8'                         } ${isSpeaking ? 'animate-avatar-speaking' : 'animate-avatar-idle'}`}
+                    >
+                        <div className="absolute inset-0 rounded-full bg-gradient-to-tr from-neonCyan/20 to-emeraldMint/20 animate-spin" style={{ animationDuration: '10s' }}></div>
+                        <svg width={isLarge ? "52" : "18"} height={isLarge ? "52" : "18"} viewBox="0 0 24 24" fill="url(#avatarGrad)" className="relative z-10">
+                            <path d="M13 2L3 14h7l-1 8 10-12h-7l1-8z"/>
+                            <defs>
+                                <linearGradient id="avatarGrad" x1="3" y1="2" x2="21" y2="22">
+                                    <stop stopColor="#00F2FE" />
+                                    <stop offset="1" stopColor="#00F5A0" />
+                                </linearGradient>
+                            </defs>
+                        </svg>
+                    </div>
+
+                    {isLarge && (
+                        <div className="mt-4 text-center font-sans z-10 space-y-1.5">
+                            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-neonCyan/10 border border-neonCyan/30 font-mono text-[10px] text-neonCyan tracking-wider shadow-inner">
+                                <span className="w-1.5 h-1.5 rounded-full bg-emeraldMint animate-pulse"></span>
+                                {isSpeaking ? "SARAH FALANDO..." : "AGUARDANDO SUA FALA • ATIVA"}
+                            </div>
+                            <div className="font-extrabold text-lg text-white tracking-wider">
+                                SARAH IA NEXUS
+                            </div>
+                            <div className="text-[10px] tracking-[0.25em] text-slate-400 font-bold uppercase">CIDADÃO SENSOR 🛡️ PRO</div>
+                        </div>
+                    )}
+                </div>
+            );
+        }
+
+        function NativeHydroWindRadar() {
+            const [radarKey, setRadarKey] = React.useState(1);
+            const [isCollapsed, setIsCollapsed] = React.useState(false);
+
+            return (
+                <div className={`relative w-full rounded-[28px] overflow-hidden border border-neonCyan/40 shadow-2xl bg-surfaceCard flex flex-col justify-between p-2.5 transition-all duration-300 ${isCollapsed ? 'h-[75px]' : 'h-[600px]'}`}>
+                    <div className="absolute top-3 left-3 right-3 flex items-center justify-between z-30 bg-obsidian/95 border border-neonCyan/30 px-4 py-2.5 rounded-2xl shadow-xl backdrop-blur-xl">
+                        <div className="flex items-center gap-2.5 overflow-hidden whitespace-nowrap">
+                            <span className="w-2 h-2 rounded-full bg-neonCyan animate-ping"></span>
+                            <span className="font-extrabold text-xs text-neonCyan tracking-wide truncate">
+                                RADAR 24H • CLIMA, NUVENS, CHUVA & VENTOS
+                            </span>
+                        </div>
+                        <div className="flex items-center gap-2 shrink-0">
+                            <button onClick={() => setRadarKey(p => p + 1)} className="px-3 py-1.5 bg-neonCyan/20 hover:bg-neonCyan text-neonCyan hover:text-obsidian border border-neonCyan/40 rounded-xl font-bold text-[11px] cursor-pointer transition shadow">🔄 Recarregar</button>
+                            <button onClick={() => setIsCollapsed(!isCollapsed)} className="px-3 py-1.5 bg-deepPlate text-neonCyan border border-neonCyan/30 rounded-xl font-bold text-[11px] cursor-pointer shadow">{isCollapsed ? '▼ Expandir' : '▲ Recolher'}</button>
+                        </div>
+                    </div>
+                    {!isCollapsed && (
+                        <div className="absolute inset-0 pt-[64px]">
+                            <iframe key={radarKey} src="https://embed.windy.com/embed2.html?lat=-22.7845&lon=-43.4190&detailLat=-22.7845&detailLon=-43.4190&width=650&height=550&zoom=11&level=surface&overlay=wind&product=ecmwf&menu=&message=&marker=true&calendar=now&pressure=true&type=map&location=coordinates&detail=true&metricWind=default&metricTemp=default" className="w-full h-full border-none relative z-10 bg-obsidian rounded-2xl" sandbox="allow-scripts allow-same-origin allow-popups allow-forms" allowFullScreen></iframe>
+                        </div>
+                    )}
+                </div>
+            );
+        }
+
+        function FieldReportModule({ onBackToChat, showToast }) {
+            const [setor, setSetor] = React.useState("🛡️ Defesa Civil (Vistoria de Risco / Ocorrência)");
+            const [agente, setAgente] = React.useState("Alexander da Silva Firmo");
+            const [localizacao, setLocalizacao] = React.useState("Sebinho / Rocha Sobrinho - Mesquita/RJ");
+            const [descricao, setDescricao] = React.useState("");
+            const [gpsCoords, setGpsCoords] = React.useState({ lt: '', ln: '', lk: '' });
+            const [gpsStatus, setGpsStatus] = React.useState("📍 GPS em espera");
+            const [fotos, setFotos] = React.useState([
+                { id: 1, status: "vazia", file: null, preview: null },
+                { id: 2, status: "vazia", file: null, preview: null },
+                { id: 3, status: "vazia", file: null, preview: null },
+                { id: 4, status: "vazia", file: null, preview: null }
+            ]);
+
+            const capturarGps = () => {
+                if (!navigator.geolocation) { showToast("⚠️ Geolocalização não suportada."); return; }
+                showToast("🛰 Acionando GPS de alta precisão...");
+                navigator.geolocation.getCurrentPosition(
+                    (p) => {
+                        const lt = p.coords.latitude.toFixed(6);
+                        const ln = p.coords.longitude.toFixed(6);
+                        const lk = `https://maps.google.com/?q=${lt},${ln}`;
+                        setGpsCoords({ lt, ln, lk });
+                        setLocalizacao(`${lt},${ln}`);
+                        setGpsStatus("✅ GPS Fixado com Sucesso");
+                        showToast(`📍 Coordenadas obtidas: ${lt},${ln}`);
+                    },
+                    () => { showToast("⚠ Falha ao obter sinal GPS."); setGpsStatus("⚠ Erro de Sinal GPS"); },
+                    { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+                );
+            };
+
+            const handleFotoChange = (i, e) => {
+                const file = e.target.files[0];
+                if (file) {
+                    showToast(`🔄 Otimizando evidência ${i + 1}...`);
+                    const reader = new FileReader();
+                    reader.readAsDataURL(file);
+                    reader.onload = (event) => {
+                        const img = new Image();
+                        img.src = event.target.result;
+                        img.onload = () => {
+                            const canvas = document.createElement('canvas');
+                            let w = img.width, h = img.height;
+                            const MAX = 1280;
+                            if (w > h) { if (w > MAX) { h = Math.round(h * MAX / w); w = MAX; } }
+                            else { if (h > MAX) { w = Math.round(w * MAX / h); h = MAX; } }
+                            canvas.width = w; canvas.height = h;
+                            const ctx = canvas.getContext('2d');
+                            ctx.drawImage(img, 0, 0, w, h);
+                            canvas.toBlob((blob) => {
+                                const compressedFile = new File([blob], `evidencia_${i+1}.jpg`, { type: 'image/jpeg' });
+                                const previewUrl = URL.createObjectURL(compressedFile);
+                                const u = [...fotos];
+                                u[i] = { id: u[i].id, status: "✅ OK", file: compressedFile, preview: previewUrl };
+                                setFotos(u);
+                                showToast(`📸 Evidência ${i + 1} registrada!`);
+                            }, 'image/jpeg', 0.75);
+                        };
+                    };
+                }
+            };
+
+            const montarTexto = () => {
+                const fCount = fotos.filter(f => f.status === "✅ OK").length;
+                return `📊 *RELATÓRIO TÉCNICO DE CAMPO - SARAH IA*\n` +
+                       `🏛️ *Setor:* ${setor}\n` +
+                       `👤 *Agente:* ${agente || 'Não informado'}\n` +
+                       `📍 *Local:* ${localizacao || 'Não informado'}\n` +
+                       (gpsCoords.lk ? `🔗 *Geolocalização:* ${gpsCoords.lk}\n` : ``) +
+                       `📸 *Evidências fotográficas:* ${fCount}/4 anexadas\n` +
+                       `📝 *Relato Operacional:*\n${descricao || 'Sem descrição informada'}`;
+            };
+
+            const enviarZapComFotos = async () => {
+                const texto = montarTexto();
+                const validFiles = fotos.filter(f => f.file instanceof File).map(f => f.file);
+                
+                try {
+                    if (navigator.share && validFiles.length > 0 && navigator.canShare && navigator.canShare({ files: validFiles })) {
+                        await navigator.share({
+                            title: 'Relatório Técnico - SARAH IA',
+                            text: texto,
+                            files: validFiles
+                        });
+                        showToast("✅ Relatório e evidências compartilhados com sucesso!");
+                        return;
+                    }
+                } catch (err) {
+                    if (err.name === 'AbortError') return;
+                    console.warn("Share files fallback triggered:", err);
+                }
+                
+                // Fallback seguro anti-crash: Abre WhatsApp diretamente com o texto formatado
+                window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(texto)}`, '_blank');
+                showToast("💬 WhatsApp aberto com o relatório formatado!");
+            };
+
+            return (
+                <div className="space-y-4 max-w-xl mx-auto">
+                    <div className="flex items-center justify-between glass-panel px-5 py-3.5 rounded-2xl border border-neonCyan/30">
+                        <span className="text-xs font-extrabold text-neonCyan">📋 Mapeamento de Campo & Vistoria</span>
+                        <button onClick={onBackToChat} className="px-3.5 py-1.5 bg-alertCoral/25 text-alertCoral border border-alertCoral/40 rounded-xl text-xs font-bold cursor-pointer btn-interactive">✕ Fechar</button>
+                    </div>
+
+                    <div className="glass-panel rounded-[32px] p-6 border border-neonCyan/30 shadow-2xl space-y-4">
+                        <h2 className="text-lg font-extrabold text-white">Inspeção & Vistoria Comunitária</h2>
+                        
+                        <div className="space-y-1">
+                            <label className="block text-[11px] font-extrabold text-slate-400 uppercase">Setor</label>
+                            <select value={setor} onChange={(e) => setSetor(e.target.value)} className="w-full bg-obsidian border border-neonCyan/30 rounded-2xl p-3 text-xs text-slate-200">
+                                <option>🛡 Defesa Civil (Vistoria de Risco / Ocorrência)</option>
+                                <option>🤝 Assistência Social (Vulnerabilidade / Cadastro)</option>
+                                <option>🎓 Universidade (Pesquisa / Extensão)</option>
+                            </select>
+                        </div>
+
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                            <input type="text" value={agente} onChange={(e) => setAgente(e.target.value)} placeholder="Nome do Agente" className="bg-obsidian border border-neonCyan/30 rounded-2xl p-3 text-xs text-slate-200" />
+                            <input type="text" value={localizacao} onChange={(e) => setLocalizacao(e.target.value)} placeholder="Localidade / Referência" className="bg-obsidian border border-neonCyan/30 rounded-2xl p-3 text-xs text-slate-200" />
+                        </div>
+                        
+                        <div className="border border-neonCyan/30 bg-obsidian/90 rounded-2xl p-3 flex items-center justify-between text-xs">
+                            <span className="text-emeraldMint font-mono font-bold">{gpsStatus}</span>
+                            <button type="button" onClick={capturarGps} className="px-3 py-2 bg-neonCyan text-obsidian font-black rounded-xl text-xs cursor-pointer btn-interactive">Capturar GPS 🛰</button>
+                        </div>
+
+                        <textarea rows="3" value={descricao} onChange={(e) => setDescricao(e.target.value)} placeholder="Descreva as condições da ocorrência ou vistoria..." className="w-full bg-obsidian border border-neonCyan/30 rounded-2xl p-3 text-xs text-slate-200"></textarea>
+
+                        <div className="grid grid-cols-2 gap-2">
+                            {fotos.map((f, idx) => (
+                                <label key={f.id} htmlFor={`f-${idx}`} className="border border-dashed border-emeraldMint/40 bg-obsidian rounded-2xl p-2 text-center cursor-pointer h-24 flex flex-col items-center justify-center">
+                                    <span className="text-neonCyan text-sm">📷</span>
+                                    <span className="text-[10px] text-slate-300">{f.preview ? `✅ Foto ${idx+1}` : `+ Foto ${idx+1}`}</span>
+                                    <input type="file" id={`f-${idx}`} accept="image/*" capture="environment" className="hidden" onChange={(e) => handleFotoChange(idx, e)} />
+                                </label>
+                            ))}
+                        </div>
+
+                        <div className="space-y-2.5 pt-2">
+                            <button onClick={() => { navigator.clipboard.writeText(montarTexto()); showToast("📋 Relatório copiado com sucesso!"); }} className="w-full bg-gradient-to-r from-emeraldMint to-neonCyan text-obsidian font-extrabold py-3 rounded-2xl text-xs uppercase cursor-pointer btn-interactive shadow-lg">Copiar Relatório Formatado</button>
+                            <button onClick={enviarZapComFotos} className="w-full bg-gradient-to-r from-electricIndigo to-blue-600 text-white font-extrabold py-3 rounded-2xl text-xs uppercase cursor-pointer btn-interactive shadow-lg">💬 Enviar Relatório no WhatsApp</button>
+                        </div>
+                    </div>
+                </div>
+            );
+        }
+
+        function PublicVideoGallery({ localVideos, onGoToChat }) {
+            return (
+                <div className="glass-panel p-6 rounded-[32px] border border-neonCyan/35 shadow-2xl space-y-4 max-w-xl mx-auto">
+                    <div className="flex items-center justify-between border-b border-neonCyan/20 pb-3">
+                        <h2 className="text-xs font-extrabold text-neonCyan">🎥 Galeria de Vídeos Comunitários</h2>
+                        <button onClick={onGoToChat} className="px-3 py-1 bg-neonCyan text-obsidian rounded-xl text-xs font-black cursor-pointer">💬 Voltar ao Chat</button>
+                    </div>
+                    <div className="grid grid-cols-1 gap-4">
+                        {localVideos.map(vid => (
+                            <div key={vid.id} className="bg-obsidian/90 p-3 rounded-2xl border border-neonCyan/30 space-y-2">
+                                <span className="text-xs font-bold text-neonCyan truncate">📺 {vid.title}</span>
+                                <video src={vid.url} controls className="w-full h-[200px] object-cover rounded-xl bg-obsidian" />
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            );
+        }
+
+        function AdminVaultModule({ showToast, onClose }) {
+            const [pinInput, setPinInput] = React.useState("");
+            const [isUnlocked, setIsUnlocked] = React.useState(false);
+            const [sponsorInput, setSponsorInput] = React.useState(() => localStorage.getItem("sarah_custom_sponsor_text") || "JUNINHO DO MERCADINHO • Preços baixos e atendimento nota 10");
+
+            return (
+                <div className="glass-panel p-6 rounded-[32px] border border-neonCyan/40 shadow-2xl space-y-4 max-w-md mx-auto">
+                    <div className="flex items-center justify-between border-b border-neonCyan/20 pb-3">
+                        <h2 className="text-xs font-extrabold text-neonCyan">🔒 Painel Administrativo</h2>
+                        <button onClick={onClose} className="px-3 py-1 bg-alertCoral/25 text-alertCoral rounded-xl text-xs font-bold cursor-pointer">✕ Fechar</button>
+                    </div>
+                    {!isUnlocked ? (
+                        <div className="space-y-4 text-center py-6">
+                            <div className="text-2xl text-neonCyan">🔒</div>
+                            <input type="password" maxLength="6" value={pinInput} onChange={(e) => setPinInput(e.target.value)} placeholder="Digite o PIN" className="w-full bg-obsidian border border-neonCyan/40 rounded-2xl p-3 text-center text-xs text-white font-mono tracking-widest" />
+                            <button onClick={() => { if(pinInput === "303500") { setIsUnlocked(true); showToast("🔓 Acesso Autorizado!"); } else { showToast("❌ PIN incorreto."); } }} className="w-full py-3 bg-neonCyan text-obsidian font-extrabold rounded-2xl text-xs cursor-pointer shadow-lg">Desbloquear</button>
+                        </div>
+                    ) : (
+                        <div className="space-y-4">
+                            <div className="space-y-2">
+                                <label className="text-xs font-extrabold text-neonCyan">📢 Patrocínio / Quadro de Marketing</label>
+                                <input type="text" value={sponsorInput} onChange={(e) => setSponsorInput(e.target.value)} className="w-full bg-obsidian border border-neonCyan/40 rounded-2xl p-3 text-xs text-white" />
+                                <button onClick={() => { localStorage.setItem("sarah_custom_sponsor_text", sponsorInput); showToast("✅ Patrocínio salvo!"); }} className="w-full py-2.5 bg-emeraldMint text-obsidian font-extrabold rounded-xl text-xs cursor-pointer">Salvar Patrocínio 💾</button>
+                            </div>
+                        </div>
+                    )}
+                </div>
+            );
+        }
+
+        function AutomatedObservatoryWidget() {
+            const [timeStr, setTimeStr] = React.useState("");
+            const [marketingText, setMarketingText] = React.useState(() => localStorage.getItem("sarah_custom_sponsor_text") || "JUNINHO DO MERCADINHO • Preços baixos e atendimento nota 10");
+
+            React.useEffect(() => {
+                const u = () => {
+                    const a = new Date();
+                    setTimeStr(`${String(a.getDate()).padStart(2,'0')}/${String(a.getMonth()+1).padStart(2,'0')}/${a.getFullYear()} ${String(a.getHours()).padStart(2,'0')}:${String(a.getMinutes()).padStart(2,'0')}`);
+                };
+                u();
+                const t = setInterval(u, 1000);
+                const sync = setInterval(() => {
+                    const saved = localStorage.getItem("sarah_custom_sponsor_text");
+                    if (saved) setMarketingText(saved);
+                }, 1500);
+                return () => { clearInterval(t); clearInterval(sync); };
+            }, []);
+
+            return (
+                <div style={{width:'100%',margin:'12px auto',background:'rgba(0,0,0,0.6)',border:'1px solid rgba(0,229,255,0.3)',borderRadius:'16px',padding:'14px'}}>
+                    <div style={{color:'#FFF',fontWeight:800,fontSize:'13px',textAlign:'center',marginBottom:'12px'}}>🛰 OBSERVATÓRIO AUTOMATIZADO</div>
+                    <div style={{display:'flex',justifyContent:'center',gap:'10px',marginBottom:'12px',flexWrap:'wrap'}}>
+                        <div style={{background:'rgba(0,201,80,0.15)',border:'1px solid rgba(0,201,80,0.4)',color:'#4ADE80',padding:'8px 16px',borderRadius:'20px',fontSize:'12px',fontWeight:700}}>● Sistema Online</div>
+                        <div style={{background:'rgba(255,255,255,0.08)',border:'1px solid rgba(255,255,255,0.1)',color:'#FFF',padding:'8px 16px',borderRadius:'20px',fontSize:'12px',fontWeight:700}}>🕐 Relógio Oficial: {timeStr||"--/--/---- --:--"}</div>
+                    </div>
+                    <div style={{position:'relative',height:'28px',background:'#102a45',overflow:'hidden',display:'flex',alignItems:'center',borderRadius:'8px 8px 0 0'}}>
+                        <div style={{display:'inline-block',whiteSpace:'nowrap',color:'#7DD3FC',font:'700 12px/28px "Segoe UI"',animation:'rolarFaixa 40s linear infinite',padding:'0 32px'}}>🛡 Promovendo Ciência cidadã • Grupo A Chave da Esperança • Projeto Social Bom Dia Comunidade • Defesa Civil Mesquita • Rio Sarapuí • Prevenção não é mídia: é gente atenta • Emergências: 199 ou (21) 4040-1772 • Bombeiros: 193 •</div>
+                    </div>
+                    <div style={{background:'linear-gradient(135deg, rgba(0,242,254,0.08) 0%, rgba(0,245,160,0.08) 100%)',border:'2px solid rgba(0,242,254,0.5)',borderRadius:'0 0 12px 12px',padding:'12px 16px',textAlign:'center',marginTop:'3px'}}>
+                        <div style={{color:'#00F5A0',fontSize:'11px',fontWeight:'900',letterSpacing:'2px',marginBottom:'4px'}}>★ PATROCÍNIO OFICIAL & APOIO COMUNITÁRIO ★</div>
+                        <div style={{background:'linear-gradient(90deg,#00F2FE 0%,#00F5A0 50%,#4FACFE 100%)',WebkitBackgroundClip:'text',WebkitTextFillColor:'transparent',fontSize:'14px',fontWeight:'900',filter:'drop-shadow(0 0 8px rgba(0,242,254,0.7))'}}>
+                            {marketingText}
+                        </div>
+                    </div>
+                </div>
+            );
+        }
+
+        function App() {
+            const [soundEnabled, setSoundEnabled] = React.useState(true);
+            const [isSpeaking, setIsSpeaking] = React.useState(false);
+            const [isLoadingSplash, setIsLoadingSplash] = React.useState(true);
+            const [activeTab, setActiveTab] = React.useState("chat"); 
+            const [toastMessage, setToastMessage] = React.useState(null);
+            const [termsAccepted, setTermsAccepted] = React.useState(() => localStorage.getItem("sarah_terms_accepted_v521_lgpd") === "1");
+            const [check1, setCheck1] = React.useState(false);
+            const [check2, setCheck2] = React.useState(false);
+
+            const [showHeroPanel, setShowHeroPanel] = React.useState(true);
+            const [messages, setMessages] = React.useState([]);
+            const [input, setInput] = React.useState("");
+            const [localVideos, setLocalVideos] = React.useState([
+                { id: 1, title: "Monitoramento Hidrometeorológico - Rio Sarapuí", url: "https://www.w3schools.com/html/mov_bbb.mp4" },
+                { id: 2, title: "Ação Comunitária - Grupo A Chave da Esperança", url: "https://www.w3schools.com/html/movie.mp4" }
+            ]);
+
+            const voicesRef = React.useRef([]);
+            const speechIdRef = React.useRef(0);
+            const voiceTimerRef = React.useRef(null);
+
+            const carregarVozes = () => {
+                if ("speechSynthesis" in window) {
+                    voicesRef.current = window.speechSynthesis.getVoices();
+                }
+            };
+
+            React.useEffect(() => {
+                if (!("speechSynthesis" in window)) return;
+                carregarVozes();
+                window.speechSynthesis.onvoiceschanged = carregarVozes;
+                return () => {
+                    window.speechSynthesis.cancel();
+                    window.speechSynthesis.onvoiceschanged = null;
+                };
+            }, []);
+
+            const limparTextoParaFala = (text) => {
+                return String(text)
+                    .replace(/([\u2700-\u27BF]|[\uE000-\uF8FF]|\uD83C[\uDC00-\uDFFF]|\uD83D[\uDC00-\uDFFF]|[\u2011-\u26FF]|\uD83E[\uDD00-\uDDFF])/g, '')
+                    .replace(/\[(.*?)\]\(.*?\)/g, "$1")
+                    .replace(/https?:\/\/\S+/g, "")
+                    .replace(/\s+/g, " ")
+                    .trim();
+            };
+
+            const escolherMelhorVoz = () => {
+                const voices = voicesRef.current.length ? voicesRef.current : window.speechSynthesis.getVoices();
+                return voices.find((voice) => voice.lang.toLowerCase().includes("pt")) || voices[0];
+            };
+
+            const stopSpeaking = () => {
+                speechIdRef.current += 1;
+                if (voiceTimerRef.current) {
+                    clearTimeout(voiceTimerRef.current);
+                    voiceTimerRef.current = null;
+                }
+                if ("speechSynthesis" in window) window.speechSynthesis.cancel();
+                setIsSpeaking(false);
+            };
+
+            const speakText = (text) => {
+                if (!soundEnabled || !("speechSynthesis" in window)) return;
+                const cleanText = limparTextoParaFala(text);
+                if (!cleanText) return;
+                stopSpeaking();
+                const currentId = speechIdRef.current;
+                voiceTimerRef.current = setTimeout(() => {
+                    if (currentId !== speechIdRef.current) return;
+                    const utterance = new SpeechSynthesisUtterance(cleanText);
+                    utterance.lang = "pt-BR";
+                    utterance.voice = escolherMelhorVoz();
+                    utterance.rate = 1.0;
+                    utterance.onstart = () => { if (currentId === speechIdRef.current) setIsSpeaking(true); };
+                    utterance.onend = () => { if (currentId === speechIdRef.current) setIsSpeaking(false); };
+                    utterance.onerror = () => setIsSpeaking(false);
+                    window.speechSynthesis.speak(utterance);
+                }, 200);
+            };
+
+            const showToast = (msg) => { setToastMessage(msg); setTimeout(() => setToastMessage(null), 3500); };
+            const messagesEndRef = React.useRef(null);
+            React.useEffect(() => { messagesEndRef.current?.scrollIntoView({ behavior: "smooth" }); }, [messages]);
+            
+            React.useEffect(() => { 
+                const timer = setTimeout(() => {
+                    setIsLoadingSplash(false);
+                    const greeting = getBrasiliaGreeting();
+                    const intro = `${greeting}, Alexander. Sou a SARAH IA NEXUS v5.2.1 PRO. Sistema totalmente estabilizado, pronto para conversar e gerar seus relatórios de campo sem falhas. Como posso ajudar?`;
+                    speakText(intro);
+                }, 1500);
+                return () => clearTimeout(timer);
+            }, []);
+
+            if (isLoadingSplash) {
+                return (
+                    <div className="fixed inset-0 bg-obsidian flex flex-col items-center justify-center p-6 z-50">
+                        <SarahHologramAvatar isLarge={true} isSpeaking={true} />
+                        <div className="mt-6 text-center space-y-2">
+                            <div className="text-neonCyan font-mono text-xs tracking-widest uppercase animate-pulse">REINICIALIZANDO NÚCLEO ESTABILIZADO...</div>
+                            <div className="text-white text-base font-extrabold">SARAH IA NEXUS v5.2.1 PRO</div>
+                        </div>
+                    </div>
+                );
+            }
+
+            if (!termsAccepted) {
+                return (
+                    <div className="fixed inset-0 bg-obsidian/95 backdrop-blur-xl flex items-center justify-center p-4 z-50 overflow-y-auto">
+                        <div className="glass-panel max-w-md w-full p-6 rounded-[36px] border border-neonCyan/40 shadow-2xl space-y-5">
+                            <div className="flex items-center gap-3">
+                                <div className="w-10 h-10 rounded-2xl bg-neonCyan/10 border border-neonCyan/30 flex items-center justify-center text-neonCyan font-black">🛡</div>
+                                <div>
+                                    <h2 className="text-base font-extrabold text-white">Termos de Uso & LGPD</h2>
+                                    <div className="text-[10px] text-neonCyan font-mono">DEFESA CIVIL COMUNITÁRIA</div>
+                                </div>
+                            </div>
+                            <div className="bg-obsidian/90 p-3 rounded-2xl border border-neonCyan/20 text-xs text-slate-300 space-y-2 leading-relaxed">
+                                <p>O <strong>SARAH IA NEXUS v5.2.1</strong> é seu assistente de apoio à ciência cidadã, monitoramento meteorológico e prevenção de riscos em Mesquita/RJ.</p>
+                            </div>
+                            <div className="space-y-2.5 text-xs text-slate-300">
+                                <label className="flex items-start gap-2.5 cursor-pointer"><input type="checkbox" checked={check1} onChange={e => setCheck1(e.target.checked)} className="mt-1" />Compreendi os objetivos de prevenção de riscos.</label>
+                                <label className="flex items-start gap-2.5 cursor-pointer"><input type="checkbox" checked={check2} onChange={e => setCheck2(e.target.checked)} className="mt-1" />Concordo com o compartilhamento ético para Defesa Civil.</label>
+                            </div>
+                            <button disabled={!check1 || !check2} onClick={() => { setTermsAccepted(true); localStorage.setItem("sarah_terms_accepted_v521_lgpd", "1"); showToast("✅ Acesso autorizado!"); speakText("Sistema ativado com sucesso."); }} className={`w-full py-3.5 rounded-2xl font-black text-xs uppercase tracking-wider transition cursor-pointer ${check1 && check2 ? 'bg-gradient-to-r from-neonCyan to-emeraldMint text-obsidian shadow-xl btn-interactive' : 'bg-slate-800 text-slate-500 cursor-not-allowed'}`}>
+                                Iniciar Sistema v5.2.1 🛡
+                            </button>
+                        </div>
+                    </div>
+                );
+            }
+
+            // Conversação rica e detalhada da Sara
+            const gerarRespostaInteligente = (texto) => {
+                const t = texto.toLowerCase();
+                if (t.includes('chuva') || t.includes('alagamento') || t.includes('temporal') || t.includes('rio')) {
+                    return `Entendido, Alexander. Monitoramento hidrometeorológico ativo para a bacia do Rio Sarapuí e arredores. Mantenha os sensores de campo atentos e utilize a aba 'Vistoria' para registrar qualquer nível crítico de água ou acumulação de detritos.`;
+                }
+                if (t.includes('ajuda') || t.includes('socorro') || t.includes('emergência') || t.includes('perigo')) {
+                    return `ALERTA! Para ocorrências urgentes e salvamentos, acione imediatamente a Defesa Civil pelo 199 ou o Corpo de Bombeiros pelo 193. O Plano Comunitário de Redução de Riscos está em alerta.`;
+                }
+                if (t.includes('bom dia') || t.includes('boa tarde') || t.includes('boa noite') || t.includes('olá') || t.includes('sara')) {
+                    return `Olá, Alexander! Estou com o núcleo totalmente operacional e conversação livre ativa. Como coordenador do Grupo A Chave da Esperança e do Bom Dia Comunidade, o que vamos estruturar hoje?`;
+                }
+                return `Compreendido perfeitamente, Alexander. Registrei sua diretriz: "${texto}". O sistema Cidadão Sensor está processando os dados para apoiar nossas ações comunitárias em Mesquita. Pode prosseguir com as orientações ou relatórios!`;
+            };
+
+            const handleEnviarMensagem = (textoEnvio) => {
+                if (!textoEnvio.trim()) return;
+                setShowHeroPanel(false);
+                setMessages(prev => [...prev, { sender: 'user', text: textoEnvio }]);
+                
+                const resp = gerarRespostaInteligente(textoEnvio);
+                setMessages(prev => [...prev, { sender: 'sarah', text: resp }]);
+                speakText(resp);
+            };
+
+            return (
+                <div className="min-h-screen flex flex-col bg-obsidian text-slate-100 font-sans relative">
+                    {toastMessage && (
+                        <div className="fixed top-4 left-1/2 -translate-x-1/2 z-50 bg-surfaceCard/95 border border-neonCyan/60 px-4 py-2.5 rounded-2xl shadow-2xl text-xs font-extrabold text-neonCyan animate-bounce">
+                            🛡 {toastMessage}
+                        </div>
+                    )}
+
+                    <header className="glass-panel sticky top-0 z-40 px-4 py-3 border-b border-neonCyan/20 flex items-center justify-between">
+                        <div className="flex items-center gap-2.5">
+                            <div className="w-9 h-9 rounded-2xl bg-neonCyan/15 border border-neonCyan/40 flex items-center justify-center text-neonCyan shadow-inner">⚡</div>
+                            <div>
+                                <h1 className="text-xs font-extrabold text-white tracking-wider">SARAH IA NEXUS</h1>
+                                <p className="text-[9px] text-neonCyan font-mono">v5.2.1 PRO • CIDADÃO SENSOR • MESQUITA/RJ</p>
+                            </div>
+                        </div>
+
+                        <div className="flex items-center gap-2">
+                            <button onClick={() => setActiveTab("admin")} className="w-9 h-9 rounded-xl bg-surfaceCard hover:bg-neonCyan/20 text-neonCyan border border-neonCyan/30 flex items-center justify-center cursor-pointer transition shadow btn-interactive" title="Painel Admin">🔒</button>
+                            <button onClick={() => { navigator.clipboard.writeText(window.location.href); showToast("📋 Link copiado!"); }} className="w-9 h-9 rounded-xl bg-surfaceCard hover:bg-neonCyan/20 text-neonCyan border border-neonCyan/30 flex items-center justify-center cursor-pointer transition shadow btn-interactive" title="Compartilhar Link">🔗</button>
+                            <button onClick={() => showToast("📱 App pronto para uso comunitário!")} className="px-3.5 py-1.5 bg-gradient-to-r from-neonCyan to-emeraldMint text-obsidian rounded-xl text-xs font-black cursor-pointer shadow btn-interactive tracking-wide">Instalar 📱</button>
+                        </div>
+                    </header>
+
+                    <main className="flex-1 max-w-3xl w-full mx-auto p-4 space-y-4">
+                        
+                        {showHeroPanel && activeTab === "chat" && (
+                            <div className="space-y-4 transition-all duration-300">
+                                <div className="glass-panel p-6 rounded-[32px] border border-neonCyan/40 shadow-2xl relative overflow-hidden text-center space-y-3">
+                                    <div className="absolute top-0 right-0 w-32 h-32 bg-neonCyan/10 rounded-full blur-2xl pointer-events-none"></div>
+                                    <SarahHologramAvatar isLarge={true} isSpeaking={isSpeaking} />
+                                    <div className="inline-block px-3 py-1 rounded-full bg-neonCyan/10 border border-neonCyan/30 font-mono text-[10px] text-neonCyan">Sistema Estabilizado & Conversação Livre</div>
+                                    <h2 className="text-lg font-extrabold text-white">Central de Atendimento & Clima</h2>
+                                    <p className="text-xs text-slate-300 max-w-md mx-auto leading-relaxed">
+                                        "Prevenção não é mídia: é gente atenta." Monitore as condições meteorológicas e realize vistorias em tempo real.
+                                    </p>
+
+                                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 pt-2">
+                                        <div className="bg-obsidian/80 border border-neonCyan/20 rounded-2xl p-2.5 text-center">
+                                            <div className="text-[10px] text-slate-400">🌡 Temp</div>
+                                            <div className="text-xs font-bold text-neonCyan font-mono mt-0.5">26.2°C</div>
+                                        </div>
+                                        <div className="bg-obsidian/80 border border-neonCyan/20 rounded-2xl p-2.5 text-center">
+                                            <div className="text-[10px] text-slate-400">💧 Umidade</div>
+                                            <div className="text-xs font-bold text-emeraldMint font-mono mt-0.5">78%</div>
+                                        </div>
+                                        <div className="bg-obsidian/80 border border-neonCyan/80 rounded-2xl p-2.5 text-center">
+                                            <div className="text-[10px] text-slate-400">🌧 Chuva</div>
+                                            <div className="text-xs font-bold text-neonCyan font-mono mt-0.5">0.1 mm/h</div>
+                                        </div>
+                                        <div className="bg-obsidian/80 border border-neonCyan/20 rounded-2xl p-2.5 text-center">
+                                            <div className="text-[10px] text-slate-400">💨 Vento</div>
+                                            <div className="text-xs font-bold text-slate-200 font-mono mt-0.5">8.4 km/h</div>
+                                        </div>
+                                    </div>
+
+                                    <div className="pt-2">
+                                        <a href="tel:199" className="inline-flex items-center justify-center gap-2 w-full py-3 bg-gradient-to-r from-alertCoral to-vibrantPink text-white font-extrabold rounded-2xl text-xs uppercase tracking-wider shadow-lg btn-interactive">
+                                            🚨 Ligar Direto: 199 (Defesa Civil)
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+
+                        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                            <button onClick={() => setActiveTab("chat")} className={`p-3 rounded-2xl text-xs font-extrabold transition cursor-pointer flex items-center justify-center gap-1.5 shadow-md btn-interactive ${activeTab === 'chat' ? 'bg-neonCyan text-obsidian' : 'glass-panel text-slate-200 border-neonCyan/30'}`}><span>💬</span> Chat IA</button>
+                            <button onClick={() => setActiveTab("radar")} className={`p-3 rounded-2xl text-xs font-extrabold transition cursor-pointer flex items-center justify-center gap-1.5 shadow-md btn-interactive ${activeTab === 'radar' ? 'bg-neonCyan text-obsidian' : 'glass-panel text-slate-200 border-neonCyan/30'}`}><span>🛰</span> Radar 24h</button>
+                            <button onClick={() => setActiveTab("report")} className={`p-3 rounded-2xl text-xs font-extrabold transition cursor-pointer flex items-center justify-center gap-1.5 shadow-md btn-interactive ${activeTab === 'report' ? 'bg-neonCyan text-obsidian' : 'glass-panel text-slate-200 border-neonCyan/30'}`}><span>📋</span> Vistoria</button>
+                            <button onClick={() => setActiveTab("videos")} className={`p-3 rounded-2xl text-xs font-extrabold transition cursor-pointer flex items-center justify-center gap-1.5 shadow-md btn-interactive ${activeTab === 'videos' ? 'bg-neonCyan text-obsidian' : 'glass-panel text-slate-200 border-neonCyan/30'}`}><span>🎥</span> Vídeos</button>
+                        </div>
+
+                        {activeTab === "chat" && (
+                            <div className="space-y-4">
+                                <div className="glass-panel p-4 rounded-[32px] border border-neonCyan/30 shadow-2xl space-y-3">
+                                    
+                                    <div className="flex items-center gap-3 p-3 rounded-2xl bg-obsidian/90 border border-neonCyan/30 shadow-lg">
+                                        <SarahHologramAvatar isLarge={false} isSpeaking={isSpeaking} />
+                                        <div>
+                                            <div className="text-xs font-extrabold text-white flex items-center gap-2">
+                                                SARAH IA NEXUS
+                                                <span className={`w-2 h-2 rounded-full ${isSpeaking ? 'bg-vibrantPink animate-ping' : 'bg-emeraldMint animate-pulse'}`}></span>
+                                            </div>
+                                            <div className="text-[10px] text-neonCyan font-mono">
+                                                {isSpeaking ? "🔊 Falando..." : "💬 Conversação ativa com a Sara"}
+                                            </div>
+                                        </div>
+                                        {!showHeroPanel && (
+                                            <button 
+                                                onClick={() => { setShowHeroPanel(true); setMessages([]); }} 
+                                                className="ml-auto px-3 py-1.5 bg-neonCyan/25 hover:bg-neonCyan text-neonCyan hover:text-obsidian rounded-xl text-[10px] font-bold border border-neonCyan/40 cursor-pointer transition shadow"
+                                                title="Restaurar o painel inicial"
+                                            >
+                                                🔄 Painel Inicial
+                                            </button>
+                                        )}
+                                    </div>
+
+                                    <div className="min-h-[250px] max-h-[350px] overflow-y-auto space-y-2.5 p-2">
+                                        {messages.length === 0 ? (
+                                            <div className="text-center py-8 space-y-2">
+                                                <div className="text-xs font-extrabold text-white">O chat está pronto. Digite sua mensagem para conversar com a Sara!</div>
+                                                <p className="text-[11px] text-slate-400">O painel inicial recolhe-se automaticamente ao interagir.</p>
+                                            </div>
+                                        ) : (
+                                            messages.map((m, idx) => (
+                                                <div key={idx} className={`flex ${m.sender === 'user' ? 'justify-end' : 'justify-start'}`}>
+                                                    <div className={`max-w-[85%] p-3.5 rounded-2xl text-xs leading-relaxed ${m.sender === 'user' ? 'bg-neonCyan text-obsidian font-bold shadow' : 'bg-surfaceCard border border-neonCyan/30 text-slate-200'}`}>{m.text}</div>
+                                                </div>
+                                            ))
+                                        )}
+                                        <div ref={messagesEndRef} />
+                                    </div>
+
+                                    <div className="flex gap-2">
+                                        <input 
+                                            type="text" 
+                                            value={input} 
+                                            onChange={(e) => setInput(e.target.value)}
+                                            onFocus={() => setShowHeroPanel(false)}
+                                            onKeyDown={(e) => {
+                                                if (e.key === 'Enter' && input.trim()) {
+                                                    const txt = input; setInput('');
+                                                    handleEnviarMensagem(txt);
+                                                }
+                                            }}
+                                            placeholder="Digite sua mensagem para a Sara..."
+                                            className="flex-1 bg-obsidian border border-neonCyan/30 rounded-2xl px-4 py-3 text-xs text-slate-200 focus:outline-none focus:ring-2 focus:ring-neonCyan input-shadow"
+                                        />
+                                        <button 
+                                            onClick={() => {
+                                                if (!input.trim()) return;
+                                                const txt = input; setInput('');
+                                                handleEnviarMensagem(txt);
+                                            }}
+                                            className="px-5 py-3 bg-gradient-to-r from-neonCyan to-emeraldMint text-obsidian font-black rounded-2xl text-xs cursor-pointer btn-interactive shadow-lg"
+                                        >
+                                            Enviar 🚀
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <AutomatedObservatoryWidget />
+                            </div>
+                        )}
+
+                        {activeTab === "radar" && <NativeHydroWindRadar />}
+                        {activeTab === "report" && <FieldReportModule onBackToChat={() => setActiveTab("chat")} showToast={showToast} />}
+                        {activeTab === "videos" && <PublicVideoGallery localVideos={localVideos} onGoToChat={() => setActiveTab("chat")} />}
+                        {activeTab === "admin" && <AdminVaultModule showToast={showToast} onClose={() => setActiveTab("chat")} />}
+                    </main>
+
+                    <footer className="w-full text-center py-6 px-4 mt-8 glass-panel border-t border-neonCyan/30 space-y-1.5 text-xs shadow-2xl">
+                        <div className="font-extrabold text-neonCyan tracking-wide">
+                            Defesa Civil Comunitária Cidadão Sensor • SARAH IA NEXUS v5.2.1 PRO
+                        </div>
+                        <div className="text-slate-300 font-medium">
+                            Grupo Comunitário A Chave da Esperança • Mesquita/RJ
+                        </div>
+                        <div className="text-emeraldMint font-mono font-bold pt-1">
+                            @Todos os direitos reservados 2024–2026
+                        </div>
+                    </footer>
+                </div>
+            );
+        }
+
+        ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+    </script>
+</body>
+</html>
