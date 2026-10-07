@@ -1,0 +1,1167 @@
+<!DOCTYPE html>
+<html lang="pt-PT" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>SARAH IA NEXUS v5.2 PRO - Sistema Consolidado Completo</title>
+    
+    <meta property="og:title" content="APP//MONITORAMENTO COMPLETO 🛰\nSARAH IA NEXUS V5.2 PRO\nMeteorologia, Bacias & Vistoria Comunitária">
+    <meta property="og:description" content="App de Prevenção e apoio meteorológico comunitário. Vistoria profissional com geotagueamento e envio de mídia via WhatsApp.">
+    <meta property="og:image" content="https://www.image2url.com/r2/default/images/1790084936078-de3b77c5-fa9f-4b89-a02a-560b09e8b5a0.png">
+    <meta property="og:url" content="https://phantrorfirmo08-alt.github.io/PROJETO-CIDAD-O-SENSOR-01/?v=5.2">
+    <meta property="og:type" content="website">
+
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#000000">
+    <link rel="apple-touch-icon" href="https://www.image2url.com/r2/default/images/1790084936078-de3b77c5-fa9f-4b89-a02a-560b09e8b5a0.png">
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;600;800;900&display=swap" rel="stylesheet">
+
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    
+    <script>
+      (function() {
+        try {
+            const savedTheme = localStorage.getItem('sarah-theme') || 'dark';
+            if (savedTheme === 'warm') {
+                document.documentElement.classList.remove('dark');
+                document.documentElement.classList.add('warm');
+            } else {
+                document.documentElement.classList.add('dark');
+                document.documentElement.classList.remove('warm');
+            }
+        } catch(e) {}
+      })();
+    </script>
+
+    <script>
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Plus Jakarta Sans', 'system-ui', '-apple-system', 'sans-serif'],
+                        mono: ['JetBrains Mono', 'monospace'],
+                    },
+                    colors: {
+                        obsidian: "#000000",
+                        deepPlate: "#0A0F1D",
+                        surfaceCard: "#131C31",
+                        neonCyan: "#00F2FE",
+                        electricIndigo: "#4FACFE",
+                        vibrantPink: "#FF0844",
+                        emeraldMint: "#00F5A0",
+                        alertCoral: "#FF5E62",
+                        warmBg: "#F8F6F0",
+                        warmText: "#1A1816",
+                        warmCard: "#FFFFFF",
+                        warmBorder: "#E5E0D8"
+                    },
+                    animation: {
+                        'pulse-glow': 'pulseGlow 3s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+                        'float': 'float 4s ease-in-out infinite',
+                        'mic-ripple': 'micRipple 1.6s cubic-bezier(0.24, 0, 0.38, 1) infinite',
+                        'avatar-idle': 'avatarIdle 5s ease-in-out infinite',
+                        'avatar-speaking': 'avatarSpeaking 0.35s ease-in-out infinite'
+                    },
+                    keyframes: {
+                        pulseGlow: {
+                            '0%, 100%': { boxShadow: '0 0 25px rgba(0,242,254,0.25), inset 0 0 15px rgba(0,242,254,0.1)' },
+                            '50%': { boxShadow: '0 0 45px rgba(0,245,160,0.4), inset 0 0 25px rgba(0,245,160,0.2)' },
+                        },
+                        float: {
+                            '0%, 100%': { transform: 'translateY(0)' },
+                            '50%': { transform: 'translateY(-8px)' },
+                        },
+                        micRipple: {
+                            '0%': { transform: 'scale(1)', boxShadow: '0 0 0 0 rgba(255, 8, 68, 0.7)' },
+                            '70%': { transform: 'scale(1.15)', boxShadow: '0 0 0 24px rgba(255, 8, 68, 0)' },
+                            '100%': { transform: 'scale(1)', boxShadow: '0 0 0 0 rgba(255, 8, 68, 0)' }
+                        },
+                        avatarIdle: {
+                            '0%, 100%': { transform: 'scale(1)', filter: 'drop-shadow(0 0 20px rgba(0,242,254,0.3))' },
+                            '50%': { transform: 'scale(1.02)', filter: 'drop-shadow(0 0 35px rgba(0,245,160,0.5))' }
+                        },
+                        avatarSpeaking: {
+                            '0%, 100%': { transform: 'scale(1)', filter: 'drop-shadow(0 0 40px rgba(255,8,68,0.8))' },
+                            '50%': { transform: 'scale(1.08)', filter: 'drop-shadow(0 0 70px rgba(0,242,254,0.9))' }
+                        }
+                    }
+                }
+            }
+        };
+    </script>
+    <script src="https://unpkg.com/react@18/umd/react.development.js" crossorigin></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js" crossorigin></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <style>
+        @keyframes rolarFaixaSofisticada {
+          0% { transform: translateX(0); }
+          100% { transform: translateX(-50%); }
+        }
+
+        html, body, #root {
+            min-height: 100%;
+            margin: 0;
+            font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+            touch-action: pan-x pan-y;
+            -webkit-text-size-adjust: 100%;
+            overscroll-behavior-y: none;
+            background-color: #000000;
+            color: #F1F5F9;
+        }
+        body {
+            overflow-x: hidden;
+            transition: background-color 0.4s ease, color 0.4s ease;
+        }
+
+        html.warm body {
+            background-color: #F8F6F0 !important;
+            color: #1A1816 !important;
+        }
+        html.warm .glass-panel {
+            background: rgba(255, 255, 255, 0.92) !important;
+            color: #1A1816 !important;
+            border: 1px solid #E5E0D8 !important;
+            box-shadow: 0 20px 45px -10px rgba(0, 0, 0, 0.05) !important;
+        }
+        html.warm .bg-deepPlate,
+        html.warm .bg-surfaceCard,
+        html.warm .bg-obsidian {
+            background-color: #FFFFFF !important;
+            color: #1A1816 !important;
+            border-color: #E5E0D8 !important;
+        }
+        html.warm .text-neonCyan {
+            color: #0284C7 !important;
+        }
+        html.warm .border-neonCyan {
+            border-color: #0284C7 !important;
+        }
+        html.warm .bg-neonCyan {
+            background-color: #0284C7 !important;
+            color: #FFFFFF !important;
+        }
+        html.warm input, html.warm select, html.warm textarea {
+            background-color: #F3F1EC !important;
+            color: #1A1816 !important;
+            border-color: #D6D0C5 !important;
+            box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.06) !important;
+        }
+
+        .glass-panel {
+            background: linear-gradient(135deg, rgba(19, 28, 49, 0.75) 0%, rgba(10, 15, 29, 0.88) 100%);
+            backdrop-filter: blur(28px);
+            -webkit-backdrop-filter: blur(28px);
+            border: 1px solid rgba(0, 242, 254, 0.18);
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.7), inset 0 1px 0 0 rgba(255, 255, 255, 0.08);
+        }
+        .btn-interactive {
+            transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
+        }
+        .btn-interactive:active {
+            transform: scale(0.97);
+        }
+        .btn-interactive:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 0 25px rgba(0, 242, 254, 0.4);
+            border-color: #00F2FE;
+        }
+        .input-shadow {
+            box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.5);
+        }
+        ::-webkit-scrollbar {
+            width: 5px;
+            height: 5px;
+        }
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: rgba(0, 242, 254, 0.25);
+            border-radius: 9999px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: rgba(0, 242, 254, 0.5);
+        }
+    </style>
+</head>
+<body class="selection:bg-vibrantPink selection:text-white">
+    <div id="root"></div>
+    <script type="text/babel">
+        document.addEventListener('gesturestart', function(e) { e.preventDefault(); });
+
+        let lastTouchEnd = 0;
+        document.addEventListener('touchend', function(e) {
+            const now = (new Date()).getTime();
+            if (now - lastTouchEnd <= 300) { e.preventDefault(); }
+            lastTouchEnd = now;
+        }, { passive: false });
+
+        const CLOUDFLARE_WORKER_URL = "https://sarah-envelope.phantrorfirmo08.workers.dev/";
+
+        const getBrasiliaGreeting = () => {
+            const hour = parseInt(
+                new Intl.DateTimeFormat("pt-BR", {
+                    timeZone: "America/Sao_Paulo",
+                    hour: "numeric",
+                    hour12: false
+                }).format(new Date()),
+                10
+            );
+            if (hour >= 0 && hour < 5) return "Boa madrugada";
+            if (hour >= 5 && hour < 12) return "Bom dia";
+            if (hour >= 12 && hour < 18) return "Boa tarde";
+            return "Boa noite";
+        };
+
+        function CyberShieldIcon({ className = "w-6 h-6" }) {
+            return (
+                <svg className={className} viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M12 2L3 6V11C3 16.55 6.84 21.74 12 23C17.16 21.74 21 16.55 21 11V6L12 2Z" fill="url(#shieldGrad)" stroke="#00F2FE" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
+                    <path d="M12 7C9.79 7 8 8.79 8 11C8 12.1 8.44 13.09 9.14 13.8L9 18H11V20H13V18H15V14.8C15.56 14.09 16 13.1 16 11C16 8.79 14.21 7 12 7ZM12 9C13.1 9 14 9.9 14 11C14 12.1 13.1 13 12 13C10.9 13 10 12.1 10 11C10 9.9 10.9 9 12 9Z" fill="#0A0F1D"/>
+                    <defs>
+                        <linearGradient id="shieldGrad" x1="3" y1="2" x2="21" y2="23" gradientUnits="userSpaceOnUse">
+                            <stop stopColor="#00F2FE" />
+                            <stop offset="0.5" stopColor="#4FACFE" />
+                            <stop offset="1" stopColor="#00F5A0" />
+                        </linearGradient>
+                    </defs>
+                </svg>
+            );
+        }
+
+        function SarahHologramAvatar({ isLarge = false, isSpeaking = false }) {
+            const containerSizeClass = isLarge 
+                ? "w-full max-w-[280px] aspect-square mx-auto p-4 rounded-[36px] border border-neonCyan/40 bg-surfaceCard shadow-[0_0_60px_rgba(0,242,254,0.18)] flex flex-col items-center justify-center relative overflow-hidden" 
+                : "w-12 h-12 rounded-2xl p-1.5 border border-neonCyan/40 bg-surfaceCard shrink-0 flex items-center justify-center relative overflow-hidden shadow-md";
+
+            return (
+                <div className={containerSizeClass}>
+                    <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                        <div className={`absolute rounded-full border border-neonCyan/30 bg-neonCyan/10 animate-ping ${isLarge ? 'w-48 h-48' : 'w-16 h-16'}`} style={{ animationDuration: '3.5s' }}></div>
+                        <div className={`absolute rounded-full border border-emeraldMint/30 bg-emeraldMint/10 animate-pulse ${isLarge ? 'w-64 h-64' : 'w-24 h-24'}`} style={{ animationDuration: '4.5s' }}></div>
+                    </div>
+
+                    <div 
+                        className={`relative rounded-full flex items-center justify-center bg-obsidian border-2 border-neonCyan/80 shadow-[0_0_35px_rgba(0,242,254,0.5)] transition-all duration-300 ease-out z-10 ${
+                            isLarge ? 'w-28 h-28' : 'w-9 h-9'
+                        } ${isSpeaking ? 'animate-avatar-speaking' : 'animate-avatar-idle'}`}
+                    >
+                        <div className="absolute inset-0 rounded-full bg-gradient-to-tr from-neonCyan/20 to-emeraldMint/20 animate-spin" style={{ animationDuration: '10s' }}></div>
+                        <svg width={isLarge ? "44" : "20"} height={isLarge ? "44" : "20"} viewBox="0 0 24 24" fill="url(#avatarGrad)" className="relative z-10">
+                            <path d="M13 2L3 14h7l-1 8 10-12h-7l1-8z"/>
+                            <defs>
+                                <linearGradient id="avatarGrad" x1="3" y1="2" x2="21" y2="22">
+                                    <stop stopColor="#00F2FE" />
+                                    <stop offset="1" stopColor="#00F5A0" />
+                                </linearGradient>
+                            </defs>
+                        </svg>
+                    </div>
+
+                    {isLarge && (
+                        <div className="mt-3 text-center font-sans z-10 space-y-1">
+                            <div className="inline-flex items-center gap-1.5 px-3 py-0.5 rounded-full bg-neonCyan/10 border border-neonCyan/30 font-mono text-[9px] text-neonCyan tracking-wider shadow-inner">
+                                <span className="w-1.5 h-1.5 rounded-full bg-emeraldMint animate-pulse"></span>
+                                {isSpeaking ? "SARAH FALANDO AO VIVO..." : "SISTEMA VOZ DIRETA ATIVADO"}
+                            </div>
+                            <div className="font-extrabold text-base text-white tracking-wider">
+                                SARAH IA NEXUS
+                            </div>
+                        </div>
+                    )}
+                </div>
+            );
+        }
+
+        function NativeHydroWindRadar({ liveWeather }) {
+            const [brasiliaTime, setBrasiliaTime] = React.useState("");
+            const [radarKey, setRadarKey] = React.useState(1);
+            const [isCollapsed, setIsCollapsed] = React.useState(false);
+
+            React.useEffect(() => {
+                const timer = setInterval(() => {
+                    const now = new Date();
+                    const timeStr = new Intl.DateTimeFormat("pt-BR", {
+                        timeZone: "America/Sao_Paulo",
+                        hour: "2-digit",
+                        minute: "2-digit",
+                        second: "2-digit",
+                        hour12: false
+                    }).format(now);
+                    setBrasiliaTime(timeStr);
+                }, 1000);
+                return () => clearInterval(timer);
+            }, []);
+
+            const handleReloadRadar = () => { setRadarKey(prev => prev + 1); };
+
+            return (
+                <div className={`relative w-full rounded-[28px] overflow-hidden border border-neonCyan/40 shadow-2xl bg-surfaceCard flex flex-col justify-between p-2.5 transition-all duration-300 ${isCollapsed ? 'h-[75px]' : 'h-[600px]'}`}>
+                    <div className="absolute top-3 left-3 right-3 flex items-center justify-between z-30 bg-obsidian/95 border border-neonCyan/30 px-4 py-2.5 rounded-2xl shadow-xl backdrop-blur-xl">
+                        <div className="flex items-center gap-2.5 overflow-hidden whitespace-nowrap">
+                            <span className="w-2 h-2 rounded-full bg-neonCyan animate-ping"></span>
+                            <span className="font-extrabold text-xs text-neonCyan tracking-wide truncate">
+                                RADAR METEOROLÓGICO 24H • CÉU, NUVENS, CHUVA & VENTOS
+                            </span>
+                        </div>
+                        <div className="flex items-center gap-2.5 shrink-0">
+                            <button onClick={handleReloadRadar} className="px-3 py-1.5 bg-neonCyan/20 hover:bg-neonCyan text-neonCyan hover:text-obsidian border border-neonCyan/40 rounded-xl font-bold text-[11px] cursor-pointer transition shadow">🔄 Recarregar</button>
+                            <button onClick={() => setIsCollapsed(!isCollapsed)} className="px-3 py-1.5 bg-deepPlate text-neonCyan border border-neonCyan/30 rounded-xl font-bold text-[11px] cursor-pointer shadow hover:bg-neonCyan/10 transition">{isCollapsed ? '▼ Expandir' : '▲ Recolher'}</button>
+                            <span className="font-mono text-[11px] font-bold text-emeraldMint px-2.5 py-1 bg-emeraldMint/10 rounded-lg border border-emeraldMint/30 shadow-inner">🕒 {brasiliaTime || "00:00:00"}</span>
+                        </div>
+                    </div>
+                    {!isCollapsed && (
+                        <div className="absolute inset-0 pt-[64px]">
+                            <iframe key={radarKey} src="https://embed.windy.com/embed2.html?lat=-22.7845&lon=-43.4190&detailLat=-22.7845&detailLon=-43.4190&width=650&height=550&zoom=11&level=surface&overlay=wind&product=ecmwf&menu=&message=&marker=true&calendar=now&pressure=true&type=map&location=coordinates&detail=true&metricWind=default&metricTemp=default" className="w-full h-full border-none relative z-10 bg-obsidian rounded-2xl" sandbox="allow-scripts allow-same-origin allow-popups allow-forms" allowFullScreen></iframe>
+                        </div>
+                    )}
+                </div>
+            );
+        }
+
+        function FieldReportModule({ onBackToDashboard, showToast }) {
+            const [setor, setSetor] = React.useState("🛡️ Defesa Civil (Vistoria de Risco / Ocorrência)");
+            const [agente, setAgente] = React.useState("");
+            const [localizacao, setLocalizacao] = React.useState("");
+            const [descricao, setDescricao] = React.useState("");
+            const [gpsCoords, setGpsCoords] = React.useState({ lt: '', ln: '', lk: '' });
+            const [gpsStatus, setGpsStatus] = React.useState("📍 GPS em espera");
+            
+            const [fotos, setFotos] = React.useState([
+                { id: 1, status: "vazia", file: null, preview: null },
+                { id: 2, status: "vazia", file: null, preview: null },
+                { id: 3, status: "vazia", file: null, preview: null },
+                { id: 4, status: "vazia", file: null, preview: null }
+            ]);
+
+            const capturarGps = () => {
+                if (!navigator.geolocation) { showToast("⚠️ Geolocalização não suportada."); return; }
+                showToast("🛰 Acionando GPS de alta precisão...");
+                navigator.geolocation.getCurrentPosition(
+                    (p) => {
+                        const lt = p.coords.latitude.toFixed(6);
+                        const ln = p.coords.longitude.toFixed(6);
+                        const lk = `https://maps.google.com/?q=${lt},${ln}`;
+                        setGpsCoords({ lt, ln, lk });
+                        setLocalizacao(`${lt}, ${ln}`);
+                        setGpsStatus("✅ GPS Fixado com Sucesso");
+                        showToast(`📍 Coordenadas obtidas: ${lt}, ${ln}`);
+                    },
+                    () => { showToast("⚠ Falha ao obter sinal GPS."); setGpsStatus("⚠ Erro de Sinal GPS"); },
+                    { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+                );
+            };
+
+            const processarFotoVistoria = (file) => {
+                return new Promise((resolve, reject) => {
+                    const reader = new FileReader();
+                    reader.readAsDataURL(file);
+                    reader.onload = (event) => {
+                        const img = new Image();
+                        img.src = event.target.result;
+                        img.onload = () => {
+                            const canvas = document.createElement('canvas');
+                            let width = img.width;
+                            let height = img.height;
+                            const MAX_DIMENSION = 960;
+
+                            if (width > height) {
+                                if (width > MAX_DIMENSION) {
+                                    height = Math.round((height * MAX_DIMENSION) / width);
+                                    width = MAX_DIMENSION;
+                                }
+                            } else {
+                                if (height > MAX_DIMENSION) {
+                                    width = Math.round((width * MAX_DIMENSION) / height);
+                                    height = MAX_DIMENSION;
+                                }
+                            }
+
+                            canvas.width = width;
+                            canvas.height = height;
+                            const ctx = canvas.getContext('2d');
+                            ctx.imageSmoothingEnabled = true;
+                            ctx.imageSmoothingQuality = 'high';
+                            ctx.drawImage(img, 0, 0, width, height);
+
+                            canvas.toBlob((blob) => {
+                                if (!blob) {
+                                    reject(new Error("Falha ao gerar blob comprimido"));
+                                    return;
+                                }
+                                const compressedFile = new File([blob], `vistoria_foto_${Date.now()}.jpg`, {
+                                    type: 'image/jpeg',
+                                    lastModified: Date.now()
+                                });
+                                const previewUrl = URL.createObjectURL(compressedFile);
+                                resolve({ compressedFile, previewUrl });
+                            }, 'image/jpeg', 0.70);
+                        };
+                        img.onerror = reject;
+                    };
+                    reader.onerror = reject;
+                });
+            };
+
+            const handleFotoChange = async (i, e) => {
+                const file = e.target.files[0];
+                if (file) {
+                    showToast(`🔄 Otimizando evidência ${i + 1} no oculto...`);
+                    try {
+                        const { compressedFile, previewUrl } = await processarFotoVistoria(file);
+                        const u = [...fotos];
+                        u[i] = { id: u[i].id, status: "✅ OK", file: compressedFile, preview: previewUrl };
+                        setFotos(u);
+                        showToast(`📸 Evidência ${i + 1} comprimida e encaixada com sucesso!`);
+                    } catch (err) {
+                        showToast(`❌ Erro ao processar foto ${i + 1}.`);
+                    }
+                }
+            };
+
+            const montarTexto = () => {
+                const fCount = fotos.filter(f => f.status === "✅ OK").length;
+                return `📊 *RELATÓRIO TÉCNICO DE VISTORIA - SARAH IA*\n` +
+                       `🏛 *Setor:* ${setor}\n` +
+                       `👤 *Agente:* ${agente || 'Não informado'}\n` +
+                       `📍 *Local:* ${localizacao || 'Não informado'}\n` +
+                       (gpsCoords.lk ? `🔗 *Geolocalização:* ${gpsCoords.lk}\n` : ``) +
+                       `📸 *Evidências Fotográficas anexadas:* ${fCount}/4\n` +
+                       `📝 *Relato Operacional:*\n${descricao || 'Sem descrição informada'}`;
+            };
+
+            const copiarLaudo = () => {
+                const texto = montarTexto();
+                navigator.clipboard.writeText(texto).then(() => {
+                    showToast("📋 Relatório copiado para a área de transferência!");
+                }).catch(() => {
+                    showToast("❌ Falha ao copiar relatório.");
+                });
+            };
+
+            const compartilharRelatorioComFotos = async () => {
+                const texto = montarTexto();
+                const validFiles = fotos.filter(f => f.file instanceof File).map(f => f.file);
+
+                if (navigator.share && navigator.canShare && validFiles.length > 0) {
+                    const shareData = {
+                        title: 'Relatório Técnico - SARAH IA Nexus',
+                        text: texto,
+                        files: validFiles
+                    };
+                    if (navigator.canShare(shareData)) {
+                        try {
+                            await navigator.share(shareData);
+                            showToast("✅ Relatório e fotos enviados com sucesso!");
+                            return;
+                        } catch (err) {
+                            if (err.name === 'AbortError') return;
+                        }
+                    }
+                }
+
+                navigator.clipboard.writeText(texto).catch(() => {});
+                if (validFiles.length > 0) {
+                    showToast("📋 Texto copiado e fotos prontas! Selecione o WhatsApp na partilha.");
+                }
+
+                if (navigator.share) {
+                    try {
+                        await navigator.share({
+                            title: 'Relatório Técnico - SARAH IA Nexus',
+                            text: texto
+                        });
+                        return;
+                    } catch (err) {}
+                }
+
+                window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(texto)}`, '_blank');
+            };
+
+            return (
+                <div className="space-y-4 max-w-xl mx-auto">
+                    <div className="flex items-center justify-between glass-panel px-5 py-3.5 rounded-2xl border border-neonCyan/30">
+                        <span className="text-xs font-extrabold text-neonCyan flex items-center gap-2"><span>📋</span> Vistoria Meteorológica & Relatório de Campo</span>
+                        <button onClick={onBackToDashboard} className="px-3.5 py-1.5 bg-alertCoral/25 text-alertCoral rounded-xl text-xs font-bold cursor-pointer">✕ Fechar</button>
+                    </div>
+                    
+                    <div className="glass-panel rounded-[32px] p-6 sm:p-8 border border-neonCyan/30 shadow-2xl space-y-5">
+                        <div className="space-y-1.5">
+                            <label className="block text-[11px] font-extrabold text-slate-400 uppercase tracking-wider">Setor Operacional</label>
+                            <select value={setor} onChange={(e) => setSetor(e.target.value)} className="w-full bg-obsidian border border-neonCyan/30 rounded-2xl p-3.5 text-xs text-slate-200 focus:outline-none input-shadow">
+                                <option>🛡 Defesa Civil (Vistoria de Risco / Ocorrência)</option>
+                                <option>🌦 Meteorologia & Monitoramento Atmosférico</option>
+                                <option>🤝 Assistência Social / Vulnerabilidade</option>
+                            </select>
+                        </div>
+                        
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                            <div className="space-y-1.5">
+                                <label className="block text-[11px] font-extrabold text-slate-400 uppercase tracking-wider">Nome do Agente</label>
+                                <input type="text" value={agente} onChange={(e) => setAgente(e.target.value)} placeholder="Ex: Alexander da Silva Firmo" className="w-full bg-obsidian border border-neonCyan/30 rounded-2xl p-3.5 text-xs text-slate-200 focus:outline-none input-shadow" />
+                            </div>
+                            <div className="space-y-1.5">
+                                <label className="block text-[11px] font-extrabold text-slate-400 uppercase tracking-wider">Localidade</label>
+                                <input type="text" value={localizacao} onChange={(e) => setLocalizacao(e.target.value)} placeholder="Ex: Sebinho, Sarapuí, Rocha Sobrinho" className="w-full bg-obsidian border border-neonCyan/30 rounded-2xl p-3.5 text-xs text-slate-200 focus:outline-none input-shadow" />
+                            </div>
+                        </div>
+                        
+                        <div className="border border-neonCyan/30 bg-obsidian/90 rounded-2xl p-4 flex items-center justify-between text-xs input-shadow">
+                            <span className="text-emeraldMint font-mono font-bold flex items-center gap-2"><span className="w-2 h-2 rounded-full bg-emeraldMint animate-ping"></span>{gpsStatus}</span>
+                            <button type="button" onClick={capturarGps} className="px-4 py-2 bg-gradient-to-r from-neonCyan to-electricIndigo text-obsidian font-black rounded-xl text-xs cursor-pointer btn-interactive shadow-lg">Capturar GPS 🛰</button>
+                        </div>
+                        
+                        <div className="space-y-1.5">
+                            <label className="block text-[11px] font-extrabold text-slate-400 uppercase tracking-wider">Relato Técnico / Condições Observadas</label>
+                            <textarea rows="4" value={descricao} onChange={(e) => setDescricao(e.target.value)} placeholder="Descreva detalhadamente a ocorrência, o céu, ventos ou bacias..." className="w-full bg-obsidian border border-neonCyan/30 rounded-2xl p-4 text-xs text-slate-200 focus:outline-none resize-none input-shadow"></textarea>
+                        </div>
+
+                        <div className="space-y-2">
+                            <div className="flex justify-between items-center">
+                                <label className="block text-[11px] font-extrabold text-emeraldMint uppercase tracking-wider">Evidências Fotográficas (4 Blocos Otimizados)</label>
+                                <span className="text-[10px] text-slate-400 font-mono">Compressão Automática Ativa</span>
+                            </div>
+                            <div className="grid grid-cols-2 gap-3">
+                                {fotos.map((f, idx) => (
+                                    <label 
+                                        key={f.id} 
+                                        htmlFor={`foto-input-${idx}`} 
+                                        className="relative border border-dashed border-emeraldMint/40 bg-obsidian hover:bg-surfaceCard rounded-2xl text-center cursor-pointer h-32 flex flex-col items-center justify-center transition shadow-md overflow-hidden group input-shadow"
+                                    >
+                                        {f.preview ? (
+                                            <div className="absolute inset-0 w-full h-full">
+                                                <img src={f.preview} className="w-full h-full object-cover rounded-2xl" alt={`Evidência ${idx + 1}`} />
+                                                <div className="absolute inset-0 bg-obsidian/40 backdrop-blur-[1px] flex items-center justify-center opacity-0 group-hover:opacity-100 transition duration-200">
+                                                    <span className="text-emeraldMint text-[11px] font-extrabold bg-obsidian/80 px-2.5 py-1 rounded-xl border border-emeraldMint/30">🔄 Trocar Foto</span>
+                                                </div>
+                                            </div>
+                                        ) : (
+                                            <div className="flex flex-col items-center justify-center p-2">
+                                                <span className="text-neonCyan text-lg font-extrabold mb-1">📷</span>
+                                                <span className="text-[11px] font-bold text-slate-300">Bloco {idx + 1}</span>
+                                                <span className="text-[9px] text-slate-500 font-mono mt-0.5">Toque para anexar</span>
+                                            </div>
+                                        )}
+                                        <input 
+                                            type="file" 
+                                            id={`foto-input-${idx}`} 
+                                            accept="image/*" 
+                                            capture="environment" 
+                                            className="hidden" 
+                                            onChange={(e) => handleFotoChange(idx, e)} 
+                                        />
+                                    </label>
+                                ))}
+                            </div>
+                        </div>
+
+                        <div className="space-y-2.5 pt-3">
+                            <button type="button" onClick={copiarLaudo} className="w-full bg-gradient-to-r from-emeraldMint to-neonCyan text-obsidian font-extrabold py-3.5 rounded-2xl text-xs uppercase tracking-wider cursor-pointer btn-interactive shadow-xl">📋 Copiar Relatório Formatado</button>
+                            <button type="button" onClick={compartilharRelatorioComFotos} className="w-full bg-gradient-to-r from-electricIndigo to-blue-600 text-white font-extrabold py-3.5 rounded-2xl text-xs uppercase tracking-wider cursor-pointer btn-interactive shadow-xl flex items-center justify-center gap-2">
+                                <span>🚀</span> Compartilhar Relatório + Fotos no WhatsApp
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            );
+        }
+
+        function PublicVideoGallery({ localVideos, onGoToDashboard }) {
+            const [dismissedIds, setDismissedIds] = React.useState([]);
+            const visibleVideos = localVideos.filter(vid => !dismissedIds.includes(vid.id));
+
+            return (
+                <div className="space-y-4 max-w-2xl mx-auto">
+                    <div className="glass-panel p-6 rounded-[32px] border border-neonCyan/35 shadow-2xl space-y-5">
+                        <div className="flex items-center justify-between border-b border-neonCyan/20 pb-4">
+                            <h2 className="text-xs font-extrabold text-neonCyan flex items-center gap-2"><span>🎥</span> Galeria de Vídeos & Monitoramento</h2>
+                            <button onClick={onGoToDashboard} className="px-3.5 py-1.5 bg-neonCyan text-obsidian rounded-xl text-xs font-black cursor-pointer">Voltar ao Painel</button>
+                        </div>
+                        {visibleVideos.length === 0 ? (
+                            <div className="text-center py-10 text-xs text-slate-400"><p>Nenhum vídeo ativo.</p></div>
+                        ) : (
+                            <div className="space-y-4">
+                                {visibleVideos.map(vid => (
+                                    <div key={vid.id} className="bg-obsidian/90 p-4 rounded-3xl border border-neonCyan/30 space-y-3 shadow-xl">
+                                        <div className="flex items-center justify-between">
+                                            <span className="text-xs font-bold text-neonCyan truncate">📺 {vid.title}</span>
+                                            <button onClick={() => setDismissedIds(prev => [...prev, vid.id])} className="px-3 py-1 bg-alertCoral/20 text-alertCoral rounded-xl text-xs font-black cursor-pointer">Fechar</button>
+                                        </div>
+                                        <video src={vid.url} controls playsInline className="w-full h-64 rounded-xl object-contain bg-obsidian border border-neonCyan/20" />
+                                    </div>
+                                ))}
+                            </div>
+                        )}
+                    </div>
+                </div>
+            );
+        }
+
+        function AdminVaultModule({ localVideos, setLocalVideos, marketingText, setMarketingText, showToast, onClose }) {
+            const [pinInput, setPinInput] = React.useState("");
+            const [isUnlocked, setIsUnlocked] = React.useState(false);
+            const [marketingInput, setMarketingInput] = React.useState(marketingText);
+
+            const handleUnlock = (e) => {
+                e.preventDefault();
+                if (pinInput === "303500") { setIsUnlocked(true); showToast("🔓 Acesso Autorizado!"); } else { showToast("❌ PIN incorreto."); }
+            };
+
+            const handleUploadVideo = (e) => {
+                const files = Array.from(e.target.files);
+                files.forEach(file => {
+                    const reader = new FileReader();
+                    reader.onload = (uploadEvt) => {
+                        const newVid = { id: Date.now() + Math.random(), title: file.name, url: uploadEvt.target.result, isPinned: true };
+                        setLocalVideos(prev => [newVid, ...prev]);
+                        showToast(`📹 Vídeo "${file.name}" carregado!`);
+                    };
+                    reader.readAsDataURL(file);
+                });
+            };
+
+            return (
+                <div className="space-y-4 max-w-xl mx-auto">
+                    <div className="glass-panel p-6 rounded-[32px] border border-neonCyan/40 shadow-2xl space-y-5">
+                        <div className="flex items-center justify-between border-b border-neonCyan/20 pb-4">
+                            <h2 className="text-xs font-extrabold text-neonCyan">🔒 Painel Administrativo</h2>
+                            <button onClick={onClose} className="px-3.5 py-1.5 bg-alertCoral/25 text-alertCoral rounded-xl text-xs font-bold">✕ Fechar</button>
+                        </div>
+                        {!isUnlocked ? (
+                            <form onSubmit={handleUnlock} className="flex gap-2.5">
+                                <input type="password" maxLength="6" value={pinInput} onChange={(e) => setPinInput(e.target.value)} placeholder="PIN 🔒" className="flex-1 bg-obsidian border border-neonCyan/40 rounded-2xl px-4 py-3 text-xs text-center text-slate-200 focus:outline-none font-mono tracking-widest text-lg" />
+                                <button type="submit" className="px-6 py-3 bg-neonCyan text-obsidian font-extrabold rounded-2xl text-xs cursor-pointer shadow-lg">Desbloquear</button>
+                            </form>
+                        ) : (
+                            <div className="space-y-4">
+                                <div className="bg-obsidian/90 border border-neonCyan/40 p-4 rounded-2xl space-y-2">
+                                    <h3 className="text-xs font-extrabold text-neonCyan">📢 Espaço de Marketing / Patrocinadores</h3>
+                                    <textarea rows="2" value={marketingInput} onChange={(e) => setMarketingInput(e.target.value)} className="w-full bg-deepPlate border border-neonCyan/30 rounded-xl p-3 text-xs text-slate-100 focus:outline-none" />
+                                    <button onClick={() => { setMarketingText(marketingInput); try{localStorage.setItem("sarah_marketing_text_v52", marketingInput);}catch(e){} showToast("💾 Atualizado!"); }} className="w-full py-2.5 bg-neonCyan text-obsidian font-black rounded-xl text-xs uppercase cursor-pointer">Salvar Patrocinador</button>
+                                </div>
+                                <label className="block text-center px-4 py-3 bg-emeraldMint text-obsidian font-black rounded-xl text-xs cursor-pointer">
+                                    ➕ Enviar Vídeo
+                                    <input type="file" accept="video/*" onChange={handleUploadVideo} className="hidden" />
+                                </label>
+                            </div>
+                        )}
+                    </div>
+                </div>
+            );
+        }
+
+        function AutomatedObservatoryWidget({ marketingText }) {
+            const [t, setT] = React.useState("");
+            const [w, setW] = React.useState({temp:"--", humidity:"--", rain:"--", status:"Sincronizando...", color:"#F59E0B"});
+
+            React.useEffect(() => {
+                const upT = () => { try { const d=new Date(); setT(`${String(d.getDate()).padStart(2,'0')}/${String(d.getMonth()+1).padStart(2,'0')}/${d.getFullYear()} ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`); }catch(e){} };
+                upT(); const tm = setInterval(upT, 1000);
+                
+                const fetchW = async () => {
+                    try {
+                        const res = await fetch('https://api.open-meteo.com/v1/forecast?latitude=-22.7831&longitude=-43.4294&current=temperature_2m,relative_humidity_2m,precipitation&timezone=America/Sao_Paulo');
+                        const d = await res.json();
+                        if(d?.current) {
+                            const {temperature_2m:tp, relative_humidity_2m:hm, precipitation:pr} = d.current;
+                            setW({temp:`${tp}°C`, humidity:`${hm}%`, rain:`${pr} mm`, status:pr>5?"Alerta Chuvas":pr>0.5?"Chuva Leve":"Céu Estável", color:pr>5?"#EF4444":pr>0.5?"#FBBF24":"#00F5A0"});
+                        } else throw new Error();
+                    } catch(e) { setW({temp:"N/D", humidity:"N/D", rain:"N/D", status:"Offline", color:"#94A3B8"}); }
+                };
+                fetchW(); const tw = setInterval(fetchW, 600000);
+                return () => { clearInterval(tm); clearInterval(tw); };
+            }, []);
+
+            const txt = '🛡️ Promovendo Ciência cidadã • 1° Edição operacional El Niño GACE • Conceitos Mesquita do amanhã e Cidades resilientes (ONU Habitat) • Grupo Comunitário A Chave da Esperança • Plano de Ação: Todos unidos, todos protegidos • EMERGÊNCIAS: Direct 199 (21 4040-1772) • Bombeiros (193) • Alertas ZAP 📲 (21) 97299-3223 • Cras de Rocha Sobrinho 21 2042-8931 • Seja voluntário • Servir é prevenir sempre + NUPDECS • #compartilhe • Participe • Utilidades Públicas • Sarah Nexus v5.2 🛡 • "Se o Senhor não guardar a cidade, em vão vigia o sentinela" (Salmos 127)';
+
+            return (
+                <div style={{width:'100%', margin:'16px auto', background:'linear-gradient(135deg, rgba(13,20,38,0.92), rgba(5,8,16,0.98))', border:'1px solid rgba(0,242,254,0.35)', borderRadius:'18px', padding:'16px', boxShadow:'0 10px 30px rgba(0,0,0,0.6)'}}>
+                    <div style={{color:'#FFF', fontWeight:800, fontSize:'12px', textAlign:'center', letterSpacing:'1.5px', marginBottom:'12px', textShadow:'0 0 10px rgba(0,242,254,0.5)'}}>🛰 OBSERVATÓRIO METEOROLÓGICO & BACIAS • MESQUITA / RJ</div>
+                    
+                    <div style={{display:'grid', gridTemplateColumns:'repeat(auto-fit, minmax(120px, 1fr))', gap:'8px', marginBottom:'12px'}}>
+                        {[{l:'Temperatura', v:w.temp, c:'#00F2FE'}, {l:'Umidade do Ar', v:w.humidity, c:'#00F5A0'}, {l:'Precipitação', v:w.rain, c:'#38BDF8'}, {l:'Status Clima', v:w.status, c:w.color}].map((x,i)=>(
+                            <div key={i} style={{background:'rgba(255,255,255,0.04)', border:'1px solid rgba(255,255,255,0.08)', borderRadius:'12px', padding:'8px', textAlign:'center'}}>
+                                <div style={{fontSize:'10px', color:'#94A3B8', fontWeight:700}}>{x.l}</div>
+                                <div style={{fontSize:'13px', color:x.c, fontWeight:900, fontFamily:'monospace', marginTop:'2px'}}>{x.v}</div>
+                            </div>
+                        ))}
+                    </div>
+
+                    <div style={{position:'relative', height:'32px', background:'linear-gradient(90deg, #091322, #0e2442, #091322)', overflow:'hidden', display:'flex', alignItems:'center', borderRadius:'10px', border:'1px solid rgba(0,242,254,0.25)', marginBottom:'10px'}}>
+                        <div style={{display:'flex', width:'max-content', whiteSpace:'nowrap', color:'#E0F2FE', fontFamily:'monospace', fontWeight:700, fontSize:'11px', animation:'rolarFaixaSofisticada 35s linear infinite'}}>
+                            <span style={{paddingRight:'50px'}}>{txt}</span>
+                            <span style={{paddingRight:'50px'}}>{txt}</span>
+                        </div>
+                    </div>
+
+                    <div style={{textAlign:'center', background:'rgba(0,242,254,0.05)', padding:'8px', borderRadius:'10px', border:'1px solid rgba(0,242,254,0.2)'}}>
+                        <div style={{background:'linear-gradient(90deg, #00F2FE, #00F5A0)', WebkitBackgroundClip:'text', WebkitTextFillColor:'transparent', fontSize:'12px', fontWeight:900, fontFamily:'monospace', textTransform:'uppercase'}}>{marketingText || "GRUPO A CHAVE DA ESPERANÇA • ROCHA SOBRINHO / MESQUITA"}</div>
+                    </div>
+                </div>
+            );
+        }
+
+        function App() {
+            const [theme, setTheme] = React.useState(() => { try { return localStorage.getItem("sarah-theme") || "dark"; } catch(e) { return "dark"; } });
+            const [soundEnabled, setSoundEnabled] = React.useState(true);
+            const [isSpeaking, setIsSpeaking] = React.useState(false);
+            const [isListening, setIsListening] = React.useState(false);
+            const [liveWeather, setLiveWeather] = React.useState(null);
+            
+            const [isLoadingSplash, setIsLoadingSplash] = React.useState(true);
+            const [activeTab, setActiveTab] = React.useState("dashboard"); 
+            
+            const [shareModalOpen, setShareModalOpen] = React.useState(false);
+            const [installModalOpen, setInstallModalOpen] = React.useState(false);
+            const [toastMessage, setToastMessage] = React.useState(null);
+            const [deferredPrompt, setDeferredPrompt] = React.useState(null);
+            
+            const [termsAccepted, setTermsAccepted] = React.useState(
+                () => { try { return localStorage.getItem("sarah_terms_accepted_v52_lgpd") === "1"; } catch(e) { return false; } }
+            );
+            const [check1, setCheck1] = React.useState(false);
+            const [check2, setCheck2] = React.useState(false);
+
+            const [input, setInput] = React.useState("");
+            const [isProcessing, setIsProcessing] = React.useState(false);
+            const [currentResponse, setCurrentResponse] = React.useState("Sistemas operando em Modo de Comando Direto e Oculto. Fale ou digite para interagir com a SARAH.");
+            const [hasIntroduced, setHasIntroduced] = React.useState(
+                () => { try { return localStorage.getItem("sarah_introduced_v52") === "1"; } catch(e) { return false; } }
+            );
+
+            const [marketingText, setMarketingText] = React.useState(() => {
+                try { return localStorage.getItem("sarah_marketing_text_v52") || "JUNINHO DO MERCADINHO • Preços baixos é aqui"; } catch(e) { return "JUNINHO DO MERCADINHO • Preços baixos é aqui"; }
+            });
+
+            const [localVideos, setLocalVideos] = React.useState(() => {
+                try {
+                    const saved = localStorage.getItem("sarah_persistent_videos_v52_fixed");
+                    if (saved) { const parsed = JSON.parse(saved); if (Array.isArray(parsed)) return parsed; }
+                } catch(e) {}
+                return [
+                    { id: 1, title: "Monitoramento Meteorológico & Hidrometeorológico - Mesquita", url: "https://www.w3schools.com/html/mov_bbb.mp4", isPinned: true }
+                ];
+            });
+
+            React.useEffect(() => {
+                try { localStorage.setItem("sarah_persistent_videos_v52_fixed", JSON.stringify(localVideos)); } catch(err) {}
+            }, [localVideos]);
+
+            const speechIdRef = React.useRef(0);
+            const voiceTimerRef = React.useRef(null);
+            const voicesRef = React.useRef([]);
+
+            const showToast = (msg) => { setToastMessage(msg); setTimeout(() => setToastMessage(null), 3500); };
+
+            React.useEffect(() => {
+                const splashTimer = setTimeout(() => setIsLoadingSplash(false), 2000);
+                return () => clearTimeout(splashTimer);
+            }, []);
+
+            React.useEffect(() => {
+                window.addEventListener('beforeinstallprompt', (e) => { e.preventDefault(); setDeferredPrompt(e); });
+            }, []);
+
+            const handleInstallApp = async () => {
+                if (deferredPrompt) {
+                    deferredPrompt.prompt();
+                    const { outcome } = await deferredPrompt.userChoice;
+                    if (outcome === 'accepted') { setDeferredPrompt(null); showToast("🎉 Aplicativo instalado!"); }
+                } else { setInstallModalOpen(true); }
+            };
+
+            const carregarVozes = () => { if ("speechSynthesis" in window) { voicesRef.current = window.speechSynthesis.getVoices(); } };
+            React.useEffect(() => {
+                if (!("speechSynthesis" in window)) return;
+                carregarVozes();
+                window.speechSynthesis.onvoiceschanged = carregarVozes;
+                return () => { window.speechSynthesis.cancel(); window.speechSynthesis.onvoiceschanged = null; };
+            }, []);
+
+            const limparTextoParaFala = (text) => {
+                return String(text).replace(/([\u2700-\u27BF]|[\uE000-\uF8FF]|\uD83C[\uDC00-\uDFFF]|\uD83D[\uDC00-\uDFFF]|[\u2011-\u26FF]|\uD83E[\uDD00[\uDDFF])/g, '').replace(/\[(.*?)\]\(.*?\)/g, "$1").replace(/https?:\/\/\S+/g, "").replace(/\s+/g, " ").trim();
+            };
+
+            const escolherMelhorVoz = () => {
+                const voices = voicesRef.current.length ? voicesRef.current : window.speechSynthesis.getVoices();
+                return voices.find((voice) => voice.lang.toLowerCase().includes("pt")) || voices[0];
+            };
+
+            const stopSpeaking = () => {
+                speechIdRef.current += 1;
+                if (voiceTimerRef.current) { clearTimeout(voiceTimerRef.current); voiceTimerRef.current = null; }
+                if ("speechSynthesis" in window) window.speechSynthesis.cancel();
+                setIsSpeaking(false);
+            };
+
+            const speakText = (text) => {
+                if (!soundEnabled || !("speechSynthesis" in window)) return;
+                const cleanText = limparTextoParaFala(text);
+                if (!cleanText) return;
+                stopSpeaking();
+                const currentId = speechIdRef.current;
+                voiceTimerRef.current = setTimeout(() => {
+                    if (currentId !== speechIdRef.current) return;
+                    const utterance = new SpeechSynthesisUtterance(cleanText);
+                    utterance.lang = "pt-BR";
+                    utterance.voice = escolherMelhorVoz();
+                    utterance.rate = 1.0;
+                    utterance.onstart = () => { if (currentId === speechIdRef.current) setIsSpeaking(true); };
+                    utterance.onend = () => { if (currentId === speechIdRef.current) setIsSpeaking(false); };
+                    utterance.onerror = () => setIsSpeaking(false);
+                    window.speechSynthesis.speak(utterance);
+                }, 200);
+            };
+
+            React.useEffect(() => {
+                if (!termsAccepted || hasIntroduced || isLoadingSplash) return;
+                const greeting = getBrasiliaGreeting();
+                const presentation = `${greeting}, sou a SARAH IA NEXUS v5.2 PRO. Modo de comando oculto e direto ativado.`;
+                const timer = setTimeout(() => {
+                    if (!soundEnabled) return;
+                    setHasIntroduced(true);
+                    try { localStorage.setItem("sarah_introduced_v52", "1"); } catch(e) {}
+                    speakText(presentation);
+                }, 700);
+                return () => clearTimeout(timer);
+            }, [termsAccepted, hasIntroduced, soundEnabled, isLoadingSplash]);
+
+            const shareMessageText = "APP//MONITORAMENTO METEOROLÓGICO 🛰\nSARAH IA NEXUS V5.2 PRO\nCéu, Clima, Chuva, Vento & Bacias Hidrográficas\nhttps://phantrorfirmo08-alt.github.io/PROJETO-CIDAD-O-SENSOR-01/";
+
+            const handleShareLink = async () => {
+                if (navigator.share) {
+                    try { await navigator.share({ title: 'SARAH IA NEXUS v5.2 PRO', text: shareMessageText, url: 'https://phantrorfirmo08-alt.github.io/PROJETO-CIDAD-O-SENSOR-01/' }); return; } catch (err) {}
+                }
+                setShareModalOpen(true);
+            };
+
+            React.useEffect(() => {
+                fetch('https://api.open-meteo.com/v1/forecast?latitude=-22.7831&longitude=-43.4294&current=temperature_2m,relative_humidity_2m,precipitation,weather_code,wind_speed_10m')
+                    .then((res) => res.json())
+                    .then((data) => { if (data && data.current) setLiveWeather(data.current); })
+                    .catch((err) => console.warn("Clima indisponível:", err));
+            }, []);
+
+            React.useEffect(() => {
+                try { localStorage.setItem("sarah-theme", theme); } catch(e) {}
+                const metaTheme = document.querySelector('meta[name="theme-color"]');
+                if (theme === 'warm') {
+                    document.documentElement.classList.remove('dark');
+                    document.documentElement.classList.add('warm');
+                    if (metaTheme) metaTheme.setAttribute('content', '#F8F6F0');
+                } else {
+                    document.documentElement.classList.add('dark');
+                    document.documentElement.classList.remove('warm');
+                    if (metaTheme) metaTheme.setAttribute('content', '#000000');
+                }
+            }, [theme]);
+
+            const toggleTheme = () => {
+                setTheme(prev => {
+                    const next = prev === 'dark' ? 'warm' : 'dark';
+                    showToast(next === 'warm' ? '🎨 Tema Comunitário Ativado' : '🌙 Modo Obsidian Dark Ativado');
+                    return next;
+                });
+            };
+
+            const toggleListening = () => {
+                const SpeechRec = window.SpeechRecognition || window.webkitSpeechRecognition;
+                if (!SpeechRec) { showToast("⚠️ Reconhecimento de voz indisponível."); return; }
+                if (isListening) { setIsListening(false); return; }
+                try {
+                    const rec = new SpeechRec();
+                    rec.lang = "pt-BR";
+                    rec.continuous = false;
+                    rec.interimResults = true;
+                    rec.onstart = () => { setIsListening(true); showToast("🎙 Ouvindo voz direta para a SARAH..."); };
+                    rec.onresult = (event) => {
+                        let final = '';
+                        for (let i = event.resultIndex; i < event.results.length; ++i) {
+                            if (event.results[i].isFinal) final += event.results[i][0].transcript;
+                        }
+                        if (final) {
+                            setInput(final);
+                            setIsListening(false);
+                            handleSendDirectCommand(final);
+                        }
+                    };
+                    rec.onerror = () => { setIsListening(false); showToast("⚠ Erro no microfone."); };
+                    rec.onend = () => { setIsListening(false); };
+                    rec.start();
+                } catch (e) { setIsListening(false); showToast("⚠️ Erro ao iniciar microfone."); }
+            };
+
+            const handleSendDirectCommand = async (textCustom) => {
+                stopSpeaking();
+                const textToSend = textCustom !== undefined ? textCustom : input;
+                if (!textToSend.trim() || isProcessing) return;
+
+                const queryText = textToSend.trim();
+                setInput("");
+                setIsProcessing(true);
+                setCurrentResponse("🔄 SARAH processando áudio e comando direto...");
+
+                const weatherContext = liveWeather
+                    ? `Condições meteorológicas atuais em Mesquita/RJ: Temperatura ${liveWeather.temperature_2m}°C, Umidade ${liveWeather.relative_humidity_2m}%, Precipitação ${liveWeather.precipitation} mm, Vento ${liveWeather.wind_speed_10m} km/h. Monitoramento ativo do céu, nuvens, radares e bacias (Rio Sarapuí, Rio Dona Eugênia e Rio Prata).`
+                    : "Dados meteorológicos e atmosféricos ativos.";
+
+                try {
+                    const response = await fetch(CLOUDFLARE_WORKER_URL, {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({
+                            model: "openai/gpt-oss-120b",
+                            messages: [
+                                {
+                                    role: "system",
+                                    content: `Você é a SARAH IA NEXUS v5.2 PRO, núcleo de inteligência da Defesa Civil Comunitária (Grupo A Chave da Esperança, Mesquita/RJ). Responda sempre diretamente para o usuário em voz viva e falada, sem histórico de chat. ${weatherContext}`
+                                },
+                                { role: "user", content: queryText }
+                            ],
+                            temperature: 0.4,
+                            max_tokens: 300
+                        })
+                    });
+
+                    if (response.status === 404) {
+                        throw new Error("Erro 404: Endpoint de IA indisponível na rota configurada.");
+                    }
+
+                    const data = await response.json();
+                    let reply = data?.choices?.[0]?.message?.content || data?.message || "Análise concluída com sucesso.";
+
+                    reply = reply.replace(/#{1,6}\s?/g, '').replace(/\*\*/g, '').replace(/\|/g, ' ').replace(/---/g, '').trim();
+
+                    setCurrentResponse(reply);
+                    speakText(reply);
+                } catch (error) {
+                    const fallback = error.message.includes("404")
+                        ? "Erro 404: Endpoint da IA indisponível na rota configurada."
+                        : "Falha de enlace com a rede. Verifique sua conexão.";
+                    setCurrentResponse(fallback);
+                    speakText(fallback);
+                } finally {
+                    setIsProcessing(false);
+                }
+            };
+
+            return (
+                <div className="min-h-screen flex flex-col relative bg-obsidian text-slate-100 antialiased selection:bg-neonCyan selection:text-obsidian">
+                    
+                    {isLoadingSplash && (
+                        <div className="fixed inset-0 bg-obsidian z-[100] flex flex-col items-center justify-center p-6">
+                            <div className="flex flex-col items-center space-y-6 max-w-sm w-full text-center">
+                                <SarahHologramAvatar isLarge={true} isSpeaking={isSpeaking} />
+                                <div className="space-y-2">
+                                    <h2 className="font-sans text-2xl font-black text-white tracking-wide">SARAH IA NEXUS <span className="text-neonCyan">v5.2 PRO</span></h2>
+                                    <p className="font-sans text-xs text-slate-400 font-medium">Modo Comando Direto & Oculto</p>
+                                    <p className="font-sans text-[11px] text-emeraldMint font-bold">Grupo A Chave da Esperança (Mesquita/RJ)</p>
+                                </div>
+                                <div className="w-56 h-1.5 bg-surfaceCard rounded-full overflow-hidden border border-neonCyan/30">
+                                    <div className="h-full bg-gradient-to-r from-neonCyan via-electricIndigo to-emeraldMint animate-pulse w-full"></div>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
+                    {toastMessage && (
+                        <div className="fixed top-20 left-1/2 -translate-x-1/2 z-50 bg-gradient-to-r from-neonCyan to-emeraldMint text-obsidian px-6 py-3 rounded-2xl font-sans text-xs font-black shadow-[0_10px_30px_rgba(0,242,254,0.4)] border border-white/40 animate-bounce">
+                            {toastMessage}
+                        </div>
+                    )}
+
+                    {shareModalOpen && (
+                        <div className="fixed inset-0 bg-obsidian/85 backdrop-blur-xl z-50 flex items-center justify-center p-4">
+                            <div className="glass-panel max-w-md w-full p-6 sm:p-8 rounded-[32px] border border-neonCyan/40 space-y-4 text-center shadow-2xl">
+                                <h3 className="text-base font-extrabold text-neonCyan">📲 Partilhar Aplicativo</h3>
+                                <textarea readOnly value={shareMessageText} className="w-full h-28 bg-obsidian border border-neonCyan/30 rounded-2xl p-3 text-xs text-slate-200 resize-none font-mono input-shadow" />
+                                <div className="flex gap-3">
+                                    <button onClick={() => { navigator.clipboard.writeText(shareMessageText); showToast("📋 Copiado!"); setShareModalOpen(false); }} className="flex-1 py-3.5 bg-neonCyan text-obsidian font-extrabold rounded-2xl text-xs cursor-pointer btn-interactive">Copiar</button>
+                                    <button onClick={() => setShareModalOpen(false)} className="px-5 py-3.5 bg-alertCoral/25 text-alertCoral rounded-2xl text-xs font-bold">Fechar</button>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
+                    {installModalOpen && (
+                        <div className="fixed inset-0 bg-obsidian/85 backdrop-blur-xl z-50 flex items-center justify-center p-4">
+                            <div className="glass-panel max-w-md w-full p-6 sm:p-8 rounded-[32px] border border-neonCyan/40 space-y-4 text-center shadow-2xl">
+                                <h3 className="text-base font-extrabold text-neonCyan">📥 Instalar App</h3>
+                                <p className="text-xs text-slate-300 leading-relaxed text-left">Abra o menu do seu navegador e selecione <em>"Adicionar à Tela Inicial"</em> ou <em>"Instalar Aplicativo"</em>.</p>
+                                <button onClick={() => setInstallModalOpen(false)} className="w-full py-3.5 bg-neonCyan text-obsidian font-extrabold rounded-2xl text-xs cursor-pointer">Entendido</button>
+                            </div>
+                        </div>
+                    )}
+
+                    {!termsAccepted && (
+                        <div className="fixed inset-0 bg-obsidian/95 z-[200] flex items-center justify-center p-4 overflow-y-auto">
+                            <div className="glass-panel max-w-lg w-full p-6 sm:p-8 rounded-[36px] border-2 border-neonCyan/65 shadow-2xl space-y-5 my-auto">
+                                <div className="text-center space-y-2">
+                                    <div className="inline-flex p-3.5 rounded-3xl bg-neonCyan/10 border border-neonCyan/30 text-neonCyan mb-1"><CyberShieldIcon className="w-9 h-9" /></div>
+                                    <h2 className="text-lg font-black text-white">SARAH IA NEXUS v5.2 PRO</h2>
+                                    <p className="text-xs text-neonCyan font-extrabold uppercase">Termo LGPD & Permissão de GPS</p>
+                                </div>
+                                <div className="bg-obsidian/90 p-4 rounded-2xl border border-neonCyan/30 text-xs text-slate-300 space-y-2 max-h-52 overflow-y-auto font-sans">
+                                    <p>Em conformidade com a <strong>Lei Federal nº 13.709/2018 (LGPD)</strong>, o sistema utiliza o GPS obrigatoriamente para fixar coordenadas precisas em vistorias de Defesa Civil.</p>
+                                </div>
+                                <div className="space-y-3 font-sans">
+                                    <label className="flex items-start gap-3 cursor-pointer text-xs text-slate-300 bg-surfaceCard/50 p-3 rounded-xl border border-neonCyan/20">
+                                        <input type="checkbox" checked={check1} onChange={(e) => setCheck1(e.target.checked)} className="mt-0.5 rounded border-neonCyan/50 text-neonCyan w-4 h-4 bg-obsidian shrink-0 cursor-pointer" />
+                                        <span>Li e aceito os termos da Lei Geral de Proteção de Dados (LGPD).</span>
+                                    </label>
+                                    <label className="flex items-start gap-3 cursor-pointer text-xs text-slate-300 bg-surfaceCard/50 p-3 rounded-xl border border-neonCyan/20">
+                                        <input type="checkbox" checked={check2} onChange={(e) => setCheck2(e.target.checked)} className="mt-0.5 rounded border-neonCyan/50 text-neonCyan w-4 h-4 bg-obsidian shrink-0 cursor-pointer" />
+                                        <span>Compreendo e autorizo o uso obrigatório do GPS para telemetria de campo.</span>
+                                    </label>
+                                </div>
+                                <button disabled={!check1 || !check2} onClick={() => { setTermsAccepted(true); try { localStorage.setItem("sarah_terms_accepted_v52_lgpd", "1"); } catch(e) {} showToast("🚀 Sistema ativado!"); }} className={`w-full py-4 rounded-2xl font-black text-xs uppercase tracking-widest transition shadow-2xl ${check1 && check2 ? 'bg-gradient-to-r from-emeraldMint via-neonCyan to-electricIndigo text-obsidian cursor-pointer btn-interactive' : 'bg-surfaceCard text-slate-500 cursor-not-allowed'}`}>
+                                    Concordar e Iniciar Operação
+                                </button>
+                            </div>
+                        </div>
+                    )}
+
+                    <header className="glass-panel sticky top-0 z-30 px-4 sm:px-6 py-3.5 border-b border-neonCyan/30 flex items-center justify-between shadow-xl">
+                        <div className="flex items-center gap-3">
+                            <div className="w-11 h-11 rounded-2xl border-2 border-neonCyan/60 flex items-center justify-center bg-obsidian shadow-[0_0_20px_rgba(0,242,254,0.3)]">
+                                <svg width="22" height="22" viewBox="0 0 24 24" fill="url(#headerGrad)"><path d="M13 2L3 14h7l-1 8 10-12h-7l1-8z"/><defs><linearGradient id="headerGrad" x1="3" y1="2" x2="21" y2="22"><stop stopColor="#00F2FE" /><stop offset="1" stopColor="#00F5A0" /></linearGradient></defs></svg>
+                            </div>
+                            <div>
+                                <h1 className="text-xs sm:text-sm font-black text-white tracking-wide">SARAH IA NEXUS <span className="text-neonCyan text-[10px] font-mono">v5.2 PRO</span></h1>
+                                <p className="text-[10px] text-emeraldMint font-mono font-bold">VOZ DIRETA & AVATAR ATIVO • MESQUITA/RJ</p>
+                            </div>
+                        </div>
+                        <div className="flex items-center gap-2">
+                            <button onClick={() => setSoundEnabled(!soundEnabled)} className={`p-2.5 rounded-xl border text-xs cursor-pointer transition btn-interactive ${soundEnabled ? 'bg-neonCyan/20 border-neonCyan text-neonCyan shadow' : 'bg-surfaceCard border-neonCyan/20 text-slate-500'}`} title={soundEnabled ? "Som Ativado" : "Mudo"}>{soundEnabled ? '🔊' : '🔇'}</button>
+                            <button onClick={toggleTheme} className="p-2.5 rounded-xl border border-neonCyan/30 bg-surfaceCard text-neonCyan text-xs cursor-pointer btn-interactive shadow" title="Tema">☀️</button>
+                            <button onClick={handleShareLink} className="p-2.5 rounded-xl border border-neonCyan/30 bg-surfaceCard text-neonCyan text-xs cursor-pointer btn-interactive shadow" title="Partilhar">🔗</button>
+                            <button onClick={handleInstallApp} className="p-2.5 rounded-xl border border-neonCyan/30 bg-surfaceCard text-neonCyan text-xs cursor-pointer btn-interactive shadow" title="Instalar">📥</button>
+                        </div>
+                    </header>
+
+                    <nav className="glass-panel border-b border-neonCyan/30 px-4 py-2.5 flex items-center justify-center gap-2 overflow-x-auto z-20">
+                        <button onClick={() => setActiveTab("dashboard")} className={`px-4 py-2 rounded-xl text-xs font-extrabold transition cursor-pointer flex items-center gap-2 shrink-0 btn-interactive ${activeTab === 'dashboard' ? 'bg-neonCyan text-obsidian shadow-[0_0_20px_rgba(0,242,254,0.4)]' : 'bg-surfaceCard text-slate-300 border border-neonCyan/20'}`}><span>💬</span> Comando Direto</button>
+                        <button onClick={() => setActiveTab("radar")} className={`px-4 py-2 rounded-xl text-xs font-extrabold transition cursor-pointer flex items-center gap-2 shrink-0 btn-interactive ${activeTab === 'radar' ? 'bg-neonCyan text-obsidian shadow-[0_0_20px_rgba(0,242,254,0.4)]' : 'bg-surfaceCard text-slate-300 border border-neonCyan/20'}`}><span>🛰</span> Radar & Clima 24h</button>
+                        <button onClick={() => setActiveTab("relatorio")} className={`px-4 py-2 rounded-xl text-xs font-extrabold transition cursor-pointer flex items-center gap-2 shrink-0 btn-interactive ${activeTab === 'relatorio' ? 'bg-neonCyan text-obsidian shadow-[0_0_20px_rgba(0,242,254,0.4)]' : 'bg-surfaceCard text-slate-300 border border-neonCyan/20'}`}><span>📋</span> Vistoria & Relatório</button>
+                        <button onClick={() => setActiveTab("galeria")} className={`px-4 py-2 rounded-xl text-xs font-extrabold transition cursor-pointer flex items-center gap-2 shrink-0 btn-interactive ${activeTab === 'galeria' ? 'bg-neonCyan text-obsidian shadow-[0_0_20px_rgba(0,242,254,0.4)]' : 'bg-surfaceCard text-slate-300 border border-neonCyan/20'}`}><span>🎥</span> Vídeos</button>
+                        <button onClick={() => setActiveTab("admin")} className={`px-4 py-2 rounded-xl text-xs font-extrabold transition cursor-pointer flex items-center gap-2 shrink-0 btn-interactive ${activeTab === 'admin' ? 'bg-emeraldMint text-obsidian shadow-[0_0_20px_rgba(0,245,160,0.4)]' : 'bg-surfaceCard text-emeraldMint border border-emeraldMint/30'}`}><span>🔒</span> Admin</button>
+                    </nav>
+
+                    <main className="flex-1 max-w-3xl w-full mx-auto p-4 sm:p-6 space-y-5 pb-28">
+                        {activeTab === 'dashboard' && (
+                            <div className="space-y-5">
+                                <div className="glass-panel p-6 sm:p-8 rounded-[36px] border border-neonCyan/35 shadow-2xl space-y-6 text-center">
+                                    <SarahHologramAvatar isLarge={true} isSpeaking={isSpeaking} />
+
+                                    <div className="space-y-2">
+                                        <h2 className="text-base font-black text-white">Comando Direto & Voz da SARAH</h2>
+                                        <p className="text-xs text-slate-300 font-medium">
+                                            Interface direta por microfone e botão de envio, sem caixas de chat poluidas. Fale diretamente com ela.
+                                        </p>
+                                    </div>
+
+                                    <div className="bg-obsidian border border-neonCyan/40 p-5 rounded-3xl text-left space-y-2 input-shadow shadow-xl">
+                                        <div className="flex items-center justify-between text-[10px] font-mono text-neonCyan font-bold uppercase border-b border-neonCyan/20 pb-2">
+                                            <span className="flex items-center gap-2"><span className="w-2 h-2 rounded-full bg-emeraldMint animate-pulse"></span> Resposta Falada Direta da SARAH</span>
+                                            <span>Modo Voz Ativa</span>
+                                        </div>
+                                        <div className="text-xs sm:text-sm font-sans text-slate-100 whitespace-pre-line leading-relaxed py-3">
+                                            {currentResponse}
+                                        </div>
+                                    </div>
+
+                                    <div className="pt-2">
+                                        <form onSubmit={(e) => { e.preventDefault(); handleSendDirectCommand(); }} className="flex items-center gap-2 bg-obsidian border-2 border-neonCyan/40 rounded-2xl p-2 input-shadow">
+                                            <button 
+                                                type="button" 
+                                                onClick={toggleListening}
+                                                className={`p-3.5 rounded-xl transition cursor-pointer flex items-center justify-center shrink-0 ${isListening ? 'bg-vibrantPink text-white animate-mic-ripple shadow-[0_0_20px_rgba(255,8,68,0.8)]' : 'bg-surfaceCard text-neonCyan hover:bg-neonCyan/20 border border-neonCyan/30'}`}
+                                                title="Falar diretamente com a SARAH"
+                                            >
+                                                🎙️
+                                            </button>
+                                            <input 
+                                                type="text" 
+                                                value={input} 
+                                                onChange={(e) => setInput(e.target.value)}
+                                                placeholder="Digite ou fale diretamente com a SARAH..." 
+                                                className="flex-1 bg-transparent border-none px-3 py-2 text-xs text-slate-100 focus:outline-none font-sans"
+                                            />
+                                            <button 
+                                                type="submit" 
+                                                disabled={isProcessing || !input.trim()}
+                                                className={`px-6 py-3 rounded-xl font-extrabold text-xs transition cursor-pointer btn-interactive shadow-lg ${
+                                                    input.trim() && !isProcessing 
+                                                        ? 'bg-gradient-to-r from-neonCyan to-emeraldMint text-obsidian' 
+                                                        : 'bg-surfaceCard text-slate-500 cursor-not-allowed'
+                                                }`}
+                                            >
+                                                {isProcessing ? 'Ouvindo...' : 'Falar 🚀'}
+                                            </button>
+                                        </form>
+                                    </div>
+
+                                    <div className="flex flex-wrap justify-center gap-2 pt-2">
+                                        <button onClick={() => handleSendDirectCommand("Status atual das bacias Sarapuí, Dona Eugênia e Prata")} className="px-3 py-1.5 bg-obsidian border border-neonCyan/30 hover:border-neonCyan text-neonCyan rounded-xl text-[11px] font-bold transition cursor-pointer">🌊 Bacias</button>
+                                        <button onClick={() => handleSendDirectCommand("Condições meteorológicas atuais em Mesquita")} className="px-3 py-1.5 bg-obsidian border border-neonCyan/30 hover:border-neonCyan text-neonCyan rounded-xl text-[11px] font-bold transition cursor-pointer">🌦️ Clima</button>
+                                        <button onClick={() => handleSendDirectCommand("Diretrizes de prevenção da Defesa Civil")} className="px-3 py-1.5 bg-obsidian border border-neonCyan/30 hover:border-neonCyan text-neonCyan rounded-xl text-[11px] font-bold transition cursor-pointer">🛡️ Defesa Civil</button>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+
+                        {activeTab === 'radar' && <NativeHydroWindRadar liveWeather={liveWeather} />}
+                        {activeTab === 'relatorio' && <FieldReportModule onBackToDashboard={() => setActiveTab('dashboard')} showToast={showToast} />}
+                        {activeTab === 'galeria' && <PublicVideoGallery localVideos={localVideos} onGoToDashboard={() => setActiveTab('dashboard')} />}
+                        {activeTab === 'admin' && (
+                            <AdminVaultModule 
+                                localVideos={localVideos} 
+                                setLocalVideos={setLocalVideos} 
+                                marketingText={marketingText}
+                                setMarketingText={setMarketingText}
+                                showToast={showToast} 
+                                onClose={() => setActiveTab('dashboard')} 
+                            />
+                        )}
+
+                        <AutomatedObservatoryWidget marketingText={marketingText} />
+                    </main>
+
+                    <footer className="glass-panel fixed bottom-0 left-0 right-0 z-40 border-t border-neonCyan/30 px-4 py-3 flex items-center justify-around shadow-2xl backdrop-blur-2xl">
+                        <button onClick={() => setActiveTab('dashboard')} className={`flex flex-col items-center gap-1 cursor-pointer transition ${activeTab === 'dashboard' ? 'text-neonCyan scale-105' : 'text-slate-400 hover:text-white'}`}>
+                            <span className="text-lg">💬</span>
+                            <span className="text-[10px] font-extrabold">Comando</span>
+                        </button>
+                        <button onClick={() => setActiveTab('radar')} className={`flex flex-col items-center gap-1 cursor-pointer transition ${activeTab === 'radar' ? 'text-neonCyan scale-105' : 'text-slate-400 hover:text-white'}`}>
+                            <span className="text-lg">🛰</span>
+                            <span className="text-[10px] font-extrabold">Radar 24h</span>
+                        </button>
+                        <button onClick={() => setActiveTab('relatorio')} className={`flex flex-col items-center gap-1 cursor-pointer transition ${activeTab === 'relatorio' ? 'text-neonCyan scale-105' : 'text-slate-400 hover:text-white'}`}>
+                            <span className="text-lg">📋</span>
+                            <span className="text-[10px] font-extrabold">Vistoria</span>
+                        </button>
+                        <button onClick={() => setActiveTab('galeria')} className={`flex flex-col items-center gap-1 cursor-pointer transition ${activeTab === 'galeria' ? 'text-neonCyan scale-105' : 'text-slate-400 hover:text-white'}`}>
+                            <span className="text-lg">🎥</span>
+                            <span className="text-[10px] font-extrabold">Vídeos</span>
+                        </button>
+                        <button onClick={() => setActiveTab('admin')} className={`flex flex-col items-center gap-1 cursor-pointer transition ${activeTab === 'admin' ? 'text-emeraldMint scale-105' : 'text-emeraldMint/70 hover:text-emeraldMint'}`}>
+                            <span className="text-lg">🔒</span>
+                            <span className="text-[10px] font-extrabold">Admin</span>
+                        </button>
+                    </footer>
+
+                </div>
+            );
+        }
+
+        ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+    </script>
+</body>
+</html>
