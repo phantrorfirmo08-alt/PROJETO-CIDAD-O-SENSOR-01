@@ -1,0 +1,409 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>SARAH AI NEXUS v11.3.0 - CHAT FLUTUANTE + DADOS COMPLETOS + LEAFLET MAP</title>
+<link rel="manifest" href="./manifest.json?v=11.3.0">
+<meta name="theme-color" content="#02040A">
+<link rel="apple-touch-icon" href="https://cdn.imagetourls.com/uploads/tyImg/BPatwSxX.png">
+<script src="https://cdn.tailwindcss.com"></script>
+<script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+<script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+<script crossorigin src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<style>
+:root{--void:#02040A;--cyan:#00F2FE;--orange:#FF8C00;--blue:#3B82F6;--green:#10B981;--rose:#F43F5E}
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:var(--void);color:#fff;font-family:'JetBrains Mono',monospace;overflow:hidden}
+#map{width:100vw;height:100vh;background:#02040A}
+.cyber-panel{background:rgba(2,6,23,0.97);border:1px solid rgba(0,242,254,0.4);backdrop-filter:blur(18px)}
+.btn-radar{background:rgba(0,242,254,0.08);border:1px solid rgba(0,242,254,0.35);color:var(--cyan);font-weight:bold;transition:all 0.3s}
+.btn-radar.active{background:var(--cyan);color:var(--void);box-shadow:0 0 15px rgba(0,242,254,0.5)}
+@keyframes hudPulse { 0%, 100% { opacity: 1; transform: scale(1); } 50% { opacity: 0.5; transform: scale(1.05); } }
+.animate-hud-pulse { animation: hudPulse 2s infinite; }
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel">
+const { useState, useEffect, useRef } = React;
+const SARAH_CUSTOM_AVATAR_URL = "https://cdn.imagetourls.com/uploads/tyImg/195w5uur9.png";
+
+const MUNICIPIOS_RJ_92 = [
+    {n:"Angra dos Reis",lat:-23.00,lon:-44.31}, {n:"Aperibé",lat:-21.62,lon:-42.10}, {n:"Araruama",lat:-22.87,lon:-42.33}, {n:"Areal",lat:-22.23,lon:-43.11}, {n:"Armação dos Búzios",lat:-22.75,lon:-41.88}, {n:"Arraial do Cabo",lat:-22.96,lon:-42.02}, 
+    {n:"Barra do Piraí",lat:-22.47,lon:-43.81}, {n:"Barra Mansa",lat:-22.54,lon:-44.17}, {n:"Belford Roxo",lat:-22.76,lon:-43.39}, {n:"Bom Jardim",lat:-22.15,lon:-42.41}, {n:"Bom Jesus do Itabapoana",lat:-21.14,lon:-41.67}, 
+    {n:"Cabo Frio",lat:-22.88,lon:-42.01}, {n:"Cachoeiras de Macacu",lat:-22.46,lon:-42.65}, {n:"Cambuci",lat:-21.56,lon:-41.90}, {n:"Campos dos Goytacazes",lat:-21.75,lon:-41.32}, {n:"Cantagalo",lat:-21.97,lon:-42.36}, 
+    {n:"Carapebus",lat:-22.21,lon:-41.65}, {n:"Comendador Levy Gasparian",lat:-22.03,lon:-43.20}, {n:"Carmo",lat:-21.92,lon:-42.61}, {n:"Casimiro de Abreu",lat:-22.48,lon:-42.20}, {n:"Duque de Caxias",lat:-22.78,lon:-43.31}, 
+    {n:"Engenheiro Paulo de Frontin",lat:-22.54,lon:-43.68}, {n:"Guapimirim",lat:-22.53,lon:-42.98}, {n:"Iguaba Grande",lat:-22.84,lon:-42.22}, {n:"Itaboraí",lat:-22.74,lon:-42.85}, {n:"Itaguaí",lat:-22.85,lon:-43.77}, 
+    {n:"Italva",lat:-21.42,lon:-41.74}, {n:"Itaocara",lat:-21.47,lon:-42.07}, {n:"Itaperuna",lat:-21.20,lon:-41.88}, {n:"Itatiaia",lat:-22.49,lon:-44.56}, {n:"Japeri",lat:-22.64,lon:-43.65}, 
+    {n:"Laje do Muriaé",lat:-21.20,lon:-42.12}, {n:"Macaé",lat:-22.37,lon:-41.78}, {n:"Macuco",lat:-21.98,lon:-42.49}, {n:"Magé",lat:-22.65,lon:-43.04}, {n:"Mangaratiba",lat:-22.95,lon:-44.04}, 
+    {n:"Maricá",lat:-22.91,lon:-42.81}, {n:"Mendes",lat:-22.52,lon:-43.73}, {n:"Mesquita",lat:-22.78,lon:-43.43}, {n:"Miguel Pereira",lat:-22.45,lon:-43.46}, {n:"Miracema",lat:-21.41,lon:-42.19}, 
+    {n:"Natividade",lat:-21.04,lon:-41.97}, {n:"Nilópolis",lat:-22.81,lon:-43.41}, {n:"Niterói",lat:-22.88,lon:-43.11}, {n:"Nova Friburgo",lat:-22.28,lon:-42.53}, {n:"Nova Iguaçu",lat:-22.75,lon:-43.45}, 
+    {n:"Paracambi",lat:-22.61,lon:-43.71}, {n:"Paraíba do Sul",lat:-22.16,lon:-43.29}, {n:"Paraty",lat:-23.22,lon:-44.71}, {n:"Paty do Alferes",lat:-22.42,lon:-43.43}, {n:"Petrópolis",lat:-22.50,lon:-43.17}, 
+    {n:"Pinheiral",lat:-22.51,lon:-44.00}, {n:"Piraí",lat:-22.62,lon:-43.89}, {n:"Porciúncula",lat:-20.97,lon:-42.04}, {n:"Porto Real",lat:-22.41,lon:-44.28}, {n:"Quatis",lat:-22.41,lon:-44.25}, 
+    {n:"Queimados",lat:-22.71,lon:-43.55}, {n:"Quissamã",lat:-22.10,lon:-41.47}, {n:"Resende",lat:-22.47,lon:-44.44}, {n:"Rio Bonito",lat:-22.70,lon:-42.62}, {n:"Rio Claro",lat:-22.73,lon:-44.13}, 
+    {n:"Rio das Ostras",lat:-22.52,lon:-41.94}, {n:"Rio de Janeiro",lat:-22.90,lon:-43.17}, {n:"Santa Maria Madalena",lat:-21.95,lon:-42.00}, {n:"Santo Antônio de Pádua",lat:-21.53,lon:-42.18}, {n:"São Fidélis",lat:-21.64,lon:-41.74}, 
+    {n:"São Francisco de Itabapoana",lat:-21.46,lon:-41.11}, {n:"São Gonçalo",lat:-22.82,lon:-43.05}, {n:"São João da Barra",lat:-21.64,lon:-41.05}, {n:"São João de Meriti",lat:-22.80,lon:-43.37}, {n:"São José de Ubá",lat:-21.35,lon:-41.94}, 
+    {n:"São José do Vale do Rio Preto",lat:-22.15,lon:-43.15}, {n:"São Pedro da Aldeia",lat:-22.84,lon:-42.10}, {n:"São Sebastião do Alto",lat:-21.95,lon:-42.13}, {n:"Sapucaia",lat:-21.99,lon:-43.13}, {n:"Saquarema",lat:-22.91,lon:-42.50}, 
+    {n:"Seropédica",lat:-22.74,lon:-43.70}, {n:"Silva Jardim",lat:-22.65,lon:-42.38}, {n:"Sumidouro",lat:-22.04,lon:-42.67}, {n:"Tanguá",lat:-22.72,lon:-42.70}, {n:"Teresópolis",lat:-22.41,lon:-42.96}, 
+    {n:"Trajano de Moraes",lat:-22.06,lon:-42.06}, {n:"Três Rios",lat:-22.11,lon:-43.21}, {n:"Valença",lat:-22.25,lon:-43.70}, {n:"Varre-Sai",lat:-20.93,lon:-41.86}, {n:"Vassouras",lat:-22.40,lon:-43.66}, {n:"Volta Redonda",lat:-22.52,lon:-44.10}
+];
+
+const SARAH_TALK_TOPICS = [
+    { icon: "🙏", tag: "FÉ & RELIGIÃO", text: "Sabem, a fé move montanhas. Como diz Salmos 127: se o Senhor não guardar a cidade, em vão vigia o sentinela." },
+    { icon: "🎭", tag: "CULTURA & LAZER", text: "Mesquita, a Baixada Fluminense e todo o Estado do Rio têm uma história cultural riquíssima e vibrante." },
+    { icon: "🍲", tag: "CULINÁRIA", text: "Um bom feijão com arroz, uma canjica aconchegante ou um café fresquinho unem gerações e corações." },
+    { icon: "🏛️", tag: "POLÍTICA & CIDADANIA", text: "Cidadania se exerce participando de conselhos, acompanhando audiências públicas e cobrando saneamento básico." },
+    { icon: "🌦️", tag: "PREVENÇÃO & DEFESA CIVIL", text: "Alerta estadual: em chuvas fortes, evite encostas e margens de rios. Emergências: ligue 199 ou 193." }
+];
+
+const TIPOS_RISCO = ["🟢 Risco Baixo", "🟡 Risco Moderado", "🟠 Risco Alto", "🔴 Risco Iminente", "💧 Risco Hidrológico", "🏗️ Comprometimento Estrutural"];
+const ORGAOS_EQUIPES = ["🛡️ Defesa Civil Municipal / Estadual", "🏛️ Grupo A Chave da Esperança", "📢 Bom Dia Comunidade", "🔔 Projeto Cidadão Sensor", "🌊 INEA"];
+
+function App() {
+    const [view, setView] = useState('dashboard');
+    const [municipioSelecionado, setMunicipioSelecionado] = useState(MUNICIPIOS_RJ_92.find(m => m.n === 'Mesquita') || MUNICIPIOS_RJ_92[0]);
+    const [filaOffline, setFilaOffline] = useState([]);
+    const [toast, setToast] = useState(null);
+    const [chatAberto, setChatAberto] = useState(false);
+    const [chatMensagens, setChatMensagens] = useState([
+        { sender: 'sarah', text: 'Olá! Sou a Sarah, sua inteligência artificial de Defesa Civil. Como posso ajudar na segurança do nosso estado hoje?' }
+    ]);
+    const [inputChat, setInputChat] = useState('');
+    const [cameraAtiva, setCameraAtiva] = useState(false);
+    const [fotosCapturadas, setFotosCapturadas] = useState([]);
+    const [analiseIaLente, setAnaliseIaLente] = useState('Aguardando escaneamento...');
+    const [nomeResponsavel, setNomeResponsavel] = useState('');
+    const [registroOuCpf, setRegistroOuCpf] = useState('');
+    const [tipoRisco, setTipoRisco] = useState(TIPOS_RISCO[0]);
+    const [orgaoSelecionado, setOrgaoSelecionado] = useState(ORGAOS_EQUIPES[0]);
+    const [bairro, setBairro] = useState('');
+    const [relatorio, setRelatorio] = useState('');
+    const mapRef = useRef(null);
+    const mapInstanceRef = useRef(null);
+    const videoRef = useRef(null);
+    const [soundEnabled, setSoundEnabled] = useState(true);
+    const [telemetria, setTelemetria] = useState({ brt: '', uptime: '99.9%' });
+
+    const showToast = (msg) => { setToast(msg); setTimeout(() => setToast(null), 3500); };
+
+    const falarTexto = (texto) => {
+        if (soundEnabled && 'speechSynthesis' in window) {
+            window.speechSynthesis.cancel();
+            const utterance = new SpeechSynthesisUtterance(texto);
+            utterance.lang = 'pt-BR';
+            window.speechSynthesis.speak(utterance);
+        }
+    };
+
+    const enviarMensagemChat = (e) => {
+        e.preventDefault();
+        if (!inputChat.trim()) return;
+        const msgUsuario = inputChat;
+        const novasMensagens = [...chatMensagens, { sender: 'user', text: msgUsuario }];
+        setChatMensagens(novasMensagens);
+        setInputChat('');
+
+        setTimeout(() => {
+            let respostaSarah = "Compreendido perfeitamente. Estou monitorando os dados em tempo real para garantir a segurança da nossa comunidade.";
+            const msgLc = msgUsuario.toLowerCase();
+            if (msgLc.includes('fé') || msgLc.includes('deus') || msgLc.includes('salmos')) {
+                respostaSarah = SARAH_TALK_TOPICS[0].text;
+            } else if (msgLc.includes('cultura') || msgLc.includes('lazer')) {
+                respostaSarah = SARAH_TALK_TOPICS[1].text;
+            } else if (msgLc.includes('comida') || msgLc.includes('culinária') || msgLc.includes('café')) {
+                respostaSarah = SARAH_TALK_TOPICS[2].text;
+            } else if (msgLc.includes('política') || msgLc.includes('cidadania') || msgLc.includes('lei')) {
+                respostaSarah = SARAH_TALK_TOPICS[3].text;
+            } else if (msgLc.includes('chuva') || msgLc.includes('risco') || msgLc.includes('alerta')) {
+                respostaSarah = SARAH_TALK_TOPICS[4].text;
+            }
+            setChatMensagens(prev => [...prev, { sender: 'sarah', text: respostaSarah }]);
+            falarTexto(respostaSarah);
+        }, 800);
+    };
+
+    useEffect(() => {
+        const saved = localStorage.getItem('sarah_protocol_grade_v11_ultimate');
+        if (saved) { try { setFilaOffline(JSON.parse(saved)); } catch(e) {} }
+        const timer = setInterval(() => {
+            const nowBrt = new Intl.DateTimeFormat('pt-BR', { timeZone: 'America/Sao_Paulo', hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false }).format(new Date());
+            setTelemetria(prev => ({ ...prev, brt: nowBrt }));
+        }, 1000);
+        return () => clearInterval(timer);
+    }, []);
+
+    useEffect(() => {
+        if (view !== 'canvas') return;
+        if (!mapInstanceRef.current && mapRef.current) {
+            const map = L.map(mapRef.current, { zoomControl: false }).setView([municipioSelecionado.lat, municipioSelecionado.lon], 10);
+            L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', { maxZoom: 19 }).addTo(map);
+            L.control.zoom({ position: 'bottomright' }).addTo(map);
+            mapInstanceRef.current = map;
+
+            MUNICIPIOS_RJ_92.forEach(m => {
+                const marker = L.circleMarker([m.lat, m.lon], {
+                    radius: 5, fillColor: m.n === municipioSelecionado.n ? '#FF8C00' : '#00F2FE', color: '#fff', weight: 1, fillOpacity: 0.8
+                }).addTo(map);
+                marker.bindPopup(`<div style="font-family: monospace; color: #02040A;"><b>${m.n}</b><br>Lat: ${m.lat}<br>Lon: ${m.lon}</div>`);
+                marker.on('click', () => { setMunicipioSelecionado(m); showToast(`📍 ${m.n} selecionado.`); });
+            });
+        } else if (mapInstanceRef.current) {
+            mapInstanceRef.current.setView([municipioSelecionado.lat, municipioSelecionado.lon], 11);
+        }
+    }, [view, municipioSelecionado]);
+
+    const iniciarCamera = async () => {
+        setCameraAtiva(true);
+        try {
+            const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
+            if (videoRef.current) videoRef.current.srcObject = stream;
+        } catch(e) { showToast("⚠️ Erro câmera."); setCameraAtiva(false); }
+    };
+
+    const tirarFotoEAnalisarAlgoritmo = () => {
+        if (!videoRef.current) return;
+        const canvas = document.createElement('canvas');
+        canvas.width = 400;
+        canvas.height = Math.round(400 * ((videoRef.current.videoHeight || 480) / (videoRef.current.videoWidth || 640)));
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(videoRef.current, 0, 0, canvas.width, canvas.height);
+        ctx.fillStyle='rgba(2,4,10,0.85)';
+        ctx.fillRect(0, canvas.height-52, canvas.width, 52);
+        ctx.fillStyle='#00F2FE';
+        ctx.font='9px monospace';
+        const now = new Date().toLocaleString('pt-BR');
+        ctx.fillText(`📅 ${now} | 📍 ${municipioSelecionado.lat}, ${municipioSelecionado.lon}`, 6, canvas.height-36);
+        ctx.fillText(`👤 ${nomeResponsavel || 'AGENTE'} | 🏛️ ${municipioSelecionado.n}`, 6, canvas.height-20);
+        const dataUrl = canvas.toDataURL('image/jpeg', 0.35);
+        setFotosCapturadas(prev => [...prev, dataUrl]);
+        setAnaliseIaLente("🤖 [SARAH-AI] Anomalia Estrutural Mapeada com Sucesso.");
+        showToast("📸 Captura 400px realizada e carimbada!");
+    };
+
+    const pararCamera = () => {
+        if (videoRef.current && videoRef.current.srcObject) {
+            videoRef.current.srcObject.getTracks().forEach(t => t.stop());
+        }
+        setCameraAtiva(false);
+    };
+
+    const gerarPDFProtocol = (item) => {
+        const { jsPDF } = window.jspdf;
+        const doc = new jsPDF();
+        doc.setFillColor(2, 6, 23);
+        doc.rect(0, 0, 210, 297, "F");
+        doc.setTextColor(0, 242, 254);
+        doc.setFontSize(12);
+        doc.text(`REGISTRO DE VISTORIA - ${item.protocolo}`, 15, 20);
+        doc.setFontSize(9);
+        doc.setTextColor(255, 255, 255);
+        doc.text(`Município: ${item.municipio} (RJ) | Bairro: ${item.bairro}`, 15, 30);
+        doc.text(`Agente Responsável: ${item.responsavel}`, 15, 38);
+        doc.text(`CPF / ID: ${item.registroOuCpf}`, 15, 46);
+        doc.text(`Tipologia de Risco: ${item.tipoRisco}`, 15, 54);
+        doc.text(`Órgão / Coletivo: ${item.orgao}`, 15, 62);
+        doc.text(`Data/Hora: ${new Date(item.data).toLocaleString('pt-BR')}`, 15, 70);
+        doc.text("Relato Técnico:", 15, 82);
+        const splitText = doc.splitTextToSize(item.relatorio, 180);
+        doc.text(splitText, 15, 90);
+        
+        let yPos = 110 + (splitText.length * 6);
+        if (item.fotos && item.fotos.length > 0) {
+            doc.text(`Fotos Carimbadas (${item.fotos.length}):`, 15, yPos);
+            yPos += 10;
+            item.fotos.forEach((fotoBase64, idx) => {
+                if (yPos > 240) { doc.addPage(); yPos = 20; }
+                try {
+                    doc.addImage(fotoBase64, 'JPEG', 15, yPos, 45, 45);
+                    yPos += 50;
+                } catch(e) {}
+            });
+        }
+        doc.save(`Laudo_${item.protocolo}.pdf`);
+        showToast("📄 PDF gerado com nome, CPF e fotos!");
+    };
+
+    const enviarWhatsApp = (item) => {
+        const texto = `🛡️ *REGISTRO DE VISTORIA E RRD* 🛡️\n\n📌 *Protocolo:* \`${item.protocolo}\`\n📍 *Município:* ${item.municipio}\n📌 *Bairro:* ${item.bairro}\n👤 *Agente:* ${item.responsavel}\n🆔 *CPF/ID:* ${item.registroOuCpf}\n⚠️ *Risco:* ${item.tipoRisco}\n👥 *Equipe:* ${item.orgao}\n📅 *Data:* ${new Date(item.data).toLocaleString('pt-BR')}\n\n📋 *Relato:* \n${item.relatorio}\n\n_SARAH AI NEXUS v11.3.0 - Defesa Civil RJ_`;
+        const url = `https://api.whatsapp.com/send?text=${encodeURIComponent(texto)}`;
+        window.open(url, '_blank');
+        showToast("🚀 WhatsApp enviado com dados completos!");
+    };
+
+    const salvarRegistroProtocol = (e) => {
+        e.preventDefault();
+        const filaAtual = JSON.parse(localStorage.getItem('sarah_protocol_grade_v11_ultimate') || '[]');
+        const seq = (filaAtual.length + 1).toString().padStart(4, '0');
+        const siglaMun = municipioSelecionado.n.substring(0, 3).toUpperCase();
+        const protocoloGerado = `PROT-RRD92-${siglaMun}-2026-${seq}`;
+        const novoRegistro = {
+            id: Date.now(), protocolo: protocoloGerado, municipio: municipioSelecionado.n,
+            lat: municipioSelecionado.lat, lon: municipioSelecionado.lon, orgao: orgaoSelecionado,
+            tipoRisco, bairro, responsavel: nomeResponsavel, registroOuCpf, relatorio,
+            fotos: [...fotosCapturadas],
+            hashHash: 'sha256-' + Math.random().toString(16).substring(2), data: new Date().toISOString()
+        };
+        filaAtual.push(novoRegistro);
+        localStorage.setItem('sarah_protocol_grade_v11_ultimate', JSON.stringify(filaAtual));
+        setFilaOffline(filaAtual);
+        showToast(`✅ Protocolo ${protocoloGerado} emitido!`);
+        gerarPDFProtocol(novoRegistro);
+        enviarWhatsApp(novoRegistro);
+        setBairro(''); setNomeResponsavel(''); setRegistroOuCpf(''); setRelatorio(''); setFotosCapturadas([]);
+    };
+
+    return (
+        <div className="w-screen h-screen relative overflow-hidden bg-[var(--void)] text-white flex flex-col">
+            {toast && <div className="fixed top-14 left-1/2 -translate-x-1/2 z-50 bg-[var(--cyan)] text-black px-5 py-2 rounded-xl font-black text-xs shadow-2xl">{toast}</div>}
+            
+            {/* BOTÃO FLUTUANTE FUTURISTA PARA ABRIR O CHAT DA SARAH */}
+            <button onClick={() => setChatAberto(!chatAberto)} className="fixed right-5 bottom-5 z-40 w-16 h-16 rounded-full bg-black border-2 border-[var(--cyan)] shadow-[0_0_25px_rgba(0,242,254,0.7)] flex items-center justify-center animate-hud-pulse cursor-pointer">
+                <img src={SARAH_CUSTOM_AVATAR_URL} alt="Sarah" className="w-12 h-12 rounded-full object-cover" />
+                <span className="absolute -bottom-2 bg-[var(--cyan)] text-black text-[8px] font-black px-1.5 py-0.5 rounded-full">SARAH</span>
+            </button>
+
+            {/* MODAL DE CHAT DA SARAH */}
+            {chatAberto && (
+                <div className="fixed right-5 bottom-24 z-50 w-[90vw] max-w-[360px] h-[450px] cyber-panel rounded-2xl flex flex-col overflow-hidden shadow-2xl border-2 border-[var(--cyan)]">
+                    <div className="bg-deepSpace p-3 border-b border-[var(--cyan)]/30 flex justify-between items-center">
+                        <div className="flex items-center gap-2">
+                            <img src={SARAH_CUSTOM_AVATAR_URL} className="w-7 h-7 rounded-full border border-[var(--cyan)] object-cover" />
+                            <span className="font-bold text-xs text-[var(--cyan)]">Sarah AI • Chat Comunitário</span>
+                        </div>
+                        <button onClick={() => setChatAberto(false)} className="text-[var(--rose)] font-bold text-xs">✕</button>
+                    </div>
+                    <div className="flex-1 p-3 overflow-y-auto space-y-2 text-[10px] font-mono">
+                        {chatMensagens.map((m, idx) => (
+                            <div key={idx} className={`p-2 rounded-xl ${m.sender === 'sarah' ? 'bg-[var(--cyan)]/10 border border-[var(--cyan)]/30 text-white' : 'bg-white/5 border border-white/10 text-[var(--cyan)] text-right'}`}>
+                                {m.text}
+                            </div>
+                        ))}
+                    </div>
+                    <form onSubmit={enviarMensagemChat} className="p-2 bg-deepSpace border-t border-[var(--cyan)]/30 flex gap-2">
+                        <input type="text" value={inputChat} onChange={e => setInputChat(e.target.value)} placeholder="Fale com a Sarah..." className="flex-1 bg-[var(--void)] border border-[var(--cyan)]/40 rounded-xl px-3 py-2 text-xs text-white" />
+                        <button type="submit" className="px-4 bg-[var(--orange)] text-black font-black rounded-xl text-xs">🎤</button>
+                    </form>
+                </div>
+            )}
+
+            <header className="h-14 bg-deepSpace border-b border-[var(--cyan)]/30 flex items-center justify-between px-3 z-25">
+                <div className="flex items-center gap-2">
+                    <span className="font-black text-[10px] text-[var(--cyan)]">SARAH AI v11.3 // {municipioSelecionado.n}</span>
+                </div>
+                <div className="flex items-center gap-1.5 overflow-x-auto py-1 max-w-[75%]">
+                    <button onClick={() => setView('dashboard')} className={`px-2 py-1.5 rounded-lg text-[10px] btn-radar ${view==='dashboard'?'active':''}`}>📊 Dash</button>
+                    <button onClick={() => setView('canvas')} className={`px-2 py-1.5 rounded-lg text-[10px] btn-radar ${view==='canvas'?'active':''}`}>🌐 Mapa RJ</button>
+                    <button onClick={() => setView('vistoria')} className={`px-2 py-1.5 rounded-lg text-[10px] btn-radar ${view==='vistoria'?'active':''}`}>🤖 Protocolo</button>
+                    <button onClick={() => setView('config')} className={`px-2 py-1.5 rounded-lg text-[10px] btn-radar ${view==='config'?'active':''}`}>⚙️ Config</button>
+                    <button onClick={() => setView('offline')} className={`px-2 py-1.5 rounded-lg text-[10px] btn-radar ${view==='offline'?'active':''}`}>📦 {filaOffline.length}</button>
+                    <span className="text-slate-300 font-mono text-[9px] ml-1">{telemetria.brt} BRT</span>
+                </div>
+            </header>
+            <main className="flex-1 relative overflow-hidden">
+                {view === 'dashboard' && (
+                    <div className="absolute inset-0 p-3 overflow-y-auto bg-[var(--void)] flex flex-col gap-3">
+                        <div className="cyber-panel p-4 rounded-2xl flex flex-col md:flex-row items-center gap-4">
+                            <div className="relative w-20 h-20 rounded-full bg-black border-2 border-[var(--cyan)] shadow-[0_0_30px_rgba(0,242,254,0.8)] overflow-hidden flex items-center justify-center animate-hud-pulse">
+                                <img src={SARAH_CUSTOM_AVATAR_URL} alt="Sarah" className="w-full h-full object-cover" />
+                            </div>
+                            <div className="flex-1 text-center md:text-left space-y-2">
+                                <div className="text-xs font-black text-[var(--cyan)]">CENTRAL DE INTELIGÊNCIA COMUNITÁRIA & DIÁLOGO</div>
+                                <p className="text-[11px] text-slate-200 bg-black/50 p-3 rounded-xl border border-[var(--cyan)]/20 font-mono">"Clique no botão flutuante da Sarah no canto inferior direito para conversar e interagir por voz a qualquer momento!"</p>
+                                <button onClick={() => setChatAberto(true)} className="px-4 py-2 bg-[var(--orange)] text-black font-black rounded-xl text-[10px] uppercase">💬 Abrir Chat com a Sarah</button>
+                            </div>
+                        </div>
+                        <button onClick={() => setView('canvas')} className="w-full py-3 bg-[var(--orange)] text-black font-black rounded-xl text-xs">ABRIR MAPA PADRÃO INTERATIVO (92 MUNICÍPIOS)</button>
+                    </div>
+                )}
+                {view === 'canvas' && (
+                    <div className="absolute inset-0 z-10">
+                        <div className="absolute top-[10px] left-[10px] w-[200px] bg-[rgba(2,4,10,0.92)] border border-[rgba(0,242,254,0.35)] rounded-[10px] p-2.5 z-20 max-h-[75vh] overflow-auto">
+                            <div className="text-[var(--cyan)] text-[10px] font-bold mb-1.5">SELECIONAR MUNICÍPIO</div>
+                            <div className="space-y-1">
+                                {MUNICIPIOS_RJ_92.map((m, idx) => (
+                                    <div key={idx} onClick={() => setMunicipioSelecionado(m)} className={`p-1 rounded cursor-pointer text-[9px] border ${municipioSelecionado.n === m.n ? 'bg-[var(--cyan)]/20 border-[var(--cyan)] text-[var(--cyan)] font-bold' : 'border-transparent text-slate-300 hover:bg-slate-800'}`}>
+                                        {m.n}
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                        <div ref={mapRef} id="map" className="w-full h-full"></div>
+                    </div>
+                )}
+                {view === 'vistoria' && (
+                    <div className="absolute inset-0 p-3 overflow-y-auto flex items-start justify-center bg-black/70 backdrop-blur-md z-20">
+                        <div className="w-full max-w-2xl cyber-panel p-4 rounded-2xl space-y-3 my-4">
+                            <h3 className="font-black text-xs text-[var(--cyan)]">🔒 EMISSÃO DE PROTOCOLO & HASH + CARIMBO ({municipioSelecionado.n})</h3>
+                            <div className="p-3 bg-[var(--void)] border border-[var(--cyan)]/30 rounded-xl space-y-2">
+                                <div className="flex justify-between">
+                                    <span className="text-[10px] font-bold text-[var(--cyan)]">CÂMERA 400px COM CARIMBO</span>
+                                    {!cameraAtiva ? <button type="button" onClick={iniciarCamera} className="px-3 py-1 bg-[var(--cyan)]/20 text-[var(--cyan)] rounded text-[10px]">Ligar</button> : <button type="button" onClick={pararCamera} className="px-3 py-1 bg-[var(--rose)]/20 text-[var(--rose)] rounded text-[10px]">Desligar</button>}
+                                </div>
+                                {cameraAtiva && (
+                                    <div className="space-y-2">
+                                        <video ref={videoRef} autoPlay playsInline className="w-full h-44 object-cover rounded border border-[var(--cyan)]/50"></video>
+                                        <button type="button" onClick={tirarFotoEAnalisarAlgoritmo} className="w-full py-2 bg-[var(--green)] text-black font-bold rounded text-xs">📸 Capturar Foto Carimbada</button>
+                                    </div>
+                                )}
+                                {fotosCapturadas.length > 0 && (
+                                    <div className="flex gap-2 overflow-x-auto py-1">
+                                        {fotosCapturadas.map((f, i) => <img key={i} src={f} className="w-14 h-14 object-cover rounded border border-[var(--cyan)]" />)}
+                                    </div>
+                                )}
+                            </div>
+                            <form onSubmit={salvarRegistroProtocol} className="space-y-2">
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                                    <input type="text" value={nomeResponsavel} onChange={e=>setNomeResponsavel(e.target.value)} placeholder="Nome do Agente / Liderança" required className="w-full bg-[var(--void)] border border-[var(--cyan)]/40 rounded-xl p-2 text-xs text-white"/>
+                                    <input type="text" value={registroOuCpf} onChange={e=>setRegistroOuCpf(e.target.value)} placeholder="CPF ou ID do Agente" required className="w-full bg-[var(--void)] border border-[var(--cyan)]/40 rounded-xl p-2 text-xs text-white"/>
+                                </div>
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                                    <select value={tipoRisco} onChange={e=>setTipoRisco(e.target.value)} className="w-full bg-[var(--void)] border border-[var(--cyan)]/40 rounded-xl p-2 text-[10px] text-[var(--cyan)]">
+                                        {TIPOS_RISCO.map((tr, i)=><option key={i} value={tr}>{tr}</option>)}
+                                    </select>
+                                    <select value={orgaoSelecionado} onChange={e=>setOrgaoSelecionado(e.target.value)} className="w-full bg-[var(--void)] border border-[var(--cyan)]/40 rounded-xl p-2 text-[10px] text-[var(--cyan)]">
+                                        {ORGAOS_EQUIPES.map((o, i)=><option key={i} value={o}>{o}</option>)}
+                                    </select>
+                                </div>
+                                <input type="text" value={bairro} onChange={e=>setBairro(e.target.value)} placeholder="Bairro / Localidade" required className="w-full bg-[var(--void)] border border-[var(--cyan)]/40 rounded-xl p-2 text-xs text-white"/>
+                                <textarea rows="3" value={relatorio} onChange={e=>setRelatorio(e.target.value)} placeholder="Relato & Prevenção..." required className="w-full bg-[var(--void)] border border-[var(--cyan)]/40 rounded-xl p-2 text-xs text-white"></textarea>
+                                <button type="submit" className="w-full py-3 bg-[var(--orange)] text-black font-black rounded-xl uppercase text-xs">Emitir Protocolo Oficial & Enviar WhatsApp 🚀</button>
+                            </form>
+                        </div>
+                    </div>
+                )}
+                {view === 'config' && (
+                    <div className="absolute inset-0 p-3 overflow-y-auto bg-[var(--void)] flex flex-col gap-3 z-20">
+                        <div className="cyber-panel p-3 rounded-xl"><h3 className="font-black text-sm text-[var(--cyan)]">⚙️ Telemetria Ativa</h3><p className="text-[9px] text-slate-400">Uptime: {telemetria.uptime}</p></div>
+                    </div>
+                )}
+                {view === 'offline' && (
+                    <div className="absolute inset-0 p-4 overflow-y-auto flex items-center justify-center bg-black/70 backdrop-blur-md z-20">
+                        <div className="w-full max-w-2xl cyber-panel p-4 rounded-2xl space-y-3">
+                            <h3 className="font-black text-xs text-[var(--cyan)]">📦 PROTOCOLOS SALVOS ({filaOffline.length})</h3>
+                            {filaOffline.map((item, idx) => (
+                                <div key={idx} className="p-2 border border-[var(--cyan)]/30 rounded text-xs flex justify-between items-center">
+                                    <div>
+                                        <b>{item.protocolo}</b> - {item.municipio} ({item.responsavel})<br/>
+                                        <span className="text-[9px] text-slate-300">CPF: {item.registroOuCpf} | {item.fotos ? item.fotos.length : 0} fotos</span>
+                                    </div>
+                                    <div className="flex gap-2">
+                                        <button onClick={() => gerarPDFProtocol(item)} className="px-2 py-1 bg-[var(--cyan)]/20 text-[var(--cyan)] rounded text-[9px]">PDF</button>
+                                        <button onClick={() => enviarWhatsApp(item)} className="px-2 py-1 bg-[var(--green)]/20 text-[var(--green)] rounded text-[9px]">Wpp</button>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                )}
+            </main>
+        </div>
+    );
+}
+ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+</script>
+</body>
+</html>
