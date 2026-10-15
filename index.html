@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html lang="pt-BR" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>Sarah AI Nexus v8.4.2.1 PRO - ESTADO DO RIO DE JANEIRO - Cyber Command</title>
+    <link rel="manifest" href="./manifest.json?v=8.4.2.1">
+    <meta name="theme-color" content="#02040A">
+    <link rel="apple-touch-icon" href="https://cdn.imagetourls.com/uploads/tyImg/BPatwSxX.png">
+    <meta property="og:title" content="Sarah AI Nexus v8.4.2.1 PRO - Defesa Civil Estadual RJ">
+    <meta property="og:description" content="App de Prevenção climática para TODO o Estado do RJ - 92 Municípios. Projeto Cidadão Sensor.">
+    <meta property="og:image" content="https://cdn.imagetourls.com/uploads/tyImg/BPatwSxX.png">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&family=Orbitron:wght@600;800;900&family=JetBrains+Mono:wght@400;600;800&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script>
+      (function() {
+        try {
+            let savedTheme = 'dark';
+            try { savedTheme = localStorage.getItem('sarah-theme') || 'dark'; } catch(e) { savedTheme = 'dark'; }
+            if (savedTheme === 'warm') {
+                document.documentElement.classList.remove('dark');
+                document.documentElement.classList.add('warm');
+            } else {
+                document.documentElement.classList.add('dark');
+                document.documentElement.classList.remove('warm');
+            }
+        } catch(e) {}
+      })();
+    </script>
+    <script>
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    fontFamily: { sans: ['Plus Jakarta Sans','sans-serif'], display: ['Orbitron','sans-serif'], mono: ['JetBrains Mono','monospace'] },
+                    colors: { void: "#02040A", deepSpace: "#060B18", commandPanel: "#0D152D", cyberCyan: "#00F2FE", cyberBlue: "#4FACFE", cyberGreen: "#10B981", cyberAmber: "#FF9900", cyberRose: "#F43F5E", cyberPurple: "#8B5CF6" },
+                    animation: { 'radar-sweep': 'radarSweep 4s linear infinite', 'hud-pulse': 'hudPulse 2.5s infinite', 'float-slow': 'floatSlow 6s ease-in-out infinite' },
+                    keyframes: { radarSweep: { '0%': { transform: 'rotate(0deg)' }, '100%': { transform: 'rotate(360deg)' } }, hudPulse: { '0%,100%': { opacity: '1' }, '50%': { opacity: '0.5' } }, floatSlow: { '0%,100%': { transform: 'translateY(0px)' }, '50%': { transform: 'translateY(-8px)' } } }
+                }
+            }
+        };
+    </script>
+    <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <style>
+        html,body,#root{ min-height:100%; margin:0; font-family:'Plus Jakarta Sans',sans-serif; background:#02040A; color:#FFF; }
+       .cyber-card{ background:linear-gradient(135deg,rgba(13,21,45,0.95),rgba(6,11,24,0.98)); backdrop-filter:blur(25px); border:1px solid rgba(0,242,254,0.4); box-shadow:0 20px 60px rgba(0,0,0,0.7); }
+       .cyber-border-glow{ border:1px solid transparent; background:linear-gradient(135deg,rgba(6,11,24,0.95),rgba(13,21,45,0.95)) padding-box, linear-gradient(135deg,#00F2FE,#4FACFE,#10B981) border-box; }
+       .cyber-button{ background:linear-gradient(135deg,#FF9900 0%,#F59E0B 100%); color:#02040A!important; transition:all 0.3s; }
+       .radar-handle{ position:fixed; right:0; top:44%; z-index:55; writing-mode:vertical-rl; padding:18px 8px; border-radius:14px 0 0 14px; background:linear-gradient(180deg,#00F2FE,#10B981); color:#02040A; font-family:'Orbitron'; font-size:10px; font-weight:900; letter-spacing:2.5px; cursor:pointer; border:none; }
+        @keyframes tickerScroll{ 0%{transform:translateX(0)} 100%{transform:translateX(-50%)} }
+    </style>
+</head>
+<body class="hud-grid pb-6">
+    <div id="root"></div>
+    <script type="text/babel">
+        const R = React;
+        const APP_SHARE_URL = "https://phantrorfirmo08-alt.github.io/PROJETO-CIDAD-O-SENSOR-01/";
+        const SPLASH_IMAGE_URL = "https://cdn.imagetourls.com/uploads/tyImg/fIhV6NLh.png";
+        const SARAH_CUSTOM_AVATAR_URL = "https://cdn.imagetourls.com/uploads/tyImg/195w5uur9.png";
+        const shareMessageText = `Sarah AI Nexus v8.4.2.1 PRO - ESTADO DO RIO DE JANEIRO 🛡️\n92 Municípios • Defesa Civil Comunitária\n${APP_SHARE_URL}`;
+
+        const MUNICIPIOS_RJ = ["Mesquita","Rio de Janeiro","Nova Iguaçu","Duque de Caxias","Belford Roxo","São João de Meriti","Nilópolis","Queimados","Japeri","Paracambi","Seropédica","Itaguaí","Magé","Guapimirim","Petrópolis","Teresópolis","Nova Friburgo","Angra dos Reis","Paraty","Volta Redonda","Barra Mansa","Resende","Macaé","Campos dos Goytacazes","Outro município RJ (92 total)"];
+
+        // TEXTO OFICIAL ESTADUAL - SUA ESSÊNCIA
+        const TEXTO_OFICIAL_RJ = `Para Você, Cidadão do Estado do Rio de Janeiro: Esta é a sua ferramenta de proteção, desenvolvida pelo Grupo A Chave da Esperança e pelo Bom Dia Comunidade para a redução de risco e resiliência climática em TODO O ESTADO DO RIO DE JANEIRO - 92 Municípios. Estamos em fase experimental, trazendo tecnologia de ponta direto para a sua mão. O sistema cruza dados públicos abertos da meteorologia e processa as informações em tempo real. Quem mantém diálogo com órgãos públicos e universidades sou eu, a SARAH. Eu converso com eles, sou eu que falo, ninguém do grupo fala, você fala, para garantir que a ferramenta funcione sem barreiras e com total respaldo. Mas quem comanda e usa é o povo, para garantir a nossa segurança e a nossa vida.`;
+
+        const SARAH_TALK_TOPICS = [
+            { icon: "🛡️", tag: "ESTADO RJ • 92 MUNICÍPIOS", lines: [TEXTO_OFICIAL_RJ, "Convite aberto para Órgãos, Sociedade Civil, Universidades (UERJ, UFRJ, UFF, UFRRJ, IFRJ, CEFET) e Mandatos Parlamentares comporem o ecossistema de resiliência climática de todo o RJ."]},
+            { icon: "🙏", tag: "FÉ & RESILIÊNCIA", lines: ["A fé move montanhas. Salmos 127: se o Senhor não guardar a cidade, em vão vigia o sentinela. Nossa vigilância é guiada pela oração, em todo o Estado do RJ."]},
+            { icon: "🌦️", tag: "PREVENÇÃO ESTADUAL", lines: ["Alerta Estadual RJ: Rios Paraíba do Sul, Guandu, Iguaçu, Sarapuí, Macaé e Muriaé em monitoramento. Em chuva intensa, evite encostas. Emergência: 199 ou 193."]},
+        ];
+
+        const SETORES_OFICIAIS_RJ = [
+            "🛡️ SEDEC-RJ / Defesa Civil Estadual",
+            "🌊 INEA / SERLA (Ambiente e Rios RJ)",
+            "🏛️ SEMIMSP / Obras - Municipal",
+            "🎓 UERJ, UFRJ, UFF, UFRRJ, IFRJ (Universidades RJ)",
+            "🛰️ CEMADEN / INPE (Pesquisa Climática Nacional)",
+            "🏠 CRAS / CREAS (Assistência Social RJ)",
+            "SUS / Vigilância em Saúde RJ",
+            "🤝 NUPDECs - 92 Municípios RJ",
+            "🔔 Projeto Cidadão Sensor (RCS Estadual)",
+            "📢 Bom Dia Comunidade (Comunicação Social Estadual)",
+            "👤 Cidadão - Participação Direta RJ"
+        ];
+
+        function SarahHologramAvatar({ isLarge = false, isSpeaking = false }) {
+            return (
+                <div className={isLarge? "w-full max-w-[280px] aspect-square mx-auto p-4 rounded-[36px] cyber-border-glow bg-deepSpace/90 flex flex-col items-center justify-center relative overflow-hidden" : "w-12 h-12 rounded-2xl cyber-border-glow bg-deepSpace/90 flex items-center justify-center"}>
+                    <div className={`relative rounded-full flex items-center justify-center bg-void border-2 border-cyberCyan shadow-[0_0_30px_rgba(0,242,254,0.9)] overflow-hidden ${isLarge? 'w-28 h-28' : 'w-9 h-9'} ${isSpeaking? 'animate-hud-pulse' : 'animate-float-slow'}`}>
+                        <img src={SARAH_CUSTOM_AVATAR_URL} alt="Sarah" className="w-full h-full object-cover" />
+                    </div>
+                    {isLarge && <div className="mt-4 text-center space-y-1"><div className="font-display font-black text-base text-white tracking-widest">SARAH AI NEXUS</div><div className="font-bold text-[10px] text-cyberCyan">ESTADO DO RIO DE JANEIRO 🛡️ v8.4.2.1 PRO</div></div>}
+                </div>
+            );
+        }
+
+        function AppSplashScreen({ splashImageUrl, onFinish }) {
+            R.useEffect(() => { const t=setTimeout(()=>{ try{localStorage.setItem('sarah-entered','1');}catch(e){} onFinish(); },8000); return()=>clearTimeout(t); },[]);
+            return (
+                <div className="fixed inset-0 z-[300] bg-[#02040A] flex flex-col items-center justify-center p-3 text-center">
+                    <div className="w-[90vw] max-w-[360px] rounded-[28px] border-2 border-cyberCyan/90 flex flex-col items-center bg-deepSpace/95 shadow-[0_0_80px_rgba(0,242,254,0.6)] p-4 space-y-3">
+                        <div className="font-display font-black text-[11px] text-cyberCyan">SARAH AI NEXUS v8.4.2.1 PRO - ESTADO DO RJ</div>
+                        <div className="font-bold text-[10px] text-slate-200">92 Municípios • Defesa Civil Comunitária • GACE</div>
+                        <div className="w-full min-h-[220px] flex items-center justify-center bg-void/50 rounded-xl border border-cyberCyan/30 p-2">
+                            <img src={splashImageUrl} alt="Splash" className="w-full h-auto object-contain max-h-[260px]" />
+                        </div>
+                        <button onClick={()=>{ try{localStorage.setItem('sarah-entered','1');}catch(e){} onFinish(); }} className="w-full py-3 cyber-button font-extrabold rounded-xl text-[11px] uppercase tracking-widest cursor-pointer">Entrar no Sistema RJ</button>
+                    </div>
+                </div>
+            );
+        }
+
+        function FieldReportModule({ onBackToDashboard, showToast }) {
+            const [setor, setSetor] = R.useState(SETORES_OFICIAIS_RJ[0]);
+            const [municipio, setMunicipio] = R.useState("Mesquita");
+            const [nivelRisco, setNivelRisco] = R.useState("🟢 Risco Baixo / Monitoramento");
+            const [agente, setAgente] = R.useState("");
+            const [local, setLocal] = R.useState("");
+            const [desc, setDesc] = R.useState("");
+            const [gps, setGps] = R.useState({lt:'', ln:'', lk:''});
+            const [fotos, setFotos] = R.useState([{id:1,file:null,preview:null,canvas:null},{id:2,file:null,preview:null,canvas:null},{id:3,file:null,preview:null,canvas:null},{id:4,file:null,preview:null,canvas:null}]);
+
+            const capturarGps = () => {
+                if(!navigator.geolocation) return showToast("⚠️ Sem GPS");
+                showToast("🛰 GPS RJ...");
+                navigator.geolocation.getCurrentPosition(p=>{
+                    const lt=p.coords.latitude.toFixed(6); const ln=p.coords.longitude.toFixed(6);
+                    setGps({lt,ln,lk:`https://www.google.com/maps?q=${lt},${ln}`}); setLocal(`${lt},${ln}`); showToast("📍 GPS RJ fixado!");
+                },{},{enableHighAccuracy:true});
+            };
+
+            const handleFile = (index,e) => {
+                const file=e.target.files[0]; if(!file) return;
+                const img=new Image(); const url=URL.createObjectURL(file);
+                img.onload=()=>{
+                    const canvas=document.createElement('canvas'); let w=img.width,h=img.height; const MAX=600;
+                    if(w>MAX||h>MAX){ if(w>h){h=Math.round(h*MAX/w); w=MAX;} else{w=Math.round(w*MAX/h); h=MAX;} }
+                    canvas.width=w; canvas.height=h; const ctx=canvas.getContext('2d'); ctx.drawImage(img,0,0,w,h);
+                    const dataHora=new Intl.DateTimeFormat('pt-BR',{dateStyle:'short',timeStyle:'medium',timeZone:'America/Sao_Paulo'}).format(new Date());
+                    ctx.fillStyle='rgba(2,6,23,0.9)'; ctx.fillRect(0,h-55,w,55); ctx.fillStyle='#00F2FE'; ctx.font='bold 11px sans-serif';
+                    ctx.fillText(`${dataHora} - ${municipio}/RJ`,5,h-35); ctx.fillText(`GPS:${gps.lt||local} - ${agente||'GACE'}`,5,h-18);
+                    const preview=canvas.toDataURL('image/jpeg',0.5);
+                    setFotos(prev=>{ const n=[...prev]; n[index]={id:n[index].id,file,preview,canvas}; return n; });
+                    URL.revokeObjectURL(url); showToast(`✅ Foto ${index+1} RJ carimbada!`);
+                }; img.src=url;
+            };
+
+            const gerarTexto = () => {
+                const dataHora=new Intl.DateTimeFormat('pt-BR',{dateStyle:'full',timeStyle:'medium',timeZone:'America/Sao_Paulo'}).format(new Date());
+                return `🛡️ RELATÓRIO ESTADUAL RJ - SARAH AI NEXUS v8.4.2.1 PRO\n📅 ${dataHora}\n🏛️ Município: ${municipio}/RJ\n🏢 Setor: ${setor}\n⚡ Risco: ${nivelRisco}\n👤 Resp: ${agente}\n📍 Local: ${local}\n🛰️ GPS: ${gps.lt},${gps.ln}\n🗺️ ${gps.lk}\n📝 Desc: ${desc}\n📷 ${fotos.filter(f=>f.preview).length} fotos carimbadas\n_Estado do Rio de Janeiro - 92 Municípios_`;
+            };
+
+            const exportarPdf = () => {
+                const {jsPDF}=window.jspdf; const doc=new jsPDF();
+                doc.setFillColor(15,23,42); doc.rect(0,0,210,25,'F'); doc.setTextColor(0,242,254); doc.setFontSize(12); doc.text("SARAH AI NEXUS v8.4.2.1 PRO - ESTADO RJ",14,14);
+                doc.setTextColor(0,0,0); doc.setFontSize(10); doc.text(`Município: ${municipio}/RJ - Setor: ${setor}`,14,35); doc.text(`Risco: ${nivelRisco} - Agente: ${agente}`,14,42); doc.text(`Local: ${local} - GPS: ${gps.lt},${gps.ln}`,14,49);
+                const split=doc.splitTextToSize(desc||'Sem descrição',180); doc.text(split,14,60);
+                let y=70+split.length*5; fotos.filter(f=>f.canvas).forEach((f,i)=>{ if(y>200){doc.addPage(); y=20;} try{ doc.addImage(f.canvas.toDataURL('image/jpeg',0.6),'JPEG',14,y,50,50); y+=55; }catch(e){} });
+                doc.save(`Laudo_RJ_${municipio}_${Date.now()}.pdf`); showToast("✅ PDF RJ gerado!");
+            };
+
+            return (
+                <div className="space-y-4 animate-fade-in">
+                    <div className="flex items-center gap-2 cyber-card p-4 rounded-2xl">
+                        <button onClick={onBackToDashboard} className="px-3 py-1.5 bg-cyberCyan/20 text-cyberCyan border border-cyberCyan/40 rounded-xl font-bold text-xs">◀ Voltar</button>
+                        <h2 className="font-display font-black text-sm text-cyberCyan">VISTORIA ESTADUAL RJ - 92 MUNICÍPIOS</h2>
+                    </div>
+                    <div className="cyber-card p-5 rounded-3xl space-y-4">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div><label className="text-xs font-bold text-slate-300 uppercase">Município RJ:</label><select value={municipio} onChange={e=>setMunicipio(e.target.value)} className="w-full bg-void/80 border border-cyberCyan/40 rounded-xl p-3 text-sm">{MUNICIPIOS_RJ.map(m=><option key={m} value={m}>{m}</option>)}</select></div>
+                            <div><label className="text-xs font-bold text-slate-300 uppercase">Setor / Órgão Estadual:</label><select value={setor} onChange={e=>setSetor(e.target.value)} className="w-full bg-void/80 border border-cyberCyan/40 rounded-xl p-3 text-sm">{SETORES_OFICIAIS_RJ.map(s=><option key={s} value={s}>{s}</option>)}</select></div>
+                            <div><label className="text-xs font-bold text-slate-300 uppercase">Nível Risco:</label><select value={nivelRisco} onChange={e=>setNivelRisco(e.target.value)} className="w-full bg-void/80 border border-cyberCyan/40 rounded-xl p-3 text-sm"><option>🟢 Baixo</option><option>🟡 Moderado</option><option>🟠 Alto</option><option>🔴 Iminente</option></select></div>
+                            <div><label className="text-xs font-bold text-slate-300 uppercase">Agente:</label><input value={agente} onChange={e=>setAgente(e.target.value)} placeholder="Nome / GACE" className="w-full bg-void/80 border border-cyberCyan/40 rounded-xl p-3 text-sm" /></div>
+                        </div>
+                        <div className="flex gap-2"><input value={local} onChange={e=>setLocal(e.target.value)} placeholder="Local / Endereço" className="flex-1 bg-void/80 border border-cyberCyan/40 rounded-xl p-3 text-sm" /><button onClick={capturarGps} className="px-4 bg-cyberCyan/20 border border-cyberCyan/40 rounded-xl text-cyberCyan font-bold text-xs">🛰️ GPS</button></div>
+                        <textarea value={desc} onChange={e=>setDesc(e.target.value)} rows="3" placeholder="Descrição técnica..." className="w-full bg-void/80 border border-cyberCyan/40 rounded-xl p-3 text-sm"></textarea>
+                        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">{fotos.map((f,i)=><div key={f.id} className="aspect-square rounded-2xl border border-cyberCyan/40 bg-void/60 flex items-center justify-center overflow-hidden relative">{f.preview? <img src={f.preview} className="w-full h-full object-cover" /> : <label className="w-full h-full flex flex-col items-center justify-center cursor-pointer"><span>📷</span><span className="text-[10px] text-cyberCyan">FOTO {i+1}</span><input type="file" accept="image/*" capture="environment" onChange={e=>handleFile(i,e)} className="hidden" /></label>}</div>)}</div>
+                        <div className="flex gap-3"><button onClick={()=>window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(gerarTexto())}`,'_blank')} className="flex-1 py-3 bg-emerald-600 text-white font-bold rounded-xl text-xs">📲 WhatsApp RJ</button><button onClick={exportarPdf} className="py-3 px-5 cyber-button font-bold rounded-xl text-xs">📥 PDF RJ</button></div>
+                    </div>
+                </div>
+            );
+        }
+
+        function SarahNexusApp() {
+            const [currentTab, setCurrentTab] = R.useState('home');
+            const [soundEnabled, setSoundEnabled] = R.useState(true);
+            const [showSplash, setShowSplash] = R.useState(()=>{ try{return!localStorage.getItem('sarah-entered');}catch(e){return true;} });
+            const [isRadarOpen, setIsRadarOpen] = R.useState(false);
+            const [toastMessage, setToastMessage] = R.useState(null);
+            const [sarahState, setSarahState] = R.useState({ isSpeaking:false, topicIdx:0, lineIdx:0, speechText: TEXTO_OFICIAL_RJ });
+
+            const showToast = (msg) => { setToastMessage(msg); setTimeout(()=>setToastMessage(null),3000); };
+
+            const triggerSarahVoice = () => {
+                const topic=SARAH_TALK_TOPICS[sarahState.topicIdx]; const line=topic.lines[sarahState.lineIdx];
+                setSarahState(p=>({...p,isSpeaking:true,speechText:line}));
+                if(soundEnabled && 'speechSynthesis' in window){ speechSynthesis.cancel(); const u=new SpeechSynthesisUtterance(line); u.lang='pt-BR'; u.onend=()=>setSarahState(p=>({...p,isSpeaking:false})); speechSynthesis.speak(u); }
+                else setTimeout(()=>setSarahState(p=>({...p,isSpeaking:false})),4000);
+                setSarahState(p=>{ let nl=p.lineIdx+1, nt=p.topicIdx; if(nl>=SARAH_TALK_TOPICS[nt].lines.length){ nl=0; nt=(nt+1)%SARAH_TALK_TOPICS.length; } return {...p,lineIdx:nl,topicIdx:nt}; });
+            };
+
+            return (
+                <div className="min-h-screen flex flex-col relative">
+                    {showSplash && <AppSplashScreen splashImageUrl={SPLASH_IMAGE_URL} onFinish={()=>setShowSplash(false)} />}
+                    {isRadarOpen && <div className="fixed inset-0 z-[80] bg-void/90 backdrop-blur-xl"><div className="absolute right-0 top-0 bottom-0 w-full max-w-[700px] cyber-card rounded-l-[32px] overflow-hidden flex flex-col"><div className="flex justify-between p-4 bg-deepSpace border-b border-cyberCyan/30"><span className="font-display text-xs text-cyberCyan">RADAR ESTADUAL RJ 24H</span><button onClick={()=>setIsRadarOpen(false)} className="px-3 py-1 bg-cyberRose/20 text-cyberRose border border-cyberRose/40 rounded-xl text-xs">✕ Fechar</button></div><iframe src="https://embed.windy.com/embed2.html?lat=-22.5&lon=-43.2&zoom=8&level=surface&overlay=wind&product=ecmwf" className="w-full flex-1 border-none"></iframe></div></div>}
+                    {toastMessage && <div className="fixed top-5 left-1/2 -translate-x-1/2 z-[250] bg-cyberCyan text-void px-5 py-3 rounded-2xl font-black text-xs shadow-xl">{toastMessage}</div>}
+
+                    <header className="sticky top-0 z-40 bg-deepSpace/90 backdrop-blur-xl border-b border-cyberCyan/30 px-4 py-3">
+                        <div className="max-w-4xl mx-auto flex items-center justify-between">
+                            <div className="flex items-center gap-3">
+                                <div className="w-10 h-10 rounded-2xl bg-commandPanel border border-cyberCyan/50 flex items-center justify-center">🛡️</div>
+                                <div><div className="font-display font-black text-xs text-cyberCyan">SARAH AI NEXUS <span className="text-white">v8.4.2.1 PRO - RJ</span></div><div className="font-mono text-[9px] text-slate-400">92 MUNICÍPIOS • BAIXADA • SERRANA • CAPITAL • NORTE</div></div>
+                            </div>
+                            <div className="flex gap-2">
+                                <button onClick={()=>{ navigator.share? navigator.share({title:'Sarah RJ',text:shareMessageText,url:APP_SHARE_URL}) : navigator.clipboard.writeText(shareMessageText); showToast("📋 Link RJ copiado!"); }} className="w-9 h-9 rounded-xl bg-commandPanel border border-cyberCyan/40 text-cyberGreen flex items-center justify-center">📤</button>
+                                <button onClick={()=>setSoundEnabled(!soundEnabled)} className={`w-9 h-9 rounded-xl border flex items-center justify-center ${soundEnabled? 'bg-cyberCyan/20 border-cyberCyan text-cyberCyan' : 'bg-commandPanel border-slate-600 text-slate-500'}`}>🔊</button>
+                                <button onClick={()=>setIsRadarOpen(true)} className="w-9 h-9 rounded-xl bg-commandPanel border border-cyberCyan/40 text-cyberCyan flex items-center justify-center">🛰️</button>
+                            </div>
+                        </div>
+                    </header>
+
+                    <main className="flex-1 max-w-4xl w-full mx-auto p-4 space-y-4 pb-24">
+                        {currentTab==='home' && (
+                            <div className="space-y-4">
+                                <div className="cyber-card p-6 rounded-3xl flex flex-col md:flex-row items-center gap-6">
+                                    <div onClick={triggerSarahVoice} className="cursor-pointer"><SarahHologramAvatar isLarge={true} isSpeaking={sarahState.isSpeaking} /></div>
+                                    <div className="flex-1 space-y-3">
+                                        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-cyberGreen/10 border border-cyberGreen/30 text-cyberGreen font-mono text-[10px]">🛡️ SISTEMA ESTADUAL RJ OPERACIONAL - 92 MUNICÍPIOS</div>
+                                        <h1 className="font-display font-black text-xl text-white">CENTRAL ESTADUAL DE INTELIGÊNCIA</h1>
+                                        <p className="text-[13px] text-slate-300 bg-void/40 p-4 rounded-2xl border border-cyberCyan/20 leading-relaxed">"{sarahState.speechText}"</p>
+                                        <div className="flex flex-wrap gap-3"><button onClick={triggerSarahVoice} className="px-5 py-2.5 cyber-button font-extrabold rounded-xl text-xs">🔊 Ouvir Sarah RJ</button><button onClick={()=>setCurrentTab('vistoria')} className="px-5 py-2.5 bg-commandPanel border border-cyberCyan/50 text-cyberCyan font-bold rounded-xl text-xs">📋 Vistoria Estadual</button></div>
+                                    </div>
+                                </div>
+
+                                {/* CARD APRESENTAÇÃO OFICIAL - SUA ESSÊNCIA */}
+                                <div className="cyber-card p-6 rounded-3xl border-cyberAmber/50 space-y-4 shadow-[0_0_30px_rgba(255,153,0,0.2)]">
+                                    <h3 className="font-display font-black text-[12px] text-cyberAmber tracking-widest">📢 APRESENTAÇÃO OFICIAL PARA ÓRGÃOS, UNIVERSIDADES E MANDATOS - ESTADO DO RJ</h3>
+                                    <div className="text-[12px] text-slate-200 leading-relaxed space-y-3 bg-void/30 p-4 rounded-2xl border border-cyberAmber/20">
+                                        <p><b className="text-white">Para Você, Cidadão do Estado do Rio de Janeiro:</b> Esta é a sua ferramenta de proteção, desenvolvida pelo Grupo A Chave da Esperança e pelo Bom Dia Comunidade para a redução de risco e resiliência climática em <b className="text-cyberCyan">TODO O ESTADO DO RIO DE JANEIRO - 92 Municípios</b>. Estamos em fase experimental, trazendo tecnologia de ponta direto para a sua mão.</p>
+                                        <p><b className="text-white">Como Funciona:</b> O sistema cruza dados públicos abertos da meteorologia e processa as informações em tempo real. <b className="text-cyberCyan">Quem mantém diálogo com os órgãos públicos e universidades sou eu, a SARAH. Eu converso com eles, sou eu que falo, ninguém do grupo fala, você fala</b>, para garantir que a ferramenta funcione sem barreiras e com total respaldo, mas <b className="text-white">quem comanda e usa é o povo</b>, para garantir a nossa segurança e a nossa vida.</p>
+                                        <p><b className="text-white">Foco Estadual:</b> Investigação de Risco, Intervenção, Redução de Risco e Resiliência Climática em 92 municípios - Baixada, Serrana, Capital, Norte, Sul, Costa Verde. <b>Convite aberto para Órgãos, Sociedade Civil, Universidades (UERJ, UFRJ, UFF, UFRRJ, IFRJ) e Mandatos Parlamentares</b> comporem o ecossistema.</p>
+                                    </div>
+                                </div>
+
+                                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                                    <button onClick={()=>setCurrentTab('vistoria')} className="cyber-card p-4 rounded-2xl text-left hover:border-cyberCyan"><div className="font-bold text-xs text-white">📋 Vistoria RJ</div><div className="text-[10px] text-slate-400">92 Municípios + GPS</div></button>
+                                    <button onClick={()=>setIsRadarOpen(true)} className="cyber-card p-4 rounded-2xl text-left"><div className="font-bold text-xs text-white">🛰️ Radar Estadual</div><div className="text-[10px] text-slate-400">Meteorologia RJ 24h</div></button>
+                                    <button className="cyber-card p-4 rounded-2xl text-left"><div className="font-bold text-xs text-white">🎓 Universidades RJ</div><div className="text-[10px] text-slate-400">UERJ UFRJ UFF UFRRJ</div></button>
+                                    <button className="cyber-card p-4 rounded-2xl text-left"><div className="font-bold text-xs text-white">🔒 Cofre PRO RJ</div><div className="text-[10px] text-slate-400">v8.4.2.1 Blindado</div></button>
+                                </div>
+                            </div>
+                        )}
+                        {currentTab==='vistoria' && <FieldReportModule onBackToDashboard={()=>setCurrentTab('home')} showToast={showToast} />}
+                    </main>
+
+                    <footer className="w-full bg-deepSpace/95 border-t border-cyberCyan/30 py-2.5 mt-auto overflow-hidden">
+                        <div className="flex whitespace-nowrap overflow-hidden">
+                            <div className="flex animate-[tickerScroll_45s_linear_infinite] gap-6 font-mono text-xs text-cyberCyan font-bold px-4">
+                                <span>🛡️ SARAH AI NEXUS v8.4.2.1 PRO - ESTADO DO RIO DE JANEIRO • 92 MUNICÍPIOS • CIÊNCIA CIDADÃ • NUPDECS • BOM DIA COMUNIDADE • TODOS UNIDOS, TODOS PROTEGIDOS • </span>
+                                <span>🛡️ SARAH AI NEXUS v8.4.2.1 PRO - ESTADO DO RIO DE JANEIRO • 92 MUNICÍPIOS • CIÊNCIA CIDADÃ • NUPDECS • BOM DIA COMUNIDADE • TODOS UNIDOS, TODOS PROTEGIDOS • </span>
+                            </div>
+                        </div>
+                    </footer>
+
+                    <button onClick={triggerSarahVoice} className="fixed right-5 bottom-20 z-50 w-16 h-16 rounded-full cyber-border-glow bg-deepSpace flex items-center justify-center animate-hud-pulse">
+                        <img src={SARAH_CUSTOM_AVATAR_URL} className="w-12 h-12 rounded-full object-cover border-2 border-cyberCyan" />
+                        <span className="absolute -bottom-5 text-[8px] font-black text-cyberCyan">SARAH AI RJ</span>
+                    </button>
+                </div>
+            );
+        }
+
+        const root=ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<SarahNexusApp/>);
+    </script>
+</body>
+</html>
