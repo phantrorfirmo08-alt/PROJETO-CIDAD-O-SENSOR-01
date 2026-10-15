@@ -1,0 +1,987 @@
+<!DOCTYPE html>
+<html lang="pt-BR" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>CHAVE CLIMÁTICA • CPARC & SARAH AI</title>
+
+    <link rel="manifest" href="./manifest.json?v=13.0.0">
+    <meta name="theme-color" content="#02040A">
+    <link rel="apple-touch-icon" href="https://cdn.imagetourls.com/uploads/tyImg/BPatwSxX.png">
+    <meta property="og:title" content="CHAVE CLIMÁTICA • Central Pública e Automatizada de Resiliência Comunitária">
+    <meta property="og:description" content="Monitoramento Climático Integrado, Bacias e Encostas • Grupo A Chave da Esperança.">
+    <meta property="og:image" content="https://cdn.imagetourls.com/uploads/tyImg/BPatwSxX.png">
+    <meta property="og:type" content="website">
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Orbitron:wght@600;800;900&family=JetBrains+Mono:wght@400;600;800&display=swap" rel="stylesheet">
+
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
+    <script>
+      (function() {
+        try {
+            const savedTheme = localStorage.getItem('sarah-theme') || 'dark';
+            if (savedTheme === 'warm') {
+                document.documentElement.classList.remove('dark');
+                document.documentElement.classList.add('warm');
+            } else {
+                document.documentElement.classList.add('dark');
+                document.documentElement.classList.remove('warm');
+            }
+        } catch(e) {}
+      })();
+    </script>
+
+    <script>
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Plus Jakarta Sans', 'system-ui', 'sans-serif'],
+                        display: ['Orbitron', 'sans-serif'],
+                        mono: ['JetBrains Mono', 'monospace'],
+                    },
+                    colors: {
+                        void: "#02040A",
+                        deepSpace: "#060B18",
+                        commandPanel: "#0D152D",
+                        cyberCyan: "#00F2FE",
+                        cyberBlue: "#4FACFE",
+                        cyberGreen: "#10B981",
+                        cyberAmber: "#FF9900",
+                        cyberRose: "#F43F5E",
+                        cyberPurple: "#8B5CF6",
+                        warmBg: "#F4F3EF",
+                        warmText: "#111827",
+                        warmCard: "#FFFFFF",
+                        warmBorder: "#D1D5DB"
+                    },
+                    animation: {
+                        'hud-pulse': 'hudPulse 2.5s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+                        'float-slow': 'floatSlow 6s ease-in-out infinite',
+                        'text-sway': 'textSway 3s ease-in-out infinite',
+                        'maluco-glow': 'malucoGlow 1.8s ease-in-out infinite alternate'
+                    },
+                    keyframes: {
+                        hudPulse: {
+                            '0%, 100%': { opacity: '1', transform: 'scale(1)' },
+                            '50%': { opacity: '0.4', transform: 'scale(1.03)' }
+                        },
+                        floatSlow: {
+                            '0%, 100%': { transform: 'translateY(0px)' },
+                            '50%': { transform: 'translateY(-8px)' }
+                        },
+                        textSway: {
+                            '0%, 100%': { transform: 'translateY(0px) scale(1)' },
+                            '50%': { transform: 'translateY(-3px) scale(1.02)' }
+                        },
+                        malucoGlow: {
+                            '0%': { textShadow: '0 0 5px #00F2FE, 0 0 10px #00F2FE, 0 0 20px #00F2FE, 0 0 35px #10B981', transform: 'scale(1)' },
+                            '100%': { textShadow: '0 0 10px #FFFFFF, 0 0 20px #00F2FE, 0 0 30px #00F2FE, 0 0 55px #10B981', transform: 'scale(1.03)' }
+                        }
+                    }
+                }
+            }
+        };
+    </script>
+    <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <style>
+        @keyframes tickerScroll {
+          0% { transform: translateX(0); }
+          100% { transform: translateX(-50%); }
+        }
+
+        html, body, #root {
+            min-height: 100%;
+            margin: 0;
+            font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
+            touch-action: pan-x pan-y;
+            -webkit-text-size-adjust: 100%;
+            overscroll-behavior-y: none;
+            background-color: #02040A;
+            color: #FFFFFF;
+            -webkit-user-select: none;
+            user-select: none;
+        }
+        body {
+            overflow-x: hidden;
+            background-image: 
+                radial-gradient(circle at 50% 0%, rgba(0, 242, 254, 0.08) 0%, transparent 60%),
+                radial-gradient(circle at 10% 90%, rgba(16, 185, 129, 0.05) 0%, transparent 50%);
+            transition: background-color 0.4s ease, color 0.4s ease;
+        }
+
+        .cyber-card {
+            background: linear-gradient(135deg, rgba(13, 21, 45, 0.95) 0%, rgba(6, 11, 24, 0.98) 100%);
+            backdrop-filter: blur(25px);
+            -webkit-backdrop-filter: blur(25px);
+            border: 1px solid rgba(0, 242, 254, 0.3);
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+        }
+        .cyber-border-glow {
+            position: relative;
+            border: 1px solid transparent;
+            background: 
+                linear-gradient(135deg, rgba(6,11,24,0.95), rgba(13,21,45,0.95)) padding-box,
+                linear-gradient(135deg, #00F2FE, #4FACFE, #10B981) border-box;
+        }
+        .cyber-button {
+            background: linear-gradient(135deg, #FF9900 0%, #F59E0B 100%);
+            background-size: 200% auto;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
+            color: #02040A !important;
+        }
+        .cyber-button:hover {
+            background-position: right center;
+            box-shadow: 0 0 25px rgba(255, 153, 0, 0.6);
+            transform: translateY(-2px);
+        }
+        .cyber-button:active { transform: scale(0.97); }
+
+        html.warm body {
+            background-color: #F4F3EF !important;
+            color: #111827 !important;
+            background-image: none !important;
+        }
+        html.warm .cyber-card {
+            background: rgba(255, 255, 255, 0.95) !important;
+            color: #111827 !important;
+            border: 1px solid #D1D5DB !important;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05) !important;
+        }
+        html.warm input, html.warm select, html.warm textarea {
+            background-color: #F9FAFB !important;
+            color: #111827 !important;
+            border-color: #D1D5DB !important;
+        }
+
+        .hud-grid {
+            background-image: linear-gradient(rgba(0, 242, 254, 0.03) 1px, transparent 1px),
+                              linear-gradient(90deg, rgba(0, 242, 254, 0.03) 1px, transparent 1px);
+            background-size: 20px 20px;
+        }
+
+        .radar-handle {
+            position: fixed;
+            right: 0;
+            top: 44%;
+            z-index: 55;
+            writing-mode: vertical-rl;
+            padding: 18px 8px;
+            border-radius: 14px 0 0 14px;
+            background: linear-gradient(180deg, #00F2FE, #10B981);
+            color: #02040A;
+            font-family: 'Orbitron', sans-serif;
+            font-size: 10px;
+            font-weight: 900;
+            letter-spacing: 2.5px;
+            cursor: pointer;
+            border: none;
+            box-shadow: -5px 0 25px rgba(0, 242, 254, 0.5);
+            transition: transform 0.25s ease;
+        }
+        .radar-handle:hover { transform: translateX(-6px); }
+
+        ::-webkit-scrollbar { width: 5px; height: 5px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: rgba(0,242,254,0.4); border-radius: 9999px; }
+        ::-webkit-scrollbar-thumb:hover { background: rgba(0,242,254,0.7); }
+    </style>
+</head>
+<body class="selection:bg-cyan-500 selection:text-void hud-grid pb-6">
+    <div id="root"></div>
+    <script type="text/babel">
+        const R = React;
+        const { useState, useRef, useEffect, useMemo } = React;
+        document.addEventListener('gesturestart', function(e) { e.preventDefault(); });
+
+        let lastTouchEnd = 0;
+        document.addEventListener('touchend', function(e) {
+            const now = (new Date()).getTime();
+            if (now - lastTouchEnd <= 300) { e.preventDefault(); }
+            lastTouchEnd = now;
+        }, { passive: false });
+
+        const CLOUDFLARE_WORKER_URL = "https://sarah-envelope.phantrorfirmo08.workers.dev/";
+        const APP_SHARE_URL = "https://phantrorfirmo08-alt.github.io/PROJETO-CIDAD-O-SENSOR-01/";
+        
+        const MAIN_ICON_URL = "https://cdn.imagetourls.com/uploads/tyImg/BPatwSxX.png";
+        const SPLASH_IMAGE_URL = "https://cdn.imagetourls.com/uploads/tyImg/fIhV6NLh.png";
+        const SARAH_CUSTOM_AVATAR_URL = "https://cdn.imagetourls.com/uploads/tyImg/195w5uur9.png";
+
+        const shareMessageText = `CHAVE CLIMÁTICA • CPARC\nCentral Pública e Automatizada de Resiliência Comunitária\nSARAH AI • Grupo A Chave da Esperança • Rocha Sobrinho / Mesquita - 🛡️\n\nInstale o app oficial:\n${APP_SHARE_URL}`;
+
+        const getBrasiliaGreeting = () => {
+            const hour = parseInt(
+                new Intl.DateTimeFormat("pt-BR", { timeZone: "America/Sao_Paulo", hour: "numeric", hour12: false }).format(new Date()),
+                10
+            );
+            if (hour >= 0 && hour < 5) return "Boa madrugada";
+            if (hour >= 5 && hour < 12) return "Bom dia";
+            if (hour >= 12 && hour < 18) return "Boa tarde";
+            return "Boa noite";
+        };
+
+        function HomeCommandIcon({ className = "w-5 h-5" }) {
+            return (
+                <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/>
+                </svg>
+            );
+        }
+
+        function RadarScanIcon({ className = "w-5 h-5" }) {
+            return (
+                <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <circle cx="12" cy="12" r="10"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/><path d="M2 12h20"/>
+                </svg>
+            );
+        }
+
+        function FieldReportIcon({ className = "w-5 h-5" }) {
+            return (
+                <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/>
+                </svg>
+            );
+        }
+
+        function StreamVideoIcon({ className = "w-5 h-5" }) {
+            return (
+                <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2" ry="2"/>
+                </svg>
+            );
+        }
+
+        function AdminVaultIcon({ className = "w-5 h-5" }) {
+            return (
+                <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+                </svg>
+            );
+        }
+
+        function IconeCompartilharTopo({ showToast, openShareFromApp }) {
+            return (
+                <button
+                    onClick={openShareFromApp}
+                    className="w-9 h-9 rounded-xl bg-commandPanel border border-cyberCyan/40 hover:border-cyberCyan flex items-center justify-center transition-all cursor-pointer shadow-md"
+                    title="Compartilhar Sistema com Ícone"
+                >
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#10B981" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="M8.59 13.51l6.83 3.98M15.41 6.51l-6.82 3.98"/>
+                    </svg>
+                </button>
+            );
+        }
+
+        function IconeSomToggle({ soundEnabled, setSoundEnabled }) {
+            return (
+                <button onClick={() => setSoundEnabled(!soundEnabled)} className={`w-9 h-9 rounded-xl border flex items-center justify-center cursor-pointer transition shadow-md ${soundEnabled ? 'bg-cyberCyan/20 border-cyberCyan text-cyberCyan shadow-[0_0_12px_rgba(0,242,254,0.5)]' : 'bg-commandPanel border-cyberCyan/30 text-slate-500'}`} title={soundEnabled ? "Áudio Ativado" : "Mudo"}>
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
+                        {soundEnabled && <path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"></path>}
+                    </svg>
+                </button>
+            );
+        }
+
+        function IconeTemaToggle({ theme, toggleTheme }) {
+            return (
+                <button onClick={toggleTheme} className="w-9 h-9 rounded-xl border border-cyberCyan/40 bg-commandPanel text-cyberCyan flex items-center justify-center cursor-pointer shadow-md hover:border-cyberCyan transition" title="Alternar Tema (Cyber / Clean)">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <circle cx="12" cy="12" r="4"/><path d="M12 2v2m0 16v2M4.93 4.93l1.41 1.41m11.32 11.32l1.41 1.41M2 12h2m16 0h2M6.34 17.66l-1.41 1.41m12.02-12.02l-1.41 1.41"/>
+                    </svg>
+                </button>
+            );
+        }
+
+        function IconeInstalarApp({ handleInstallApp, isInstallable }) {
+            return (
+                <button onClick={handleInstallApp} className={`w-9 h-9 rounded-xl border flex items-center justify-center cursor-pointer shadow-md transition ${isInstallable ? 'bg-cyberGreen/20 border-cyberGreen text-cyberGreen animate-pulse shadow-[0_0_15px_#10B981]' : 'border-cyberCyan/40 bg-commandPanel text-cyberCyan hover:border-cyberCyan'}`} title="Instalar Aplicativo">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/>
+                    </svg>
+                </button>
+            );
+        }
+
+        function SarahHologramAvatar({ isLarge = false, isSpeaking = false }) {
+            const containerSizeClass = isLarge
+                ? "w-full max-w-[280px] aspect-square mx-auto p-4 rounded-[36px] cyber-border-glow shadow-[0_0_100px_rgba(0,242,254,0.7)] flex flex-col items-center justify-center relative overflow-hidden bg-deepSpace/90"
+                : "w-12 h-12 rounded-2xl p-1.5 cyber-border-glow shrink-0 flex items-center justify-center relative overflow-hidden shadow-[0_0_25px_rgba(0,242,254,0.6)] bg-deepSpace/90";
+
+            return (
+                <div className={containerSizeClass}>
+                    <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                        <div className={`absolute rounded-full border-2 border-cyberCyan bg-cyberCyan/20 animate-ping ${isLarge ? 'w-56 h-56' : 'w-16 h-16'}`} style={{ animationDuration: '2.5s' }}></div>
+                        <div className={`absolute rounded-full border border-cyberCyan/60 bg-cyberCyan/15 animate-pulse ${isLarge ? 'w-72 h-72' : 'w-24 h-24'}`} style={{ animationDuration: '3.5s' }}></div>
+                    </div>
+                    <div
+                        className={`relative rounded-full flex items-center justify-center bg-void border-2 border-cyberCyan shadow-[0_0_50px_rgba(0,242,254,0.9)] transition-all duration-300 ease-out z-10 overflow-hidden ${ isLarge ? 'w-28 h-28' : 'w-9 h-9' } ${isSpeaking ? 'animate-hud-pulse' : 'animate-float-slow'}`}
+                    >
+                        <div className="absolute inset-0 rounded-full bg-gradient-to-tr from-cyberCyan/40 via-blue-500/30 to-emerald-500/30 animate-spin" style={{ animationDuration: '8s' }}></div>
+                        <img 
+                            src={SARAH_CUSTOM_AVATAR_URL} 
+                            alt="SARAH AI • v13.0" 
+                            className="w-full h-full object-cover relative z-10 rounded-full" 
+                        />
+                    </div>
+                    {isLarge && (
+                        <div className="mt-3 text-center font-sans z-10 space-y-1">
+                            <div className="inline-flex items-center gap-1.5 px-3 py-0.5 rounded-full bg-cyberCyan/20 border border-cyberCyan/60 font-mono text-[9px] text-cyberCyan tracking-widest shadow-[0_0_15px_rgba(0,242,254,0.5)]">
+                                <span className="w-2 h-2 rounded-full bg-cyberCyan animate-ping"></span>
+                                SARAH AI • v13.0 • ROCHA SOBRINHO • RJ
+                            </div>
+                            <div className="font-display font-black text-2xl text-white tracking-[0.2em] animate-maluco-glow">
+                                CPARC
+                            </div>
+                            <div className="font-bold text-[9px] text-cyberCyan tracking-tight uppercase" style={{textShadow:'0 0 10px rgba(0,242,254,0.5)'}}>
+                                CHAVE CLIMÁTICA • CPARC v13.0
+                            </div>
+                        </div>
+                    )}
+                </div>
+            );
+        }
+
+        function AppSplashScreen({ splashImageUrl, onFinish }) {
+            return (
+                <div className="fixed inset-0 z-[300] bg-[#02040A] flex flex-col items-center justify-center p-3 text-center animate-fade-in overflow-y-auto">
+                    <div className="absolute inset-0 opacity-20 hud-grid pointer-events-none"></div>
+                    
+                    <div className="w-[90vw] max-w-[340px] rounded-[28px] border-2 border-cyberCyan/90 flex flex-col items-center justify-center bg-deepSpace/95 shadow-[0_0_80px_rgba(0,242,254,0.6)] my-auto overflow-hidden relative p-3 space-y-2">
+                        <div className="font-display font-black text-lg text-white tracking-[0.3em] uppercase text-center px-1 animate-maluco-glow">
+                            CHAVE CLIMÁTICA v13.0
+                        </div>
+                        
+                        <div className="font-sans font-bold text-[10px] text-slate-200 tracking-wider text-center px-1">
+                            Central Pública e Automatizada de Resiliência Comunitária (CPARC) • Grupo A Chave da Esperança
+                        </div>
+
+                        <div className="w-full h-auto min-h-[200px] max-h-[250px] flex items-center justify-center overflow-hidden my-1 bg-void/50 rounded-xl border border-cyberCyan/30 p-1.5">
+                            <img 
+                                src={splashImageUrl} 
+                                alt="Logo Splash Completa" 
+                                className="w-full h-auto object-contain rounded-lg max-h-[230px]" 
+                                onError={(e) => { e.target.style.display = 'none'; }} 
+                            />
+                        </div>
+
+                        <div className="w-full space-y-0.5 pt-1 border-t border-cyberCyan/30 text-center">
+                            <div className="font-display font-bold text-[10px] text-white tracking-widest uppercase">
+                                TODAS AS BASES & SERRAS DO RJ
+                            </div>
+                            <div className="font-mono text-[8px] font-bold text-cyberCyan tracking-[0.2em] uppercase" style={{textShadow:'0 0 8px rgba(0,242,254,0.8)'}}>
+                                SEBINHO • ROCHA SOBRINHO
+                            </div>
+                        </div>
+
+                        <button 
+                            type="button"
+                            onClick={onFinish}
+                            className="w-full py-3 cyber-button font-extrabold rounded-xl text-[11px] uppercase tracking-widest cursor-pointer shadow-[0_0_25px_rgba(255,153,0,0.6)] transition hover:scale-105 flex items-center justify-center gap-2 mt-1"
+                        >
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><polyline points="10 17 15 12 10 7"/><line x1="15" y1="12" x2="3" y2="12"/></svg>
+                            <span>Acessar CPARC</span>
+                        </button>
+                    </div>
+                </div>
+            );
+        }
+
+        function ModuloElNinoModule({ onGoToDashboard }) {
+            return (
+                <div className="space-y-4 max-w-2xl mx-auto">
+                    <div className="cyber-card p-6 sm:p-8 rounded-[36px] shadow-2xl space-y-6 border border-cyberCyan/40">
+                        <div className="flex items-center justify-between border-b border-cyberCyan/25 pb-4">
+                            <div className="space-y-1">
+                                <h2 className="font-display text-base font-black text-white tracking-widest flex items-center gap-2">
+                                    <span className="text-cyberCyan">🌪️</span> MÓDULO 1: EL NIÑO
+                                </h2>
+                                <p className="text-[10px] font-mono text-cyberCyan font-bold">CHAVE CLIMÁTICA • CPARC v13.0 & SARAH AI</p>
+                            </div>
+                            <button onClick={onGoToDashboard} className="px-4 py-2 cyber-button rounded-xl text-[11px] font-black cursor-pointer">Painel</button>
+                        </div>
+
+                        <div className="space-y-4 text-xs sm:text-sm text-slate-200 leading-relaxed">
+                            <p>
+                                O <strong className="text-cyberCyan">El Niño</strong> é um fenômeno climático natural caracterizado pelo aquecimento anormal das águas superficiais do setor central e oriental do Oceano Pacífico Equatorial. Ele faz parte de um ciclo oceânico-atmosférico conhecido como <strong className="text-cyberCyan">ENSO</strong> (El Niño-Oscilação Sul), gerando profundos impactos nos padrões de circulação atmosférica, chuvas e temperaturas em escala global e regional.
+                            </p>
+
+                            <div className="bg-void/80 border border-cyberCyan/30 rounded-2xl p-4 space-y-3">
+                                <h3 className="font-display font-black text-xs text-cyberCyan tracking-wider uppercase">Principais Mecanismos e Efeitos:</h3>
+                                <ul className="list-disc list-inside space-y-2 text-slate-300">
+                                    <li><strong className="text-white">Enfraquecimento dos Ventos Alísios:</strong> Os ventos que normalmente sopram de leste para oeste empurrando as águas quentes em direção à Oceania enfraquecem, permitindo que o calor se desloque para a costa da América do Sul.</li>
+                                    <li><strong className="text-white">Alteração Térmica e Hidrológica:</strong> Provoca alterações drásticas no regime de chuvas, resultando em enchentes e secas severas associadas.</li>
+                                    <li><strong className="text-white">Impacto na Resiliência Urbana:</strong> Essencial para a antecipação de desastres e monitoramento integrado pela <strong className="text-cyberCyan">CPARC</strong> e <strong className="text-cyberCyan">SARAH AI</strong>.</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            );
+        }
+
+        function ModuloCidadaoSensorModule({ onGoToDashboard }) {
+            return (
+                <div className="space-y-4 max-w-2xl mx-auto">
+                    <div className="cyber-card p-6 sm:p-8 rounded-[36px] shadow-2xl space-y-6 border border-cyberCyan/40">
+                        <div className="flex items-center justify-between border-b border-cyberCyan/25 pb-4">
+                            <div className="space-y-1">
+                                <h2 className="font-display text-base font-black text-white tracking-widest flex items-center gap-2">
+                                    <span className="text-cyberGreen">📡</span> MÓDULO 2: CIDADÃO SENSOR
+                                </h2>
+                                <p className="text-[10px] font-mono text-cyberGreen font-bold">TECNOLOGIA SOCIAL • CPARC v13.0 & SARAH AI</p>
+                            </div>
+                            <button onClick={onGoToDashboard} className="px-4 py-2 cyber-button rounded-xl text-[11px] font-black cursor-pointer">Painel</button>
+                        </div>
+
+                        <div className="space-y-4 text-xs sm:text-sm text-slate-200 leading-relaxed">
+                            <p>
+                                O <strong className="text-cyberCyan">Projeto Cidadão Sensor</strong> constitui a vanguarda da telemetria participativa e da engenharia comunitária de mitigação de riscos. Desenvolvido para atuar como malha de sensores humanos e digitais distribuídos nas bacias e encostas (como a Serra do Mendanha).
+                            </p>
+
+                            <div className="bg-void/80 border border-cyberGreen/30 rounded-2xl p-4 space-y-3">
+                                <h3 className="font-display font-black text-xs text-cyberGreen tracking-wider uppercase">Arquitetura e Pilares Operacionais:</h3>
+                                <ul className="list-disc list-inside space-y-2 text-slate-300">
+                                    <li><strong className="text-white">Cartografia de Riscos Colaborativa:</strong> Mapeamento participativo integrando setores de vulnerabilidade hidrológica e geotécnica em tempo real.</li>
+                                    <li><strong className="text-white">Telemetria Descentralizada:</strong> Coleta de dados baseada em observadores de campo locais munidos de ferramentas criptografadas de verificação (Hash SHA-256).</li>
+                                    <li><strong className="text-white">Resiliência Coordenada:</strong> Conexão direta com os comitês de bairro, CRAS de Rocha Sobrinho, Defesa Civil e a inteligência preditiva da SARAH AI.</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            );
+        }
+
+        function NativeHydroWindRadar({ isOpen, onToggle }) {
+            const [brasiliaTime, setBrasiliaTime] = React.useState("");
+            const [radarKey, setRadarKey] = React.useState(1);
+
+            React.useEffect(() => {
+                const timer = setInterval(() => {
+                    const timeStr = new Intl.DateTimeFormat("pt-BR", {
+                        timeZone: "America/Sao_Paulo", hour: "2-digit", minute: "2-digit", second: "2-digit", hour12: false
+                    }).format(new Date());
+                    setBrasiliaTime(timeStr);
+                }, 1000);
+                return () => clearInterval(timer);
+            }, []);
+
+            return (
+                <R.Fragment>
+                    <button className="radar-handle" onClick={onToggle} title="Abrir/Fechar Radar 24h">
+                        {isOpen ? "✕ FECHAR RADAR ✕" : "🛰 RADAR 24H ◀"}
+                    </button>
+                    {isOpen && (
+                        <div className="fixed inset-0 z-[80] bg-void/90 backdrop-blur-2xl animate-fade-in" onClick={onToggle}>
+                            <div
+                                className="absolute right-0 top-0 bottom-0 w-full max-w-[700px] cyber-card rounded-l-[32px] overflow-hidden flex flex-col shadow-2xl"
+                                onClick={(e) => e.stopPropagation()}
+                            >
+                                <div className="flex items-center justify-between px-5 py-4 bg-deepSpace/95 border-b border-cyberCyan/30">
+                                    <div className="flex items-center gap-3 overflow-hidden">
+                                        <span className="w-2.5 h-2.5 rounded-full bg-cyberCyan animate-ping shrink-0"></span>
+                                        <span className="font-display font-bold text-xs text-cyberCyan tracking-wider truncate">
+                                            CHAVE CLIMÁTICA • RADAR METEOROLÓGICO • RJ
+                                        </span>
+                                    </div>
+                                    <div className="flex items-center gap-2.5 shrink-0">
+                                        <span className="font-mono text-[11px] font-bold text-cyberGreen px-2.5 py-1 bg-cyberGreen/10 rounded-xl border border-cyberGreen/40">🕒 {brasiliaTime || "00:00:00"}</span>
+                                        <button onClick={() => setRadarKey(k => k + 1)} className="px-3 py-1.5 bg-cyberCyan/25 hover:bg-cyberCyan text-cyberCyan hover:text-void border border-cyberCyan/40 rounded-xl font-bold text-xs cursor-pointer transition">🔄</button>
+                                        <button onClick={onToggle} className="px-3.5 py-1.5 bg-cyberRose/20 text-cyberRose border border-cyberRose/40 rounded-xl font-bold text-xs cursor-pointer">✕</button>
+                                    </div>
+                                </div>
+                                <iframe
+                                    key={radarKey}
+                                    src="https://embed.windy.com/embed2.html?lat=-22.7845&lon=-43.4190&detailLat=-22.7845&detailLon=-43.4190&width=650&height=550&zoom=10&level=surface&overlay=wind&product=ecmwf&menu=&message=&marker=true&calendar=now&pressure=true&type=map&location=coordinates&detail=true&metricWind=default&metricTemp=default"
+                                    className="w-full flex-1 border-none bg-void"
+                                    sandbox="allow-scripts allow-same-origin allow-popups allow-forms"
+                                    allowFullScreen
+                                ></iframe>
+                            </div>
+                        </div>
+                    )}
+                </R.Fragment>
+            );
+        }
+
+        function FieldReportModule({ onBackToDashboard, showToast }) {
+            const [setor, setSetor] = React.useState("🛡️ Defesa Civil Municipal");
+            const [nivelRisco, setNivelRisco] = React.useState("🟢 Risco Baixo / Monitoramento");
+            const [agente, setAgente] = React.useState("");
+            const [local, setLocal] = React.useState("");
+            const [desc, setDesc] = React.useState("");
+            const [gps, setGps] = React.useState({ lt: '', ln: '', lk: '' });
+            const [gpsSt, setGpsSt] = React.useState("📍 GPS em espera");
+            const [hashSha256, setHashSha256] = React.useState("Calculando hash...");
+            
+            const [ocorrencias, setOcorrencias] = React.useState({
+                deslizamento: false,
+                alagamento: false,
+                trincas: false,
+                arvore: false,
+                valao: false
+            });
+
+            const [fotos, setFotos] = React.useState([
+                { id: 1, file: null, preview: null },
+                { id: 2, file: null, preview: null },
+                { id: 3, file: null, preview: null },
+                { id: 4, file: null, preview: null }
+            ]);
+
+            const protocoloAtual = React.useMemo(() => `CPARC-2026-${Math.floor(1000 + Math.random() * 9000)}`, []);
+
+            React.useEffect(() => {
+                const calcularHash = async () => {
+                    try {
+                        const dadosStr = setor + nivelRisco + agente + local + desc + protocoloAtual + JSON.stringify(ocorrencias);
+                        const msgBuffer = new TextEncoder().encode(dadosStr);
+                        const hashBuffer = await crypto.subtle.digest('SHA-256', msgBuffer);
+                        const hashArray = Array.from(new Uint8Array(hashBuffer));
+                        const hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+                        setHashSha256(hashHex.substring(0, 32) + "...");
+                    } catch (e) {
+                        setHashSha256("sha256-fallback-secure");
+                    }
+                };
+                calcularHash();
+            }, [setor, nivelRisco, agente, local, desc, ocorrencias, protocoloAtual]);
+
+            const capturarGps = () => {
+                if (!navigator.geolocation) return showToast("⚠️ Geolocalização não suportada");
+                showToast("🛰 Buscando GPS...");
+                navigator.geolocation.getCurrentPosition(
+                    (p) => {
+                        const lt = p.coords.latitude.toFixed(6);
+                        const ln = p.coords.longitude.toFixed(6);
+                        const lk = `https://www.google.com/maps?q=${lt},${ln}`;
+                        setGps({ lt, ln, lk });
+                        setLocal(`${lt},${ln}`);
+                        setGpsSt("✅ GPS Fixado");
+                        showToast("📍 Coordenadas obtidas com sucesso!");
+                    },
+                    () => setGpsSt("⚠ Erro ao obter GPS"),
+                    { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+                );
+            };
+
+            const processar = (file, gpsInfo, ag, loc, setorAtual) => new Promise((res, rej) => {
+                const rd = new FileReader();
+                rd.readAsDataURL(file);
+                rd.onload = (e) => {
+                    const img = new Image();
+                    img.src = e.target.result;
+                    img.onload = () => {
+                        const cv = document.createElement('canvas');
+                        const MAX = 600;
+                        let w = img.width, h = img.height;
+                        if (w > MAX || h > MAX) {
+                            if (w > h) { h = Math.round(h * MAX / w); w = MAX; }
+                            else { w = Math.round(w * MAX / h); h = MAX; }
+                        }
+                        cv.width = w;
+                        cv.height = h;
+                        const ctx = cv.getContext('2d');
+                        ctx.drawImage(img, 0, 0, w, h);
+
+                        const dt = new Intl.DateTimeFormat('pt-BR', { dateStyle: 'short', timeStyle: 'medium', timeZone: 'America/Sao_Paulo' }).format(new Date());
+                        const ct = gpsInfo.lt ? `${gpsInfo.lt},${gpsInfo.ln}` : (loc || 'Local não fixado');
+                        
+                        let siglaSetor = "CPARC";
+                        if (setorAtual.includes("Defesa Civil")) siglaSetor = "DEFESA CIVIL";
+                        else if (setorAtual.includes("CRAS")) siglaSetor = "CRAS";
+                        else if (setorAtual.includes("Universidade")) siglaSetor = "PESQUISA";
+                        else if (setorAtual.includes("Chave da Esperança")) siglaSetor = "GADE";
+                        else if (setorAtual.includes("Cidadão Sensor")) siglaSetor = "CIDADÃO SENSOR";
+                        else if (setorAtual.includes("Técnico")) siglaSetor = "TÉCNICO DE CAMPO";
+
+                        const fs = Math.max(10, Math.round(w * 0.028));
+                        const pad = 8;
+                        const lh = fs + 4;
+                        const bh = lh * 3 + pad * 2;
+
+                        ctx.font = `bold ${fs}px sans-serif`;
+                        ctx.fillStyle = 'rgba(6, 11, 24, 0.90)';
+                        ctx.fillRect(0, h - bh, w, bh);
+                        
+                        ctx.fillStyle = '#00F2FE';
+                        ctx.fillRect(0, h - bh, w, 2);
+
+                        ctx.shadowColor = 'rgba(0, 0, 0, 1)';
+                        ctx.shadowBlur = 4;
+
+                        let y = h - bh + pad + fs;
+                        ctx.fillStyle = '#00F2FE';
+                        ctx.fillText(`📅 ${dt} \vert{}${siglaSetor} (GADE)`, pad, y);
+                        
+                        ctx.fillStyle = '#FFFFFF';
+                        ctx.fillText(`📍 GPS: ${ct}`, pad, y + lh);
+                        
+                        ctx.fillStyle = '#94A3B8';
+                        ctx.fillText(`👤 Resp.: ${ag || 'Equipe de Campo'}`, pad, y + lh * 2);
+
+                        cv.toBlob((b) => {
+                            if (!b) return rej(new Error("Falha ao gerar blob da imagem"));
+                            const compressedFile = new File([b], `vistoria_${siglaSetor.toLowerCase()}_${Date.now()}.jpg`, { type: 'image/jpeg' });
+                            res({ compressedFile, preview: cv.toDataURL('image/jpeg', 0.5) });
+                        }, 'image/jpeg', 0.5);
+                    };
+                    img.onerror = () => rej(new Error("Falha ao carregar imagem"));
+                };
+                rd.onerror = () => rej(new Error("Falha ao ler arquivo"));
+            });
+
+            const handleFoto = async (i, e) => {
+                const file = e.target.files[0];
+                if (!file) return;
+                e.target.value = "";
+                showToast(`🔄 Otimizando foto ${i + 1}...`);
+                try {
+                    const { compressedFile, preview } = await processar(file, gps, agente, local, setor);
+                    setFotos(p => {
+                        const n = [...p];
+                        n[i] = { id: n[i].id, file: compressedFile, preview };
+                        return n;
+                    });
+                    showToast(`📸 Foto ${i + 1} carimbada com sucesso!`);
+                } catch (err) {
+                    showToast("❌ Erro ao processar a foto.");
+                }
+            };
+
+            const apagar = (i, e) => {
+                e.stopPropagation();
+                setFotos(p => {
+                    const n = [...p];
+                    n[i] = { id: n[i].id, file: null, preview: null };
+                    return n;
+                });
+                showToast(`🗑️ Foto ${i + 1} removida!`);
+            };
+
+            const getOcorrenciasTexto = () => {
+                const lista = [];
+                if (ocorrencias.deslizamento) lista.push("• Deslizamento / Escorregamento");
+                if (ocorrencias.alagamento) lista.push("• Alagamento / Inundação");
+                if (ocorrencias.trincas) lista.push("• Trincas / Rachaduras Estruturais");
+                if (ocorrencias.arvore) lista.push("• Queda de Árvore / Risco Elétrico");
+                if (ocorrencias.valao) lista.push("• Obstrução de Bueiro / Valão");
+                return lista.length > 0 ? lista.join("\n") : "• Nenhuma categoria específica marcada";
+            };
+
+            const montarTexto = () => {
+                const c = fotos.filter(f => f.file).length;
+                const dh = new Intl.DateTimeFormat('pt-BR', { dateStyle: 'short', timeStyle: 'medium', timeZone: 'America/Sao_Paulo' }).format(new Date());
+                return `🛡️ *LAUDO DE VISTORIA • CPARC v13.0* 🛡️\n` +
+                       `━━━━━━━━━━━━━━━━━━━━━━\n` +
+                       `📌 *Protocolo:* \`${protocoloAtual}\`\n` +
+                       `🏛 *Setor / Instituição:* ${setor}\n` +
+                       `⚠️ *Nível de Risco:* ${nivelRisco}\n` +
+                       `👤 *Responsável:* ${agente || 'Não informado'} (GADE)\n` +
+                       `📅 *Data/Hora:* ${dh}\n` +
+                       `📍 *Localidade:* ${local || 'Não informada'}\n` +
+                       (gps.lk ? `🔗 *Google Maps:* ${gps.lk}\n` : ``) +
+                       `━━━━━━━━━━━━━━━━━━━━━━\n` +
+                       `📋 *Tipos de Ocorrência:*\n${getOcorrenciasTexto()}\n` +
+                       `━━━━━━━━━━━━━━━━━━━━━━\n` +
+                       `📸 *Evidências Anexadas:* ${c}/4 fotos\n` +
+                       `📝 *Relato da Ocorrência:*\n${desc || 'Sem descrição.'}\n` +
+                       `━━━━━━━━━━━━━━━━━━━━━━\n` +
+                       `🔒 *Hash SHA-256:* \`${hashSha256}\`\n` +
+                       `⚡ *GADE • Chave Climática & CPARC v13.0*`;
+            };
+
+            const copiar = () => {
+                navigator.clipboard.writeText(montarTexto())
+                    .then(() => showToast("📋 Relatório copiado para a área de transferência!"))
+                    .catch(() => showToast("❌ Erro ao copiar."));
+            };
+
+            const gerarPdfLaudo = async () => {
+                showToast("📄 Gerando PDF oficial do laudo...");
+                try {
+                    let jsPDFClass = window.jspdf ? window.jspdf.jsPDF : null;
+                    if (!jsPDFClass && window.jsPDF) { jsPDFClass = window.jsPDF; }
+
+                    if (!jsPDFClass) {
+                        showToast("⚠️ Biblioteca PDF indisponível. Tente novamente em instantes.");
+                        return;
+                    }
+
+                    const doc = new jsPDFClass({ unit: 'mm', format: 'a4' });
+                    const margin = 15;
+                    let y = 20;
+
+                    doc.setFillColor(6, 11, 24);
+                    doc.rect(0, 0, 210, 297, "F");
+
+                    doc.setTextColor(0, 242, 254);
+                    doc.setFontSize(14);
+                    doc.setFont("helvetica", "bold");
+                    doc.text("LAUDO TÉCNICO OFICIAL DE VISTORIA", margin, y);
+                    
+                    y += 8;
+                    doc.setFontSize(10);
+                    doc.setTextColor(16, 185, 129);
+                    doc.text("CPARC v13.0 • Central Pública e Automatizada de Resiliência Comunitária (GADE)", margin, y);
+
+                    y += 12;
+                    doc.setDrawColor(0, 242, 254);
+                    doc.setLineWidth(0.5);
+                    doc.line(margin, y, 210 - margin, y);
+
+                    y += 8;
+                    doc.setFontSize(9);
+                    doc.setTextColor(255, 255, 255);
+                    doc.text(`Protocolo: ${protocoloAtual}`, margin, y);
+                    doc.text(`Data/Hora: ${new Date().toLocaleString('pt-BR')}`, margin + 90, y);
+                    
+                    y += 6;
+                    doc.text(`Setor / Instituição: ${setor}`, margin, y);
+                    
+                    y += 6;
+                    doc.text(`Nível de Risco: ${nivelRisco}`, margin, y);
+                    doc.text(`Responsável: ${agente || 'Não informado'} (GADE)`, margin + 90, y);
+
+                    y += 6;
+                    doc.text(`Localidade: ${local || 'Não informada'}`, margin, y);
+                    
+                    if (gps.lk) {
+                        y += 6;
+                        doc.setTextColor(0, 242, 254);
+                        doc.text(`Google Maps: ${gps.lk}`, margin, y);
+                    }
+
+                    y += 10;
+                    doc.setTextColor(0, 242, 254);
+                    doc.setFont("helvetica", "bold");
+                    doc.text("CHECKLIST DE OCORRÊNCIAS / DANOS OBSERVADOS:", margin, y);
+                    
+                    y += 6;
+                    doc.setFont("helvetica", "normal");
+                    doc.setTextColor(255, 255, 255);
+                    getOcorrenciasTexto().split('\n').forEach(linha => {
+                        doc.text(linha, margin + 5, y);
+                        y += 5;
+                    });
+
+                    y += 4;
+                    doc.setTextColor(0, 242, 254);
+                    doc.setFont("helvetica", "bold");
+                    doc.text("RELATO TÉCNICO / ANOMALIA:", margin, y);
+                    
+                    y += 6;
+                    doc.setFont("helvetica", "normal");
+                    doc.setTextColor(255, 255, 255);
+                    const splitText = doc.splitTextToSize(desc || 'Sem descrição informada', 180);
+                    doc.text(splitText, margin, y);
+                    y += (splitText.length * 5) + 8;
+
+                    doc.setFillColor(13, 21, 45);
+                    doc.roundedRect(margin, y, 180, 12, 2, 2, "F");
+                    doc.setFontSize(8);
+                    doc.setTextColor(0, 242, 254);
+                    doc.text(`IDENTIFICADOR ÚNICO DE INTEGRIDADE (HASH SHA-256):`, margin + 4, y + 4.5);
+                    doc.setTextColor(255, 255, 255);
+                    doc.text(`${hashSha256}`, margin + 4, y + 9);
+
+                    y += 18;
+
+                    const fotosValidas = fotos.filter(f => f.preview);
+                    if (fotosValidas.length > 0) {
+                        if (y > 180) { doc.addPage(); y = 20; }
+                        doc.setFontSize(10);
+                        doc.setTextColor(0, 242, 254);
+                        doc.setFont("helvetica", "bold");
+                        doc.text("EVIDÊNCIAS FOTOGRÁFICAS DE CAMPO (CARIMBADAS):", margin, y);
+                        y += 6;
+
+                        let xPos = margin;
+                        let startY = y;
+                        let maxHeight = 0;
+
+                        fotosValidas.forEach((f, i) => {
+                            if (xPos + 40 > 210 - margin) {
+                                xPos = margin;
+                                startY += maxHeight + 10;
+                                maxHeight = 0;
+                            }
+                            if (startY > 230) {
+                                doc.addPage();
+                                startY = 20;
+                                xPos = margin;
+                            }
+
+                            try {
+                                doc.addImage(f.preview, 'JPEG', xPos, startY, 40, 40);
+                                doc.setFontSize(8);
+                                doc.setTextColor(255, 255, 255);
+                                doc.text(`Foto #${i + 1}`, xPos, startY + 44);
+                                xPos += 48;
+                                maxHeight = 45;
+                            } catch(err) {}
+                        });
+                    }
+
+                    doc.save(`Laudo_Oficial_CPARC_${protocoloAtual}.pdf`);
+                    showToast("✅ PDF oficial gerado com sucesso!");
+                } catch (err) {
+                    console.error(err);
+                    showToast("❌ Erro ao compilar o PDF.");
+                }
+            };
+
+            const compartilhar = async () => {
+                const txt = montarTexto();
+                const files = fotos.filter(f => f.file).map(f => f.file);
+
+                if (navigator.canShare) {
+                    try {
+                        const d = { title: 'Relatório Técnico CPARC', text: txt, files: files.length ? files : undefined };
+                        if (navigator.canShare(d)) {
+                            await navigator.share(d);
+                            showToast("✅ Compartilhado com sucesso!");
+                            return;
+                        }
+                    } catch (err) {
+                        if (err.name === 'AbortError') return;
+                    }
+                }
+
+                try {
+                    await navigator.clipboard.writeText(txt);
+                } catch (e) {}
+
+                if (files.length > 0) {
+                    files.forEach((f, i) => {
+                        const a = document.createElement('a');
+                        a.href = URL.createObjectURL(f);
+                        a.download = `vistoria_${i + 1}.jpg`;
+                        a.click();
+                    });
+                }
+
+                showToast("📋 Texto copiado e fotos baixadas para envio!");
+                setTimeout(() => {
+                    window.open(`https://wa.me/?text=${encodeURIComponent(txt)}`, '_blank');
+                }, 800);
+            };
+
+            return (
+                <div className="space-y-4 max-w-xl mx-auto">
+                    <div className="flex items-center justify-between cyber-card px-5 py-3.5 rounded-2xl border border-cyberCyan/30">
+                        <span className="text-xs font-extrabold text-cyberCyan">📋 Vistoria & Laudo Oficial • CPARC v13.0</span>
+                        <button onClick={onBackToDashboard} className="px-3.5 py-1.5 bg-cyberRose/20 text-cyberRose rounded-xl text-xs font-bold border border-cyberRose/40">✕ Fechar</button>
+                    </div>
+                    
+                    <div className="cyber-card rounded-[32px] p-6 border border-cyberCyan/40 space-y-4 shadow-2xl">
+                        <div className="space-y-1">
+                            <label className="text-[10px] font-bold text-cyberCyan uppercase">Setor / Instituição / Coletivo</label>
+                            <select value={setor} onChange={e => setSetor(e.target.value)} className="w-full bg-void border border-cyberCyan/40 rounded-2xl p-3.5 text-xs text-white">
+                                <option>🛡️ Defesa Civil Municipal</option>
+                                <option>🤝 Assistência Social / CRAS</option>
+                                <option>🎓 Pesquisa Acadêmica / Universidade</option>
+                                <option>🌱 GADE (Grupo A Chave da Esperança)</option>
+                                <option>👁️ Cidadão Sensor / Iniciativa Comunitária</option>
+                                <option>🛠️ Técnico de Campo / Mutuário Independente</option>
+                            </select>
+                        </div>
+
+                        <div className="space-y-1">
+                            <label className="text-[10px] font-bold text-cyberCyan uppercase">Nível de Risco Avaliado</label>
+                            <select value={nivelRisco} onChange={e => setNivelRisco(e.target.value)} className="w-full bg-void border border-cyberCyan/40 rounded-2xl p-3.5 text-xs text-white font-bold">
+                                <option>🟢 Risco Baixo / Monitoramento</option>
+                                <option>🟡 Risco Médio / Atenção</option>
+                                <option>🟠 Risco Alto / Alerta</option>
+                                <option>🔴 Risco Muito Alto / Perigo Iminente</option>
+                            </select>
+                        </div>
+
+                        <div className="space-y-2 bg-void/70 border border-cyberCyan/30 rounded-2xl p-4">
+                            <label className="text-[10px] font-bold text-cyberCyan uppercase tracking-widest block mb-1">Checklist de Ocorrências / Danos Observados</label>
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs text-slate-200">
+                                <label className="flex items-center gap-2 cursor-pointer">
+                                    <input type="checkbox" checked={ocorrencias.deslizamento} onChange={e => setOcorrencias({...ocorrencias, deslizamento: e.target.checked})} className="rounded border-cyberCyan/50 text-cyberCyan w-4 h-4 bg-void cursor-pointer" />
+                                    <span>Deslizamento / Encosta</span>
+                                </label>
+                                <label className="flex items-center gap-2 cursor-pointer">
+                                    <input type="checkbox" checked={ocorrencias.alagamento} onChange={e => setOcorrencias({...ocorrencias, alagamento: e.target.checked})} className="rounded border-cyberCyan/50 text-cyberCyan w-4 h-4 bg-void cursor-pointer" />
+                                    <span>Alagamento / Inundação</span>
+                                </label>
+                                <label className="flex items-center gap-2 cursor-pointer">
+                                    <input type="checkbox" checked={ocorrencias.trincas} onChange={e => setOcorrencias({...ocorrencias, trincas: e.target.checked})} className="rounded border-cyberCyan/50 text-cyberCyan w-4 h-4 bg-void cursor-pointer" />
+                                    <span>Trincas / Rachaduras</span>
+                                </label>
+                                <label className="flex items-center gap-2 cursor-pointer">
+                                    <input type="checkbox" checked={ocorrencias.arvore} onChange={e => setOcorrencias({...ocorrencias, arvore: e.target.checked})} className="rounded border-cyberCyan/50 text-cyberCyan w-4 h-4 bg-void cursor-pointer" />
+                                    <span>Árvore / Risco Elétrico</span>
+                                </label>
+                                <label className="flex items-center gap-2 cursor-pointer sm:col-span-2">
+                                    <input type="checkbox" checked={ocorrencias.valao} onChange={e => setOcorrencias({...ocorrencias, valao: e.target.checked})} className="rounded border-cyberCyan/50 text-cyberCyan w-4 h-4 bg-void cursor-pointer" />
+                                    <span>Obstrução de Bueiro / Valão / Canal</span>
+                                </label>
+                            </div>
+                        </div>
+
+                        <div className="grid grid-cols-2 gap-3">
+                            <input value={agente} onChange={e => setAgente(e.target.value)} placeholder="Nome do Responsável / Agente" className="w-full bg-void border border-cyberCyan/40 rounded-2xl p-3.5 text-xs text-white" />
+                            <input value={local} onChange={e => setLocal(e.target.value)} placeholder="Localidade / Setor" className="w-full bg-void border border-cyberCyan/40 rounded-2xl p-3.5 text-xs text-white" />
+                        </div>
+
+                        <div className="border border-cyberCyan/40 bg-void/80 rounded-2xl p-3.5 flex items-center justify-between">
+                            <span className="text-cyberGreen text-xs font-mono font-bold">{gpsSt}</span>
+                            <button onClick={capturarGps} className="px-4 py-2 cyber-button text-void font-black rounded-xl text-xs cursor-pointer">GPS 🛰</button>
+                        </div>
+
+                        <textarea value={desc} onChange={e => setDesc(e.target.value)} placeholder="Descreva a ocorrência, danos observados ou situação de risco..." rows="3" className="w-full bg-void border border-cyberCyan/40 rounded-2xl p-3.5 text-xs text-white resize-none shadow-inner"></textarea>
+
+                        <div className="bg-void/90 border border-cyberCyan/30 rounded-2xl p-3 text-[10px] font-mono text-cyan-300 break-all">
+                            <b>Protocolo:</b> {protocoloAtual} <br/>
+                            <b>Hash SHA-256:</b> {hashSha256}
+                        </div>
+
+                        <div className="grid grid-cols-2 gap-3">
+                            {fotos.map((f, i) => (
+                                <div key={f.id} className="relative h-32 rounded-2xl border-2 border-dashed border-cyberGreen/40 bg-void flex items-center justify-center overflow-hidden">
+                                    {f.preview ? (
+                                        <>
+                                            <img src={f.preview} alt={`Vistoria ${i+1}`} className="w-full h-full object-cover rounded-2xl" />
+                                            <button type="button" onClick={e => apagar(i, e)} className="absolute top-2 right-2 w-7 h-7 bg-cyberRose text-white rounded-full flex items-center justify-center text-xs z-20 shadow cursor-pointer">✕</button>
+                                        </>
+                                    ) : (
+                                        <label htmlFor={`foto-${i}`} className="w-full h-full flex flex-col items-center justify-center cursor-pointer">
+                                            <div className="text-xl">📷</div>
+                                            <div className="text-[10px] text-slate-300 font-bold mt-1">Bloco {i + 1}</div>
+                                            <div className="text-[8px] text-slate-400">Carimbo Dinâmico + GADE</div>
+                                        </label>
+                                    )}
+                                    <input id={`foto-${i}`} type="file" accept="image/*" capture="environment" className="hidden" onChange={e => handleFoto(i, e)} />
+                                    {f.preview && <div className="absolute bottom-1.5 right-1.5 bg-cyberGreen text-void text-[9px] font-black px-2 py-0.5 rounded-full shadow">CARIMBADA</div>}
+                                </div>
+                            ))}
+                        </div>
+
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 pt-2">
+                            <button onClick={gerarPdfLaudo} className="w-full cyber-button text-void font-extrabold py-3.5 rounded-2xl text-xs uppercase shadow-lg cursor-pointer flex items-center justify-center gap-2">📄 Gerar Laudo PDF</button>
+                            <button onClick={copiar} className="w-full bg-commandPanel border border-cyberCyan/40 text-cyberCyan font-extrabold py-3.5 rounded-2xl text-xs uppercase shadow-lg cursor-pointer">📋 Copiar Relatório</button>
+                        </div>
+                        
+                        <button onClick={compartilhar} className="w-full bg-gradient-to-r from-amber-600 via-orange-600 to-cyberCyan text-white font-extrabold py-3.5 rounded-2xl text-xs uppercase shadow-xl flex items-center justify-center gap-2 cursor-pointer">🚀 Enviar Relatório + Fotos p/ WhatsApp</button>
+                    </div>
+                </div>
+            );
+        }.
