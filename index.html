@@ -1,0 +1,1799 @@
+<!DOCTYPE html>
+<html lang="pt-BR" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>CHAVE CLIMÁTICA • EPRCA & SARAH AI</title>
+
+    <meta name="theme-color" content="#02040A">
+    <link rel="apple-touch-icon" href="https://www.image2url.com/r2/default/images/1792314795970-5a397155-f3e3-4aa1-98b3-9d1482626b0f.png">
+    <meta property="og:title" content="CHAVE CLIMÁTICA • Estação Pública de Resiliência Comunitária Automatizada (EPRCA)">
+    <meta property="og:description" content="Monitoramento Climático Integrado, Bacias, Reciclagem e Encostas • EPRCA. Todos unidos, todos protegidos, Baixada.">
+    <meta property="og:image" content="https://www.image2url.com/r2/default/images/1792314795970-5a397155-f3e3-4aa1-98b3-9d1482626b0f.png">
+    <meta property="og:type" content="website">
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Orbitron:wght@600;800;900&family=JetBrains+Mono:wght@400;600;800&display=swap" rel="stylesheet">
+
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+    <script>
+      (function() {
+        try {
+            const savedTheme = localStorage.getItem('sarah-theme') || 'dark';
+            if (savedTheme === 'warm') {
+                document.documentElement.classList.remove('dark');
+                document.documentElement.classList.add('warm');
+            } else {
+                document.documentElement.classList.add('dark');
+                document.documentElement.classList.remove('warm');
+            }
+        } catch(e) {}
+      })();
+    </script>
+
+    <script>
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Plus Jakarta Sans', 'system-ui', 'sans-serif'],
+                        display: ['Orbitron', 'sans-serif'],
+                        mono: ['JetBrains Mono', 'monospace'],
+                    },
+                    colors: {
+                        void: "#02040A",
+                        deepSpace: "#060B18",
+                        commandPanel: "#0D152D",
+                        cyberCyan: "#00F2FE",
+                        cyberBlue: "#4FACFE",
+                        cyberGreen: "#10B981",
+                        cyberAmber: "#FF9900",
+                        cyberRose: "#F43F5E",
+                        cyberPurple: "#8B5CF6",
+                        warmBg: "#F4F3EF",
+                        warmText: "#111827",
+                        warmCard: "#FFFFFF",
+                        warmBorder: "#D1D5DB"
+                    },
+                    animation: {
+                        'hud-pulse': 'hudPulse 2.5s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+                        'float-slow': 'floatSlow 6s ease-in-out infinite',
+                        'text-sway': 'textSway 3s ease-in-out infinite',
+                        'maluco-glow': 'malucoGlow 1.8s ease-in-out infinite alternate',
+                        'blink-two-minutes': 'blinkPulseSlow 120s infinite'
+                    },
+                    keyframes: {
+                        hudPulse: {
+                            '0%, 100%': { opacity: '1', transform: 'scale(1)' },
+                            '50%': { opacity: '0.4', transform: 'scale(1.03)' }
+                        },
+                        floatSlow: {
+                            '0%, 100%': { transform: 'translateY(0px)' },
+                            '50%': { transform: 'translateY(-8px)' }
+                        },
+                        textSway: {
+                            '0%, 100%': { transform: 'translateY(0px) scale(1)' },
+                            '50%': { transform: 'translateY(-3px) scale(1.02)' }
+                        },
+                        malucoGlow: {
+                            '0%': { textShadow: '0 0 5px #00F2FE, 0 0 10px #00F2FE, 0 0 20px #00F2FE, 0 0 35px #10B981', transform: 'scale(1)' },
+                            '100%': { textShadow: '0 0 10px #FFFFFF, 0 0 20px #00F2FE, 0 0 30px #00F2FE, 0 0 55px #10B981', transform: 'scale(1.03)' }
+                        },
+                        blinkPulseSlow: {
+                            '0%, 98%, 100%': { opacity: '1', transform: 'scale(1)', boxShadow: '0 0 0 rgba(72, 173, 169, 0)' },
+                            '99%': { opacity: '0.4', transform: 'scale(1.04)', boxShadow: '0 0 20px rgba(72, 173, 169, 0.9)' }
+                        }
+                    }
+                }
+            }
+        };
+    </script>
+    <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <style>
+        @keyframes tickerScroll {
+          0% { transform: translateX(0); }
+          100% { transform: translateX(-50%); }
+        }
+
+        html, body, #root {
+            min-height: 100%;
+            margin: 0;
+            font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
+            touch-action: pan-x pan-y;
+            -webkit-text-size-adjust: 100%;
+            overscroll-behavior-y: none;
+            background-color: #02040A;
+            color: #FFFFFF;
+            -webkit-user-select: none;
+            user-select: none;
+        }
+        body {
+            overflow-x: hidden;
+            background-image: 
+                radial-gradient(circle at 50% 0%, rgba(0, 242, 254, 0.08) 0%, transparent 60%),
+                radial-gradient(circle at 10% 90%, rgba(16, 185, 129, 0.05) 0%, transparent 50%);
+            transition: background-color 0.4s ease, color 0.4s ease;
+        }
+
+        .cyber-card {
+            background: linear-gradient(135deg, rgba(13, 21, 45, 0.95) 0%, rgba(6, 11, 24, 0.98) 100%);
+            backdrop-filter: blur(25px);
+            -webkit-backdrop-filter: blur(25px);
+            border: 1px solid rgba(0, 242, 254, 0.3);
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+        }
+        .cyber-border-glow {
+            position: relative;
+            border: 1px solid transparent;
+            background: 
+                linear-gradient(135deg, rgba(6,11,24,0.95), rgba(13,21,45,0.95)) padding-box,
+                linear-gradient(135deg, #00F2FE, #4FACFE, #10B981) border-box;
+        }
+        .cyber-button {
+            background: linear-gradient(135deg, #FF9900 0%, #F59E0B 100%);
+            background-size: 200% auto;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
+            color: #02040A !important;
+        }
+        .cyber-button:hover {
+            background-position: right center;
+            box-shadow: 0 0 25px rgba(255, 153, 0, 0.6);
+            transform: translateY(-2px);
+        }
+        .cyber-button:active { transform: scale(0.97); }
+
+        body.chameleon-active {
+            background-color: #041208 !important;
+            background-image: 
+                radial-gradient(circle at 50% 0%, rgba(16, 185, 129, 0.18) 0%, transparent 60%),
+                radial-gradient(circle at 90% 90%, rgba(0, 242, 254, 0.12) 0%, transparent 50%) !important;
+        }
+        body.chameleon-active .cyber-card {
+            background: linear-gradient(135deg, rgba(10, 30, 20, 0.96) 0%, rgba(4, 15, 10, 0.99) 100%) !important;
+            border: 1px solid rgba(16, 185, 129, 0.6) !important;
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.8), inset 0 1px 0 rgba(16, 185, 129, 0.3) !important;
+        }
+
+        html.warm body {
+            background-color: #F4F3EF !important;
+            color: #111827 !important;
+            background-image: none !important;
+        }
+        html.warm .cyber-card {
+            background: rgba(255, 255, 255, 0.95) !important;
+            color: #111827 !important;
+            border: 1px solid #D1D5DB !important;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05) !important;
+        }
+        html.warm input, html.warm select, html.warm textarea {
+            background-color: #F9FAFB !important;
+            color: #111827 !important;
+            border-color: #D1D5DB !important;
+        }
+
+        .hud-grid {
+            background-image: linear-gradient(rgba(0, 242, 254, 0.03) 1px, transparent 1px),
+                              linear-gradient(90deg, rgba(0, 242, 254, 0.03) 1px, transparent 1px);
+            background-size: 20px 20px;
+        }
+
+        .radar-handle {
+            position: fixed;
+            right: 0;
+            top: 54%;
+            z-index: 55;
+            writing-mode: vertical-rl;
+            padding: 14px 6px;
+            border-radius: 12px 0 0 12px;
+            background: linear-gradient(180deg, #00F2FE, #10B981);
+            color: #02040A;
+            font-family: 'Orbitron', sans-serif;
+            font-size: 10px;
+            font-weight: 900;
+            letter-spacing: 2px;
+            cursor: pointer;
+            border: none;
+            box-shadow: -4px 0 20px rgba(0, 242, 254, 0.5);
+            transition: transform 0.25s ease;
+        }
+        .radar-handle:hover { transform: translateX(-6px); }
+
+        .no-break { word-break: keep-all; overflow-wrap: normal; white-space: normal; }
+        .one-line { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+        ::-webkit-scrollbar { width: 5px; height: 5px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: rgba(0,242,254,0.4); border-radius: 9999px; }
+        ::-webkit-scrollbar-thumb:hover { background: rgba(0,242,254,0.7); }
+    </style>
+</head>
+<body class="selection:bg-cyan-500 selection:text-void hud-grid pb-6">
+    <div id="root"></div>
+    <script type="text/babel">
+        const R = React;
+        const { useState, useRef, useEffect, useMemo } = React;
+        document.addEventListener('gesturestart', function(e) { e.preventDefault(); });
+
+        let lastTouchEnd = 0;
+        document.addEventListener('touchend', function(e) {
+            const now = (new Date()).getTime();
+            if (now - lastTouchEnd <= 300) { e.preventDefault(); }
+            lastTouchEnd = now;
+        }, { passive: false });
+
+        const CLOUDFLARE_WORKER_URL = "https://sarah-envelope.phantrorfirmo08.workers.dev/";
+        const APP_SHARE_URL = "https://phantrorfirmo08-alt.github.io/PROJETO-CIDAD-O-SENSOR-01/";
+        
+        const PROFILE_LOGO_URL = "https://www.image2url.com/r2/default/images/1792314795970-5a397155-f3e3-4aa1-98b3-9d1482626b0f.png";
+        const SPLASH_IMAGE_URL = "https://www.image2url.com/r2/default/images/1792314795970-5a397155-f3e3-4aa1-98b3-9d1482626b0f.png";
+        const SARAH_CUSTOM_AVATAR_URL = "https://cdn.imagetourls.com/uploads/tyImg/195w5uur9.png";
+
+        const SHARE_ICON_SVG_DATAURI = "data:image/svg+xml;utf8," + encodeURIComponent(`
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+              <defs>
+                <radialGradient id="bgG" cx="50%" cy="50%" r="50%">
+                  <stop offset="0%" stop-color="#060B18"/>
+                  <stop offset="100%" stop-color="#02040A"/>
+                </radialGradient>
+                <linearGradient id="cyberG" x1="0%" y1="0%" x2="100%" y2="100%">
+                  <stop offset="0%" stop-color="#00F2FE"/>
+                  <stop offset="50%" stop-color="#4FACFE"/>
+                  <stop offset="100%" stop-color="#10B981"/>
+                </linearGradient>
+                <linearGradient id="goldG" x1="0%" y1="0%" x2="100%" y2="100%">
+                  <stop offset="0%" stop-color="#FF9900"/>
+                  <stop offset="100%" stop-color="#F59E0B"/>
+                </linearGradient>
+              </defs>
+              <rect width="512" height="512" rx="110" fill="url(#bgG)" stroke="url(#cyberG)" stroke-width="8"/>
+              <circle cx="256" cy="256" r="200" fill="none" stroke="url(#cyberG)" stroke-width="2" stroke-dasharray="10 6" opacity="0.4"/>
+              <circle cx="256" cy="256" r="160" fill="none" stroke="#00F2FE" stroke-width="4" opacity="0.6"/>
+              <path d="M256 116 L316 216 L196 216 Z" fill="none" stroke="url(#goldG)" stroke-width="8" stroke-linejoin="round"/>
+              <path d="M256 160 L256 320" stroke="url(#cyberG)" stroke-width="12" stroke-linecap="round"/>
+              <circle cx="256" cy="356" r="18" fill="#10B981"/>
+              <circle cx="160" cy="256" r="12" fill="#00F2FE"/>
+              <circle cx="352" cy="256" r="12" fill="#FF9900"/>
+            </svg>
+        `);
+
+        const shareMessageText = "CHAVE CLIMÁTICA - RESILIÊNCIA ESTENDIDA 92 MUNICÍPIOS DO RJ\nCiência Cidadã • REMA • Estação Pública Comunitária de Resiliência\nMesquita / RJ • Todos unidos, todos protegidos, Baixada.\n\nInstale o app oficial:\n" + APP_SHARE_URL;
+
+        async function compartilharAppComSvg(showToast) {
+            try {
+                const response = await fetch(SHARE_ICON_SVG_DATAURI);
+                const blob = await response.blob();
+                const file = new File([blob], "chave_climatica_icone.svg", { type: "image/svg+xml" });
+
+                if (navigator.canShare && navigator.canShare({ files: [file] })) {
+                    await navigator.share({
+                        title: "Chave Climática • Resiliência Estendida",
+                        text: shareMessageText,
+                        url: APP_SHARE_URL,
+                        files: [file]
+                    });
+                    return;
+                }
+            } catch (e) {}
+
+            if (navigator.share) {
+                try {
+                    await navigator.share({
+                        title: "Chave Climática • Resiliência Estendida",
+                        text: shareMessageText,
+                        url: APP_SHARE_URL
+                    });
+                    return;
+                } catch (err) {
+                    if (err.name === 'AbortError') return;
+                }
+            }
+
+            navigator.clipboard.writeText(shareMessageText);
+            if(showToast) showToast("📋 Link e mensagem copiados para a área de transferência!");
+        }
+
+        const SETORES_FIXO_OFICIAL = [
+            "🛡️ SEDEC-RJ / Defesa Civil Estadual",
+            "🌊 INEA / SERLA (Ambiente e Rios - Baixada Fluminense e RJ)",
+            "🏛️ SEMIMSP / Obras - Municipal e Baixada",
+            "🎓 Periferia Viva, CAU/RJ, Universidades e Pesquisadores de Campo (Urbanismo, Habitação e Ação Local)",
+            "🛰️ CEMADEN / INPE (Monitoramento e Alerta Climático Nacional)",
+            "🏠 CRAS / CREAS (Assistência Social e Proteção Básica - Baixada Fluminense e RJ)",
+            "🩺 SUS / Vigilância em Saúde e Saneamento - Baixada Fluminense e RJ",
+            "🚨 Defesa Civil Municipal (Baixada Fluminense e Regiões)",
+            "🤝 NUPDECs — Núcleos Comunitários (92 Municípios - RJ)",
+            "🔔 Projeto Cidadão Sensor — Iniciativa Comunitária (Baixada Fluminense)",
+            "📢 Bom Dia Comunidade / Iniciativa Grupo A Chave da Esperança — Baixada Fluminense",
+            "👤 Cidadão — Participação Direta e Soberania Popular (Baixada Fluminense e RJ)"
+        ];
+
+        const MUNICIPIOS_92 = ["Angra dos Reis","Aperibé","Araruama","Areal","Armação dos Búzios","Arraial do Cabo","Barra do Piraí","Barra Mansa","Belford Roxo","Bom Jardim","Bom Jesus do Itabapoana","Cabo Frio","Cachoeiras de Macacu","Cambuci","Campos dos Goytacazes","Cantagalo","Carapebus","Carmo","Casimiro de Abreu","Comendador Levy Gasparian","Conceição de Macabu","Cordeiro","Duas Barras","Duque de Caxias","Engenheiro Paulo de Frontin","Guapimirim","Iguaba Grande","Itaboraí","Itaguaí","Italva","Itaocara","Itaperuna","Itatiaia","Japeri","Laje do Muriaé","Macaé","Macuco","Magé","Mangaratiba","Maricá","Mendes","Mesquita","Miguel Pereira","Miracema","Natividade","Nilópolis","Niterói","Nova Friburgo","Nova Iguaçu","Paracambi","Paraíba do Sul","Paraty","Paty do Alferes","Petrópolis","Pinheiral","Piraí","Porciúncula","Porto Real","Quatis","Queimados","Quissamã","Resende","Rio Bonito","Rio Claro","Rio das Flores","Rio das Ostras","Rio de Janeiro","Santa Maria Madalena","Santo Antônio de Pádua","São Fidélis","São Francisco de Itabapoana","São Gonçalo","São João da Barra","São João de Meriti","São José de Ubá","São José do Vale do Rio Preto","São Pedro da Aldeia","São Sebastião do Alto","Sapucaia","Saquarema","Seropédica","Silva Jardim","Sumidouro","Tanguá","Teresópolis","Trajano de Moraes","Três Rios","Valença","Varre-Sai","Vassouras","Volta Redonda"];
+
+        function playChameleonSound() {
+            try {
+                const AudioCtx = window.AudioContext || window.webkitAudioContext;
+                if (!AudioCtx) return;
+                const ctx = new AudioCtx();
+                if (ctx.state === 'suspended') ctx.resume();
+
+                const bufferSize = ctx.sampleRate * 1.2;
+                const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
+                const data = buffer.getChannelData(0);
+                for (let i = 0; i < bufferSize; i++) {
+                    data[i] = (Math.random() * 2 - 1) * Math.sin(i / 800);
+                }
+
+                const noiseSource = ctx.createBufferSource();
+                noiseSource.buffer = buffer;
+
+                const filter = ctx.createBiquadFilter();
+                filter.type = 'lowpass';
+                filter.frequency.setValueAtTime(350, ctx.currentTime);
+                filter.frequency.exponentialRampToValueAtTime(120, ctx.currentTime + 1.2);
+
+                const gainNode = ctx.createGain();
+                gainNode.gain.setValueAtTime(0.8, ctx.currentTime);
+                gainNode.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 1.2);
+
+                noiseSource.connect(filter);
+                filter.connect(gainNode);
+                gainNode.connect(ctx.destination);
+
+                noiseSource.start();
+            } catch (e) {
+                console.log("Áudio bloqueado:", e);
+            }
+        }
+
+        const getBrasiliaGreeting = () => {
+            const hour = parseInt(
+                new Intl.DateTimeFormat("pt-BR", { timeZone: "America/Sao_Paulo", hour: "numeric", hour12: false }).format(new Date()),
+                10
+            );
+            if (hour >= 0 && hour < 5) return "Boa madrugada";
+            if (hour >= 5 && hour < 12) return "Bom dia";
+            if (hour >= 12 && hour < 18) return "Boa tarde";
+            return "Boa noite";
+        };
+
+        function HomeCommandIcon({ className = "w-5 h-5" }) {
+            return (
+                <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/>
+                </svg>
+            );
+        }
+
+        function RadarScanIcon({ className = "w-5 h-5" }) {
+            return (
+                <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <circle cx="12" cy="12" r="10"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/><path d="M2 12h20"/>
+                </svg>
+            );
+        }
+
+        function FieldReportIcon({ className = "w-5 h-5" }) {
+            return (
+                <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/>
+                </svg>
+            );
+        }
+
+        function StreamVideoIcon({ className = "w-5 h-5" }) {
+            return (
+                <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2" ry="2"/>
+                </svg>
+            );
+        }
+
+        function AdminVaultIcon({ className = "w-5 h-5" }) {
+            return (
+                <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+                </svg>
+            );
+        }
+
+        function SurvivalStationIcon({ className = "w-5 h-5" }) {
+            return (
+                <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M14 14.76V3.5a2.5 2.5 0 0 0-5 0v11.26a4.5 4.5 0 1 0 5 0z"/>
+                </svg>
+            );
+        }
+
+        function SarahHologramAvatar({ isLarge = false, isSpeaking = false }) {
+            return (
+                <div className={`relative mx-auto rounded-2xl flex items-center justify-center overflow-hidden border border-cyberCyan/50 shadow-[0_0_30px_rgba(0,242,254,0.3)] bg-void ${isLarge ? 'w-24 h-24 sm:w-28 sm:h-28' : 'w-12 h-12'}`}>
+                    <div className="absolute inset-0 bg-gradient-to-t from-cyberCyan/20 to-transparent pointer-events-none"></div>
+                    <img src={SARAH_CUSTOM_AVATAR_URL} alt="SARAH AI Hologram" className={`w-full h-full object-cover transition-transform duration-700 ${isSpeaking ? 'scale-110' : 'scale-100'}`} />
+                    <div className="absolute bottom-1 right-1 w-2.5 h-2.5 rounded-full bg-cyberGreen border border-void animate-ping"></div>
+                </div>
+            );
+        }
+
+        function IconeCompartilharTopo({ openShareFromApp }) {
+            return (
+                <button
+                    onClick={openShareFromApp}
+                    className="w-9 h-9 rounded-xl bg-commandPanel border border-cyberCyan/40 hover:border-cyberCyan flex items-center justify-center transition-all cursor-pointer shadow-md"
+                    title="Compartilhar Sistema com Ícone SVG"
+                >
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#10B981" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="M8.59 13.51l6.83 3.98M15.41 6.51l-6.82 3.98"/>
+                    </svg>
+                </button>
+            );
+        }
+
+        function IconeSomToggle({ soundEnabled, setSoundEnabled }) {
+            return (
+                <button onClick={() => setSoundEnabled(!soundEnabled)} className={`w-9 h-9 rounded-xl border flex items-center justify-center cursor-pointer transition shadow-md ${soundEnabled ? 'bg-cyberCyan/20 border-cyberCyan text-cyberCyan shadow-[0_0_12px_rgba(0,242,254,0.5)]' : 'bg-commandPanel border-cyberCyan/30 text-slate-500'}`} title={soundEnabled ? "Áudio Ativado" : "Mudo"}>
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
+                        {soundEnabled && <path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"></path>}
+                    </svg>
+                </button>
+            );
+        }
+
+        function IconeTemaToggle({ theme, toggleTheme }) {
+            return (
+                <button onClick={toggleTheme} className="w-9 h-9 rounded-xl border border-cyberCyan/40 bg-commandPanel text-cyberCyan flex items-center justify-center cursor-pointer shadow-md hover:border-cyberCyan transition" title="Alternar Tema (Cyber / Clean)">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <circle cx="12" cy="12" r="4"/><path d="M12 2v2m0 16v2M4.93 4.93l1.41 1.41m11.32 11.32l1.41 1.41M2 12h2m16 0h2M6.34 17.66l-1.41 1.41m12.02-12.02l-1.41 1.41"/>
+                    </svg>
+                </button>
+            );
+        }
+
+        function IconeInstalarApp({ handleInstallApp, isInstallable }) {
+            return (
+                <button onClick={handleInstallApp} className={`w-9 h-9 rounded-xl border flex items-center justify-center cursor-pointer shadow-md transition ${isInstallable ? 'bg-cyberGreen/20 border-cyberGreen text-cyberGreen animate-pulse shadow-[0_0_15px_#10B981]' : 'border-cyberCyan/40 bg-commandPanel text-cyberCyan hover:border-cyberCyan'}`} title="Instalar Aplicativo">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/>
+                    </svg>
+                </button>
+            );
+        }
+
+        function CardPerfilConsolidado({ openShareFromApp }) {
+            return (
+                <div className="cyber-card p-5 sm:p-6 rounded-[28px] border border-cyberCyan/50 shadow-2xl space-y-4 font-mono my-3 text-center">
+                    <div className="space-y-1">
+                        <h2 className="font-display font-black text-xs sm:text-sm text-cyberCyan tracking-[0.2em] uppercase">
+                            SARAH AI NEXUS V8.4.2 PRO
+                        </h2>
+                        <p className="text-[9px] text-slate-300 font-bold uppercase tracking-wider">
+                            Official Edition 2024 - 2026 • GADE • Colaboração Cidadã 🛡️
+                        </p>
+                    </div>
+
+                    <div className="relative w-full max-w-[280px] mx-auto rounded-2xl overflow-hidden border border-cyberCyan/40 bg-void p-3 shadow-[0_0_25px_rgba(0,242,254,0.3)]">
+                        <div className="text-[9px] font-bold text-cyberCyan uppercase tracking-widest mb-2">
+                            COLABORAÇÃO COMUNITÁRIA • ARTIFICIAL INTELLIGENCE
+                        </div>
+                        <div className="flex justify-center my-1">
+                            <img src={PROFILE_LOGO_URL} alt="Cidadão Sensor Logo" className="w-28 h-28 object-contain drop-shadow-[0_0_15px_rgba(255,153,0,0.6)]" />
+                        </div>
+                        <div className="mt-2 text-center">
+                            <div className="font-display font-black text-base text-white tracking-wider">CIDADÃO SENSOR</div>
+                            <div className="text-[8px] text-orange-400 font-bold uppercase tracking-widest mt-0.5">SENSOR INDEPENDENTE • REDE COMUNITÁRIA</div>
+                        </div>
+                    </div>
+
+                    <div className="space-y-1">
+                        <div className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">PUBLIC SYSTEM AI GROUP</div>
+                        <div className="text-[11px] font-black text-teal-300 tracking-wider">GRUPO A CHAVE DA ESPERANÇA</div>
+                    </div>
+
+                    <div className="pt-2">
+                        <button
+                            onClick={openShareFromApp}
+                            className="w-full py-3.5 px-4 rounded-2xl cyber-button font-display font-black text-xs uppercase tracking-[0.15em] cursor-pointer shadow-[0_0_30px_rgba(255,153,0,0.6)] transition hover:scale-[1.02] flex items-center justify-center gap-2 animate-blink-two-minutes"
+                        >
+                            <span>➔ ENTRAR NO SISTEMA</span>
+                        </button>
+                    </div>
+                </div>
+            );
+        }
+
+        function AppSplashScreen({ splashImageUrl, onFinish }) {
+            return (
+                <div className="fixed inset-0 z-[300] bg-[#02040A] flex flex-col items-center justify-center p-3 text-center animate-fade-in overflow-y-auto">
+                    <div className="absolute inset-0 opacity-20 hud-grid pointer-events-none"></div>
+                    
+                    <div className="w-[92vw] max-w-[360px] rounded-[32px] border-2 border-cyberCyan/90 flex flex-col items-center justify-center bg-deepSpace/95 shadow-[0_0_90px_rgba(0,242,254,0.7)] my-auto overflow-hidden relative p-4 space-y-3">
+                        
+                        <div className="w-full h-auto min-h-[220px] max-h-[300px] flex items-center justify-center overflow-hidden my-1 bg-void/50 rounded-2xl border border-cyberCyan/40 p-2 shadow-inner">
+                            <img 
+                                src={splashImageUrl} 
+                                alt="Logo Splash Completa" 
+                                className="w-full h-auto object-contain rounded-xl max-h-[280px]" 
+                                onError={(e) => { e.target.style.display = 'none'; }} 
+                            />
+                        </div>
+
+                        <div className="w-full space-y-1 pt-1 border-t border-cyberCyan/30 text-center">
+                            <div className="font-display font-black text-[11px] text-white tracking-[0.15em] uppercase animate-maluco-glow">
+                                SARAH AI NEXUS V8.4.2 PRO
+                            </div>
+                            <div className="font-display font-bold text-[9px] text-cyberCyan tracking-widest uppercase">
+                                TODOS UNIDOS, TODOS PROTEGIDOS, BAIXADA
+                            </div>
+                        </div>
+
+                        <button 
+                            type="button"
+                            onClick={onFinish}
+                            className="w-full py-3.5 cyber-button font-extrabold rounded-xl text-[11px] uppercase tracking-[0.2em] cursor-pointer shadow-[0_0_30px_rgba(255,153,0,0.7)] transition hover:scale-105 flex items-center justify-center gap-2 mt-2"
+                        >
+                            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><polyline points="10 17 15 12 10 7"/><line x1="15" y1="12" x2="3" y2="12"/></svg>
+                            <span>ACESSAR APLICATIVO</span>
+                        </button>
+                    </div>
+                </div>
+            );
+        }
+
+        // =========================================================================
+        // PORTAIS DE SATÉLITE 24H & ESTAÇÃO DE SOBREVIVÊNCIA INTEGRADA
+        // =========================================================================
+        function EstacaoSobrevivenciaModule({ showToast }) {
+            const [telemetria, setTelemetria] = React.useState({ temp: 24.5, humidity: 60, wind: 12, rain: 0 });
+            const [status, setStatus] = React.useState({ nivel: "OPERACIONAL", cor: "#10B981", msg: "EPRCA OPERACIONAL - ROCHA SOBRINHO MONITORADA" });
+            const [parecerIA, setParecerIA] = React.useState("SARAH AI NEXUS - EPRCA sincronizando com satélite GOES-19 em tempo real...");
+            const [falando, setFalando] = React.useState(false);
+            const [ultimaSync, setUltimaSync] = React.useState(new Date().toLocaleTimeString('pt-BR'));
+            const [modoReal, setModoReal] = React.useState(true);
+
+            React.useEffect(() => {
+                const criaPortal = (id, centro, marcadores, rota, cor) => {
+                    const el = document.getElementById(id);
+                    if (!el || el._leaflet_id) return;
+                    const map = L.map(id, { minZoom: 10, maxZoom: 17 }).setView(centro, 14);
+                    L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', { maxZoom: 17, maxNativeZoom: 17, attribution: 'GOES-19' }).addTo(map);
+                    L.tileLayer('https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png', { maxZoom: 17, opacity: 0.45 }).addTo(map);
+                    if(rota) L.polyline(rota, { color: cor, weight: 6, dashArray: '12,8' }).addTo(map);
+                    marcadores.forEach(m => L.marker(m.c).addTo(map).bindPopup(m.p));
+                    setTimeout(() => { map.invalidateSize(); }, 300);
+                };
+
+                criaPortal('mapMaria', [-22.8063, -43.4825], [
+                    { c: [-22.8058, -43.3685], p: "<b>Serra do Mendanha</b><br>-22.8058,-43.3685<br>Origem Rota Laranja" },
+                    { c: [-22.8063, -43.4825], p: "<b>PONTO ZERO: MARIA CRISTINA</b><br>Sebinho / Rua Amazonas<br>Mesquita/RJ<br>Observadora Oficial: Sarah<br>-22.8063,-43.4825" }
+                ], [[-22.8058, -43.3685], [-22.8063, -43.4825]], '#FF8C00');
+
+                criaPortal('mapBento', [-22.7075, -43.3666], [
+                    { c: [-22.6397, -43.3713], p: "<b>Serra do Tinguá - Jaceruba</b><br>-22.6397,-43.3713<br>Origem Rota Azul" },
+                    { c: [-22.7075, -43.3666], p: "<b>Parque Liberdade / São Bento</b><br>Caxias/RJ - Manifesto Obras<br>Observadora Oficial: Sarah<br>-22.7075,-43.3666" }
+                ], [[-22.6397, -43.3713], [-22.7075, -43.3666]], '#1E90FF');
+            }, []);
+
+            const falar = React.useCallback((texto) => {
+                if (!('speechSynthesis' in window)) return;
+                window.speechSynthesis.cancel();
+                const u = new SpeechSynthesisUtterance(texto);
+                u.lang = 'pt-BR'; u.rate = 1.0; u.pitch = 1.05;
+                u.onstart = () => setFalando(true);
+                u.onend = () => setFalando(false);
+                window.speechSynthesis.speak(u);
+            }, []);
+
+            const avaliar = React.useCallback((t, h, v, chuva) => {
+                if (t >= 40 || chuva > 20 || v > 60) {
+                    setStatus({ nivel: "CRÍTICO", cor: "#EF4444", msg: `EPRCA ALERTA CRÍTICO: Temp ${t.toFixed(1)}°C | Vento ${v.toFixed(0)}km/h | Chuva ${chuva}mm - ATIVAR PROTOCOLO A CHAVE DA ESPERANÇA` });
+                } else if (t >= 35 || h < 35) {
+                    setStatus({ nivel: "ATENÇÃO", cor: "#F59E0B", msg: `EPRCA ATENÇÃO: Condições adversas - Temp ${t.toFixed(1)}°C` });
+                } else {
+                    setStatus({ nivel: "OPERACIONAL", cor: "#10B981", msg: "EPRCA OPERACIONAL - AMBIENTE SEGURO - MONITORAMENTO GOES-19 ATIVO" });
+                }
+            }, []);
+
+            const analisarComSarah = React.useCallback(async (t, h, v, chuva) => {
+                try {
+                    setParecerIA("🛰️ SARAH processando telemetria GOES-19 + radar + campanha em tempo real...");
+                    const prompt = `Você é SARAH da Estação Pública de Resiliência Comunitária Automatizada (EPRCA), primeiro mundo. Dados Rocha Sobrinho: ${t}°C, ${h}% umidade, ${v}km/h vento, ${chuva}mm chuva. Dê parecer técnico de 2 frases, sofisticado, falando em tempo real como estação da NASA, mencionando que a Iniciativa Grupo A Chave da Esperança acompanha a movimentação em tempo real.`;
+                    const r = await fetch("https://sarah-envelope.phantrorfirmo08.workers.dev/", {
+                        method: "POST", headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({ model: "openai/gpt-oss-120b", messages: [{ role: "system", content: "Você é SARAH da EPRCA, sofisticada, primeiro mundo, fala em tempo real." }, { role: "user", content: prompt }], temperature: 0.3, max_tokens: 200 })
+                    });
+                    const d = await r.json();
+                    let texto = d?.choices?.[0]?.message?.content?.replace(/[#*]/g,'').trim() || `EPRCA em tempo real: ${t.toFixed(1)} graus monitorados via GOES-19. Iniciativa Grupo A Chave da Esperança acompanhando movimentação da campanha ao vivo.`;
+                    setParecerIA(texto);
+                    falar(texto);
+                    setUltimaSync(new Date().toLocaleTimeString('pt-BR'));
+                } catch (e) {
+                    const fb = `EPRCA operando em tempo real. Temperatura ${t.toFixed(1)} graus, umidade ${h} por cento. Iniciativa Grupo A Chave da Esperança em monitoramento contínuo.`;
+                    setParecerIA(fb); falar(fb);
+                }
+            }, [falar]);
+
+            React.useEffect(() => {
+                if (!modoReal) return;
+                const buscar = async () => {
+                    try {
+                        const res = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=-22.7831&longitude=-43.4294&current=temperature_2m,relative_humidity_2m,wind_speed_10m,precipitation&timezone=America/Sao_Paulo`);
+                        const j = await res.json();
+                        if (j?.current) {
+                            const t = { temp: j.current.temperature_2m, humidity: j.current.relative_humidity_2m, wind: j.current.wind_speed_10m, rain: j.current.precipitation || 0 };
+                            setTelemetria(t); avaliar(t.temp, t.humidity, t.wind, t.rain); analisarComSarah(t.temp, t.humidity, t.wind, t.rain);
+                        }
+                    } catch {}
+                };
+                buscar(); const id = setInterval(buscar, 300000); return () => clearInterval(id);
+            }, [modoReal, avaliar, analisarComSarah]);
+
+            return (
+                <div className="max-w-4xl mx-auto space-y-4 font-mono p-2">
+                    <div className="rounded-[16px] border border-cyan-400/40 bg-[#081425] p-3 relative overflow-hidden">
+                        <div className="absolute inset-0 bg-gradient-to-r from-cyan-500/10 via-transparent to-emerald-500/10"></div>
+                        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-3/4 h-[1px] bg-gradient-to-r from-transparent via-cyan-400/60 to-transparent"></div>
+                        <div className="relative flex justify-between items-center">
+                            <div className="flex items-center gap-2.5">
+                                <div className={`w-8 h-8 rounded-lg flex items-center justify-center border ${falando ? 'bg-emerald-500 border-emerald-300 animate-pulse' : 'bg-cyan-500/20 border-cyan-400'}`}>🛰️</div>
+                                <div>
+                                    <h1 className="text-[10px] md:text-[11px] font-black text-cyan-200 tracking-widest">ESTAÇÃO DE SOBREVIVÊNCIA E MONITORAMENTO</h1>
+                                    <p className="text-[8px] text-slate-400 tracking-widest">EPRCA • GOES-19 • {ultimaSync} • {falando ? '🔊 FALANDO' : 'TEMPO REAL'}</p>
+                                </div>
+                            </div>
+                            <button onClick={() => setModoReal(!modoReal)} className={`px-2.5 py-1 rounded-full text-[8px] font-bold border ${modoReal ? 'bg-emerald-500/20 border-emerald-400 text-emerald-300' : 'bg-slate-700 border-slate-500 text-slate-300'}`}>{modoReal ? '🛰️ AO VIVO' : 'PAUSADO'}</button>
+                        </div>
+                    </div>
+
+                    <div className="w-full rounded-[14px] p-3 text-white text-center font-black text-[10px] tracking-widest border border-white/20 shadow-[0_0_20px_rgba(0,0,0,0.5)] transition-all duration-500" style={{ backgroundColor: status.cor }}>{falando ? '🔊 ' : ''}{status.msg}</div>
+
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-2.5">
+                        {[{l:'TEMPERATURA', v:`${telemetria.temp.toFixed(1)}°C`, c:'cyan'}, {l:'UMIDADE', v:`${telemetria.humidity.toFixed(0)}%`, c:'emerald'}, {l:'VENTO', v:`${telemetria.wind.toFixed(0)} km/h`, c:'amber'}, {l:'PRECIPITAÇÃO', v:`${telemetria.rain} mm`, c:'blue'}].map((k,i)=>(
+                            <div key={i} className="bg-[#0f2242]/80 border border-white/10 rounded-xl p-3 backdrop-blur">
+                                <p className="text-[7px] text-slate-400 tracking-widest">{k.l}</p>
+                                <p className="text-[18px] font-black text-white mt-0.5">{k.v}</p>
+                                <div className="mt-1.5 h-[2px] w-full bg-white/10 rounded-full overflow-hidden"><div className={`h-full bg-${k.c}-400 w-[75%] animate-pulse`}></div></div>
+                            </div>
+                        ))}
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-5 gap-3">
+                        <div className="md:col-span-3 bg-[#0a1933] border border-cyan-400/30 rounded-[18px] p-3.5 space-y-2.5">
+                            <div className="flex items-center justify-between">
+                                <h3 className="text-[10px] font-black text-cyan-300 tracking-widest flex items-center gap-1.5">{falando ? '🎙️ SARAH FALANDO AGORA' : '🤖 SARAH AI NEXUS'} {falando && <span className="flex gap-1"><span className="w-1 h-3 bg-emerald-400 animate-pulse"></span><span className="w-1 h-5 bg-emerald-400 animate-pulse delay-100"></span><span className="w-1 h-3 bg-emerald-400 animate-pulse delay-200"></span></span>}</h3>
+                                <span className="text-[7px] px-2 py-0.5 rounded-full bg-cyan-500/20 border border-cyan-400/30 text-cyan-300">GOES-19</span>
+                            </div>
+                            <div className="flex items-start gap-2.5 bg-black/20 rounded-xl p-2.5 border border-white/5">
+                                <div className="w-10 h-10 rounded-xl overflow-hidden shrink-0 border border-cyan-400/40">
+                                    <img src={SARAH_CUSTOM_AVATAR_URL} alt="SARAH AI" className="w-full h-full object-cover" />
+                                </div>
+                                <p className="text-[12px] text-slate-100 leading-relaxed flex-1">{parecerIA}</p>
+                            </div>
+                            <div className="flex gap-2">
+                                <button onClick={() => falar(parecerIA)} className="flex-1 py-2 rounded-xl bg-cyan-500/20 border border-cyan-400/50 text-cyan-200 text-[9px] font-bold hover:bg-cyan-500/30 transition">🔊 OUVIR SARAH</button>
+                                <button onClick={() => analisarComSarah(telemetria.temp, telemetria.humidity, telemetria.wind, telemetria.rain)} className="flex-1 py-2 rounded-xl bg-emerald-500/20 border border-emerald-400/50 text-emerald-200 text-[9px] font-bold hover:bg-emerald-500/30 transition">🔄 SINCRONIZAR</button>
+                            </div>
+                        </div>
+
+                        <div className="md:col-span-2 bg-[#1a102a]/80 border border-fuchsia-400/30 rounded-[18px] p-3.5 space-y-2.5">
+                            <h3 className="text-[9px] font-black text-fuchsia-300 tracking-widest">📡 CHAVE DA ESPERANÇA</h3>
+                            <div className="space-y-2">
+                                <div className="flex justify-between items-center bg-white/5 rounded-lg p-2 border border-white/5"><span className="text-[8px] text-slate-400">STATUS BACIA</span><span className="text-[9px] font-bold text-white">{status.nivel}</span></div>
+                                <div className="flex justify-between items-center bg-white/5 rounded-lg p-2 border border-white/5"><span className="text-[8px] text-slate-400">ALERTAS</span><span className={`text-[9px] font-bold ${status.nivel==='CRÍTICO'?'text-red-400':'text-emerald-400'}`}>{status.nivel==='OPERACIONAL'?'NENHUM':'1 ATIVO'}</span></div>
+                                <div className="flex justify-between items-center bg-white/5 rounded-lg p-2 border border-white/5"><span className="text-[8px] text-slate-400">RASTREAMENTO</span><span className="text-[9px] font-bold text-fuchsia-300 animate-pulse">● AO VIVO</span></div>
+                            </div>
+                            <div className="pt-1">
+                                <div className="w-full bg-black/40 rounded-full h-1.5 overflow-hidden border border-white/10"><div className="h-full bg-gradient-to-r from-fuchsia-500 via-cyan-400 to-emerald-400 transition-all duration-1000" style={{ width: status.nivel==='CRÍTICO' ? '95%' : '68%' }}></div></div>
+                                <p className="text-[7px] text-slate-400 mt-1.5 text-center tracking-widest">ROCHA SOBRINHO • MESQUITA</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div className="space-y-4 pt-2">
+                        <div className="cyber-card p-4 sm:p-5 rounded-[28px] border border-[#D4AF37]/60 shadow-2xl space-y-4">
+                            <div className="text-center space-y-1 pb-3 border-b border-[#D4AF37]/40">
+                                <h2 className="text-[12px] sm:text-[14px] font-black text-[#D4AF37] tracking-wider uppercase">
+                                    CHAVE CLIMÁTICA - RESILIÊNCIA ESTENDIDA 92 MUNICÍPIOS DO RJ EPRCA - RE
+                                </h2>
+                                <p className="text-[10px] font-bold text-cyberCyan">PONTO ZERO: MARIA CRISTINA - MESQUITA / RJ - BACIA RIO SARAPUÍ</p>
+                                <p className="text-[9px] text-[#D4AF37]">Observadora Oficial do Tempo: Sarah | Monitoramento GOES-19 24H | Sebinho / Rua Amazonas</p>
+                                <p className="text-[8px] text-slate-400">RADAR METEOROLÓGICO & SATÉLITE • GOES-19 + Sentinel-2 + CBERS-4A • 92 MUNICÍPIOS RJ • ZOOM 17 OFICIAL</p>
+                            </div>
+
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div className="relative border border-[#D4AF37] rounded-2xl overflow-hidden flex flex-col bg-[#08111e]">
+                                    <div className="absolute top-0 left-0 right-0 z-[1000] bg-black/90 text-[#D4AF37] p-2 text-[9px] font-extrabold text-center border-b border-[#D4AF37] leading-tight">
+                                        🛰️ PORTAL 1 - MARIA CRISTINA / SEBINHO - MESQUITA - PONTO ZERO<br/>ROTA LARANJA 9.2KM MENDANHA → SEBINHO -22.8063,-43.4825
+                                    </div>
+                                    <div id="mapMaria" className="w-full h-[320px]"></div>
+                                    <div className="absolute bottom-10 left-2 z-[1000] bg-black/80 border border-[#00FF00] rounded p-1.5 text-[8px] leading-tight">
+                                        <span className="text-[#00FF00]">●</span> GOES-19 AO VIVO<br/>Maria Cristina / Sebinho<br/>Zoom 17<br/><span style={{color:'#FF8C00'}}>■ Rota Mendanha</span>
+                                    </div>
+                                    <div className="absolute bottom-10 right-2 z-[1000] bg-black/90 border border-[#D4AF37] rounded p-1.5 text-[7px] text-center leading-tight">
+                                        🔒<br/><b className="text-[#D4AF37]">OFICIAL</b><br/>ZOOM 17<br/><span className="text-[#00FF00]">● PRIVACIDADE<br/>PROTEGIDA</span>
+                                    </div>
+                                    <div className="bg-[#08111e] border-t border-[#D4AF37] p-1.5 text-center">
+                                        <span className="text-slate-400 text-[9px] tracking-[2.5px] font-light lowercase">cidadão sensor &nbsp; • &nbsp; modo operacional</span>
+                                    </div>
+                                </div>
+
+                                <div className="relative border border-[#D4AF37] rounded-2xl overflow-hidden flex flex-col bg-[#08111e]">
+                                    <div className="absolute top-0 left-0 right-0 z-[1000] bg-black/90 text-[#D4AF37] p-2 text-[9px] font-extrabold text-center border-b border-[#D4AF37] leading-tight">
+                                        🛰️ PORTAL 2 - PARQUE LIBERDADE / SÃO BENTO - CAXIAS - MANIFESTO<br/>ROTA AZUL 4.2KM TINGUÁ → SÃO BENTO -22.7075,-43.3666
+                                    </div>
+                                    <div id="mapBento" className="w-full h-[320px]"></div>
+                                    <div className="absolute bottom-10 left-2 z-[1000] bg-black/80 border border-[#00FF00] rounded p-1.5 text-[8px] leading-tight">
+                                        <span className="text-[#00FF00]">●</span> GOES-19 AO VIVO<br/>São Bento / Liberdade<br/>Zoom 17<br/><span style={{color:'#1E90FF'}}>■ Rota Tinguá</span>
+                                    </div>
+                                    <div className="absolute bottom-10 right-2 z-[1000] bg-black/90 border border-[#D4AF37] rounded p-1.5 text-[7px] text-center leading-tight">
+                                        🔒<br/><b className="text-[#D4AF37]">OFICIAL</b><br/>ZOOM 17<br/><span className="text-[#00FF00]">● PRIVACIDADE<br/>PROTEGIDA</span>
+                                    </div>
+                                    <div className="bg-[#08111e] border-t border-[#D4AF37] p-1.5 text-center">
+                                        <span className="text-slate-400 text-[9px] tracking-[2.5px] font-light lowercase">cidadão sensor &nbsp; • &nbsp; modo operacional</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            );
+        }
+
+        function ModuloElNinoModule({ onGoToDashboard }) {
+            return (
+                <div className="space-y-4 max-w-2xl mx-auto">
+                    <div className="cyber-card p-5 sm:p-6 rounded-[28px] shadow-xl space-y-5 border border-cyberCyan/40">
+                        <div className="flex items-center justify-between border-b border-cyberCyan/25 pb-3">
+                            <div className="space-y-0.5">
+                                <h2 className="font-display text-xs font-black text-white tracking-widest flex items-center gap-2">
+                                    <span className="text-cyberCyan">🌪️</span> MÓDULO 1: EL NIÑO
+                                </h2>
+                                <p className="text-[9px] font-mono text-cyberCyan font-bold">CHAVE CLIMÁTICA • EPRCA</p>
+                            </div>
+                            <button onClick={onGoToDashboard} className="px-3.5 py-1.5 cyber-button rounded-xl text-[10px] font-black cursor-pointer">Painel</button>
+                        </div>
+
+                        <div className="space-y-3 text-xs text-slate-200 leading-relaxed cyber-card p-3.5 rounded-2xl border border-cyberCyan/20">
+                            <p>
+                                O <strong className="text-cyberCyan">El Niño</strong> é um fenômeno climático natural caracterizado pelo aquecimento anormal das águas superficiais do setor central e oriental do Oceano Pacífico Equatorial.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            );
+        }
+
+        function ModuloCidadaoSensorModule({ onGoToDashboard, showToast }) {
+            const [petKg, setPetKg] = React.useState(10);
+            const [aluminioKg, setAluminioKg] = React.useState(39.5);
+            const [ferroKg, setFerroKg] = React.useState(160);
+            const [precoPet, setPrecoPet] = React.useState(2.5);
+            const [precoAluminio, setPrecoAluminio] = React.useState(8);
+            const [precoFerro, setPrecoFerro] = React.useState(1.2);
+            const [comentario, setComentario] = React.useState("");
+
+            const totalPet = Number(petKg) * Number(precoPet);
+            const totalAluminio = Number(aluminioKg) * Number(precoAluminio);
+            const totalFerro = Number(ferroKg) * Number(precoFerro);
+            const valorTotal = totalPet + totalAluminio + totalFerro;
+            const pesoTotal = Number(petKg) + Number(aluminioKg) + Number(ferroKg);
+
+            const montarRelatorio = () => `📡 RESÍDUO E ARTEFATOS INTERCEPTADO - RIOS / SOLO\n\n♻️ PET: ${petKg}kg = R$${totalPet.toFixed(2)}\n🥫 ALUMINIO: ${aluminioKg}kg = R$${totalAluminio.toFixed(2)}\n🔩 FERRO: ${ferroKg}kg = R$${totalFerro.toFixed(2)}\n\n💰 R$${valorTotal.toFixed(2)} | ${pesoTotal.toFixed(1)} KG - RIOS / SOLO\n${comentario ? `\n📝 ${comentario}` : ''}\n\n📍 Baixada Fluminense`;
+
+            const copiar = () => { navigator.clipboard.writeText(montarRelatorio()); if(showToast) showToast("📋 Copiado!"); };
+            const zap = () => { window.open(`https://wa.me/?text=${encodeURIComponent(montarRelatorio())}`,'_blank'); };
+
+            return (
+                <div className="space-y-4 max-w-3xl mx-auto font-mono">
+                    <div className="cyber-card p-5 rounded-[28px] border border-cyberGreen/40 space-y-4">
+                        <div className="flex items-center justify-between border-b border-cyberGreen/25 pb-3">
+                            <div><h2 className="text-xs font-black text-white tracking-widest">📡 RESÍDUO E ARTEFATOS INTERCEPTADO - RIOS / SOLO</h2></div>
+                            {onGoToDashboard && <button onClick={onGoToDashboard} className="px-3.5 py-1.5 cyber-button rounded-xl text-[10px] font-black cursor-pointer">Painel</button>}
+                        </div>
+
+                        <div className="bg-void/90 border border-cyberGreen/40 rounded-2xl p-4 space-y-4">
+                            <div className="flex items-center justify-between border-b border-cyberGreen/30 pb-2">
+                                <span className="text-xs font-black text-cyberGreen uppercase">⚖️ RESÍDUO E ARTEFATOS INTERCEPTADO - RIOS / SOLO</span>
+                                <span className="text-[9px] px-2.5 py-0.5 rounded-full bg-cyberGreen/20 text-cyberGreen border border-cyberGreen/40 font-bold">{pesoTotal.toFixed(1)} KG</span>
+                            </div>
+
+                            <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                                <div className="bg-deepSpace/90 border border-cyan-400/30 rounded-xl p-3 space-y-2">
+                                    <div className="flex justify-between text-[10px] font-bold text-cyan-300"><span>♻️ PET</span><span className="text-white">R$ {totalPet.toFixed(2)}</span></div>
+                                    <input type="range" min="0" max="100" value={petKg} onChange={e => setPetKg(Number(e.target.value))} className="w-full accent-cyan-400 cursor-pointer" />
+                                    <div className="flex justify-between text-[8px] text-slate-400"><span>{petKg} kg</span><input type="number" step="0.1" value={precoPet} onChange={e => setPrecoPet(Number(e.target.value))} className="w-14 bg-void border border-cyan-400/40 rounded px-1 text-right text-white text-[9px]" /></div>
+                                </div>
+                                <div className="bg-deepSpace/90 border border-emerald-400/30 rounded-xl p-3 space-y-2">
+                                    <div className="flex justify-between text-[10px] font-bold text-emerald-300"><span>🥫 ALUMÍNIO</span><span className="text-white">R$ {totalAluminio.toFixed(2)}</span></div>
+                                    <input type="range" min="0" max="50" step="0.5" value={aluminioKg} onChange={e => setAluminioKg(Number(e.target.value))} className="w-full accent-emerald-400 cursor-pointer" />
+                                    <div className="flex justify-between text-[8px] text-slate-400"><span>{aluminioKg} kg</span><input type="number" step="0.5" value={precoAluminio} onChange={e => setPrecoAluminio(Number(e.target.value))} className="w-14 bg-void border border-emerald-400/40 rounded px-1 text-right text-white text-[9px]" /></div>
+                                </div>
+                                <div className="bg-deepSpace/90 border border-amber-400/30 rounded-xl p-3 space-y-2">
+                                    <div className="flex justify-between text-[10px] font-bold text-amber-300"><span>🔩 FERRO</span><span className="text-white">R$ {totalFerro.toFixed(2)}</span></div>
+                                    <input type="range" min="0" max="200" value={ferroKg} onChange={e => setFerroKg(Number(e.target.value))} className="w-full accent-amber-400 cursor-pointer" />
+                                    <div className="flex justify-between text-[8px] text-slate-400"><span>{ferroKg} kg</span><input type="number" step="0.1" value={precoFerro} onChange={e => setPrecoFerro(Number(e.target.value))} className="w-14 bg-void border border-amber-400/40 rounded px-1 text-right text-white text-[9px]" /></div>
+                                </div>
+                            </div>
+
+                            <div className="space-y-1.5">
+                                <label className="text-[10px] font-black text-cyberGreen uppercase">📝 COMENTÁRIO / OBSERVAÇÃO</label>
+                                <textarea value={comentario} onChange={e=>setComentario(e.target.value)} placeholder="Ex: Coleta NUPDEC, Rocha Sobrinho..." rows="2" className="w-full bg-void border border-cyberGreen/40 rounded-xl p-2.5 text-xs text-white resize-none outline-none focus:border-cyberGreen"></textarea>
+                            </div>
+
+                            <div className="bg-gradient-to-r from-emerald-950/80 to-cyan-950/80 border border-cyberGreen/50 rounded-xl p-3.5 flex items-center justify-between gap-3">
+                                <div><span className="text-[9px] text-slate-400 block uppercase">TOTAL</span><span className="text-xl font-black text-cyberGreen">R$ {valorTotal.toFixed(2)}</span><span className="text-xs font-black text-cyberCyan block">{pesoTotal.toFixed(1)} KG - RIOS / SOLO</span></div>
+                                <div className="flex gap-2">
+                                    <button onClick={copiar} className="bg-[#0D152D] border border-cyberGreen/40 text-cyberGreen px-3 py-2.5 rounded-xl text-[10px] font-black cursor-pointer shadow-md">📋</button>
+                                    <button onClick={zap} className="cyber-button px-4 py-2.5 rounded-xl text-[10px] font-black cursor-pointer">🚀 WhatsApp</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            );
+        }
+
+        function NativeHydroWindRadar({ isOpen, onToggle }) {
+            const [brasiliaTime, setBrasiliaTime] = React.useState("");
+            const [radarKey, setRadarKey] = React.useState(1);
+
+            React.useEffect(() => {
+                const timer = setInterval(() => {
+                    const timeStr = new Intl.DateTimeFormat("pt-BR", {
+                        timeZone: "America/Sao_Paulo", hour: "2-digit", minute: "2-digit", second: "2-digit", hour12: false
+                    }).format(new Date());
+                    setBrasiliaTime(timeStr);
+                }, 1000);
+                return () => clearInterval(timer);
+            }, []);
+
+            return (
+                <R.Fragment>
+                    <button className="radar-handle" onClick={onToggle} title="Abrir/Fechar Radar 24h">
+                        {isOpen ? "✕ FECHAR RADAR ✕" : "🛰 RADAR 24H ◀"}
+                    </button>
+                    {isOpen && (
+                        <div className="fixed inset-0 z-[80] bg-void/90 backdrop-blur-2xl animate-fade-in" onClick={onToggle}>
+                            <div
+                                className="absolute right-0 top-0 bottom-0 w-full max-w-[700px] cyber-card rounded-l-[32px] overflow-hidden flex flex-col shadow-2xl"
+                                onClick={(e) => e.stopPropagation()}
+                            >
+                                <div className="flex items-center justify-between px-5 py-4 bg-deepSpace/95 border-b border-cyberCyan/30">
+                                    <div className="flex items-center gap-3 overflow-hidden">
+                                        <span className="w-2.5 h-2.5 rounded-full bg-cyberCyan animate-ping shrink-0"></span>
+                                        <span className="font-display font-bold text-xs text-cyberCyan tracking-wider truncate">
+                                            CHAVE CLIMÁTICA • RADAR METEOROLÓGICO • RJ
+                                        </span>
+                                    </div>
+                                    <div className="flex items-center gap-2.5 shrink-0">
+                                        <span className="font-mono text-[11px] font-bold text-cyberGreen px-2.5 py-1 bg-cyberGreen/10 rounded-xl border border-cyberGreen/40">🕒 {brasiliaTime || "00:00:00"}</span>
+                                        <button onClick={() => setRadarKey(k => k + 1)} className="px-3 py-1.5 bg-cyberCyan/25 hover:bg-cyberCyan text-cyberCyan hover:text-void border border-cyberCyan/40 rounded-xl font-bold text-xs cursor-pointer transition">🔄</button>
+                                        <button onClick={onToggle} className="px-3.5 py-1.5 bg-cyberRose/20 text-cyberRose border border-cyberRose/40 rounded-xl font-bold text-xs cursor-pointer">✕</button>
+                                    </div>
+                                </div>
+                                <iframe
+                                    key={radarKey}
+                                    src="https://embed.windy.com/embed2.html?lat=-22.7845&lon=-43.4190&detailLat=-22.7845&detailLon=-43.4190&width=650&height=550&zoom=10&level=surface&overlay=wind&product=ecmwf&menu=&message=&marker=true&calendar=now&pressure=true&type=map&location=coordinates&detail=true&metricWind=default&metricTemp=default"
+                                    className="w-full flex-1 border-none bg-void"
+                                    sandbox="allow-scripts allow-same-origin allow-popups allow-forms"
+                                    allowFullScreen
+                                ></iframe>
+                            </div>
+                        </div>
+                    )}
+                </R.Fragment>
+            );
+        }
+
+        function VistoriaEPRCA_BlocosFuturistas({onBackToDashboard,showToast}){
+            const videoRef=React.useRef(null),canvasRef=React.useRef(null);
+            const MUN=window.MUNICIPIOS_92||["Mesquita","Nilópolis","Nova Iguaçu","Belford Roxo","Duque de Caxias","São João de Meriti","Magé","Guapimirim","Japeri","Queimados","Seropédica","Paracambi"];
+            const SET=window.SETORES_FIXO_OFICIAL||["Defesa Civil","Meio Ambiente","Obras","Assistência Social","EPRCA - Baixada"];
+            const TOP=[["deslizamento","Deslizamento"],["alagamento","Alagamento"],["trincas","Trincas"],["arvore","Árvore Risco"],["valao","Bueiro/Valão"],["lixo","Lixo"],["erosao","Erosão"],["via","Via Danificada"],["iluminacao","Iluminação"],["eletrica","Fiação"],["ocupacao","Ocupação"],["infiltracao","Infiltração"],["desmatamento","Desmatamento"],["barragem","Muro Risco"],["ponte","Ponte Risco"],["outros","Outros"]];
+            const [municipio,setMun]=React.useState("Mesquita"),[setor,setSetor]=React.useState(SET[0]),[equipe,setEquipe]=React.useState("Iniciativa Grupo A Chave da Esperança"),[nivel,setNivel]=React.useState("🟢 Risco Baixo"),[agente,setAgente]=React.useState(""),[local,setLocal]=React.useState(""),[desc,setDesc]=React.useState(""),[gps,setGps]=React.useState({lt:'',ln:'',lk:''}),[gpsSt,setGpsSt]=React.useState("📍 GPS em espera"),[hash,setHash]=React.useState("..."),[camAtiva,setCamAtiva]=React.useState(false),[oc,setOc]=React.useState({}),[fotos,setFotos]=React.useState([null,null,null,null]);
+            const protocolo=React.useMemo(()=>`EPRCA-${municipio.slice(0,3).toUpperCase()}-2026-${Math.floor(1000+Math.random()*9000)}`,[municipio]);
+            const getFinal=()=>equipe.trim()?`${setor} | ${equipe.trim()}`:setor;
+            const gpsStr=gps.lt?`${gps.lt},${gps.ln}`:(local||"Rocha Sobrinho/Mesquita-RJ");
+            React.useEffect(()=>{(async()=>{try{const s=municipio+setor+equipe+nivel+agente+local+desc+protocolo+JSON.stringify(oc);const hb=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(s));setHash(Array.from(new Uint8Array(hb)).map(b=>b.toString(16).padStart(2,'0')).join('').slice(0,32)+"...")}catch{setHash("sha256-ok")}})()},[municipio,setor,equipe,nivel,agente,local,desc,protocolo,oc]);
+            const pegarGps=()=>{if(!navigator.geolocation)return showToast("⚠️ GPS não suportado");showToast("🛰 Buscando GPS...");navigator.geolocation.getCurrentPosition(p=>{const lt=p.coords.latitude.toFixed(6),ln=p.coords.longitude.toFixed(6);setGps({lt,ln,lk:`https://www.google.com/maps?q=${lt},${ln}`});setLocal(`${lt},${ln}`);setGpsSt("✅ GPS Fixado")},()=>setGpsSt("⚠ Erro GPS"),{enableHighAccuracy:true,timeout:1e4})};
+            const ligarCam=async()=>{try{const s=await navigator.mediaDevices.getUserMedia({video:{facingMode:'environment'}});videoRef.current.srcObject=s;setCamAtiva(true)}catch{showToast("⚠️ Erro câmera")}};
+            const desligarCam=()=>{if(videoRef.current?.srcObject){videoRef.current.srcObject.getTracks().forEach(t=>t.stop());videoRef.current.srcObject=null}setCamAtiva(false)};
+            React.useEffect(()=>{ligarCam();return()=>desligarCam()},[]);
+            const comprimir=(dataUrl,maxW=600,q=0.5)=>new Promise(r=>{const i=new Image();i.onload=()=>{const c=document.createElement('canvas');let w=i.width,h=i.height;if(w>maxW){h=h*(maxW/w);w=maxW}c.width=w;c.height=h;c.getContext('2d').drawImage(i,0,0,w,h);r(c.toDataURL('image/jpeg',q))};i.src=dataUrl});
+            const capturar=async i=>{const v=videoRef.current,c=canvasRef.current;if(!v||!c||!v.srcObject){showToast("⚠️ Ative a câmera!");ligarCam();return}const ctx=c.getContext('2d');c.width=v.videoWidth||1280;c.height=v.videoHeight||720;ctx.drawImage(v,0,0,c.width,c.height);const agora=new Date().toLocaleString('pt-BR'),bh=75;ctx.fillStyle='rgba(2,4,10,0.88)';ctx.fillRect(0,c.height-bh,c.width,bh);ctx.fillStyle='#00F2FE';ctx.fillRect(0,c.height-bh,c.width,3);ctx.fillStyle='#FFF';ctx.font='bold 11px monospace';ctx.fillText(`EPRCA | ${agora} | ${gpsStr}`.slice(0,90),10,c.height-45);ctx.fillStyle='#00F2FE';ctx.fillText(`SETOR: ${setor}`.slice(0,80),10,c.height-28);ctx.fillStyle='#FFB86A';ctx.fillText(`EQUIPE: ${getFinal()}`.slice(0,85),10,c.height-12);const leve=await comprimir(c.toDataURL('image/jpeg',0.8),1280,0.6);const n=[...fotos];n[i]=leve;setFotos(n);showToast(`📸 Foto 0${i+1} OK!`)};
+            const getOcTxt=()=>{const l=TOP.filter(t=>oc[t[0]]).map(t=>`• ${t[1]}`);return l.length?l.join("\n"):"• Nenhuma ocorrência"};
+            const montarLaudo=()=>`🛡️ LAUDO EPRCA BAIXADA\n📌 ${protocolo}\n📍 ${municipio}-RJ\n🏛 ${setor}\n👥 ${getFinal()}\n⚠️ ${nivel}\n👤 ${agente||'N/I'}\n📍 ${gpsStr}\n${gps.lk||''}\n\nOCORRENCIAS:\n${getOcTxt()}\n\n📝 ${desc||'Sem obs'}\n\n🔒 ${hash}`;
+            const gerarPdfLeve=async()=>{let J=window.jspdf?window.jspdf.jsPDF:window.jsPDF;if(!J){showToast("⚠️ Sem jsPDF");return null}const doc=new J({compress:true});let y=18,m=12;doc.setFontSize(11);doc.text(`LAUDO ${municipio}-RJ - ${protocolo}`,m,y);y+=7;doc.setFontSize(8);doc.text(`Setor: ${setor} | ${getFinal()} | ${nivel} | ${gpsStr}`,m,y);y+=6;doc.text(doc.splitTextToSize(`${getOcTxt()}\n\nOBS: ${desc||'Sem desc'}`,186),m,y);y+=35;doc.text(`HASH: ${hash}`,m,y);y+=6;for(let i=0;i<fotos.length;i++){if(!fotos[i])continue;const f=await comprimir(fotos[i],600,0.5);if(y>220){doc.addPage();y=15}doc.addImage(f,'JPEG',m,y,85,48);doc.text(`Foto 0${i+1} ${gpsStr}`,m+90,y+10);y+=55}return doc};
+            const enviarComFotos=async()=>{if(!fotos.some(Boolean))return showToast("⚠️ 1 foto no mínimo");showToast("📦 Preparando...");const doc=await gerarPdfLeve();if(!doc)return;const pdfBlob=doc.output('blob');const files=[];for(let i=0;i<fotos.length;i++){if(!fotos[i])continue;const b=await (await fetch(fotos[i])).blob();files.push(new File([b],`Foto-0${i+1}.jpg`,{type:'image/jpeg'}))}files.unshift(new File([pdfBlob],`${protocolo}.pdf`,{type:'application/pdf'}));if(navigator.canShare&&navigator.canShare({files})){try{await navigator.share({title:protocolo,text:montarLaudo(),files});showToast("✅ Enviado com fotos!");return}catch(e){}}doc.save(`${protocolo}.pdf`);window.open(`https://wa.me/?text=${encodeURIComponent(montarLaudo())}`,'_blank')};
+
+            return(
+            <div className="max-w-xl mx-auto space-y-3 cyber-card p-4 rounded-[28px] border border-cyan-400/40 font-mono">
+              <style>{`
+                .grid-futuro{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+                .bloco-foto{height:110px;border-radius:14px;position:relative;overflow:hidden;background:linear-gradient(145deg,#0a1a33,#02040a);border:1px solid rgba(0,242,254,.3);cursor:pointer}
+                .scan{position:absolute;top:0;left:0;width:100%;height:2px;background:#00F2FE;animation:scan 2.5s linear infinite}
+                @keyframes scan{0%{top:0}100%{top:100%}}
+                .bloco-label{position:absolute;bottom:6px;left:6px;right:6px;background:rgba(2,4,10,.8);border-radius:8px;padding:4px 6px;font-size:8px;color:#00F2FE;display:flex;justify-content:space-between}
+                .img-foto{width:100%;height:100%;object-fit:cover}
+                .placeholder{width:100%;height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;color:#00F2FE;gap:4px}
+              `}</style>
+              <div className="flex justify-between items-center border-b border-cyan-400/30 pb-2">
+                <div><span className="text-xs font-black text-cyan-400 block">📋 VISTORIA • BLOCOS FUTURISTAS</span><span className="text-[9px] text-slate-400">EPRCA • Baixada Fluminense</span></div>
+                <button onClick={onBackToDashboard} className="px-3 py-1 bg-rose-500/20 text-rose-400 border border-rose-500/40 rounded-xl text-xs font-bold cursor-pointer">✕ Fechar</button>
+              </div>
+              <div className="space-y-3">
+                <div><label className="text-[10px] text-cyan-400 font-bold uppercase">Município - RJ</label><select value={municipio} onChange={e=>setMun(e.target.value)} className="w-full bg-void border border-cyan-400/40 rounded-xl p-2 text-xs text-white font-bold mt-1">{MUN.map(m=><option key={m} value={m}>{m} - RJ</option>)}</select></div>
+                <div><label className="text-[10px] text-cyan-400 font-bold uppercase">Setor / Órgão Oficial</label><select value={setor} onChange={e=>setSetor(e.target.value)} className="w-full bg-[#1A1A1A] border border-orange-500/50 rounded-xl p-2 text-[11px] text-white mt-1">{SET.map(s=><option key={s} value={s}>{s}</option>)}</select></div>
+                <div className="bg-gradient-to-br from-[#1A1A1A] to-[#0D152D] border-2 border-orange-500/80 rounded-xl p-3"><label className="text-[10px] font-black text-orange-400 uppercase block">📢 NOME DA SUA EQUIPE / COLETIVO</label><input value={equipe} onChange={e=>setEquipe(e.target.value)} className="w-full bg-void border-2 border-orange-400/70 rounded-xl p-2 text-[11px] text-white font-bold mt-1.5" /><div className="bg-black/70 border border-cyan-400/30 rounded-lg p-1.5 mt-1.5"><p className="text-[8px] text-slate-400">PRÉVIA:</p><p className="text-[10px] text-orange-300 font-bold">👥 {getFinal()}</p></div></div>
+                <div className="grid grid-cols-2 gap-2"><div><label className="text-[10px] text-cyan-400 font-bold uppercase block mb-1">Risco</label><select value={nivel} onChange={e=>setNivel(e.target.value)} className="w-full bg-void border border-cyberCyan/40 rounded-xl p-2 text-xs text-white"><option>🟢 Risco Baixo</option><option>🟡 Risco Médio</option><option>🟠 Risco Alto</option><option>🔴 Risco Muito Alto</option></select></div><div><label className="text-[10px] text-cyan-400 font-bold uppercase block mb-1">Agente / Responsável</label><input value={agente} onChange={e=>setAgente(e.target.value)} placeholder="Seu Nome" className="w-full bg-void border border-cyberCyan/40 rounded-xl p-2 text-xs text-white" /></div></div>
+                <div className="flex justify-between items-center bg-void border border-cyberCyan/40 rounded-xl p-2"><div className="truncate pr-2"><span className="text-xs text-emerald-400 block">{gpsSt}</span><span className="text-[9px] text-slate-300">{gpsStr}</span></div><button onClick={pegarGps} className="cyber-button px-3 py-1.5 rounded-lg text-xs font-black cursor-pointer shrink-0">GPS 🛰</button></div>
+                <div className="bg-void p-3 rounded-2xl border border-cyberCyan/30 space-y-2"><div className="flex justify-between items-center"><span className="text-[10px] font-bold text-cyberCyan">📸 CÂMERA DE CAMPO EPRCA</span>{camAtiva ? <button onClick={desligarCam} className="px-2.5 py-1 bg-rose-500/20 text-rose-400 border border-rose-500/40 rounded-lg text-[9px] font-bold cursor-pointer">Pausar</button> : <button onClick={ligarCam} className="px-2.5 py-1 bg-emerald-500/20 text-emerald-400 border border-emerald-500/40 rounded-lg text-[9px] font-bold cursor-pointer">Ativar</button>}</div><video ref={videoRef} autoPlay playsInline className="w-full rounded-xl bg-black h-44 object-cover border border-cyberCyan/40"></video><canvas ref={canvasRef} style={{display:'none'}}></canvas><div className="grid-futuro">{[0,1,2,3].map(i=>(<div key={i} className="bloco-foto" onClick={()=>capturar(i)}><div className="scan"></div>{fotos[i] ? (<div className="relative w-full h-full"><img src={fotos[i]} className="img-foto" alt={`Foto ${i+1}`} /><button onClick={(e)=>{e.stopPropagation();const n=[...fotos];n[i]=null;setFotos(n)}} className="absolute top-1 right-1 bg-rose-600 text-white w-4 h-4 rounded-full text-[9px] flex items-center justify-center font-bold">×</button></div>) : (<div className="placeholder"><span className="text-lg">◈</span><span className="text-[9px]">FOTO 0{i+1}</span><span className="text-[7px] text-slate-400">TOQUE PARA CAPTURAR</span></div>)}<div className="bloco-label"><span>● REC</span><span>{fotos[i]?'OK':'AGUARDANDO'}</span></div></div>))}</div></div>
+                <div className="bg-void/70 border border-cyberCyan/30 rounded-xl p-2.5"><label className="text-[10px] font-bold text-cyberCyan uppercase block mb-1.5">Checklist de Ocorrências ({Object.values(oc).filter(Boolean).length})</label><div className="grid grid-cols-2 gap-1.5 text-[11px] text-slate-200 max-h-36 overflow-y-auto pr-1">{TOP.map(t=>(<label key={t[0]} className="flex items-center gap-1.5 cursor-pointer bg-void/50 p-1.5 rounded-lg border border-white/5"><input type="checkbox" checked={!!oc[t[0]]} onChange={e=>setOc({...oc,[t[0]]:e.target.checked})} className="rounded text-cyberCyan w-3.5 h-3.5 bg-void cursor-pointer" /><span className="truncate">{t[1]}</span></label>))}</div></div>
+                <textarea value={desc} onChange={e=>setDesc(e.target.value)} placeholder="Observações complementares..." rows="2" className="w-full bg-void border border-cyberCyan/40 rounded-xl p-2 text-xs text-white resize-none"></textarea>
+                <div className="grid grid-cols-2 gap-2 text-[9px]"><div className="bg-void/80 border border-cyberCyan/30 rounded-xl p-2 truncate"><span className="text-slate-400 block">PROTOCOLO:</span><span className="text-white font-bold">{protocolo}</span></div><div className="bg-void/80 border border-cyberCyan/30 rounded-xl p-2 truncate"><span className="text-slate-400 block">HASH:</span><span className="text-white font-bold">{hash.slice(0,12)}...</span></div></div>
+                <div className="grid grid-cols-2 gap-2"><button onClick={enviarComFotos} className="cyber-button py-2.5 rounded-xl text-[10px] uppercase font-black cursor-pointer shadow-lg">🚀 ENVIAR PDF + FOTOS</button><button onClick={()=>{navigator.clipboard.writeText(montarLaudo());showToast("📋 Texto copiado!")}} className="bg-[#0D152D] border border-cyberCyan/40 text-cyberCyan py-2.5 rounded-xl text-[10px] font-bold cursor-pointer">📋 Copiar Texto</button></div>
+              </div>
+            </div>);
+        }
+
+        function PublicVideoGallery({ localVideos, onGoToDashboard }) {
+            return (
+                <div className="space-y-4 max-w-2xl mx-auto">
+                    <div className="cyber-card p-5 rounded-[28px] shadow-xl space-y-4">
+                        <div className="flex items-center justify-between border-b border-cyberCyan/25 pb-3">
+                            <div className="space-y-0.5">
+                                <h2 className="font-display text-xs font-black text-white tracking-widest flex items-center gap-2"><span className="text-cyberCyan">🎥</span> SARAH AI STREAM</h2>
+                                <p className="text-[9px] font-mono text-cyberCyan font-bold">CHAVE CLIMÁTICA • EPRCA</p>
+                            </div>
+                            <button onClick={onGoToDashboard} className="px-3.5 py-1.5 cyber-button rounded-xl text-[10px] font-black cursor-pointer">Painel</button>
+                        </div>
+                        {localVideos.length === 0 ? (
+                            <div className="text-center py-10 space-y-2">
+                                <div className="text-2xl opacity-40">🎬</div>
+                                <p className="text-xs text-slate-400 font-medium">Nenhum stream ativo.</p>
+                            </div>
+                        ) : (
+                            <div className="space-y-4">
+                                {localVideos.map(vid => (
+                                    <div key={vid.id} className="rounded-2xl overflow-hidden cyber-card shadow-lg border border-cyberCyan/30">
+                                        <div className="flex items-center justify-between px-3.5 py-2.5 bg-void/90 border-b border-cyberCyan/20">
+                                            <span className="text-[10px] font-black text-cyberCyan truncate font-display tracking-wide">▶ {vid.title}</span>
+                                            <span className="text-[8px] font-mono text-slate-400">{vid.date || 'Sistema'}</span>
+                                        </div>
+                                        <video src={vid.url} controls playsInline preload="auto" className="w-full h-52 object-contain bg-void" />
+                                    </div>
+                                ))}
+                            </div>
+                        )}
+                    </div>
+                </div>
+            );
+        }
+
+        function AdminVaultModule({ localVideos, setLocalVideos, marketingText, setMarketingText, showToast, onClose }) {
+            const [pinInput, setPinInput] = React.useState("");
+            const [isUnlocked, setIsUnlocked] = React.useState(false);
+            const [marketingInput, setMarketingInput] = React.useState(marketingText);
+
+            const handleUnlock = (e) => {
+                e.preventDefault();
+                if (pinInput === "303500") { setIsUnlocked(true); showToast("🔓 Acesso Autorizado!"); } else { showToast("❌ PIN Incorreto."); }
+            };
+
+            const handleUploadVideo = (e) => {
+                const files = Array.from(e.target.files);
+                if (files.length === 0) return;
+
+                files.forEach(file => {
+                    showToast(`🔄 Salvando "${file.name}"...`);
+                    const reader = new FileReader();
+                    reader.onload = (uploadEvt) => {
+                        const base64Data = uploadEvt.target.result;
+                        const newVid = { 
+                            id: Date.now() + Math.random(), 
+                            title: file.name, 
+                            url: base64Data, 
+                            date: new Date().toLocaleDateString('pt-BR'),
+                            isPinned: true 
+                        };
+                        
+                        setLocalVideos(prev => {
+                            const updated = [newVid, ...prev];
+                            try { localStorage.setItem("cparc_videos_permanent", JSON.stringify(updated)); } catch(err) {}
+                            return updated;
+                        });
+                        showToast(`📹 Vídeo "${file.name}" salvo com sucesso!`);
+                    };
+                    reader.readAsDataURL(file);
+                });
+                e.target.value = "";
+            };
+
+            const handleDeleteVideo = (id, title) => {
+                if (confirm(`Excluir "${title}"?`)) {
+                    setLocalVideos(prev => {
+                        const updated = prev.filter(v => v.id !== id);
+                        try { localStorage.setItem("cparc_videos_permanent", JSON.stringify(updated)); } catch(err) {}
+                        return updated;
+                    });
+                    showToast(`🗑️ Vídeo excluído!`);
+                }
+            };
+
+            return (
+                <div className="space-y-4 max-w-xl mx-auto">
+                    <div className="cyber-card p-5 rounded-[28px] shadow-xl space-y-4">
+                        <div className="flex items-center justify-between border-b border-cyberCyan/25 pb-3">
+                            <h2 className="font-display text-xs font-black text-cyberCyan tracking-widest">🔒 ÁREA RESTRITA (ADMIN)</h2>
+                            <button onClick={onClose} className="px-3 py-1 bg-cyberRose/20 text-cyberRose border border-cyberRose/40 rounded-xl text-[10px] font-bold cursor-pointer">✕ Fechar</button>
+                        </div>
+                        {!isUnlocked ? (
+                            <form onSubmit={handleUnlock} className="flex gap-2.5">
+                                <input type="password" maxLength="6" value={pinInput} onChange={(e) => setPinInput(e.target.value)} placeholder="PIN 🔒" className="flex-1 bg-void border border-cyberCyan/40 rounded-xl px-3.5 py-3 text-center text-slate-100 focus:outline-none font-mono tracking-widest text-base shadow-inner" />
+                                <button type="submit" className="px-5 py-3 cyber-button font-black rounded-xl text-xs cursor-pointer shadow-lg">Acessar</button>
+                            </form>
+                        ) : (
+                            <div className="space-y-3.5">
+                                <div className="bg-void/80 border border-cyberCyan/40 p-3.5 rounded-2xl space-y-2">
+                                    <h3 className="text-[10px] font-black text-cyberCyan tracking-widest font-display">📢 INFORMATIVO DA EPRCA</h3>
+                                    <textarea rows="2" value={marketingInput} onChange={(e) => setMarketingInput(e.target.value)} className="w-full bg-deepSpace border border-cyberCyan/30 rounded-xl p-2.5 text-xs text-slate-100 focus:outline-none" />
+                                    <button onClick={() => { setMarketingText(marketingInput); try{localStorage.setItem("cparc_marketing_text", marketingInput);}catch(e){} showToast("💾 Mensagem salva!"); }} className="w-full py-2.5 cyber-button font-black rounded-xl text-[10px] uppercase tracking-widest cursor-pointer">Salvar Mensagem</button>
+                                </div>
+
+                                <label className="block text-center px-4 py-3 bg-gradient-to-r from-cyberGreen to-cyberCyan text-void font-black rounded-xl text-[11px] uppercase tracking-widest cursor-pointer shadow-lg transition hover:scale-[1.02]">
+                                    ➕ Enviar Novo Vídeo de Monitoramento
+                                    <input type="file" accept="video/*" onChange={handleUploadVideo} className="hidden" />
+                                </label>
+
+                                <div className="space-y-2.5 pt-1">
+                                    <h3 className="text-[10px] font-black text-cyberCyan tracking-widest font-display">Gerenciar Vídeos:</h3>
+                                    {localVideos.length === 0 ? (
+                                        <p className="text-xs text-slate-400 italic">Nenhum vídeo armazenado.</p>
+                                    ) : (
+                                        localVideos.map(vid => (
+                                            <div key={vid.id} className="flex items-center justify-between bg-void/90 p-2.5 rounded-xl border border-cyberCyan/30 gap-2">
+                                                <div className="truncate text-xs font-bold text-slate-200">▶ {vid.title}</div>
+                                                <button onClick={() => handleDeleteVideo(vid.id, vid.title)} className="px-2.5 py-1 bg-cyberRose/20 text-cyberRose border border-cyberRose/40 rounded-lg text-[9px] font-bold shrink-0 cursor-pointer hover:bg-cyberRose/80 transition">
+                                                    🗑️ Excluir
+                                                </button>
+                                            </div>
+                                        ))
+                                    )}
+                                </div>
+                            </div>
+                        )}
+                    </div>
+                </div>
+            );
+        }
+
+        function AutomatedObservatoryWidget() {
+            const [w, setW] = React.useState({temp:"--", humidity:"--", rain:"--", status:"Sincronizando...", color:"#00F2FE"});
+
+            React.useEffect(() => {
+                const fetchW = async () => {
+                    try {
+                        const res = await fetch('https://api.open-meteo.com/v1/forecast?latitude=-22.7831&longitude=-43.4294&current=temperature_2m,relative_humidity_2m,precipitation&timezone=America/Sao_Paulo');
+                        const d = await res.json();
+                        if(d?.current) {
+                            const {temperature_2m:tp, relative_humidity_2m:hm, precipitation:pr} = d.current;
+                            setW({temp:`${tp}°C`, humidity:`${hm}%`, rain:`${pr} mm`, status:pr>5?"ALERTA CHUVAS":pr>0.5?"CHUVA LEVE":"CÉU ESTÁVEL", color:pr>5?"#F43F5E":pr>0.5?"#00F2FE":"#10B981"});
+                        } else throw new Error();
+                    } catch(e) { setW({temp:"N/D", humidity:"N/D", rain:"N/D", status:"OFFLINE", color:"#64748B"}); }
+                };
+                fetchW(); const tw = setInterval(fetchW, 600000);
+                return () => clearInterval(tw);
+            }, []);
+
+            const tickerPhrases = [
+                "🛡️ PROJETO IGUAÇU",
+                "MINHA CASA MINHA VIDA",
+                "PERIFERIA VIVA",
+                "CIDADES RESILIENTES",
+                "ONU HABITAT",
+                "PROGRAMA MEU LAR",
+                "CIDADÃO SENSOR",
+                "TODOS UNIDOS, TODOS PROTEGIDOS",
+                "GRUPO A CHAVE DA ESPERANÇA",
+                "MESQUITA RJ 🛡️"
+            ];
+
+            const emergencias = [
+                { n: "199", label: "DEFESA CIVIL", c: "#F43F5E" },
+                { n: "193", label: "BOMBEIROS", c: "#F472B6" },
+                { n: "192", label: "SAMU", c: "#10B981" },
+                { n: "188", label: "CVV - APOIO", c: "#00F2FE" }
+            ];
+
+            return (
+                <div className="cyber-card rounded-[26px] overflow-hidden shadow-xl border border-cyberCyan/30 space-y-2.5">
+                    <div className="px-4 py-3 bg-gradient-to-r from-deepSpace via-commandPanel to-deepSpace border-b border-cyberCyan/30 text-center space-y-1">
+                        <div className="font-display font-black text-xs tracking-[0.1em] text-cyan-200 uppercase leading-snug">
+                            REDE DE RESILIÊNCIA ESTENDIDA • MÓDULO AMPLIADO MESQUITA - 92 MUNICÍPIOS RJ
+                        </div>
+                        <div className="font-display font-bold text-[10px] tracking-wider text-cyberCyan uppercase">
+                            CIÊNCIA CIDADÃ • REMA
+                        </div>
+                        <div className="font-display font-black text-[11px] tracking-wider text-white uppercase animate-maluco-glow">
+                            ESTAÇÃO PÚBLICA COMUNITÁRIA DE RESILIÊNCIA CLIMÁTICA
+                        </div>
+                        <div className="font-mono text-[9px] text-emerald-400 tracking-widest font-bold uppercase pt-0.5">
+                            "Todos unidos, todos protegidos, Baixada."
+                        </div>
+                    </div>
+
+                    <div style={{display:'grid', gridTemplateColumns:'repeat(auto-fit, minmax(100px, 1fr))', gap:'8px'}} className="px-3 pt-0.5">
+                        {[{l:'TEMPERATURA', v:w.temp, c:'#00F2FE'}, {l:'UMIDADE', v:w.humidity, c:'#10B981'}, {l:'PRECIPITAÇÃO', v:w.rain, c:'#4FACFE'}, {l:'STATUS', v:w.status, c:w.color}].map((x,i)=>(
+                            <div key={i} className="bg-void/80 border border-cyberCyan/20 rounded-xl p-2.5 text-center shadow-inner">
+                                <div className="text-[8px] text-slate-400 font-black tracking-[0.15em] font-display">{x.l}</div>
+                                <div className="text-xs font-mono font-black mt-0.5" style={{color:x.c, textShadow:`0 0 8px ${x.c}66`}}>{x.v}</div>
+                            </div>
+                        ))}
+                    </div>
+
+                    <div className="px-3 pb-2">
+                        <div className="flex gap-2 overflow-x-auto pb-1">
+                            {emergencias.map((e,i)=>(
+                                <a key={i} href={`tel:${e.n}`} className="shrink-0 flex items-center gap-1.5 px-3 py-2 rounded-xl bg-void/90 border transition hover:scale-105 cursor-pointer shadow-md" style={{borderColor:`${e.c}55`}}>
+                                    <span className="font-display font-black text-sm" style={{color:e.c, textShadow:`0 0 8px ${e.c}88`}}>{e.n}</span>
+                                    <span className="text-[8px] font-black text-slate-300 tracking-wider">{e.label}</span>
+                                </a>
+                            ))}
+                        </div>
+                    </div>
+
+                    <div className="relative h-10 bg-gradient-to-r from-[#02040A] via-[#060B18] to-[#02040A] border-t border-b border-cyberCyan/40 overflow-hidden flex items-center shadow-[inset_0_0_15px_rgba(0,242,254,0.15)]">
+                        <div className="absolute left-0 top-0 bottom-0 z-10 px-3 flex items-center bg-gradient-to-r from-cyan-500 to-teal-500 rounded-r-lg shadow-[0_0_10px_rgba(0,242,254,0.6)]">
+                            <span className="font-display font-black text-[8px] text-void tracking-widest uppercase">★ EPRCA</span>
+                        </div>
+                        <div style={{display:'flex', width:'max-content', whiteSpace:'nowrap', animation:'tickerScroll 35s linear infinite'}} className="ml-28">
+                            {Array(2).fill(0).map((_, idx) => (
+                                <div key={idx} className="flex items-center space-x-5 pr-5 font-display font-bold text-[11px] tracking-wider text-cyan-300" style={{textShadow:'0 0 6px rgba(0,242,254,0.6)'}}>
+                                    {tickerPhrases.map((phrase, pIdx) => (
+                                        <span key={pIdx} className="inline-flex items-center space-x-5">
+                                            <span className="text-cyberGreen font-black text-xs">✦</span>
+                                            <span>{phrase}</span>
+                                        </span>
+                                    ))}
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+
+                    <div className="relative px-4 py-3 bg-gradient-to-r from-deepSpace via-commandPanel to-deepSpace border-t border-cyberCyan/35 text-center overflow-hidden">
+                        <div className="absolute inset-0 opacity-10" style={{background:'repeating-linear-gradient(45deg, transparent, transparent 10px, rgba(0,242,254,0.4) 10px, rgba(0,242,254,0.4) 11px)'}}></div>
+                        <div className="relative inline-flex items-center gap-1.5 px-3 py-0.5 mb-1.5 rounded-full bg-cyberCyan/15 border border-cyberCyan/40">
+                            <span className="text-[8px] font-black font-display text-cyberCyan tracking-[0.25em] animate-maluco-glow">★ TODOS UNIDOS, TODOS PROTEGIDOS, BAIXADA ★</span>
+                        </div>
+                        <div className="relative font-display font-black text-xs tracking-wider text-white animate-text-sway" style={{textShadow:'0 0 10px rgba(0,242,254,0.8)'}}>
+                            Todos unidos, todos protegidos, Baixada.
+                        </div>
+                        <div className="mt-2 text-[8px] font-mono font-bold text-slate-400 tracking-widest">
+                            @ Todos os direitos reservados - GADE Evolution 2024-2026
+                        </div>
+                    </div>
+
+                    <div style={{textAlign:'center', padding:'12px', background:'#08111e', borderTop:'1px solid #D4AF37', fontFamily:'monospace'}}>
+                        <p style={{fontSize:'9px', color:'#8a9bb8', margin:'0 0 4px 0'}}>Chave Climática • Resiliência Estendida • Baixada Fluminense / RJ</p>
+                        <div style={{fontSize:'8px', fontWeight:'bold', color:'#8a9bb8', letterSpacing:'1px'}}>
+                            @ Todos os direitos reservados - GADE Evolution 2024-2026
+                        </div>
+                    </div>
+                </div>
+            );
+        }
+
+        function SarahFabButton({ onOpen }) {
+            return (
+                <button className="fixed z-[60] w-12 h-12 rounded-full cyber-border-glow flex items-center justify-center cursor-pointer animate-hud-pulse transition-transform hover:scale-110 active:scale-95 bg-deepSpace shadow-[0_0_30px_rgba(0,242,254,0.6)]" style={{ right: '14px', bottom: '82px' }} onClick={onOpen} aria-label="Falar com a SARAH AI">
+                    <span className="absolute inset-0 rounded-full border-2 border-cyberCyan/60 animate-ping pointer-events-none" style={{animationDuration:'2.8s'}}></span>
+                    <img src={SARAH_CUSTOM_AVATAR_URL} alt="SARAH AI" className="w-9 h-9 rounded-full object-cover relative z-10 border border-cyberCyan" />
+                    <span className="absolute -top-1 -right-1 w-3 h-3 rounded-full bg-cyberGreen border-2 border-void shadow-[0_0_10px_rgba(16,185,129,0.9)]"></span>
+                    <span className="absolute -bottom-4 right-0 whitespace-nowrap font-display font-black text-[6px] text-cyberCyan tracking-[0.15em]" style={{textShadow:'0 0 6px rgba(0,242,254,0.8)'}}>NEXUS AI</span>
+                </button>
+            );
+        }
+
+        function SarahChatOverlay({ isOpen, onClose, isSpeaking, isProcessing, currentResponse, input, setInput, handleSendDirectCommand, toggleListening, isListening }) {
+            if (!isOpen) return null;
+            return (
+                <div className="fixed inset-0 z-[90] flex items-end sm:items-center justify-center bg-void/85 backdrop-blur-2xl" onClick={onClose}>
+                    <div className="cyber-card w-full sm:max-w-lg rounded-t-[32px] sm:rounded-[32px] shadow-2xl overflow-hidden animate-fade-in max-h-[85vh] flex flex-col border border-cyberCyan/40" onClick={(e) => e.stopPropagation()}>
+                        <div className="flex items-center justify-between px-4 py-3 border-b border-cyberCyan/30 bg-deepSpace/90">
+                            <div className="flex items-center gap-2.5">
+                                <div className={`w-9 h-9 rounded-xl cyber-border-glow flex items-center justify-center shrink-0 overflow-hidden border border-cyberCyan ${isSpeaking ? 'animate-hud-pulse' : ''}`}>
+                                    <img src={SARAH_CUSTOM_AVATAR_URL} alt="SARAH AI" className="w-full h-full object-cover rounded-xl" />
+                                </div>
+                                <div>
+                                    <div className="font-display text-xs font-black text-white tracking-widest flex items-center gap-1.5">
+                                        SARAH AI <span className="text-[10px] text-cyberCyan animate-maluco-glow">V8.4.2</span>
+                                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-cyberGreen/15 border border-cyberGreen/40 font-mono text-[8px] text-cyberGreen">
+                                            <span className="w-1.5 h-1.5 rounded-full bg-cyberGreen animate-ping"></span> ONLINE
+                                        </span>
+                                    </div>
+                                    <div className="text-[9px] font-mono text-cyberCyan font-bold">
+                                        {isProcessing ? "processando..." : isListening ? "🎙 ouvindo..." : isSpeaking ? "🔊 falando..." : "assistente • EPRCA"}
+                                    </div>
+                                </div>
+                            </div>
+                            <button onClick={onClose} className="w-8 h-8 rounded-xl bg-cyberRose/20 border border-cyberRose/40 text-cyberRose font-black cursor-pointer flex items-center justify-center text-xs">✕</button>
+                        </div>
+
+                        <div className="flex-1 overflow-y-auto px-4 py-3.5 min-h-[170px]">
+                            <div className="bg-void/90 border border-cyberCyan/30 rounded-2xl p-3.5 text-xs text-slate-100 whitespace-pre-line leading-relaxed shadow-inner">
+                                {currentResponse}
+                            </div>
+                        </div>
+
+                        <div className="px-3 pb-2.5 flex flex-wrap justify-center gap-1.5">
+                            <button onClick={() => handleSendDirectCommand("Status da EPRCA na Baixada Fluminense")} className="px-3 py-1 bg-void border border-cyberCyan/30 hover:border-cyberCyan text-cyberCyan rounded-xl text-[10px] font-bold transition cursor-pointer">🛡️ EPRCA Baixada</button>
+                            <button onClick={() => handleSendDirectCommand("Condições climáticas e radar meteorológico")} className="px-3 py-1 bg-void border border-cyberCyan/30 hover:border-cyberCyan text-cyberCyan rounded-xl text-[10px] font-bold transition cursor-pointer">🌦️ Clima Baixada</button>
+                            <button onClick={() => handleSendDirectCommand("Orientações para vistorias de campo EPRCA")} className="px-3 py-1 bg-void border border-cyberCyan/30 hover:border-cyberCyan text-cyberCyan rounded-xl text-[10px] font-bold transition cursor-pointer">📋 Vistorias</button>
+                        </div>
+
+                        <div className="px-3 pb-4 pt-1">
+                            <form onSubmit={(e) => { e.preventDefault(); handleSendDirectCommand(); }} className="flex items-center gap-2 bg-void border-2 border-cyberCyan/40 rounded-2xl p-1.5 shadow-inner">
+                                <button type="button" onClick={toggleListening}
+                                    className={`p-3 rounded-xl transition cursor-pointer flex items-center justify-center shrink-0 ${isListening ? 'bg-cyberRose text-white animate-pulse' : 'bg-commandPanel text-cyberCyan hover:bg-cyberCyan/20 border border-cyberCyan/30'}`}
+                                    title="Falar com a SARAH AI">🎙️</button>
+                                <input type="text" value={input} onChange={(e) => setInput(e.target.value)}
+                                    placeholder="Digite ou fale com a SARAH..."
+                                    className="flex-1 bg-transparent border-none px-2.5 py-1.5 text-xs text-slate-100 focus:outline-none" />
+                                <button type="submit" disabled={isProcessing || !input.trim()}
+                                    className={`px-4 py-2.5 rounded-xl font-black text-xs transition cursor-pointer shadow-lg flex items-center gap-1 ${input.trim() && !isProcessing ? 'cyber-button font-black' : 'bg-commandPanel text-slate-500 cursor-not-allowed'}`}>
+                                    {isProcessing ? '...' : (
+                                        <>
+                                            <span>Enviar</span>
+                                            <svg className="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+                                        </>
+                                    )}
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            );
+        }
+
+        function App() {
+            const [showSplash, setShowSplash] = React.useState(true);
+            const [theme, setTheme] = React.useState(() => { try { return localStorage.getItem("sarah-theme") || "dark"; } catch(e) { return "dark"; } });
+            const [soundEnabled, setSoundEnabled] = React.useState(true);
+            const [isSpeaking, setIsSpeaking] = React.useState(false);
+            const [isListening, setIsListening] = React.useState(false);
+
+            const [activeTab, setActiveTab] = React.useState("dashboard");
+            const [radarOpen, setRadarOpen] = React.useState(false);
+
+            const [chameleonActive, setChameleonActive] = React.useState(false);
+
+            const [shareModalOpen, setShareModalOpen] = React.useState(false);
+            const [installModalOpen, setInstallModalOpen] = React.useState(false);
+            const [toastMessage, setToastMessage] = React.useState(null);
+            const [deferredPrompt, setDeferredPrompt] = React.useState(null);
+            const [isInstallable, setIsInstallable] = React.useState(false);
+
+            const [termsAccepted, setTermsAccepted] = React.useState(
+                () => { try { return localStorage.getItem("cparc_terms_accepted") === "1"; } catch(e) { return false; } }
+            );
+            const [check1, setCheck1] = React.useState(false);
+            const [check2, setCheck2] = React.useState(false);
+
+            const [isChatOpen, setIsChatOpen] = React.useState(false);
+            const [input, setInput] = React.useState("");
+            const [isProcessing, setIsProcessing] = React.useState(false);
+            const [currentResponse, setCurrentResponse] = React.useState("Olá! Sou a SARAH AI NEXUS V8.4.2 PRO na Estação Pública de Resiliência Comunitária Automatizada (EPRCA). Como posso auxiliar?");
+            const [hasIntroduced, setHasIntroduced] = React.useState(
+                () => { try { return localStorage.getItem("cparc_introduced_v842") === "1"; } catch(e) { return false; } }
+            );
+
+            const [marketingText, setMarketingText] = React.useState(() => {
+                try { return localStorage.getItem("cparc_marketing_text") || "Todos unidos, todos protegidos, Baixada."; } catch(e) { return "Todos unidos, todos protegidos, Baixada."; }
+            });
+
+            const [localVideos, setLocalVideos] = React.useState(() => {
+                try {
+                    const saved = localStorage.getItem("cparc_videos_permanent");
+                    if (saved) { const parsed = JSON.parse(saved); if (Array.isArray(parsed) && parsed.length > 0) return parsed; }
+                } catch(e) {}
+                return [{ id: 1, title: "SARAH AI NEXUS V8.4.2 PRO • EPRCA Baixada", url: "https://www.w3schools.com/html/mov_bbb.mp4", date: "Sistema", isPinned: true }];
+            });
+
+            React.useEffect(() => {
+                try { localStorage.setItem("cparc_videos_permanent", JSON.stringify(localVideos)); } catch(err) {}
+            }, [localVideos]);
+
+            const speechIdRef = React.useRef(0);
+            const voiceTimerRef = React.useRef(null);
+            const voicesRef = React.useRef([]);
+
+            const showToast = (msg) => { setToastMessage(msg); setTimeout(() => setToastMessage(null), 3500); };
+
+            useEffect(() => {
+                const interval = setInterval(() => {
+                    const now = new Date();
+                    const formatter = new Intl.DateTimeFormat("pt-BR", {
+                        timeZone: "America/Sao_Paulo",
+                        hour: "numeric",
+                        minute: "numeric",
+                        hour12: false
+                    });
+                    const parts = formatter.formatToParts(now);
+                    let hours = 0, minutes = 0;
+                    for (let p of parts) {
+                        if (p.type === 'hour') hours = parseInt(p.value, 10);
+                        if (p.type === 'minute') minutes = parseInt(p.value, 10);
+                    }
+                    const todayStr = now.toDateString();
+
+                    if (hours === 19 && minutes === 20) {
+                        const lastTriggered = localStorage.getItem('chameleon_last_date');
+                        if (lastTriggered !== todayStr) {
+                            setChameleonActive(true);
+                            localStorage.setItem('chameleon_last_date', todayStr);
+                            if (soundEnabled) playChameleonSound();
+                            showToast("🦎 EFEITO CAMALEÃO ATIVADO (19:20 Brasília)!");
+                        }
+                    }
+                }, 10000);
+
+                const now = new Date();
+                const formatter = new Intl.DateTimeFormat("pt-BR", {
+                    timeZone: "America/Sao_Paulo",
+                    hour: "numeric",
+                    minute: "numeric",
+                    hour12: false
+                });
+                const parts = formatter.formatToParts(now);
+                let hours = 0, minutes = 0;
+                for (let p of parts) {
+                    if (p.type === 'hour') hours = parseInt(p.value, 10);
+                    if (p.type === 'minute') minutes = parseInt(p.value, 10);
+                }
+                if (hours > 19 || (hours === 19 && minutes >= 20)) {
+                    const todayStr = now.toDateString();
+                    if (localStorage.getItem('chameleon_last_date') === todayStr) {
+                        setChameleonActive(true);
+                    }
+                }
+
+                return () => clearInterval(interval);
+            }, [soundEnabled]);
+
+            useEffect(() => {
+                if (chameleonActive) {
+                    document.body.classList.add('chameleon-active');
+                } else {
+                    document.body.classList.remove('chameleon-active');
+                }
+            }, [chameleonActive]);
+
+            React.useEffect(() => {
+                const onPrompt = (e) => { e.preventDefault(); setDeferredPrompt(e); setIsInstallable(true); };
+                const onInstalled = () => { setIsInstallable(false); showToast("🎉 Aplicativo instalado com sucesso!"); };
+                window.addEventListener('beforeinstallprompt', onPrompt);
+                window.addEventListener('appinstalled', onInstalled);
+                return () => {
+                    window.removeEventListener('beforeinstallprompt', onPrompt);
+                    window.removeEventListener('appinstalled', onInstalled);
+                };
+            }, []);
+
+            const handleInstallApp = async () => {
+                if (deferredPrompt) {
+                    deferredPrompt.prompt();
+                    const { outcome } = await deferredPrompt.userChoice;
+                    if (outcome === 'accepted') { showToast("🎉 Aplicativo instalado!"); }
+                    setDeferredPrompt(null);
+                    setIsInstallable(false);
+                } else {
+                    setInstallModalOpen(true);
+                }
+            };
+
+            const carregarVozes = () => { if ("speechSynthesis" in window) { voicesRef.current = window.speechSynthesis.getVoices(); } };
+            React.useEffect(() => {
+                if (!("speechSynthesis" in window)) return;
+                carregarVozes();
+                window.speechSynthesis.onvoiceschanged = carregarVozes;
+                return () => { window.speechSynthesis.cancel(); window.speechSynthesis.onvoiceschanged = null; };
+            }, []);
+
+            const limparTextoParaFala = (text) => {
+                return String(text).replace(/([\u2700-\u27BF]|[\uE000-\uF8FF]|\uD83C[\uDC00-\uDFFF]|\uD83D[\uDC00-\uDFFF]|[\u2011-\u26FF]|\uD83E[\uDD00-\uDDFF])/g, '').replace(/\[(.*?)\]\(.*?\)/g, "$1").replace(/https?:\/\/\S+/g, "").replace(/\s+/g, " ").trim();
+            };
+
+            const escolherMelhorVoz = () => {
+                const voices = voicesRef.current.length ? voicesRef.current : window.speechSynthesis.getVoices();
+                return voices.find((voice) => voice.lang.toLowerCase().includes("pt")) || voices[0];
+            };
+
+            const stopSpeaking = () => {
+                speechIdRef.current += 1;
+                if (voiceTimerRef.current) { clearTimeout(voiceTimerRef.current); voiceTimerRef.current = null; }
+                if ("speechSynthesis" in window) window.speechSynthesis.cancel();
+                setIsSpeaking(false);
+            };
+
+            const speakText = (text) => {
+                if (!soundEnabled || !("speechSynthesis" in window)) return;
+                const cleanText = limparTextoParaFala(text);
+                if (!cleanText) return;
+                stopSpeaking();
+                const currentId = speechIdRef.current;
+                voiceTimerRef.current = setTimeout(() => {
+                    if (currentId !== speechIdRef.current) return;
+                    const utterance = new SpeechSynthesisUtterance(cleanText);
+                    utterance.lang = "pt-BR";
+                    utterance.voice = escolherMelhorVoz();
+                    utterance.rate = 1.0;
+                    utterance.onstart = () => { if (currentId === speechIdRef.current) setIsSpeaking(true); };
+                    utterance.onend = () => { if (currentId === speechIdRef.current) setIsSpeaking(false); };
+                    utterance.onerror = () => setIsSpeaking(false);
+                    window.speechSynthesis.speak(utterance);
+                }, 200);
+            };
+
+            React.useEffect(() => {
+                if (!termsAccepted || hasIntroduced) return;
+                const greeting = getBrasiliaGreeting();
+                const presentation = `${greeting}, sou a SARAH AI NEXUS versão 8.4.2 PRO na Estação Pública de Resiliência Comunitária Automatizada, EPRCA. Todos unidos, todos protegidos, Baixada.`;
+                const timer = setTimeout(() => {
+                    if (!soundEnabled) return;
+                    setHasIntroduced(true);
+                    try { localStorage.setItem("cparc_introduced_v842", "1"); } catch(e) {}
+                    speakText(presentation);
+                }, 700);
+                return () => clearTimeout(timer);
+            }, [termsAccepted, hasIntroduced, soundEnabled]);
+
+            const openShareFromApp = async () => {
+                await compartilharAppComSvg(showToast);
+            };
+
+            React.useEffect(() => {
+                try { localStorage.setItem("sarah-theme", theme); } catch(e) {}
+                const metaTheme = document.querySelector('meta[name="theme-color"]');
+                if (theme === 'warm') {
+                    document.documentElement.classList.remove('dark');
+                    document.documentElement.classList.add('warm');
+                    if (metaTheme) metaTheme.setAttribute('content', '#F4F3EF');
+                } else {
+                    document.documentElement.classList.add('dark');
+                    document.documentElement.classList.remove('warm');
+                    if (metaTheme) metaTheme.setAttribute('content', '#02040A');
+                }
+            }, [theme]);
+
+            const toggleTheme = () => {
+                setTheme(prev => {
+                    const next = prev === 'dark' ? 'warm' : 'dark';
+                    showToast(next === 'warm' ? '🎨 Tema Clean Ativado' : '🌌 Modo Cyber Ativado');
+                    return next;
+                });
+            };
+
+            const toggleListening = () => {
+                const SpeechRec = window.SpeechRecognition || window.webkitSpeechRecognition;
+                if (!SpeechRec) { showToast("⚠️ Reconhecimento de voz indisponível."); return; }
+                if (isListening) { setIsListening(false); return; }
+                try {
+                    const rec = new SpeechRec();
+                    rec.lang = "pt-BR";
+                    rec.continuous = false;
+                    rec.interimResults = true;
+                    rec.onstart = () => { setIsListening(true); showToast("🎙 Ouvindo voz..."); };
+                    rec.onresult = (event) => {
+                        let final = '';
+                        for (let i = event.resultIndex; i < event.results.length; ++i) {
+                            if (event.results[i].isFinal) final += event.results[i][0].transcript;
+                        }
+                        if (final) {
+                            setInput(final);
+                            setIsListening(false);
+                            handleSendDirectCommand(final);
+                        }
+                    };
+                    rec.onerror = () => { setIsListening(false); showToast("⚠ Erro no microfone."); };
+                    rec.onend = () => { setIsListening(false); };
+                    rec.start();
+                } catch (e) { setIsListening(false); showToast("⚠️ Erro ao iniciar microfone."); }
+            };
+
+            const handleWhoAmIClick = () => {
+                const fullText = "Somos uma plataforma comunitária de abrangência regional, voltada para a Baixada Fluminense e o Estado do Rio de Janeiro. Visamos levar ao cidadão a integração da automação moderna, obtendo informações relevantes elaboradas pelos órgãos oficiais. Interagimos com esses meios de informação e com a população em geral, com o intuito de prevenir, reduzir riscos e fortalecer a resiliência de cada morador nas áreas e manchas de alagamentos e desastres em geral, com foco no clima e na meteorologia. Todos unidos, todos protegidos, Baixada.";
+                setCurrentResponse("📋 QUEM SOMOS:\n\n" + fullText);
+                setIsChatOpen(true);
+                speakText(fullText);
+            };
+
+            const handleSendDirectCommand = async (textCustom) => {
+                stopSpeaking();
+                const textToSend = textCustom !== undefined ? textCustom : input;
+                if (!textToSend.trim() || isProcessing) return;
+
+                const queryText = textToSend.trim();
+                setInput("");
+                setIsProcessing(true);
+                setCurrentResponse("🔄 SARAH AI NEXUS processando solicitação...");
+
+                try {
+                    const response = await fetch(CLOUDFLARE_WORKER_URL, {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({
+                            model: "openai/gpt-oss-120b",
+                            messages: [
+                                {
+                                    role: "system",
+                                    content: `Você é a SARAH AI NEXUS V8.4.2 PRO, assistente virtual oficial da Estação Pública de Resiliência Comunitária Automatizada (EPRCA). Lema: Todos unidos, todos protegidos, Baixada.`
+                                },
+                                { role: "user", content: queryText }
+                            ],
+                            temperature: 0.5,
+                            max_tokens: 300
+                        })
+                    });
+
+                    if (response.status === 404) throw new Error("Erro 404");
+
+                    const data = await response.json();
+                    let reply = data?.choices?.[0]?.message?.content || data?.message || "Análise concluída.";
+                    reply = reply.replace(/#{1,6}\s?/g, '').replace(/\*\*/g, '').replace(/\|/g, ' ').replace(/---/g, '').trim();
+
+                    setCurrentResponse(reply);
+                    speakText(reply);
+                } catch (error) {
+                    const fallback = "SARAH AI NEXUS V8.4.2 PRO à disposição na Estação Pública de Resiliência Comunitária Automatizada (EPRCA). Todos unidos, todos protegidos, Baixada.";
+                    setCurrentResponse(fallback);
+                    speakText(fallback);
+                } finally {
+                    setIsProcessing(false);
+                }
+            };
+
+            const openSarahChat = () => {
+                setIsChatOpen(true);
+                stopSpeaking();
+                const greeting = getBrasiliaGreeting();
+                speakText(`${greeting}! SARAH AI NEXUS V8.4.2 PRO pronta na EPRCA. Todos unidos, todos protegidos, Baixada.`);
+            };
+
+            const NAV_TABS = [
+                { id: 'cidadao-sensor', iconComponent: <span className="text-xs">📡</span>, label: 'Cidadão Sensor' },
+                { id: 'quem-somos', iconComponent: <HomeCommandIcon className="w-4 h-4" />, label: 'Quem somos' },
+                { id: 'sarah-chat', iconComponent: <div className="w-4 h-4 rounded-full overflow-hidden border border-cyberCyan"><img src={SARAH_CUSTOM_AVATAR_URL} className="w-full h-full object-cover"/></div>, label: 'Sarah' },
+                { id: 'dashboard', iconComponent: <HomeCommandIcon className="w-4 h-4" />, label: 'Painel' },
+                { id: 'estacao', iconComponent: <SurvivalStationIcon className="w-4 h-4" />, label: 'Estação' },
+                { id: 'radar', iconComponent: <RadarScanIcon className="w-4 h-4" />, label: 'Radar' },
+                { id: 'relatorio', iconComponent: <FieldReportIcon className="w-4 h-4" />, label: 'Vistoria' },
+                { id: 'galeria', iconComponent: <StreamVideoIcon className="w-4 h-4" />, label: 'Vídeos' },
+                { id: 'admin', iconComponent: <AdminVaultIcon className="w-4 h-4" />, label: 'Admin' }
+            ];
+
+            const handleNavClick = (tabId) => {
+                if (tabId === 'radar') {
+                    setRadarOpen(true);
+                } else if (tabId === 'sarah-chat') {
+                    openSarahChat();
+                } else if (tabId === 'quem-somos') {
+                    handleWhoAmIClick();
+                } else if (tabId === 'cidadao-sensor') {
+                    setActiveTab('modulo2');
+                } else {
+                    setActiveTab(tabId);
+                }
+            };
+
+            return (
+                <div className="min-h-screen flex flex-col relative text-slate-100 antialiased items-center justify-start">
+                    {showSplash && (
+                        <AppSplashScreen 
+                            splashImageUrl={SPLASH_IMAGE_URL} 
+                            onFinish={() => setShowSplash(false)} 
+                        />
+                    )}
+
+                    {toastMessage && (
+                        <div className="fixed top-16 left-1/2 -translate-x-1/2 z-50 cyber-card px-5 py-2.5 rounded-xl font-display text-[10px] font-black text-cyberCyan tracking-wider shadow-2xl border border-cyberCyan/50 animate-bounce">
+                            {toastMessage}
+                        </div>
+                    )}
+
+                    {!termsAccepted && (
+                        <div className="fixed inset-0 bg-void/95 z-[200] flex items-center justify-center p-4 overflow-y-auto">
+                            <div className="cyber-card max-w-lg w-full p-6 rounded-[28px] shadow-2xl space-y-4 my-auto border border-cyberCyan/50 font-mono">
+                                <div className="text-center space-y-1 border-b border-cyberCyan/30 pb-3">
+                                    <h2 className="font-display text-base font-black text-white tracking-widest animate-maluco-glow">
+                                        ⚖️ TERMO DE RESPONSABILIDADE &amp; LGPD
+                                    </h2>
+                                    <p className="text-[9px] text-cyberCyan font-bold uppercase tracking-wider">
+                                        CHAVE CLIMÁTICA • EPRCA &amp; SARAH AI
+                                    </p>
+                                </div>
+
+                                <div className="space-y-3 text-[11px] text-slate-300 leading-relaxed max-h-[45vh] overflow-y-auto pr-1">
+                                    <div className="bg-void/80 p-3 rounded-xl border border-cyberCyan/30 space-y-1">
+                                        <h3 className="font-bold text-cyberCyan text-[11px]">1. Privacidade e Conformidade com a LGPD</h3>
+                                        <p className="text-[10px] text-slate-300">
+                                            Em conformidade com a <strong>Lei Federal nº 13.709/2018 (LGPD)</strong>, este aplicativo utiliza exclusivamente APIs públicas e dados abertos, contando com travas de segurança rigorosas que garantem que nenhuma informação pessoal identificável de usuários seja comercializada ou armazenada indevidamente.
+                                        </p>
+                                    </div>
+
+                                    <div className="bg-void/80 p-3 rounded-xl border border-cyberCyan/30 space-y-1">
+                                        <h3 className="font-bold text-cyberCyan text-[11px]">2. Uso Obrigatório de Geolocalização (GPS)</h3>
+                                        <p className="text-[10px] text-slate-300">
+                                            O sistema utiliza dados de <strong>GPS em tempo real</strong> exclusivamente para posicionar o usuário no mapa de resiliência e bacias hidrográficas, viabilizando alertas de riscos e vistorias de campo com precisão técnica.
+                                        </p>
+                                    </div>
+
+                                    <div className="bg-void/80 p-3 rounded-xl border border-cyberCyan/30 space-y-1">
+                                        <h3 className="font-bold text-cyberCyan text-[11px]">3. Amparo Legal da Defesa Civil e Apoio Comunitário</h3>
+                                        <p className="text-[10px] text-slate-300">
+                                            As iniciativas comunitárias encontram respaldo institucional na <strong>Lei Federal nº 12.608/2012</strong> (Política Nacional de Proteção e Defesa Civil), que fomenta o apoio e a integração dos órgãos oficiais com núcleos comunitários e civis na prevenção de desastres.
+                                        </p>
+                                    </div>
+                                </div>
+
+                                <div className="space-y-2.5 pt-2 border-t border-cyberCyan/30">
+                                    <label className="flex items-start gap-2.5 cursor-pointer text-[10px] text-slate-200 bg-commandPanel/80 p-2.5 rounded-xl border border-cyberCyan/20">
+                                        <input type="checkbox" checked={check1} onChange={(e) => setCheck1(e.target.checked)} className="mt-0.5 rounded border-cyberCyan/50 text-cyberCyan w-4 h-4 bg-void shrink-0 cursor-pointer" />
+                                        <span>Concordo com os termos de privacidade, LGPD, uso exclusivo de APIs públicas e anonimidade.</span>
+                                    </label>
+                                    <label className="flex items-start gap-2.5 cursor-pointer text-[10px] text-slate-200 bg-commandPanel/80 p-2.5 rounded-xl border border-cyberCyan/20">
+                                        <input type="checkbox" checked={check2} onChange={(e) => setCheck2(e.target.checked)} className="mt-0.5 rounded border-cyberCyan/50 text-cyberCyan w-4 h-4 bg-void shrink-0 cursor-pointer" />
+                                        <span>Autorizo o uso temporário do GPS e reconheço o amparo legal da Defesa Civil (Lei nº 12.608/2012).</span>
+                                    </label>
+                                </div>
+
+                                <button 
+                                    disabled={!check1 || !check2} 
+                                    onClick={() => { 
+                                        setTermsAccepted(true); 
+                                        try { localStorage.setItem("cparc_terms_accepted", "1"); } catch(e) {} 
+                                        showToast("🚀 Termos aceitos! Bem-vindo à EPRCA."); 
+                                    }} 
+                                    className={`w-full py-3.5 rounded-xl font-display font-black text-xs uppercase tracking-[0.15em] transition shadow-xl ${check1 && check2 ? 'cyber-button font-black cursor-pointer' : 'bg-commandPanel text-slate-500 cursor-not-allowed'}`}
+                                >
+                                    CONCORDAR E ENTRAR NA ESTAÇÃO &gt;
+                                </button>
+                            </div>
+                        </div>
+                    )}
+
+                    <header className="cyber-card sticky top-0 z-30 w-full max-w-2xl px-4 py-2.5 border-b border-cyberCyan/30 flex items-center justify-between shadow-lg rounded-b-xl">
+                        <div className="flex items-center gap-2.5">
+                            <div className={`w-9 h-9 rounded-xl cyber-border-glow flex items-center justify-center bg-void shadow-[0_0_20px_rgba(0,242,254,0.4)] overflow-hidden border border-cyberCyan ${isSpeaking ? 'animate-hud-pulse' : ''}`}>
+                                <img src={SARAH_CUSTOM_AVATAR_URL} alt="SARAH AI" className="w-full h-full object-cover" />
+                            </div>
+                            <div>
+                                <h1 className="font-display text-[10px] sm:text-[11px] font-black text-white tracking-[0.05em] animate-maluco-glow">EPRCA • SARAH AI NEXUS</h1>
+                                <p className="text-[8px] text-cyberCyan font-mono font-bold tracking-wider uppercase">
+                                    {chameleonActive ? "🦎 CAMALEÃO ATIVO" : "ESTAÇÃO PÚBLICA • MESQUITA/RJ"}
+                                </p>
+                            </div>
+                        </div>
+                        <div className="flex items-center gap-1.5">
+                            <button 
+                                onClick={() => {
+                                    setChameleonActive(!chameleonActive);
+                                    if (!chameleonActive && soundEnabled) playChameleonSound();
+                                    showToast(chameleonActive ? "🔄 Modo Padrão Restabelecido" : "🦎 Efeito Camaleão Testado!");
+                                }}
+                                className={`px-2 py-1 rounded-lg border text-[8px] font-bold cursor-pointer transition ${chameleonActive ? 'bg-emerald-500/20 border-emerald-400 text-emerald-300' : 'bg-cyberCyan/20 border-cyberCyan text-cyberCyan'}`}
+                                title="Testar Efeito Camaleão"
+                            >
+                                {chameleonActive ? "🦎 Camaleão ON" : "🦎 Camaleão"}
+                            </button>
+                            <IconeSomToggle soundEnabled={soundEnabled} setSoundEnabled={setSoundEnabled} />
+                            <IconeTemaToggle theme={theme} toggleTheme={toggleTheme} />
+                            <IconeCompartilharTopo openShareFromApp={openShareFromApp} />
+                            <IconeInstalarApp handleInstallApp={handleInstallApp} isInstallable={isInstallable} />
+                        </div>
+                    </header>
+
+                    <nav className="cyber-card w-full max-w-2xl border-b border-cyberCyan/30 px-3 py-2 flex items-center justify-center gap-1.5 overflow-x-auto z-20">
+                        {NAV_TABS.map(tab => (
+                            <button key={tab.id} onClick={() => handleNavClick(tab.id)}
+                                className={`px-3 py-1.5 rounded-xl text-[10px] font-black transition cursor-pointer flex items-center gap-1.5 shrink-0 tracking-wider ${
+                                    activeTab === tab.id || (tab.id === 'cidadao-sensor' && activeTab === 'modulo2') || (tab.id === 'quem-somos' && isChatOpen)
+                                        ? 'cyber-button font-black shadow-[0_0_20px_rgba(255,153,0,0.4)]'
+                                        : 'bg-commandPanel text-slate-300 border border-cyberCyan/20'
+                                }`}>
+                                {tab.iconComponent} {tab.label}
+                            </button>
+                        ))}
+                    </nav>
+
+                    <main className="flex-1 w-full max-w-2xl mx-auto p-3 sm:p-4 space-y-4 pb-28 relative z-10">
+                        {activeTab === 'dashboard' && (
+                            <div className="space-y-4">
+                                <div className="cyber-card p-5 sm:p-6 rounded-[28px] shadow-xl space-y-4 text-center border border-cyberCyan/60">
+                                    <SarahHologramAvatar isLarge={true} isSpeaking={isSpeaking} />
+
+                                    <CardPerfilConsolidado openShareFromApp={openShareFromApp} />
+
+                                    <div className="flex flex-col sm:flex-row items-center justify-center gap-2.5 w-full max-w-md mx-auto">
+                                        <button onClick={() => setActiveTab('modulo2')} className="w-full sm:flex-1 py-3 px-4 rounded-2xl bg-gradient-to-r from-emerald-600 to-teal-500 text-white font-display font-black text-[11px] uppercase tracking-[0.1em] shadow-[0_0_20px_rgba(16,185,129,0.4)] cursor-pointer transition hover:scale-105 flex items-center justify-center gap-2">
+                                            <span>📡 Cidadão Sensor</span>
+                                        </button>
+                                        <button onClick={handleWhoAmIClick} className="w-full sm:flex-1 py-3 px-4 rounded-2xl bg-gradient-to-r from-teal-500 to-cyan-500 text-void font-display font-black text-[11px] uppercase tracking-[0.1em] shadow-[0_0_20px_rgba(0,242,254,0.4)] cursor-pointer transition hover:scale-105 flex items-center justify-center gap-2">
+                                            <span>Quem Somos</span>
+                                        </button>
+                                        <button onClick={openSarahChat} className="w-full sm:flex-1 py-3 px-4 rounded-2xl cyber-button font-display font-black text-[11px] uppercase tracking-[0.1em] shadow-[0_0_30px_rgba(255,153,0,0.5)] cursor-pointer transition hover:scale-105 flex items-center justify-center gap-2">
+                                            <span>Falar com a Sarah</span>
+                                        </button>
+                                    </div>
+
+                                    <div className="flex flex-wrap justify-center gap-1.5 pt-2">
+                                        <button onClick={() => setActiveTab('estacao')} className="px-3.5 py-1.5 bg-void border border-cyberCyan/30 hover:border-cyberCyan text-cyberCyan rounded-xl text-[10px] font-bold transition cursor-pointer">🌡️ Estação</button>
+                                        <button onClick={() => setActiveTab('modulo1')} className="px-3.5 py-1.5 bg-void border border-cyberCyan/30 hover:border-cyberCyan text-cyberCyan rounded-xl text-[10px] font-bold transition cursor-pointer">🌪️ Módulo 1</button>
+                                        <button onClick={() => setActiveTab('relatorio')} className="px-3.5 py-1.5 bg-void border border-cyberCyan/30 hover:border-cyberCyan text-cyberCyan rounded-xl text-[10px] font-bold transition cursor-pointer">📋 Vistorias</button>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+
+                        {activeTab === 'estacao' && <EstacaoSobrevivenciaModule showToast={showToast} />}
+                        {activeTab === 'modulo1' && <ModuloElNinoModule onGoToDashboard={() => setActiveTab('dashboard')} />}
+                        {activeTab === 'modulo2' && <ModuloCidadaoSensorModule onGoToDashboard={() => setActiveTab('dashboard')} showToast={showToast} />}
+                        {activeTab === 'relatorio' && <VistoriaEPRCA_BlocosFuturistas onBackToDashboard={() => setActiveTab('dashboard')} showToast={showToast} />}
+                        {activeTab === 'galeria' && <PublicVideoGallery localVideos={localVideos} onGoToDashboard={() => setActiveTab('dashboard')} />}
+                        {activeTab === 'admin' && (
+                            <AdminVaultModule
+                                localVideos={localVideos}
+                                setLocalVideos={setLocalVideos}
+                                marketingText={marketingText}
+                                setMarketingText={setMarketingText}
+                                showToast={showToast}
+                                onClose={() => setActiveTab('dashboard')}
+                            />
+                        )}
+
+                        <AutomatedObservatoryWidget />
+                    </main>
+
+                    {termsAccepted && <SarahFabButton onOpen={openSarahChat} />}
+
+                    <NativeHydroWindRadar isOpen={radarOpen} onToggle={() => setRadarOpen(o => !o)} />
+
+                    <SarahChatOverlay
+                        isOpen={isChatOpen}
+                        onClose={() => { setIsChatOpen(false); stopSpeaking(); }}
+                        isSpeaking={isSpeaking}
+                        isProcessing={isProcessing}
+                        currentResponse={currentResponse}
+                        input={input}
+                        setInput={setInput}
+                        handleSendDirectCommand={handleSendDirectCommand}
+                        toggleListening={toggleListening}
+                        isListening={isListening}
+                    />
+
+                    <footer className="cyber-card fixed bottom-0 left-0 right-0 z-40 border-t border-cyberCyan/30 px-3 py-2.5 flex items-center justify-around shadow-xl backdrop-blur-2xl max-w-2xl mx-auto rounded-t-xl">
+                        {NAV_TABS.map(tab => (
+                            <button key={tab.id} onClick={() => handleNavClick(tab.id)}
+                                className={`flex flex-col items-center gap-0.5 cursor-pointer transition ${activeTab === tab.id ? 'text-cyberCyan scale-105' : 'text-slate-400 hover:text-white'}`}>
+                                {tab.iconComponent}
+                                <span className="text-[8px] font-black tracking-wider">{tab.label}</span>
+                            </button>
+                        ))}
+                    </footer>
+                </div>
+            );
+        }
+
+        ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+    </script>
+</body>
+</html>
