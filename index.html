@@ -1,0 +1,361 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>SARAH V11 FINAL 92 CIDADES COMPLETO FECHADO</title>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+<style>
+body{margin:0;background:#0f172a;color:#fff;font-family:system-ui}
+.top{padding:10px;background:#1e293b;border-bottom:2px solid #f59e0b;display:flex;justify-content:space-between;flex-wrap:wrap}
+#map{width:100%;height:75vh;min-height:500px}
+.card{background:#1e293b;padding:8px;margin:6px;border-radius:8px;border-left:4px solid #f59e0b}
+button{padding:7px;border-radius:6px;border:1px solid #334155;background:#0f172a;color:white;font-weight:700;cursor:pointer}
+.btn-gold{background:#f59e0b;color:#0f172a;border:none}
+.btn-green{background:#10b981;color:#0f172a;border:none}
+.app{display:grid;grid-template-columns:300px 1fr;gap:8px;padding:8px}
+@keyframes pisca{0%,100%{opacity:1}50%{opacity:.4}} .piscando{animation:pisca 1s infinite}
+</style>
+</head>
+<body>
+<div class="top">
+  <div>
+    <b style="color:#f59e0b">SARAH MESQUITA V11 FINAL 92 CIDADES COMPLETO</b><br>
+    <span style="font-size:10px;color:#94a3b8">Mesquita 3302858 - Centro Operacoes - FECHADO COM &lt;/html&gt;</span>
+  </div>
+  <div>
+    <button id="btnWhats" style="background:#25D366;color:#0f172a;width:auto">WhatsApp Prefeitura</button>
+  </div>
+</div>
+
+<div class="app">
+  <aside>
+    <div class="card">
+      <b>🌍 PUBLICO - Sem cadastro</b><br>
+      <span style="font-size:10px;color:#94a3b8">Ve chuva, GOES-16, CEMADEN piscando Laranja/Alto.</span>
+    </div>
+    <div class="card" style="border-left-color:#10b981">
+      <b style="color:#10b981">🛡️ LIDER VERIFICADO - 3 pilotos</b><br>
+      <span style="font-size:9px">Maria Chatuba pendente, Pastor Joao pendente, Dona Cida verificado</span><br>
+      <button id="btnLider" class="btn-green" style="margin-top:6px">Ser Lider</button>
+      <button id="btnAdmin" style="margin-top:6px">Admin (voce aprova)</button>
+    </div>
+    <div class="card">
+      <label style="font-size:10px;color:#f59e0b">92 MUNICIPIOS IBGE RJ</label>
+      <select id="selCidade" style="width:100%;padding:6px;border-radius:6px;background:#0f172a;color:white;border:1px solid #334155;margin-top:4px"></select>
+    </div>
+    <div class="card" style="border-left-color:#38bdf8">
+      <b style="color:#38bdf8">📡 CEMADEN BAIXADA PISCANDO</b>
+      <div id="boxCemaden" style="margin-top:6px"></div>
+    </div>
+    <div class="card" style="border-left-color:#10b981">
+      <b style="color:#10b981">🗣️ Provas Oficiais Verificadas</b>
+      <div id="boxRelatos" style="margin-top:6px"></div>
+      <button id="btnNovo" class="btn-green" style="display:none;margin-top:6px">+ Novo Relato Verificado</button>
+    </div>
+  </aside>
+  <main><div id="map"></div></main>
+</div>
+
+<!-- MODAIS -->
+<div id="modalLider" style="position:fixed;inset:0;background:rgba(0,0,0,.8);display:none;align-items:center;justify-content:center;z-index:9999">
+  <div style="background:#1e293b;padding:14px;border-radius:10px;max-width:400px;width:90%">
+    <h3>Ser Lider Verificado</h3>
+    <input id="fNome" placeholder="Nome completo" style="width:100%;padding:6px;margin-top:8px">
+    <select id="fBairro" style="width:100%;padding:6px;margin-top:6px">
+      <option>Centro</option>
+      <option>Chatuba</option>
+      <option>Edson Passos</option>
+      <option>Banco de Areia</option>
+    </select>
+    <input id="fZap" placeholder="WhatsApp" style="width:100%;padding:6px;margin-top:6px">
+    <textarea id="fMotivo" placeholder="Por que quer ser lider?" style="width:100%;padding:6px;margin-top:6px"></textarea>
+    <button id="fEnviar" class="btn-green" style="margin-top:8px">Enviar pra aprovacao</button>
+    <button id="fCancel" style="margin-top:4px">Cancelar</button>
+  </div>
+</div>
+
+<div id="modalAdmin" style="position:fixed;inset:0;background:rgba(0,0,0,.8);display:none;align-items:center;justify-content:center;z-index:9999">
+  <div style="background:#1e293b;padding:14px;border-radius:10px;max-width:500px;width:90%;max-height:80vh;overflow:auto">
+    <h3>Admin Mesquita - Voce aprova lideres</h3>
+    <div id="listaAdmin" style="margin-top:8px"></div>
+    <button id="adminFechar" style="margin-top:8px">Fechar</button>
+  </div>
+</div>
+
+<div id="modalRelato" style="position:fixed;inset:0;background:rgba(0,0,0,.8);display:none;align-items:center;justify-content:center;z-index:9999">
+  <div style="background:#1e293b;padding:14px;border-radius:10px;max-width:400px;width:90%">
+    <h3>Novo Relato Verificado - Vira prova oficial</h3>
+    <input id="rLocal" placeholder="Local: Rua Elpidio, Chatuba 120" style="width:100%;padding:6px;margin-top:8px">
+    <select id="rTipo" style="width:100%;padding:6px;margin-top:6px">
+      <option>Alagamento confirmado</option>
+      <option>Bueiro entupido</option>
+      <option>Rio cheio</option>
+    </select>
+    <textarea id="rDesc" placeholder="Descricao prova prefeitura" style="width:100%;padding:6px;margin-top:6px"></textarea>
+    <button id="rEnviar" class="btn-green" style="margin-top:8px">Publicar como VERIFICADO</button>
+    <button id="rCancelar" style="margin-top:4px">Cancelar</button>
+  </div>
+</div>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+var CIDADES_92 = [
+  ["3300100","Angra dos Reis",-23.0067,-44.3181,"Costa Verde","Médio"],
+  ["3300159","Aperibé",-21.8639,-42.1011,"Noroeste","Baixo"],
+  ["3300209","Araruama",-22.8728,-42.3417,"Baixada Litorânea","Médio"],
+  ["3300225","Areal",-22.1489,-42.6461,"Centro-Sul","Baixo"],
+  ["3300233","Armação dos Búzios",-22.7469,-41.8817,"Baixada Litorânea","Baixo"],
+  ["3300258","Arraial do Cabo",-22.9658,-42.0278,"Baixada Litorânea","Baixo"],
+  ["3300308","Barra do Piraí",-22.4708,-43.8258,"Médio Paraíba","Médio"],
+  ["3300407","Barra Mansa",-22.5447,-44.1714,"Médio Paraíba","Médio"],
+  ["3300456","Belford Roxo",-22.7642,-43.3997,"Baixada","Alto"],
+  ["3300506","Bom Jardim",-22.1514,-42.4189,"Serrana","Baixo"],
+  ["3300605","Bom Jesus do Itabapoana",-21.1358,-41.6803,"Noroeste","Médio"],
+  ["3300704","Cabo Frio",-22.8792,-42.0406,"Baixada Litorânea","Médio"],
+  ["3300803","Cachoeiras de Macacu",-22.4622,-42.6533,"Metropolitana","Médio"],
+  ["3300902","Cambuci",-21.5758,-41.9086,"Noroeste","Baixo"],
+  ["3300936","Carapebus",-22.1861,-41.6658,"Norte","Baixo"],
+  ["3300951","Comendador Levy Gasparian",-22.0264,-43.2017,"Centro-Sul","Baixo"],
+  ["3301009","Campos dos Goytacazes",-21.7545,-41.3089,"Norte","Médio"],
+  ["3301108","Cantagalo",-21.9486,-42.3683,"Serrana","Baixo"],
+  ["3301157","Cardoso Moreira",-21.4869,-41.9169,"Norte","Baixo"],
+  ["3301207","Carmo",-21.9242,-42.61,"Serrana","Baixo"],
+  ["3301306","Casimiro de Abreu",-22.4817,-42.2042,"Baixada Litorânea","Baixo"],
+  ["3301405","Conceição de Macabu",-22.0839,-41.8686,"Norte","Baixo"],
+  ["3301504","Cordeiro",-22.0283,-42.3606,"Serrana","Baixo"],
+  ["3301603","Duas Barras",-22.0503,-42.5231,"Serrana","Baixo"],
+  ["3301702","Duque de Caxias",-22.7858,-43.3117,"Baixada","Alto"],
+  ["3301801","Engenheiro Paulo de Frontin",-22.55,-43.6817,"Centro-Sul","Baixo"],
+  ["3301850","Guapimirim",-22.5322,-42.9819,"Metropolitana","Médio"],
+  ["3301876","Iguaba Grande",-22.8397,-42.2278,"Baixada Litorânea","Baixo"],
+  ["3301900","Itaboraí",-22.7447,-42.8592,"Metropolitana","Médio"],
+  ["3302007","Itaguaí",-22.8528,-43.7767,"Metropolitana","Médio"],
+  ["3302056","Italva",-21.4308,-41.6939,"Noroeste","Baixo"],
+  ["3302106","Itaocara",-21.6728,-42.0786,"Noroeste","Baixo"],
+  ["3302205","Itaperuna",-21.2047,-41.8897,"Noroeste","Médio"],
+  ["3302254","Itatiaia",-22.4917,-44.5647,"Médio Paraíba","Baixo"],
+  ["3302270","Japeri",-22.6442,-43.6536,"Baixada","Médio"],
+  ["3302304","Laje do Muriaé",-21.2067,-42.1267,"Noroeste","Baixo"],
+  ["3302403","Macaé",-22.3708,-41.7869,"Norte","Médio"],
+  ["3302452","Macuco",-21.9833,-42.25,"Serrana","Baixo"],
+  ["3302502","Magé",-22.6561,-43.0358,"Baixada","Médio"],
+  ["3302601","Mangaratiba",-22.9597,-44.0414,"Costa Verde","Baixo"],
+  ["3302700","Maricá",-22.9194,-42.8186,"Metropolitana","Médio"],
+  ["3302809","Mendes",-22.5264,-43.7328,"Centro-Sul","Baixo"],
+  ["3302858","Mesquita",-22.7819,-43.4286,"Baixada","Baixo"],
+  ["3302908","Miguel Pereira",-22.4561,-43.4681,"Centro-Sul","Baixo"],
+  ["3303005","Miracema",-21.4128,-42.1967,"Noroeste","Baixo"],
+  ["3303104","Natividade",-21.0428,-41.9731,"Noroeste","Baixo"],
+  ["3303203","Nilópolis",-22.8097,-43.4122,"Baixada","Alto"],
+  ["3303302","Niterói",-22.8833,-43.1036,"Metropolitana","Médio"],
+  ["3303401","Nova Friburgo",-22.2819,-42.5311,"Serrana","Médio"],
+  ["3303500","Nova Iguaçu",-22.7592,-43.4514,"Baixada","Alto"],
+  ["3303609","Paracambi",-22.6111,-43.7108,"Baixada","Baixo"],
+  ["3303708","Paraíba do Sul",-22.1608,-43.2928,"Centro-Sul","Baixo"],
+  ["3303807","Paraty",-23.2178,-44.7131,"Costa Verde","Baixo"],
+  ["3303856","Paty do Alferes",-22.4264,-43.4258,"Centro-Sul","Baixo"],
+  ["3303906","Petrópolis",-22.5058,-43.1786,"Serrana","Médio"],
+  ["3303955","Pinheiral",-22.5189,-43.9822,"Médio Paraíba","Baixo"],
+  ["3304003","Piraí",-22.6264,-43.8986,"Médio Paraíba","Baixo"],
+  ["3304102","Porciúncula",-20.9622,-42.0411,"Noroeste","Baixo"],
+  ["3304110","Porto Real",-22.4167,-44.29,"Médio Paraíba","Baixo"],
+  ["3304128","Quatis",-22.4072,-44.2597,"Médio Paraíba","Baixo"],
+  ["3304144","Queimados",-22.7167,-43.555,"Baixada","Alto"],
+  ["3304151","Quissamã",-22.1078,-41.47,"Norte","Baixo"],
+  ["3304201","Resende",-22.4686,-44.4464,"Médio Paraíba","Médio"],
+  ["3304300","Rio Bonito",-22.71,-42.6258,"Metropolitana","Baixo"],
+  ["3304409","Rio Claro",-22.7236,-44.1369,"Médio Paraíba","Baixo"],
+  ["3304508","Rio das Flores",-22.1697,-43.5869,"Médio Paraíba","Baixo"],
+  ["3304524","Rio das Ostras",-22.5228,-41.945,"Baixada Litorânea","Médio"],
+  ["3304557","Rio de Janeiro",-22.9068,-43.1729,"Capital","Médio"],
+  ["3304607","Santa Maria Madalena",-21.9606,-42.0111,"Serrana","Baixo"],
+  ["3304706","Santo Antônio de Pádua",-21.5358,-42.1806,"Noroeste","Baixo"],
+  ["3304755","São Francisco de Itabapoana",-21.47,-41.115,"Norte","Baixo"],
+  ["3304805","São Fidélis",-21.6456,-41.7486,"Norte","Baixo"],
+  ["3304904","São Gonçalo",-22.8269,-43.0634,"Metropolitana","Alto"],
+  ["3305000","São João da Barra",-21.6408,-41.0519,"Norte","Baixo"],
+  ["3305109","São João de Meriti",-22.8054,-43.3731,"Baixada","Alto"],
+  ["3305133","São José de Ubá",-21.3611,-41.9358,"Noroeste","Baixo"],
+  ["3305158","São José do Vale do Rio Preto",-22.3056,-42.925,"Serrana","Baixo"],
+  ["3305208","São Pedro da Aldeia",-22.8397,-42.1028,"Baixada Litorânea","Médio"],
+  ["3305307","São Sebastião do Alto",-21.9569,-42.135,"Serrana","Baixo"],
+  ["3305406","Sapucaia",-21.9964,-42.9194,"Centro-Sul","Baixo"],
+  ["3305505","Saquarema",-22.92,-42.5108,"Baixada Litorânea","Baixo"],
+  ["3305554","Seropédica",-22.7408,-43.7081,"Baixada","Médio"],
+  ["3305604","Silva Jardim",-22.6511,-42.3878,"Baixada Litorânea","Baixo"],
+  ["3305703","Sumidouro",-22.0489,-42.675,"Serrana","Baixo"],
+  ["3305752","Tanguá",-22.7314,-42.7208,"Metropolitana","Baixo"],
+  ["3305802","Teresópolis",-22.4119,-42.9658,"Serrana","Médio"],
+  ["3305901","Trajano de Moraes",-22.0608,-42.0667,"Serrana","Baixo"],
+  ["3306008","Três Rios",-22.1167,-43.2078,"Centro-Sul","Médio"],
+  ["3306107","Valença",-22.2447,-43.7006,"Médio Paraíba","Baixo"],
+  ["3306156","Varre-Sai",-20.93,-41.8658,"Noroeste","Baixo"],
+  ["3306206","Vassouras",-22.4056,-43.6639,"Centro-Sul","Baixo"],
+  ["3306305","Volta Redonda",-22.5231,-44.1042,"Médio Paraíba","Médio"]
+];
+
+var mesquita = null;
+for(var i=0; i<CIDADES_92.length; i++){
+  if(CIDADES_92[i][0] == '3302858'){
+    mesquita = { ibge: CIDADES_92[i][0], nome: CIDADES_92[i][1], lat: CIDADES_92[i][2], lng: CIDADES_92[i][3], regiao: CIDADES_92[i][4], risco: CIDADES_92[i][5] };
+  }
+}
+
+var map = L.map('map', {zoomControl: false}).setView([mesquita.lat, mesquita.lng], 11);
+L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {subdomains: 'abcd', maxZoom: 19}).addTo(map);
+L.control.zoom({position: 'topright'}).addTo(map);
+
+var layers = {};
+layers.cemaden = L.layerGroup().addTo(map);
+layers.risco = L.layerGroup().addTo(map);
+layers.provas = L.layerGroup().addTo(map);
+
+var cemaden = [
+  {id: 'PLUV-3302858-01', cidade: 'Mesquita', local: 'Centro', valor: '18.4mm', status: 'Amarelo', lat: -22.7819, lng: -43.4286, pisca: false},
+  {id: 'PLUV-3300456-01', cidade: 'Belford Roxo', local: 'Lote XV', valor: '32.7mm', status: 'Laranja', lat: -22.7642, lng: -43.3997, pisca: true},
+  {id: 'ENC-3301702-03', cidade: 'Duque de Caxias', local: 'Vila Operaria', valor: '12mm', status: 'Alto', lat: -22.7858, lng: -43.3117, pisca: true},
+  {id: 'PLUV-3304557-01', cidade: 'Rio de Janeiro', local: 'Vidigal', valor: '45.1mm', status: 'Vermelho', lat: -22.9926, lng: -43.2321, pisca: true}
+];
+
+for(var i=0; i<cemaden.length; i++){
+  var s = cemaden[i];
+  var cor = (s.status == 'Alto' || s.status == 'Laranja' || s.status == 'Vermelho') ? '#ef4444' : '#f59e0b';
+  var cls = s.pisca ? 'piscando' : '';
+  var htmlDiv = '<div class="' + cls + '" style="background:' + cor + ';color:white;font-size:9px;font-weight:700;padding:3px 6px;border-radius:10px;border:2px solid white">💧 ' + s.valor + '</div>';
+  L.marker([s.lat, s.lng], {icon: L.divIcon({html: htmlDiv, iconSize: [70, 20]})}).addTo(layers.cemaden);
+}
+
+for(var i=0; i<CIDADES_92.length; i++){
+  var c = CIDADES_92[i];
+  var cor = c[5] == 'Alto' ? '#ef4444' : c[5] == 'Médio' ? '#f59e0b' : '#10b981';
+  L.circleMarker([c[2], c[3]], {radius: 4, color: cor, fillColor: cor, fillOpacity: 0.5}).addTo(layers.risco).bindPopup('<b>' + c[1] + ' • ' + c[0] + '</b><br>' + c[4] + ' • Risco ' + c[5]);
+}
+
+function renderCemaden(){
+  var h = '';
+  for(var i=0; i<cemaden.length; i++){
+    var s = cemaden[i];
+    var cor = s.pisca ? '#ef4444' : '#f59e0b';
+    var cls = s.pisca ? 'piscando' : '';
+    h += '<div style="background:#0f172a;padding:5px;border-radius:6px;border-left:3px solid ' + cor + ';margin-bottom:4px;display:flex;justify-content:space-between"><div><b style="font-size:10px">' + s.cidade + ' • ' + s.local + '</b><div style="font-size:8px;color:#94a3b8">' + s.valor + ' • ' + s.id + '</div></div><div style="font-size:8px;color:' + cor + '" class="' + cls + '">' + s.status + '</div></div>';
+  }
+  document.getElementById('boxCemaden').innerHTML = h;
+}
+renderCemaden();
+
+var lideres = [
+  {id: 1, nome: 'Maria da Chatuba', bairro: 'Chatuba', entidade: 'Associacao Chatuba', status: 'pendente', motivo: 'Moro ha 22 anos, Rua Elpidio alaga'},
+  {id: 2, nome: 'Pastor Joao - Edson Passos', bairro: 'Edson Passos', entidade: 'Igreja Batista - Abrigo', status: 'pendente', motivo: 'Igreja vira abrigo'},
+  {id: 3, nome: 'Dona Cida - Banco de Areia', bairro: 'Banco de Areia', entidade: 'Comercio Local', status: 'verificado', motivo: 'Fotos 5 anos'}
+];
+
+var relatos = [
+  {id: 1, lider: 'Dona Cida - Banco de Areia', bairro: 'Banco de Areia', local: 'Rua Bicuiba 120', tipo: 'Alagamento confirmado', desc: 'Agua 40cm 14h, bueiro CEDAE entupido - prova oficial', data: 'Hoje 14:23', lat: -22.785, lng: -43.42}
+];
+
+var usuario = null;
+for(var i=0; i<lideres.length; i++){
+  if(lideres[i].status == 'verificado'){ usuario = lideres[i]; }
+}
+
+function renderRelatos(){
+  var h = '';
+  for(var i=0; i<relatos.length; i++){
+    var r = relatos[i];
+    h += '<div style="background:rgba(16,185,129,.08);padding:6px;border-radius:6px;border-left:3px solid #10b981;margin-bottom:4px"><div style="display:flex;justify-content:space-between"><span style="background:#10b981;color:#0f172a;padding:1px 5px;border-radius:8px;font-size:8px;font-weight:700">🛡️ VERIFICADO</span><span style="font-size:8px;color:#94a3b8">' + r.data + '</span></div><div style="font-size:10px;font-weight:700;margin-top:2px">' + r.lider + ' • ' + r.bairro + '</div><div style="font-size:9px;color:#f59e0b">' + r.tipo + ' • ' + r.local + '</div><div style="font-size:8px;color:#cbd5e1">' + r.desc + '</div><div style="font-size:7px;color:#10b981">✓ PROVA OFICIAL → Prefeitura/CEDAE/INEA</div></div>';
+  }
+  document.getElementById('boxRelatos').innerHTML = h;
+  layers.provas.clearLayers();
+  for(var i=0; i<relatos.length; i++){
+    var r = relatos[i];
+    var htmlDiv2 = '<div style="background:#10b981;color:#0f172a;font-size:9px;font-weight:800;padding:3px 6px;border-radius:10px;border:2px solid white">🛡️ ' + r.tipo + '</div>';
+    L.marker([r.lat, r.lng], {icon: L.divIcon({html: htmlDiv2, iconSize: [110, 20]})}).addTo(layers.provas);
+  }
+}
+renderRelatos();
+
+var sel = document.getElementById('selCidade');
+var opt = '';
+for(var i=0; i<CIDADES_92.length; i++){
+  opt += '<option value="' + CIDADES_92[i][0] + '">' + CIDADES_92[i][1] + ' • ' + CIDADES_92[i][0] + ' • ' + CIDADES_92[i][4] + '</option>';
+}
+sel.innerHTML = opt;
+sel.value = '3302858';
+sel.onchange = function(e){
+  var v = e.target.value;
+  for(var i=0; i<CIDADES_92.length; i++){
+    if(CIDADES_92[i][0] == v){ map.flyTo([CIDADES_92[i][2], CIDADES_92[i][3]], 13); }
+  }
+};
+
+document.getElementById('btnLider').onclick = function(){ document.getElementById('modalLider').style.display = 'flex'; };
+document.getElementById('fCancel').onclick = function(){ document.getElementById('modalLider').style.display = 'none'; };
+document.getElementById('btnAdmin').onclick = function(){ renderPendentes(); document.getElementById('modalAdmin').style.display = 'flex'; };
+document.getElementById('adminFechar').onclick = function(){ document.getElementById('modalAdmin').style.display = 'none'; };
+document.getElementById('btnNovo').onclick = function(){ document.getElementById('modalRelato').style.display = 'flex'; };
+document.getElementById('rCancelar').onclick = function(){ document.getElementById('modalRelato').style.display = 'none'; };
+
+document.getElementById('fEnviar').onclick = function(){
+  var nome = document.getElementById('fNome').value || 'Novo Lider';
+  var bairro = document.getElementById('fBairro').value;
+  var zap = document.getElementById('fZap').value;
+  var motivo = document.getElementById('fMotivo').value;
+  var novo = {id: Date.now(), nome: nome, bairro: bairro, status: 'pendente', motivo: motivo, zap: zap};
+  lideres.push(novo);
+  renderPendentes();
+  document.getElementById('modalLider').style.display = 'none';
+  alert('Cadastro enviado! Pendente aprovacao do admin de Mesquita.');
+};
+
+function renderPendentes(){
+  var h = '';
+  for(var i=0; i<lideres.length; i++){
+    var l = lideres[i];
+    var cor = l.status == 'verificado' ? '#10b981' : '#f59e0b';
+    var btn = l.status == 'pendente' ? '<button onclick="aprovar(' + l.id + ')" style="margin-top:5px;background:#10b981;color:#0f172a;border:none;padding:4px;font-size:9px">✅ Aprovar VERIFICADO</button>' : '';
+    h += '<div style="background:#0f172a;padding:7px;border-radius:6px;margin-bottom:5px;border-left:3px solid ' + cor + '"><div style="display:flex;justify-content:space-between"><b style="font-size:11px">' + l.nome + '</b><span style="background:' + cor + ';color:#0f172a;padding:1px 5px;border-radius:8px;font-size:8px">' + l.status.toUpperCase() + '</span></div><div style="font-size:9px;color:#94a3b8">' + l.bairro + ' • ' + (l.motivo || '') + '</div>' + btn + '</div>';
+  }
+  document.getElementById('listaAdmin').innerHTML = h;
+}
+
+window.aprovar = function(id){
+  for(var i=0; i<lideres.length; i++){
+    if(lideres[i].id == id){
+      lideres[i].status = 'verificado';
+      usuario = lideres[i];
+      renderPendentes();
+      document.getElementById('btnNovo').style.display = 'block';
+      alert(lideres[i].nome + ' agora é VERIFICADO! Pode publicar prova oficial.');
+    }
+  }
+};
+
+document.getElementById('rEnviar').onclick = function(){
+  var local = document.getElementById('rLocal').value || 'Rua Elpidio, Chatuba 120';
+  var tipo = document.getElementById('rTipo').value;
+  var desc = document.getElementById('rDesc').value || 'Agua 40cm 14h, bueiro CEDAE entupido - prova oficial';
+  var novo = {id: Date.now(), lider: usuario ? usuario.nome : 'Dona Cida - Banco de Areia', bairro: usuario ? usuario.bairro : 'Banco de Areia', local: local, tipo: tipo, desc: desc, data: 'Agora', lat: -22.785, lng: -43.42};
+  relatos.unshift(novo);
+  renderRelatos();
+  document.getElementById('modalRelato').style.display = 'none';
+  alert('Relato VERIFICADO publicado! Vira prova oficial pra prefeitura/CEDAE/INEA.');
+};
+
+if(usuario){ document.getElementById('btnNovo').style.display = 'block'; }
+
+document.getElementById('btnWhats').onclick = function(){
+  var msg = '🛡️ SARAH Mesquita V11 FINAL 92 CIDADES - FECHADO COM </html> - https://sarah-mesquita.pages.dev - CEMADEN Baixada piscando Laranja 32.7mm - Provas oficiais verificadas';
+  window.open('https://wa.me/?text=' + encodeURIComponent(msg), '_blank');
+};
+
+L.marker([mesquita.lat, mesquita.lng], {
+  icon: L.divIcon({
+    html: '<div style="background:#f59e0b;width:32px;height:32px;border-radius:50% 50% 50% 0;transform:rotate(-45deg);border:3px solid white;display:flex;align-items:center;justify-content:center"><span style="transform:rotate(45deg)">📍</span></div>',
+    iconSize: [32, 32],
+    iconAnchor: [16, 32]
+  })
+}).addTo(map).bindPopup('<b>Mesquita 3302858 - Centro Operacoes V11 FINAL 92 CIDADES FECHADO COM &lt;/html&gt;</b>');
+</script>
+</body>
+</html>
