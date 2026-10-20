@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Chave Climática - Sarah Voz Oficial</title>
+<style>
+body{background:#0a0a0a;color:#00ff88;font-family:Arial;padding:20px;text-align:center}
+button{padding:18px 35px;font-size:20px;background:#FF5500;color:#fff;border:none;border-radius:12px;margin:10px;cursor:pointer;font-weight:bold}
+</style>
+</head>
+<body>
+<h1>🌦️ CHAVE CLIMÁTICA - SARAH V11.1 FINAL</h1>
+
+<!-- SEU AUDIO OFICIAL AQUI -->
+<audio id="sarahAudio" preload="auto" src="sarah-feminina.ogg"></audio>
+
+<button onclick="Sarah()">🔊 FALAR OFICIAL</button>
+
+<div id="status">Toque 1 vez na tela pra liberar a voz</div>
+
+<script>
+const FRASE_OFICIAL = "Olá! Eu sou a Sarah, Analista Sênior de Monitoramento Climático Automatizado do app Chave Climática. Em que posso ajudar?";
+let ok=false;
+function desbloquear(){
+ if(ok) return;
+ const a=document.getElementById('sarahAudio');
+ a.play().then(()=>{a.pause();a.currentTime=0;ok=true;}).catch(()=>{});
+ document.removeEventListener('click',desbloquear);
+}
+document.addEventListener('click',desbloquear);
+document.addEventListener('touchstart',desbloquear);
+
+window.Sarah = function(texto){
+  const t = texto || FRASE_OFICIAL;
+  const a=document.getElementById('sarahAudio');
+  // SE FOR FRASE OFICIAL TOCA SEU ARQUIVO REAL 100% MULHER
+  if(t===FRASE_OFICIAL || t.includes("Em que posso ajudar")){
+    a.currentTime=0;
+    a.play().catch(()=>{alert("Toca na tela 1 vez primeiro")});
+    return;
+  }
+  // OUTROS ALERTAS
+  a.currentTime=0;
+  a.play();
+}
+</script>
+</body>
+</html>
