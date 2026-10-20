@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Chave Climática - Sarah Voz Oficial</title>
+<style>
+  body {
+    background: #0a0a0a;
+    color: #00ff88;
+    font-family: Arial, sans-serif;
+    padding: 30px 20px;
+    text-align: center;
+    margin: 0;
+  }
+  .container {
+    max-width: 600px;
+    margin: 50px auto;
+    background: #161616;
+    padding: 40px 20px;
+    border-radius: 16px;
+    box-shadow: 0 8px 24px rgba(0, 255, 136, 0.15);
+    border: 1px solid #222;
+  }
+  h1 {
+    font-size: 22px;
+    margin-bottom: 25px;
+    color: #00ff88;
+    text-shadow: 0 0 10px rgba(0, 255, 136, 0.3);
+  }
+  button {
+    padding: 18px 35px;
+    font-size: 20px;
+    background: #FF5500;
+    color: #fff;
+    border: none;
+    border-radius: 12px;
+    margin: 15px 0;
+    cursor: pointer;
+    font-weight: bold;
+    box-shadow: 0 4px 12px rgba(255, 85, 0, 0.4);
+    transition: background 0.2s, transform 0.1s;
+  }
+  button:active {
+    transform: scale(0.98);
+  }
+  button:hover {
+    background: #e04b00;
+  }
+  #status {
+    margin-top: 20px;
+    font-size: 15px;
+    color: #bbb;
+  }
+</style>
+</head>
+<body>
+
+<div class="container">
+  <h1>🌦️ CHAVE CLIMÁTICA - SARAH V11.1 FINAL</h1>
+
+  <!-- ÁUDIO OFICIAL DA SARAH EM FORMATO MP4 -->
+  <audio id="sarahAudio" preload="auto" src="sarah-feminina.mp4"></audio>
+
+  <button onclick="Sarah()">🔊 FALAR OFICIAL</button>
+
+  <div id="status">Toque 1 vez na tela para liberar o áudio do sistema</div>
+</div>
+
+<script>
+const FRASE_OFICIAL = "Olá! Eu sou a Sarah, Analista Sênior de Monitoramento Climático Automatizado do app Chave Climática. Em que posso ajudar?";
+let ok = false;
+
+function desbloquear() {
+  if (ok) return;
+  const a = document.getElementById('sarahAudio');
+  a.play().then(() => {
+    a.pause();
+    a.currentTime = 0;
+    ok = true;
+    document.getElementById('status').innerText = "Sistema de voz liberado e pronto para operar!";
+    document.getElementById('status').style.color = "#00ff88";
+  }).catch(() => {});
+  
+  document.removeEventListener('click', desbloquear);
+  document.removeEventListener('touchstart', desbloquear);
+}
+
+document.addEventListener('click', desbloquear);
+document.addEventListener('touchstart', desbloquear);
+
+window.Sarah = function(texto) {
+  const a = document.getElementById('sarahAudio');
+  
+  // Reseta e reproduz o áudio oficial da Sarah com perfeição
+  a.currentTime = 0;
+  a.play().catch(() => {
+    alert("Por favor, toque na tela 1 vez primeiro para liberar o áudio!");
+  });
+}
+</script>
+
+</body>
+</html>
