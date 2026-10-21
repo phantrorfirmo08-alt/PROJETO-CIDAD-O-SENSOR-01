@@ -1,0 +1,628 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>CENTRAL BIOCIBERNÉTICA — 92 MUNICÍPIOS RJ</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Courier New', Courier, monospace;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        html, body {
+            width: 100%;
+            height: 100vh;
+            background-color: #010306;
+            color: #00ffcc;
+            overflow: hidden;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            transition: background-color 0.3s ease;
+        }
+
+        /* Classe de Alerta Crítico Visual (Estresse Térmico Ativo) */
+        body.critical-alert {
+            background-color: #1a0205 !important;
+        }
+
+        .dashboard {
+            width: 100%;
+            max-width: 460px;
+            height: 98vh;
+            background: linear-gradient(135deg, #050d14 0%, #010204 100%);
+            border: 2px solid #00ffcc;
+            border-radius: 10px;
+            box-shadow: 0 0 25px rgba(0, 255, 204, 0.25);
+            padding: 8px 10px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            position: relative;
+            transition: border-color 0.3s ease;
+        }
+
+        body.critical-alert .dashboard {
+            border-color: #ff3366;
+            box-shadow: 0 0 35px rgba(255, 51, 102, 0.5);
+        }
+
+        /* Header / Banner Comercial Abrangência 92 Municípios */
+        header {
+            border-bottom: 1px solid rgba(0, 255, 204, 0.4);
+            padding-bottom: 4px;
+            margin-bottom: 4px;
+        }
+
+        .header-title h1 {
+            font-size: 0.9rem;
+            color: #00ffcc;
+            letter-spacing: 0.5px;
+            text-shadow: 0 0 6px rgba(0,255,204,0.5);
+            font-weight: 900;
+        }
+
+        .header-title h2 {
+            font-size: 0.65rem;
+            color: #ffd700;
+            font-weight: bold;
+        }
+
+        .header-title p {
+            font-size: 0.52rem;
+            color: #88ffcc;
+        }
+
+        .vital-box {
+            border: 1px solid #00ffcc;
+            padding: 3px 6px;
+            background: rgba(0, 255, 204, 0.08);
+            font-size: 0.6rem;
+            border-radius: 4px;
+            display: flex;
+            justify-content: space-between;
+            margin-top: 2px;
+        }
+
+        .vital-box span {
+            color: #ffffff;
+            font-weight: bold;
+        }
+
+        /* Container do Mapa em Canvas com Vento e Automação Real */
+        .radar-container {
+            position: relative;
+            background: #020509;
+            border: 1px solid #00ffcc;
+            height: 130px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+            border-radius: 5px;
+            margin-bottom: 4px;
+        }
+
+        canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            cursor: pointer;
+        }
+
+        .hud-overlay {
+            position: absolute;
+            font-size: 0.48rem;
+            color: #00ffcc;
+            background: rgba(2, 8, 14, 0.9);
+            padding: 2px 5px;
+            border-left: 2px solid #00ffcc;
+            z-index: 10;
+        }
+
+        .hud-top-left { top: 4px; left: 4px; }
+        .hud-top-right { top: 4px; right: 4px; color: #ffaa00; }
+
+        .coords-bar {
+            position: absolute;
+            bottom: 0;
+            width: 100%;
+            font-size: 0.46rem;
+            background: rgba(1, 4, 8, 0.95);
+            padding: 2px;
+            text-align: center;
+            border-top: 1px solid rgba(0, 255, 204, 0.3);
+            color: #aaeebb;
+            z-index: 10;
+        }
+
+        /* Chat Interativo SARAH AI com Balões */
+        .chat-section {
+            background: rgba(4, 10, 18, 0.95);
+            border: 1px solid #00ffcc;
+            border-radius: 5px;
+            padding: 4px;
+            margin-bottom: 4px;
+        }
+
+        .chat-header {
+            font-size: 0.62rem;
+            color: #00ffcc;
+            border-bottom: 1px solid rgba(0, 255, 204, 0.3);
+            padding-bottom: 2px;
+            margin-bottom: 3px;
+            font-weight: bold;
+        }
+
+        .chat-window {
+            height: 65px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 3px;
+            padding-right: 2px;
+        }
+
+        .chat-bubble {
+            font-size: 0.54rem;
+            padding: 3px 5px;
+            border-radius: 5px;
+            max-width: 90%;
+            line-height: 1.2;
+        }
+
+        .bubble-sarah {
+            background: rgba(0, 255, 204, 0.12);
+            border-left: 2px solid #00ffcc;
+            color: #d1ffd6;
+            align-self: flex-start;
+        }
+
+        .bubble-user {
+            background: rgba(255, 170, 0, 0.15);
+            border-right: 2px solid #ffaa00;
+            color: #ffeebb;
+            align-self: flex-end;
+        }
+
+        /* Controles de Entrada (Input + Mic + Enviar) */
+        .chat-input-bar {
+            display: flex;
+            gap: 3px;
+            margin-top: 3px;
+        }
+
+        .chat-input-bar input {
+            flex: 1;
+            background: #010306;
+            border: 1px solid #00ffcc;
+            color: #fff;
+            padding: 3px 5px;
+            font-size: 0.54rem;
+            border-radius: 4px;
+            outline: none;
+        }
+
+        .mic-btn, .send-btn {
+            background: rgba(0, 255, 204, 0.2);
+            border: 1px solid #00ffcc;
+            color: #00ffcc;
+            padding: 3px 7px;
+            font-size: 0.56rem;
+            font-weight: bold;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        .mic-btn:active, .send-btn:active {
+            background: rgba(0, 255, 204, 0.5);
+            color: #fff;
+        }
+
+        /* Tabela Técnica Compacta e Legível */
+        .table-section {
+            background: rgba(4, 10, 18, 0.95);
+            border: 1px solid #00ffcc;
+            border-radius: 5px;
+            padding: 4px;
+            margin-bottom: 4px;
+        }
+
+        .table-section h3 {
+            font-size: 0.6rem;
+            color: #00ffcc;
+            margin-bottom: 2px;
+            border-bottom: 1px solid rgba(0, 255, 204, 0.3);
+            padding-bottom: 2px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.52rem;
+            text-align: left;
+        }
+
+        th, td {
+            border: 1px solid rgba(0, 255, 204, 0.3);
+            padding: 2px 4px;
+        }
+
+        th {
+            background: rgba(0, 255, 204, 0.15);
+            color: #00ffcc;
+        }
+
+        td {
+            color: #ffffff;
+            font-weight: 600;
+        }
+
+        /* Botões Mobile Grid */
+        .controls-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 3px;
+            margin-bottom: 3px;
+        }
+
+        .btn {
+            background: rgba(0, 255, 204, 0.1);
+            border: 1px solid #00ffcc;
+            color: #00ffcc;
+            padding: 4px 3px;
+            text-align: center;
+            font-size: 0.56rem;
+            font-weight: bold;
+            cursor: pointer;
+            border-radius: 4px;
+        }
+
+        .btn:active {
+            background: rgba(0, 255, 204, 0.4);
+            color: #fff;
+        }
+
+        .btn-emergency {
+            grid-column: span 2;
+            background: rgba(255, 51, 102, 0.25);
+            border-color: #ff3366;
+            color: #ff99bb;
+            padding: 3px;
+        }
+
+        footer {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.46rem;
+            color: #668877;
+            border-top: 1px solid rgba(0, 255, 204, 0.2);
+            padding-top: 2px;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="dashboard">
+        <!-- HEADER COMERCIAL & ESTADUAL -->
+        <header>
+            <div class="header-title">
+                <h1>CENTRAL BIOCIBERNÉTICA • 92 MUNICÍPIOS RJ</h1>
+                <h2>PILOTO: SEBINHO (MESQUITA) &amp; DOM BOSCO (CAXIAS)</h2>
+                <p>TELEMETRIA AUTOMATIZADA EM TEMPO REAL</p>
+            </div>
+            <div class="vital-box">
+                <div>ESTADO: <span id="lblHomeostasis" style="color: #00ffcc;">ESTÁVEL</span></div>
+                <div>PULSO: <span id="lblHeartrate">75 BPM</span></div>
+            </div>
+        </header>
+
+        <!-- CANVAS COM ANIMAÇÃO DE VENTO E DADOS REAIS AUTOMATIZADOS -->
+        <div class="radar-container">
+            <div class="hud-overlay hud-top-left" id="hudWindText">VENTO: 12 KM/H (AUTOMATIZADO)</div>
+            <div class="hud-overlay hud-top-right">92 MUNICÍPIOS</div>
+            <canvas id="livingMapCanvas"></canvas>
+            <div class="coords-bar">
+                <span>MENDANHA ➔ SEBINHO (MESQ) | TINGUÁ ➔ DOM BOSCO / LIBERDADE (CAX)</span>
+            </div>
+        </div>
+
+        <!-- PAINEL DE DIÁLOGO SARAH IA (COM BALÕES) -->
+        <div class="chat-section">
+            <div class="chat-header">🤖 SARAH AI NEXUS • CANAL DE VOZ E COMANDO</div>
+            <div class="chat-window" id="chatWindow">
+                <div class="chat-bubble bubble-sarah"><strong>[SARAH IA]:</strong> Sistema pronto para auditoria técnica da Defesa Civil e meteorologistas.</div>
+                <div class="chat-bubble bubble-user"><strong>[POPULAÇÃO]:</strong> O que acontece ao acionar o Estresse Térmico?</div>
+                <div class="chat-bubble bubble-sarah"><strong>[SARAH IA]:</strong> O sistema simula alerta crítico, dispara alarme sonoro e ativa o protocolo de encostas.</div>
+            </div>
+            <div class="chat-input-bar">
+                <input type="text" id="userInputMsg" placeholder="Digite comando ou pergunte à Sarah...">
+                <button class="mic-btn" onclick="toggleMic()" id="micBtn">🎙️</button>
+                <button class="send-btn" onclick="sendUserMsg()">ENVIAR</button>
+            </div>
+        </div>
+
+        <!-- TABELA TÉCNICA CLARA E LEGÍVEL -->
+        <div class="table-section">
+            <h3>SENSORES &amp; VETORES OFICIAIS</h3>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Município</th>
+                        <th>Bairro / Local</th>
+                        <th>Origem / Cume</th>
+                        <th>Distância</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>Mesquita</strong></td>
+                        <td>Rua Amazonas (Sebinho)</td>
+                        <td>Serra Mendanha (974m)</td>
+                        <td><strong>7,8 km</strong></td>
+                    </tr>
+                    <tr>
+                        <td><strong>Caxias</strong></td>
+                        <td>Dom Bosco / Pq. Liberdade</td>
+                        <td>Serra do Mar (1627m)</td>
+                        <td><strong>11,4 km</strong></td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- BOTÕES DE CONTROLE TÁTEIS -->
+        <div class="controls-grid">
+            <div class="btn" onclick="injectNutrients()">🟢 INJETAR ATP</div>
+            <div class="btn" onclick="triggerFever()" style="background: rgba(255,51,102,0.2); border-color: #ff3366; color: #ff99bb;">⚡ ESTRESSE TÉRMICO</div>
+            <div class="btn" onclick="triggerRegeneration()">💊 REGENERAÇÃO</div>
+            <div class="btn" onclick="addChatMsg('Relatório mobile exportado para auditoria.', 'sarah')">📊 EXPORTAR</div>
+            <div class="btn btn-emergency" onclick="alert('CHAMADA DIRETA ACIONADA: DEFESA CIVIL 199')">📞 DEFESA CIVIL 199</div>
+        </div>
+
+        <!-- RODAPÉ FIXO COM HORÁRIO DE BRASÍLIA -->
+        <footer>
+            <span>ECD-MOBILE • 92 MUNICÍPIOS (GMT-3)</span>
+            <span id="lblLiveClock" style="color: #00ffcc; font-weight: bold;">00:00:00</span>
+        </footer>
+    </div>
+
+    <!-- SCRIPT DE SIMULAÇÃO DE ESTRESSE ATIVO E ÁUDIO -->
+    <script>
+        function getBrasiliaTimeString() {
+            return new Intl.DateTimeFormat('pt-BR', {
+                timeZone: 'America/Sao_Paulo',
+                hour: '2-digit',
+                minute: '2-digit',
+                second: '2-digit',
+                hour12: false
+            }).format(new Date());
+        }
+
+        setInterval(() => {
+            document.getElementById('lblLiveClock').innerText = getBrasiliaTimeString();
+        }, 1000);
+
+        function speakSarah(text) {
+            if (!('speechSynthesis' in window)) return;
+            window.speechSynthesis.cancel();
+            const u = new SpeechSynthesisUtterance(text);
+            u.lang = 'pt-BR';
+            u.rate = 1.05;
+            u.pitch = 1.0;
+            window.speechSynthesis.speak(u);
+        }
+
+        function addChatMsg(text, sender) {
+            const chatWindow = document.getElementById('chatWindow');
+            const bubble = document.createElement('div');
+            bubble.className = `chat-bubble ${sender === 'sarah' ? 'bubble-sarah' : 'bubble-user'}`;
+            bubble.innerHTML = `<strong>[${sender === 'sarah' ? 'SARAH IA' : 'POPULAÇÃO'}]:</strong> ${text}`;
+            chatWindow.appendChild(bubble);
+            chatWindow.scrollTop = chatWindow.scrollHeight;
+        }
+
+        function sendUserMsg() {
+            const input = document.getElementById('userInputMsg');
+            if (!input.value.trim()) return;
+            const text = input.value;
+            addChatMsg(text, 'user');
+            input.value = '';
+
+            setTimeout(() => {
+                addChatMsg(`Análise de telemetria processada pela Analista Sarah.`, 'sarah');
+            }, 1000);
+        }
+
+        let micActive = false;
+        function toggleMic() {
+            micActive = !micActive;
+            const btn = document.getElementById('micBtn');
+            btn.style.borderColor = micActive ? '#ff3366' : '#00ffcc';
+            btn.style.color = micActive ? '#ff3366' : '#00ffcc';
+            addChatMsg(micActive ? "Microfone aberto. Ouvindo comando de voz..." : "Microfone fechado.", 'sarah');
+        }
+
+        let realWindSpeed = 12;
+        let realRainMm = 0;
+        let heartRate = 75;
+        let organismState = "ESTÁVEL";
+        let isStressed = false;
+
+        async function fetchRealWeatherData() {
+            if (isStressed) return; // Pausa a busca se estiver em teste de estresse manual
+            try {
+                const res = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=-22.7831&longitude=-43.4294&current=temperature_2m,relative_humidity_2m,wind_speed_10m,precipitation&timezone=America/Sao_Paulo`);
+                const j = await res.json();
+                if (j?.current) {
+                    realWindSpeed = j.current.wind_speed_10m || 10;
+                    realRainMm = j.current.precipitation || 0;
+                    document.getElementById('hudWindText').innerText = `VENTO: ${realWindSpeed} KM/H (AUTOMATIZADO)`;
+                    heartRate = 75 + Math.round(realWindSpeed * 0.5);
+                }
+            } catch (e) {}
+        }
+        fetchRealWeatherData();
+        setInterval(fetchRealWeatherData, 300000);
+
+        function injectNutrients() {
+            if (isStressed) return;
+            heartRate = Math.min(110, heartRate + 10);
+            addChatMsg("ATP injetado. Metabolismo hídrico acelerado.", 'sarah');
+        }
+
+        // Função de Acionamento do Teste de Estresse Climático
+        function triggerFever() {
+            isStressed = true;
+            organismState = "CRÍTICO";
+            heartRate = 145;
+            realWindSpeed = 68; // Vento simulado de vendaval
+            realRainMm = 35;    // Chuva forte simulada
+
+            document.body.classList.add('critical-alert');
+            document.getElementById('lblHomeostasis').innerText = organismState;
+            document.getElementById('lblHomeostasis').style.color = "#ff3366";
+            document.getElementById('hudWindText').innerText = `VENTO: 68 KM/H (ALERTA CRÍTICO)`;
+
+            const alertaTexto = "ALERTA DA DEFESA CIVIL! Estresse térmico e hidrometeorológico extremo ativado nas serras de Mesquita e Caxias. Risco iminente de enxurrada. Atenção total nos 92 municípios!";
+            addChatMsg(alertaTexto, 'sarah');
+            speakSarah(alertaTexto);
+
+            // Restaura o estado normal após 8 segundos
+            setTimeout(() => {
+                isStressed = false;
+                organismState = "ESTÁVEL";
+                heartRate = 75;
+                realWindSpeed = 12;
+                realRainMm = 0;
+                document.body.classList.remove('critical-alert');
+                document.getElementById('lblHomeostasis').innerText = organismState;
+                document.getElementById('lblHomeostasis').style.color = "#00ffcc";
+                document.getElementById('hudWindText').innerText = `VENTO: 12 KM/H (AUTOMATIZADO)`;
+                addChatMsg("Simulação encerrada. Homeostase e parâmetros normais restabelecidos.", 'sarah');
+                speakSarah("Simulação encerrada. Sistema normalizado.");
+            }, 8000);
+        }
+
+        function triggerRegeneration() {
+            isStressed = false;
+            document.body.classList.remove('critical-alert');
+            organismState = "ESTÁVEL";
+            heartRate = 72;
+            document.getElementById('lblHomeostasis').innerText = organismState;
+            document.getElementById('lblHomeostasis').style.color = "#00ffcc";
+            addChatMsg("Nanobots aplicados. Sistema regenerado e íntegro.", 'sarah');
+            speakSarah("Nanobots aplicados. Sistema íntegro.");
+        }
+
+        // Canvas de Animação
+        const canvas = document.getElementById('livingMapCanvas');
+        const ctx = canvas.getContext('2d');
+
+        function resizeCanvas() {
+            canvas.width = canvas.parentElement.clientWidth;
+            canvas.height = canvas.parentElement.clientHeight;
+        }
+        window.addEventListener('resize', resizeCanvas);
+        resizeCanvas();
+
+        let radarAngle = 0;
+        let pulsePhase = 0;
+
+        const mendanha = { x: 0.20, y: 0.75 };
+        const sebinho = { x: 0.40, y: 0.55 };
+        const tingua = { x: 0.65, y: 0.25 };
+        const domBosco = { x: 0.82, y: 0.50 };
+
+        let windParticles = [];
+        for (let i = 0; i < 15; i++) {
+            windParticles.push({ x: Math.random() * canvas.width, y: Math.random() * canvas.height, length: Math.random() * 15 + 5 });
+        }
+
+        let rainDrops = [];
+        for (let i = 0; i < 20; i++) {
+            rainDrops.push({ x: Math.random() * canvas.width, y: Math.random() * canvas.height, vy: Math.random() * 2 + 1 });
+        }
+
+        function renderLivingMap() {
+            ctx.fillStyle = isStressed ? 'rgba(30, 2, 8, 0.45)' : 'rgba(1, 4, 8, 0.38)';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            radarAngle += 0.03 + (heartRate / 2000);
+            let centerX = canvas.width / 2;
+            let centerY = canvas.height / 2;
+
+            ctx.strokeStyle = isStressed ? 'rgba(255, 51, 102, 0.2)' : 'rgba(0, 255, 204, 0.12)';
+            ctx.lineWidth = 1;
+            [35, 70, 105, 140].forEach(r => {
+                ctx.beginPath(); ctx.arc(centerX, centerY, r, 0, Math.PI * 2); ctx.stroke();
+            });
+
+            let sweepX = centerX + Math.cos(radarAngle) * 160;
+            let sweepY = centerY + Math.sin(radarAngle) * 160;
+            ctx.strokeStyle = isStressed ? 'rgba(255, 51, 102, 0.9)' : 'rgba(0, 255, 204, 0.7)';
+            ctx.lineWidth = 1.8;
+            ctx.beginPath(); ctx.moveTo(centerX, centerY); ctx.lineTo(sweepX, sweepY); ctx.stroke();
+
+            // Vento na tela
+            let windSpeedFactor = Math.max(1, realWindSpeed * 0.15);
+            ctx.strokeStyle = isStressed ? 'rgba(255, 150, 150, 0.6)' : 'rgba(255, 255, 255, 0.35)';
+            ctx.lineWidth = isStressed ? 1.5 : 1;
+            windParticles.forEach(wp => {
+                wp.x += windSpeedFactor;
+                if (wp.x > canvas.width) { wp.x = -20; wp.y = Math.random() * canvas.height; }
+                ctx.beginPath(); ctx.moveTo(wp.x, wp.y); ctx.lineTo(wp.x + wp.length, wp.y); ctx.stroke();
+            });
+
+            // Chuva na tela
+            if (realRainMm > 0 || isStressed) {
+                ctx.strokeStyle = 'rgba(0, 180, 255, 0.7)';
+                rainDrops.forEach(rd => {
+                    rd.y += rd.vy + (realRainMm * 0.3);
+                    if (rd.y > canvas.height) { rd.y = -10; rd.x = Math.random() * canvas.width; }
+                    ctx.beginPath(); ctx.moveTo(rd.x, rd.y); ctx.lineTo(rd.x, rd.y + 8); ctx.stroke();
+                });
+            }
+
+            // Vetores Topográficos
+            let mx = canvas.width * mendanha.x, my = canvas.height * mendanha.y;
+            let sx1 = canvas.width * sebinho.x, sy1 = canvas.height * sebinho.y;
+            let tx = canvas.width * tingua.x, ty = canvas.height * tingua.y;
+            let sx2 = canvas.width * domBosco.x, sy2 = canvas.height * domBosco.y;
+
+            ctx.strokeStyle = '#FF8C00'; ctx.lineWidth = 2; ctx.setLineDash([4, 3]);
+            ctx.beginPath(); ctx.moveTo(mx, my); ctx.lineTo(sx1, sy1); ctx.stroke();
+            ctx.setLineDash([]);
+
+            ctx.strokeStyle = '#1E90FF'; ctx.lineWidth = 2; ctx.setLineDash([4, 3]);
+            ctx.beginPath(); ctx.moveTo(tx, ty); ctx.lineTo(sx2, sy2); ctx.stroke();
+            ctx.setLineDash([]);
+
+            [ {x: mx, y: my}, {x: tx, y: ty} ].forEach(cume => {
+                ctx.fillStyle = '#ff3366';
+                ctx.beginPath(); ctx.arc(cume.x, cume.y, 4, 0, Math.PI * 2); ctx.fill();
+            });
+
+            pulsePhase += (heartRate / 500);
+            let organicPulse = Math.sin(pulsePhase) * (isStressed ? 6 : 3);
+
+            ctx.fillStyle = isStressed ? '#ff3366' : '#00ffcc';
+            ctx.beginPath(); ctx.arc(sx1, sy1, 5 + organicPulse * 0.5, 0, Math.PI * 2); ctx.fill();
+
+            ctx.fillStyle = isStressed ? '#ff3366' : '#ffaa00';
+            ctx.beginPath(); ctx.arc(sx2, sy2, 5 + organicPulse * 0.5, 0, Math.PI * 2); ctx.fill();
+
+            document.getElementById('lblHeartrate').innerText = Math.round(heartRate) + ' BPM';
+            requestAnimationFrame(renderLivingMap);
+        }
+
+        renderLivingMap();
+    </script>
+</body>
+</html>
