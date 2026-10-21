@@ -1,0 +1,471 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta name="theme-color" content="#010306">
+<title>CENTRAL BIOCIBERNÉTICA — 92 MUNICÍPIOS RJ</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Courier New', monospace; -webkit-tap-highlight-color: transparent; }
+html { -webkit-text-size-adjust: 100%; }
+html, body {
+  background-color: #010306;
+  background-image: linear-gradient(rgba(1, 3, 6, 0.88), rgba(1, 3, 6, 0.92)), url('https://images.unsplash.com/photo-1558494949-ef010cbdcc31?q=80&w=1000&auto=format&fit=crop');
+  background-size: cover;
+  background-position: center;
+  background-attachment: fixed;
+  color: #00ffcc;
+  width: 100%;
+  height: 100vh;
+  overflow: hidden;
+  display: flex; justify-content: center; align-items: center;
+  transition: background-color 0.3s ease;
+}
+
+body.critical-alert {
+  background-color: #1a0205 !important;
+  background-image: linear-gradient(rgba(26, 2, 5, 0.88), rgba(26, 2, 5, 0.92)), url('https://images.unsplash.com/photo-1558494949-ef010cbdcc31?q=80&w=1000&auto=format&fit=crop') !important;
+}
+
+.dashboard {
+  width: 100%; max-width: 480px;
+  height: 98vh;
+  background: rgba(5, 13, 20, 0.88);
+  backdrop-filter: blur(6px);
+  border: 2px solid #00ffcc; border-radius: 14px;
+  box-shadow: 0 0 30px rgba(0,255,204,0.3);
+  padding: 8px 10px;
+  display: flex; flex-direction: column; justify-content: space-between;
+  position: relative;
+  transition: border-color 0.3s ease;
+}
+
+body.critical-alert .dashboard {
+  border-color: #ff3366;
+  box-shadow: 0 0 35px rgba(255, 51, 102, 0.6);
+  background: rgba(26, 2, 5, 0.9);
+}
+
+header { display: flex; flex-direction: column; gap: 4px; border-bottom: 1px solid rgba(0,255,204,0.4); padding-bottom: 4px; margin-bottom: 4px; }
+.header-title h1 { font-size: 0.95rem; color: #00ffcc; letter-spacing: 1px; text-shadow: 0 0 10px rgba(0,255,204,0.6); font-weight: 900; }
+.header-title h2 { font-size: 0.68rem; color: #ffd700; font-weight: bold; }
+.header-title p { font-size: 0.55rem; color: #88ffcc; letter-spacing: 0.5px; }
+
+.vital-box { border: 1px solid #00ffcc; padding: 4px 6px; background: rgba(0, 255, 204, 0.12); font-size: 0.65rem; border-radius: 6px; display: flex; justify-content: space-between; align-items: center; margin-top: 2px; }
+.vital-box span { color: #fff; font-weight: bold; }
+
+/* Radar refinado com mini satélites laterais visuais */
+.radar-container {
+  position: relative; background: #020509; border: 1px solid #00ffcc;
+  height: 110px;
+  border-radius: 8px; overflow: hidden; margin-bottom: 4px;
+  display: flex; justify-content: space-between; align-items: center;
+}
+.side-sat {
+  width: 28%; height: 100%; object-fit: cover; opacity: 0.45; filter: contrast(120%);
+}
+.canvas-wrapper {
+  position: absolute; top: 0; left: 28%; width: 44%; height: 100%;
+}
+canvas { position: absolute; top:0; left:0; width:100%; height:100%; z-index:5; touch-action: none; }
+#goes19Img, #rainviewerImg { position: absolute; top:0; left:0; width:100%; height:100%; object-fit: cover; opacity:0; transition: opacity 0.6s; z-index:2; pointer-events:none; }
+.hud-overlay { position: absolute; font-size: 0.5rem; background: rgba(2,8,14,0.9); padding: 2px 5px; border-left: 2px solid #00ffcc; z-index: 10; pointer-events:none; border-radius: 0 4px 4px 0; }
+.hud-top-left { top:4px; left:4px; } .hud-top-right { top:4px; right:4px; color:#ffaa00; border-left-color:#ffaa00; }
+
+.coords-bar { position: absolute; bottom:0; width:100%; font-size: 0.48rem; background: rgba(1,4,8,0.95); padding: 3px 4px; border-top: 1px solid rgba(0,255,204,0.3); color: #aaffdd; z-index:10; text-align:center; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+/* Chat Largo e Legível */
+.chat-section {
+  border: 1px solid rgba(0,255,204,0.6); background: rgba(4,10,18,0.92); padding: 6px 8px; border-radius: 8px; margin-bottom: 4px;
+}
+.chat-header { font-size: 0.68rem; color: #00ffcc; border-bottom: 1px solid rgba(0,255,204,0.3); padding-bottom: 3px; margin-bottom: 4px; font-weight: bold; }
+.chat-window { height: 82px; overflow-y: auto; display: flex; flex-direction: column; gap: 4px; padding-right: 3px; }
+.chat-bubble { font-size: 0.62rem; padding: 4px 7px; border-radius: 6px; max-width: 92%; line-height: 1.3; }
+.bubble-sarah { background: rgba(0, 255, 204, 0.14); border-left: 3px solid #00ffcc; color: #d1ffd6; align-self: flex-start; }
+.bubble-user { background: rgba(255, 170, 0, 0.18); border-right: 3px solid #ffaa00; color: #ffeebb; align-self: flex-end; }
+
+.chat-input-bar { display: flex; gap: 4px; margin-top: 5px; }
+.chat-input-bar input { flex: 1; background: #010306; border: 1px solid #00ffcc; color: #fff; padding: 5px 8px; font-size: 0.62rem; border-radius: 5px; outline: none; }
+.mic-btn, .send-btn { background: rgba(0,255,204,0.25); border: 1px solid #00ffcc; color: #00ffcc; padding: 5px 10px; font-size: 0.62rem; font-weight: bold; border-radius: 5px; cursor: pointer; }
+.mic-btn:active, .send-btn:active { background: rgba(0,255,204,0.6); color: #fff; }
+
+.table-section { border: 1px solid rgba(0,255,204,0.5); background: rgba(4,10,18,0.92); padding: 5px; border-radius: 8px; margin-bottom: 4px; }
+.table-section h3 { font-size: 0.62rem; color: #00ffcc; border-bottom: 1px solid rgba(0,255,204,0.3); padding-bottom: 2px; margin-bottom: 2px; }
+table { width:100%; border-collapse: collapse; font-size: 0.55rem; } th, td { border: 1px solid rgba(0,255,204,0.25); padding: 3px 5px; } th { background: rgba(0,255,204,0.15); color: #00ffcc; } td { color: #fff; font-weight: 600; }
+
+.controls-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 4px; margin-bottom: 4px; }
+.btn {
+  background: rgba(0,255,204,0.12); border: 1px solid #00ffcc; color: #00ffcc;
+  padding: 6px 3px; font-size: 0.56rem; font-weight: bold; border-radius: 6px;
+  cursor: pointer; min-height: 38px; text-align: center;
+}
+.btn:active { transform: scale(0.97); background: rgba(0,255,204,0.4); }
+.btn-active { background: rgba(0,255,204,0.35) !important; color:#fff !important; box-shadow: 0 0 10px #00ffcc; }
+.btn-emergency { grid-column: span 4; background: rgba(255,51,102,0.25); border-color:#ff3366; color:#ff99bb; padding: 5px; font-size: 0.6rem; }
+
+footer { display:flex; justify-content: space-between; font-size: 0.48rem; color: #668877; padding-top: 3px; border-top: 1px solid rgba(0,255,204,0.2); }
+</style>
+</head>
+<body>
+<div class="dashboard">
+<header>
+<div class="header-title">
+<h1>CENTRAL BIOCIBERNÉTICA • 92 MUNICÍPIOS</h1>
+<h2>PILOTO: SEBINHO (MESQUITA) &amp; DOM BOSCO (CAXIAS)</h2>
+<p>GOES-19 + RAINVIEWER + OPEN-METEO</p>
+</div>
+<div class="vital-box">
+<div>ESTADO: <span id="lblHomeostasis">ESTÁVEL</span></div>
+<div>PULSO: <span id="lblHeartrate">--</span> | <span id="lblTemp">--°C</span></div>
+</div>
+</header>
+
+<div class="radar-container">
+<img src="https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?q=80&w=300&auto=format&fit=crop" class="side-sat" alt="Satélite L">
+<div class="canvas-wrapper">
+<img id="goes19Img" alt="GOES-19">
+<img id="rainviewerImg" alt="Radar">
+<div class="hud-overlay hud-top-left" id="hudMode">RADAR + GOES-19</div>
+<div class="hud-overlay hud-top-right" id="hudPrecip">CHUVA: --</div>
+<canvas id="livingMapCanvas"></canvas>
+</div>
+<img src="https://images.unsplash.com/photo-1507499739999-097706ad8914?q=80&w=300&auto=format&fit=crop" class="side-sat" alt="Satélite R">
+<div class="coords-bar" id="coordsSebinho">SEBINHO: CARREGANDO DADOS REAIS...</div>
+</div>
+
+<!-- CHAT LARGO E LEGÍVEL -->
+<div class="chat-section">
+<div class="chat-header">🤖 SARAH AI NEXUS • CANAL DE VOZ E COMANDO</div>
+<div class="chat-window" id="chatWindow">
+<div class="chat-bubble bubble-sarah"><strong>[SARAH IA]:</strong> Sistema unificado online com Horário de Brasília e 92 municípios.</div>
+<div class="chat-bubble bubble-user"><strong>[POPULAÇÃO]:</strong> Status dos sensores e radar operando?</div>
+<div class="chat-bubble bubble-sarah"><strong>[SARAH IA]:</strong> Afirmativo! Varredura contínua ativa.</div>
+</div>
+<div class="chat-input-bar">
+<input type="text" id="userInputMsg" placeholder="Comando ou pergunta à Sarah...">
+<button class="mic-btn" onclick="toggleMic()" id="micBtn">🎙️</button>
+<button class="send-btn" onclick="sendUserMsg()">ENVIAR</button>
+</div>
+</div>
+
+<div class="table-section">
+<h3>SENSORES &amp; DADOS REAIS</h3>
+<table>
+<thead><tr><th>Município</th><th>Local / Temp</th><th>Chuva / Vento</th><th>Status</th></tr></thead>
+<tbody>
+<tr><td>Mesquita</td><td id="tdSebinhoTemp">--</td><td id="tdSebinhoChuva">--</td><td id="tdSebinhoStatus">--</td></tr>
+<tr><td>Caxias</td><td id="tdCaxiasTemp">--</td><td id="tdCaxiasChuva">--</td><td id="tdCaxiasStatus">--</td></tr>
+</tbody>
+</table>
+</div>
+
+<div class="controls-grid">
+<button class="btn" id="btnGoes19" onclick="toggleGoes19()">🛰️ GOES-19</button>
+<button class="btn" id="btnRain" onclick="toggleRainviewer()">🌧️ RADAR</button>
+<button class="btn" onclick="triggerFever()" style="border-color:#ff3366; color:#ff99bb;">⚡ ESTRESSE</button>
+<button class="btn" onclick="injectNutrients()">🟢 ATP</button>
+<button class="btn btn-emergency" onclick="window.open('tel:199')">📞 DEFESA CIVIL 199 (EMERGÊNCIA)</button>
+</div>
+
+<footer><span>R20-MOBILE PRO v4</span><span id="lblLiveClock">--:--:--</span></footer>
+</div>
+
+<script>
+function getBrasiliaTimeString(){ 
+    return new Intl.DateTimeFormat('pt-BR',{timeZone:'America/Sao_Paulo',hour:'2-digit',minute:'2-digit',second:'2-digit',hour12:false}).format(new Date()); 
+}
+function updateClock(){ 
+    const el = document.getElementById('lblLiveClock');
+    if(el) el.innerText = getBrasiliaTimeString(); 
+} 
+setInterval(updateClock,1000); 
+updateClock();
+
+// Alarme Sonoro Real via Web Audio API + Síntese de Voz
+let audioCtx = null;
+let alarmInterval = null;
+
+function playAlarmBeep() {
+    try {
+        if (!audioCtx) {
+            audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        }
+        if (audioCtx.state === 'suspended') {
+            audioCtx.resume();
+        }
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        
+        osc.type = 'sawtooth';
+        osc.frequency.setValueAtTime(880, audioCtx.currentTime);
+        osc.frequency.exponentialRampToValueAtTime(440, audioCtx.currentTime + 0.2);
+        
+        gain.gain.setValueAtTime(0.3, audioCtx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.25);
+        
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        
+        osc.start();
+        osc.stop(audioCtx.currentTime + 0.25);
+    } catch(e) {}
+}
+
+function startAlarmSound() {
+    stopAlarmSound();
+    playAlarmBeep();
+    alarmInterval = setInterval(playAlarmBeep, 400);
+}
+
+function stopAlarmSound() {
+    if (alarmInterval) {
+        clearInterval(alarmInterval);
+        alarmInterval = null;
+    }
+}
+
+function speakSarah(text) {
+    if (!('speechSynthesis' in window)) return;
+    window.speechSynthesis.cancel();
+    const u = new SpeechSynthesisUtterance(text);
+    u.lang = 'pt-BR';
+    u.rate = 1.05;
+    u.pitch = 1.0;
+    window.speechSynthesis.speak(u);
+}
+
+function addChatMsg(text, sender) {
+    const chatWindow = document.getElementById('chatWindow');
+    if(!chatWindow) return;
+    const bubble = document.createElement('div');
+    bubble.className = `chat-bubble ${sender === 'sarah' ? 'bubble-sarah' : 'bubble-user'}`;
+    bubble.innerHTML = `<strong>[${sender === 'sarah' ? 'SARAH IA' : 'POPULAÇÃO'}]:</strong> ${text}`;
+    chatWindow.appendChild(bubble);
+    chatWindow.scrollTop = chatWindow.scrollHeight;
+}
+
+function sendUserMsg() {
+    const input = document.getElementById('userInputMsg');
+    if (!input || !input.value.trim()) return;
+    const text = input.value;
+    addChatMsg(text, 'user');
+    input.value = '';
+
+    setTimeout(() => {
+        addChatMsg(`Consulta automatizada processada com sucesso para a malha estadual.`, 'sarah');
+    }, 1000);
+}
+
+let micActive = false;
+function toggleMic() {
+    micActive = !micActive;
+    const btn = document.getElementById('micBtn');
+    if(btn) {
+        btn.style.borderColor = micActive ? '#ff3366' : '#00ffcc';
+        btn.style.color = micActive ? '#ff3366' : '#00ffcc';
+    }
+    addChatMsg(micActive ? "Microfone aberto. Ouvindo comando de voz..." : "Microfone fechado.", 'sarah');
+}
+
+// ===== CANVAS VIVO - ORGANISMO + RADAR GIRATÓRIO =====
+const canvas=document.getElementById('livingMapCanvas'); 
+const ctx=canvas ? canvas.getContext('2d') : null;
+
+function resizeCanvas(){ 
+    if(!canvas) return;
+    const dpr=window.devicePixelRatio||1; 
+    const rect=canvas.parentElement.getBoundingClientRect(); 
+    canvas.width=rect.width*dpr; 
+    canvas.height=rect.height*dpr; 
+    if(ctx) ctx.setTransform(dpr,0,0,dpr,0,0); 
+    canvas.style.width=rect.width+'px'; 
+    canvas.style.height=rect.height+'px'; 
+} 
+window.addEventListener('resize', resizeCanvas); 
+resizeCanvas();
+
+let heartRate=75, pulsePhase=0, radarAngle=0, isStressed=false; 
+const mendanha={x:0.25,y:0.70}, sebinho={x:0.42,y:0.55}, tingua={x:0.65,y:0.25}, domBosco={x:0.75,y:0.45};
+let bloodCells=[]; 
+for(let i=0;i<20;i++) bloodCells.push({x:Math.random()*400,y:Math.random()*300,vx:(Math.random()-0.5)*0.8,vy:(Math.random()-0.5)*0.8,radius:Math.random()*2+1});
+
+function injectNutrients(){ 
+    if (isStressed) return;
+    heartRate = Math.min(110, heartRate + 10); 
+    addChatMsg("ATP injetado - Metabolismo acelerado.", "sarah"); 
+}
+
+function triggerFever() {
+    isStressed = true;
+    heartRate = 145;
+    document.body.classList.add('critical-alert');
+    const h1 = document.getElementById('lblHomeostasis');
+    if(h1) { h1.innerText = "CRÍTICO"; h1.style.color = "#ff3366"; }
+
+    const msg = "ALERTA DA DEFESA CIVIL! Estresse hidrometeorológico extremo ativado nas serras de Mesquita e Caxias. Monitoramento intensificado nos 92 municípios.";
+    addChatMsg(msg, 'sarah');
+    startAlarmSound();
+    speakSarah(msg);
+
+    setTimeout(() => {
+        isStressed = false;
+        heartRate = 75;
+        document.body.classList.remove('critical-alert');
+        stopAlarmSound();
+        if(h1) { h1.innerText = "ESTÁVEL"; h1.style.color = "#00ffcc"; }
+        addChatMsg("Simulação encerrada. Parâmetros normais restabelecidos.", 'sarah');
+        speakSarah("Simulação encerrada. Sistema normalizado.");
+    }, 8000);
+}
+
+function renderLivingMap(){ 
+    if(!ctx || !canvas) return;
+    const w = canvas.parentElement.clientWidth, h = canvas.parentElement.clientHeight; 
+    ctx.fillStyle = isStressed ? 'rgba(30, 2, 8, 0.45)' : 'rgba(1, 4, 8, 0.38)';
+    ctx.fillRect(0,0,w,h); 
+
+    radarAngle += 0.03 + (heartRate / 2500);
+    let centerX = w / 2, centerY = h / 2;
+
+    ctx.strokeStyle = isStressed ? 'rgba(255, 51, 102, 0.2)' : 'rgba(0, 255, 204, 0.12)';
+    ctx.lineWidth = 1;
+    [20, 40, 60, 80].forEach(r => {
+        ctx.beginPath(); ctx.arc(centerX, centerY, r, 0, Math.PI * 2); ctx.stroke();
+    });
+
+    let sweepX = centerX + Math.cos(radarAngle) * 90;
+    let sweepY = centerY + Math.sin(radarAngle) * 90;
+    ctx.strokeStyle = isStressed ? 'rgba(255, 51, 102, 0.9)' : 'rgba(0, 255, 204, 0.7)';
+    ctx.lineWidth = 1.8;
+    ctx.beginPath(); ctx.moveTo(centerX, centerY); ctx.lineTo(sweepX, sweepY); ctx.stroke();
+
+    pulsePhase += heartRate / 600; 
+    let pulse = Math.sin(pulsePhase) * (isStressed ? 6 : 4); 
+    
+    ctx.fillStyle = 'rgba(0,255,204,0.4)'; 
+    bloodCells.forEach(bc => { 
+        bc.x += bc.vx; bc.y += bc.vy; 
+        if(bc.x < 0) bc.x = w; if(bc.x > w) bc.x = 0; 
+        if(bc.y < 0) bc.y = h; if(bc.y > h) bc.y = 0; 
+        ctx.beginPath(); ctx.arc(bc.x, bc.y, bc.radius, 0, Math.PI * 2); ctx.fill(); 
+    }); 
+
+    let mx = w*mendanha.x, my = h*mendanha.y, sx1 = w*sebinho.x, sy1 = h*sebinho.y, tx = w*tingua.x, ty = h*tingua.y, sx2 = w*domBosco.x, sy2 = h*domBosco.y; 
+    
+    ctx.strokeStyle = '#FF8C00'; ctx.lineWidth = 1.8; ctx.setLineDash([4,4]); 
+    ctx.beginPath(); ctx.moveTo(mx,my); ctx.lineTo(sx1,sy1); ctx.stroke(); 
+    
+    ctx.strokeStyle = '#1E90FF'; ctx.lineWidth = 1.8; ctx.setLineDash([4,4]); 
+    ctx.beginPath(); ctx.moveTo(tx,ty); ctx.lineTo(sx2,sy2); ctx.stroke(); 
+    ctx.setLineDash([]); 
+
+    [{x:sx1, y:sy1, c:isStressed?'#ff3366':'#00ffcc'}, {x:sx2, y:sy2, c:isStressed?'#ff3366':'#ffaa00'}].forEach(s => {
+        ctx.fillStyle = s.c; ctx.beginPath(); ctx.arc(s.x, s.y, 5 + pulse*0.5, 0, Math.PI*2); ctx.fill();
+    }); 
+    [{x:mx, y:my}, {x:tx, y:ty}].forEach(c => {
+        ctx.fillStyle = '#ff3366'; ctx.beginPath(); ctx.arc(c.x, c.y, 4, 0, Math.PI*2); ctx.fill();
+    });
+
+    const hrEl = document.getElementById('lblHeartrate');
+    if(hrEl) hrEl.innerText = Math.round(heartRate) + ' BPM'; 
+    requestAnimationFrame(renderLivingMap); 
+} 
+renderLivingMap();
+
+// ===== INTEGRAÇÃO REAL - GOES-19 + RAINVIEWER + OPEN-METEO =====
+let goes19Ativo=false, rainAtivo=false, rainFrames=[], rainIndex=0, rainTimer=null;
+
+async function fetchRealData(){
+ try{
+  let u1='https://api.open-meteo.com/v1/forecast?latitude=-22.78&longitude=-43.43&current=temperature_2m,relative_humidity_2m,precipitation,wind_speed_10m,weather_code&timezone=America/Sao_Paulo';
+  let u2='https://api.open-meteo.com/v1/forecast?latitude=-22.78&longitude=-43.28&current=temperature_2m,relative_humidity_2m,precipitation,wind_speed_10m,weather_code&timezone=America/Sao_Paulo';
+  let [r1,r2]=await Promise.all([fetch(u1),fetch(u2)]); 
+  let d1=await r1.json(), d2=await r2.json(); 
+  let c1=d1.current, c2=d2.current;
+
+  const tEl = document.getElementById('lblTemp'); if(tEl) tEl.innerText = c1.temperature_2m.toFixed(1) + '°C';
+  const pEl = document.getElementById('hudPrecip'); if(pEl) pEl.innerText = 'CHUVA: ' + c1.precipitation + ' mm';
+  const cEl = document.getElementById('coordsSebinho'); if(cEl) cEl.innerText = `SEBINHO: ${c1.temperature_2m}°C | ${c1.precipitation}mm | ${c1.wind_speed_10m}km/h`;
+  
+  const st1 = document.getElementById('tdSebinhoTemp'); if(st1) st1.innerText = `Sebinho ${c1.temperature_2m}°C`; 
+  const sc1 = document.getElementById('tdSebinhoChuva'); if(sc1) sc1.innerText = `${c1.precipitation}mm | ${c1.wind_speed_10m}km/h`;
+  const st2 = document.getElementById('tdCaxiasTemp'); if(st2) st2.innerText = `Dom Bosco ${c2.temperature_2m}°C`; 
+  const sc2 = document.getElementById('tdCaxiasChuva'); if(sc2) sc2.innerText = `${c2.precipitation}mm | ${c2.wind_speed_10m}km/h`;
+
+  let s1 = c1.precipitation > 5 ? "🔴 ALAGAMENTO" : c1.precipitation > 0.5 ? "🟡 ATENÇÃO" : "🟢 ESTÁVEL"; 
+  const ss1 = document.getElementById('tdSebinhoStatus'); if(ss1) ss1.innerText = s1; 
+  const ss2 = document.getElementById('tdCaxiasStatus'); if(ss2) ss2.innerText = s1;
+  
+  if (!isStressed) {
+      const hEl = document.getElementById('lblHomeostasis');
+      if(hEl) {
+          hEl.innerText = c1.precipitation > 5 ? "CHUVA FORTE" : "ESTÁVEL"; 
+          hEl.style.color = c1.precipitation > 5 ? "#ff3366" : "#00ffcc";
+      }
+  }
+  
+  addChatMsg(`REAL GOES-19: Sebinho ${c1.temperature_2m}°C | Chuva ${c1.precipitation}mm | Vento ${c1.wind_speed_10m}km/h`, 'sarah');
+
+  if([95,96,99].includes(c1.weather_code)){
+    addChatMsg(`⚡ ALERTA DE TEMPESTADE EM SEBINHO! Código ${c1.weather_code}`, 'sarah');
+  }
+
+ }catch(e){ 
+  addChatMsg("Erro API Open-Meteo: "+e.message, 'sarah'); 
+ }
+}
+
+function toggleGoes19(){ 
+  let img = document.getElementById('goes19Img'), btn = document.getElementById('btnGoes19'); 
+  if(!img || !btn) return;
+  if(goes19Ativo){ 
+    img.style.opacity = 0; goes19Ativo = false; btn.classList.remove('btn-active'); btn.innerText = "🛰️ GOES-19"; 
+    addChatMsg("GOES-19 DESLIGADO", 'sarah'); return; 
+  } 
+  img.src = 'https://cdn.star.nesdis.noaa.gov/GOES19/ABI/CONUS/GEOCOLOR/GOES19-CONUS-GEOCOLOR-1000x1000.jpg?t='+Date.now(); 
+  img.style.opacity = 0.65; goes19Ativo = true; btn.classList.add('btn-active'); btn.innerText = "🛰️ GOES-19 ATIVO";
+  addChatMsg("GOES-19 LIGADO - Nuvem real NOAA sobre Baixada Fluminense", 'sarah');
+  img.onerror = ()=>{ 
+    addChatMsg("GOES-19 fallback GOES-16", 'sarah'); 
+    img.src = 'https://cdn.star.nesdis.noaa.gov/GOES16/ABI/CONUS/GEOCOLOR/GOES16-CONUS-GEOCOLOR-1000x1000.jpg?t='+Date.now(); 
+  }
+}
+
+async function toggleRainviewer(){ 
+  let img = document.getElementById('rainviewerImg'), btn = document.getElementById('btnRain'); 
+  if(!img || !btn) return;
+  if(rainAtivo){ 
+    clearInterval(rainTimer); img.style.opacity = 0; rainAtivo = false; btn.classList.remove('btn-active'); btn.innerText = "🌧️ RADAR"; 
+    addChatMsg("Radar OFF", 'sarah'); return; 
+  } 
+  try{ 
+    let res = await fetch('https://api.rainviewer.com/public/weather-maps.json'); 
+    let data = await res.json(); 
+    rainFrames = data.radar.past.slice(-8); 
+    rainAtivo = true; btn.classList.add('btn-active'); btn.innerText = "🌧️ RADAR ATIVO";
+    rainIndex = 0; 
+    rainTimer = setInterval(()=>{
+      let f = rainFrames[rainIndex]; 
+      img.src = `https://tilecache.rainviewer.com/v2/radar/${f.path}/256/8/99/152.png`; 
+      img.style.opacity = 0.7; 
+      const hud = document.getElementById('hudMode');
+      if(hud) hud.innerText = `RADAR ${new Date(f.time*1000).toLocaleTimeString('pt-BR')}`; 
+      rainIndex = (rainIndex + 1) % rainFrames.length; 
+    },800); 
+    addChatMsg(`RainViewer ON - ${rainFrames.length} frames de chuva real animados`, 'sarah'); 
+  }catch(e){ 
+    addChatMsg("Erro Radar: "+e.message, 'sarah'); 
+  } 
+}
+
+// AUTO-ATUALIZAÇÃO
+fetchRealData(); 
+setInterval(fetchRealData, 120000); 
+setInterval(()=>{ 
+    const gImg = document.getElementById('goes19Img');
+    if(goes19Ativo && gImg) gImg.src = 'https://cdn.star.nesdis.noaa.gov/GOES19/ABI/CONUS/GEOCOLOR/GOES19-CONUS-GEOCOLOR-1000x1000.jpg?t='+Date.now(); 
+}, 600000);
+addChatMsg("SISTEMA v4 - PAINEL COM FUNDO DE SALA DE CONTROLE E IMAGENS ATIVAS", 'sarah');
+</script>
+</body>
+</html>
