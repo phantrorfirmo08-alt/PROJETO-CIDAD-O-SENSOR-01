@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TCO - AMAZONAS • VOZ NATIVA</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;font-family:'Courier New',monospace}
+body{background:#010306;color:#00ffcc;display:flex;justify-content:center;padding:10px}
+.dashboard{width:100%;max-width:650px;background:rgba(4,10,18,0.96);border:2px solid #00ffcc;border-radius:14px;padding:14px;display:flex;flex-direction:column;gap:10px}
+.audio-player-box{background:rgba(0,255,204,0.12);border:1px solid #00ffcc;padding:10px;border-radius:8px}
+.audio-player-box label{font-size:0.7rem;font-weight:bold}
+audio{width:100%;height:36px;margin-top:6px}
+.vital{border:1px solid #00ffcc;padding:8px;background:rgba(0,255,204,.1);border-radius:6px;display:flex;justify-content:space-between;font-size:0.8rem}
+.radar{position:relative;background:#020509;border:1px solid #00ffcc;height:160px;border-radius:8px;overflow:hidden}
+canvas{width:100%;height:100%}
+.btn{padding:12px;border:1px solid #00ffcc;background:rgba(0,255,204,.1);color:#00ffcc;font-weight:bold;border-radius:6px;cursor:pointer}
+.btn-voz{background:#ffd700;color:#000;border-color:#ffd700}
+.btn-active{background:rgba(0,255,204,.35)!important;color:#fff!important}
+footer{display:flex;justify-content:space-between;font-size:0.65rem;color:#557766;border-top:1px solid #00ffcc44;padding-top:6px}
+</style>
+</head>
+<body>
+<div class="dashboard">
+<h1>TCO - AMAZONAS - VOZ NATIVA LIBERADA</h1>
+<h2 style="color:#ffd700;font-size:0.7rem">GADE • CHAVE CLIMÁTICA • GITHUB BLOQUEIO CORRIGIDO</h2>
+
+<div class="audio-player-box">
+<label>🔊 [ VOZ OFICIAL SARAH - MP3 NATIVA - GITHUB RUBI LIBERADO ]</label>
+<audio id="sarahAudio" controls preload="auto" crossorigin="anonymous"></audio>
+<div style="display:flex;gap:6px;margin-top:8px">
+<button class="btn btn-voz" id="btnAtivarVoz" onclick="ativarVozNativa()">▶️ ATIVAR VOZ SARAH (CLIQUE AQUI 1X)</button>
+<button class="btn" onclick="document.getElementById('sarahAudio').play()">🔊 TOCAR</button>
+</div>
+<p id="statusAudio" style="font-size:0.65rem;margin-top:6px;color:#ffaa00">Status: Aguardando ativação...</p>
+</div>
+
+<div class="vital"><div>ESTADO: <span id="lblHomeostasis" style="color:#fff">ESTÁVEL</span></div><div>PULSO: <span id="lblHeartrate" style="color:#fff">75 BPM</span></div><div id="lblLiveClock">--:--:--</div></div>
+<div class="radar"><canvas id="livingMapCanvas"></canvas></div>
+
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+<button class="btn" onclick="falarTexto('Sala operacional TCO Amazonas ativa na Baixada Fluminense')">🗣️ TESTAR VOZ</button>
+<button class="btn" onclick="window.open('tel:199')">📞 199 DEFESA CIVIL</button>
+</div>
+<footer><span>TCO AMAZONAS • VOZ NATIVA OK</span><span>GADE</span></footer>
+</div>
+
+<script>
+// === CORREÇÃO GITHUB RUBI - TROCA RAW POR CDN LIBERADO ===
+const MP3_URLS = [
+  "https://cdn.jsdelivr.net/gh/phantrorfirmo08-alt/PROJETO-CIDAD-O-SENSOR-01@main/sarah-feminina.mp3",
+  "https://raw.githubusercontent.com/phantrorfirmo08-alt/PROJETO-CIDAD-O-SENSOR-01/main/sarah-feminina.mp3"
+];
+
+let vozAtivada = false;
+let audioCtx = null;
+
+async function ativarVozNativa(){
+  const status = document.getElementById('statusAudio');
+  const audio = document.getElementById('sarahAudio');
+  const btn = document.getElementById('btnAtivarVoz');
+  
+  try{
+    // Desbloqueia AudioContext no celular
+    if(!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    if(audioCtx.state === 'suspended') await audioCtx.resume();
+    
+    status.innerText = "Status: Baixando voz nativa...";
+    
+    // Tenta CDN jsDelivr primeiro (liberado)
+    let blobUrl = null;
+    for(let url of MP3_URLS){
+      try{
+        const res = await fetch(url);
+        if(!res.ok) continue;
+        const blob = await res.blob();
+        blobUrl = URL.createObjectURL(blob);
+        break;
+      }catch(e){ console.log("Tentando próximo CDN...", e) }
+    }
+    
+    if(blobUrl){
+      audio.src = blobUrl;
+      audio.load();
+      await audio.play();
+      vozAtivada = true;
+      btn.innerText = "✅ VOZ ATIVADA";
+      btn.classList.add('btn-active');
+      status.innerText = "Status: ✅ VOZ NATIVA MP3 TOCANDO - GITHUB RUBI LIBERADO";
+      status.style.color = "#00ffcc";
+    } else {
+      status.innerText = "Status: Erro - verifique internet";
+    }
+  }catch(e){
+    status.innerText = "Status: Clique em TOCAR para liberar áudio no Android";
+    // No Android precisa de interação
+    audio.src = MP3_URLS[0];
+    audio.load();
+  }
+}
+
+function falarTexto(texto){
+  const audio = document.getElementById('sarahAudio');
+  if(vozAtivada && audio.src){
+    audio.currentTime = 0;
+    audio.play();
+  } else {
+    // Fallback voz sintética se MP3 não carregou ainda
+    if('speechSynthesis' in window){
+      const u = new SpeechSynthesisUtterance(texto);
+      u.lang='pt-BR'; u.rate=1.0;
+      speechSynthesis.speak(u);
+    }
+    ativarVozNativa();
+  }
+}
+
+function getBrasiliaTimeString(){return new Intl.DateTimeFormat('pt-BR',{timeZone:'America/Sao_Paulo',hour:'2-digit',minute:'2-digit',second:'2-digit',hour12:false}).format(new Date())}
+setInterval(()=>{document.getElementById('lblLiveClock').innerText=getBrasiliaTimeString()},1000);
+
+// Canvas radar simples
+const c=document.getElementById('livingMapCanvas'),ctx=c.getContext('2d');
+function resize(){c.width=c.parentElement.clientWidth*2;c.height=c.parentElement.clientHeight*2;ctx.setTransform(2,0,0,2,0,0)}window.addEventListener('resize',resize);resize();
+let a=0;function render(){let w=c.parentElement.clientWidth,h=c.parentElement.clientHeight;ctx.fillStyle='rgba(1,4,8,0.38)';ctx.fillRect(0,0,w,h);a+=0.04;ctx.strokeStyle='rgba(0,255,204,0.5)';ctx.beginPath();ctx.moveTo(w/2,h/2);ctx.lineTo(w/2+Math.cos(a)*80,h/2+Math.sin(a)*80);ctx.stroke();ctx.fillStyle='#00ffcc';ctx.beginPath();ctx.arc(w*0.42,h*0.55,5,0,Math.PI*2);ctx.fill();requestAnimationFrame(render)}render();
+
+// Auto tenta carregar mas só toca após clique
+window.addEventListener('load', async ()=>{
+  const audio = document.getElementById('sarahAudio');
+  try{
+    const res = await fetch(MP3_URLS[0]);
+    const blob = await res.blob();
+    audio.src = URL.createObjectURL(blob);
+    document.getElementById('statusAudio').innerText = "Status: Voz carregada - clique ATIVAR VOZ para tocar";
+  }catch(e){}
+});
+</script>
+</body>
+</html>
