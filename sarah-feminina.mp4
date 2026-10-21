@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CENTRAL DE COMANDO • CANAL DE VOZ SARAH</title>
+<style>
+  body {
+    background: #010306;
+    color: #00ffcc;
+    font-family: 'Courier New', monospace;
+    padding: 30px 20px;
+    text-align: center;
+    margin: 0;
+  }
+  .container {
+    max-width: 600px;
+    margin: 50px auto;
+    background: rgba(4, 10, 18, 0.94);
+    padding: 40px 20px;
+    border-radius: 12px;
+    box-shadow: 0 0 25px rgba(0, 255, 204, 0.2);
+    border: 2px solid #00ffcc;
+  }
+  h1 {
+    font-size: 1.1rem;
+    margin-bottom: 25px;
+    color: #00ffcc;
+    letter-spacing: 1px;
+  }
+  button {
+    padding: 16px 30px;
+    font-size: 14px;
+    background: #111;
+    color: #00ffcc;
+    border: 1px solid #00ffcc;
+    border-radius: 6px;
+    margin: 15px 0;
+    cursor: pointer;
+    font-weight: bold;
+    letter-spacing: 1px;
+    box-shadow: 0 0 10px rgba(0, 255, 204, 0.2);
+    transition: background 0.2s, transform 0.1s;
+  }
+  button:active {
+    transform: scale(0.98);
+  }
+  button:hover {
+    background: rgba(0, 255, 204, 0.2);
+    color: #fff;
+  }
+  #status {
+    margin-top: 20px;
+    font-size: 0.75rem;
+    color: #aaffdd;
+  }
+</style>
+</head>
+<body>
+
+<div class="container">
+  <h1>[ TERMINAL DE TESTE • VOZ OFICIAL SARAH ]</h1>
+
+  <!-- ÁUDIO OFICIAL APONTANDO PARA O LINK RAW DO GITHUB (ESSENCIAL PARA FUNCIONAR) -->
+  <audio id="sarahAudio" preload="auto" src="https://raw.githubusercontent.com/phantrorfirmo08-alt/PROJETO-CIDAD-O-SENSOR-01/main/sarah-feminina.mp4"></audio>
+
+  <button onclick="Sarah()">[ ACIONAR CANAL DE VOZ ]</button>
+
+  <div id="status">STATUS: AGUARDANDO TOQUE NA TELA PARA LIBERAÇÃO DE ÁUDIO</div>
+</div>
+
+<script>
+let ok = false;
+
+function desbloquear() {
+  if (ok) return;
+  const a = document.getElementById('sarahAudio');
+  if(a) {
+    a.play().then(() => {
+      a.pause();
+      a.currentTime = 0;
+      ok = true;
+      document.getElementById('status').innerText = "STATUS: CANAL DE ÁUDIO LIBERADO E OPERACIONAL";
+    }).catch(() => {});
+  }
+  
+  document.removeEventListener('click', desbloquear);
+  document.removeEventListener('touchstart', desbloquear);
+}
+
+document.addEventListener('click', desbloquear);
+document.addEventListener('touchstart', desbloquear);
+
+window.Sarah = function() {
+  const a = document.getElementById('sarahAudio');
+  if(a) {
+    a.currentTime = 0;
+    a.play().catch(() => {
+      alert("Toque na tela 1 vez para autorizar o fluxo de áudio!");
+    });
+  }
+}
+</script>
+
+</body>
+</html>
