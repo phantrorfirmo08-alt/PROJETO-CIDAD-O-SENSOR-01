@@ -1,0 +1,455 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta name="theme-color" content="#02060c">
+<title>TCOM/RJ // PAINEL PWA DE ALTO DESEMPENHO - GADE (MESQUITA, RJ)</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Orbitron:wght@400;600;800;900&display=swap');
+* { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Share Tech Mono', monospace; -webkit-tap-highlight-color: transparent; }
+html { -webkit-text-size-adjust: 100%; }
+html, body {
+  background-color: #050b0f; color: #00ffcc; width: 100%; min-height: 100vh;
+  display: flex; justify-content: center; align-items: center; padding: 6px; overflow-x: hidden; position: relative;
+}
+#cyberSpaceBg { position: fixed; inset: 0; z-index: -10; background: radial-gradient(circle at 50% 30%, #081121 0%, #02060c 70%, #000205 100%); }
+.cyber-grid-overlay { position: absolute; inset: 0; background-image: linear-gradient(rgba(0,255,204,0.03) 1px, transparent 1px), linear-gradient(90deg, rgba(0,255,204,0.03) 1px, transparent 1px); background-size: 30px 30px; pointer-events: none; }
+body.critical-alert #cyberSpaceBg { background: radial-gradient(circle at 50% 30%, #2b020c 0%, #0a0104 70%, #020001 100%) !important; }
+
+.terminal-container { width: 100%; max-width: 1200px; background: rgba(2,8,18,0.95); border: 1px solid rgba(0,255,204,0.5); border-radius: 12px; box-shadow: 0 0 50px rgba(0,255,204,0.18), inset 0 0 25px rgba(0,255,204,0.05); padding: 10px; display: flex; flex-direction: column; gap: 8px; position: relative; backdrop-filter: blur(14px); }
+body.critical-alert .terminal-container { border-color: #ff3366; box-shadow: 0 0 70px rgba(255,51,102,0.5); }
+
+header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(0,255,204,0.3); padding-bottom: 6px; flex-wrap: wrap; gap: 6px; }
+.system-id { font-family: 'Orbitron', sans-serif; font-size: 1rem; font-weight: 900; color: #00ffcc; letter-spacing: 2px; }
+.system-sub { font-size: 0.6rem; color: #77aacc; letter-spacing: 1.2px; text-transform: uppercase; }
+
+.master-grid { display: grid; grid-template-columns: 260px 1fr 260px; gap: 8px; align-items: stretch; }
+@media(max-width: 1024px) { .master-grid { grid-template-columns: 1fr; } }
+
+.side-panel { background: rgba(1,5,12,0.9); border: 1px solid rgba(0,255,204,0.3); border-radius: 6px; padding: 8px; display: flex; flex-direction: column; gap: 6px; font-size: 0.68rem; }
+.panel-title { font-family: 'Orbitron', sans-serif; font-size: 0.7rem; color: #00ffcc; border-bottom: 1px solid rgba(0,255,204,0.3); padding-bottom: 3px; letter-spacing: 1px; }
+.metric-row { display: flex; justify-content: space-between; align-items: center; background: rgba(0,255,204,0.03); padding: 4px 6px; border: 1px solid rgba(0,255,204,0.12); border-radius: 4px; }
+.metric-row span:last-child { font-family: 'Orbitron', sans-serif; color: #ffffff; font-weight: 600; font-size: 0.65rem; }
+
+/* Display Central Tático Unificado */
+.central-tactical-stage { position: relative; background: rgba(1,4,10,0.96); border: 1px solid rgba(0,255,204,0.5); height: 340px; border-radius: 6px; overflow: hidden; display: flex; align-items: center; justify-content: center; box-shadow: inset 0 0 35px rgba(0,255,204,0.06); }
+
+.radar-container {
+  position: relative;
+  width: 320px;
+  height: 320px;
+  background: radial-gradient(circle, #0a1f26 0%, #03080c 85%);
+  border: 2px solid #00ffcc55;
+  border-radius: 50%;
+  overflow: hidden;
+  box-shadow: 0 0 25px rgba(0, 255, 204, 0.2);
+}
+
+.radar-grid { position: absolute; width: 100%; height: 100%; pointer-events: none; }
+.radar-sweep {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  background: conic-gradient(from 0deg at 50% 50%, rgba(0, 255, 204, 0) 0deg, rgba(0, 255, 204, 0.4) 360deg);
+  border-radius: 50%;
+  animation: sweep 3.5s linear infinite;
+  pointer-events: none;
+}
+@keyframes sweep { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+
+.corridor-line { stroke-dasharray: 5, 5; animation: flowPath 1.2s linear infinite; }
+@keyframes flowPath { to { stroke-dashoffset: -20; } }
+
+.pulse-ring {
+  animation: pulseRing 1.8s cubic-bezier(0.215, 0.61, 0.355, 1) infinite;
+  transform-origin: center;
+  transform-box: fill-box;
+}
+@keyframes pulseRing { 0% { transform: scale(0.8); opacity: 0.95; } 100% { transform: scale(2.5); opacity: 0; } }
+
+#rainCanvas { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; mix-blend-mode: screen; z-index: 4; }
+.map-labels { position: absolute; width: 100%; height: 100%; pointer-events: none; font-size: 7.5px; fill: #00ffcc; font-weight: bold; text-shadow: 0 0 3px #000; z-index: 5; }
+
+.tactical-hud { position: absolute; font-size: 0.62rem; background: rgba(2,8,18,0.9); padding: 3px 6px; border: 1px solid rgba(0,255,204,0.35); border-radius: 3px; z-index: 10; letter-spacing: 1px; }
+.hud-tl { top: 6px; left: 6px; color: #00ffcc; display: flex; gap: 6px; align-items: center; }
+.hud-tr { top: 6px; right: 6px; color: #ffaa00; border-color: rgba(255,170,0,0.4); }
+.clock-badge { background: rgba(0,255,204,0.15); color: #00ffcc; padding: 1px 5px; border-radius: 3px; font-family: 'Orbitron', sans-serif; font-weight: 700; font-size: 0.6rem; }
+.ticker-bar { position: absolute; bottom: 0; left: 0; right: 0; background: rgba(1,4,10,0.96); border-top: 1px solid rgba(0,255,204,0.3); padding: 4px; font-size: 0.58rem; text-align: center; color: #aaffdd; z-index: 10; letter-spacing: 0.8px; }
+
+/* Bloco Inferior Consolidado (Painel Analítico & Alerta Militar) */
+.bottom-control-section { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+@media(max-width: 768px) { .bottom-control-section { grid-template-columns: 1fr; } }
+
+.analytics-control-panel { border: 1px solid rgba(0,255,204,0.35); background: rgba(1,5,12,0.92); padding: 8px; border-radius: 6px; display: flex; flex-direction: column; gap: 6px; }
+.analytics-header { font-family: 'Orbitron', sans-serif; font-size: 0.7rem; color: #00ffcc; border-bottom: 1px solid rgba(0,255,204,0.25); padding-bottom: 4px; letter-spacing: 1px; display: flex; justify-content: space-between; align-items: center; }
+.analytics-grid { display: grid; grid-template-columns: 1fr; gap: 6px; }
+.analytics-card { background: rgba(0,255,204,0.02); border: 1px solid rgba(0,255,204,0.2); border-radius: 4px; padding: 6px; display: flex; flex-direction: column; gap: 4px; }
+.analytics-title { font-family: 'Orbitron', sans-serif; font-size: 0.62rem; color: #ffaa00; letter-spacing: 1px; }
+.bar-chart-row { display: flex; align-items: center; justify-content: space-between; font-size: 0.6rem; gap: 6px; color: #d1ffff; }
+.bar-chart-row span:first-child { width: 110px; flex-shrink: 0; }
+.mini-bar-container { flex: 1; height: 5px; background: rgba(255,255,255,0.08); border-radius: 3px; overflow: hidden; }
+.mini-bar-fill { height: 100%; transition: width 0.5s ease; }
+.metric-row-analitico { display: flex; justify-content: space-between; align-items: center; background: rgba(0,255,204,0.03); padding: 4px 5px; border: 1px solid rgba(0,255,204,0.1); border-radius: 3px; font-size: 0.6rem; }
+
+.militar-card { border: 2px solid #ff3366; background: rgba(26,2,5,0.94); padding: 8px; border-radius: 6px; display: flex; flex-direction: column; gap: 5px; }
+.tactical-btn { background: rgba(0,255,204,0.12); border: 1px solid rgba(0,255,204,0.5); color: #00ffcc; padding: 8px; font-size: 0.68rem; font-weight: bold; border-radius: 4px; cursor: pointer; font-family: 'Orbitron', sans-serif; }
+.progress-bar { width: 100%; height: 5px; background: rgba(255,255,255,0.1); border-radius: 3px; overflow: hidden; margin: 3px 0; }
+.progress-fill { height: 100%; background: linear-gradient(90deg,#ff3366,#ffaa00); width: 0%; transition: width 1s linear; }
+
+/* Assistente SARAH AI Flutuante */
+.sarah-fab { position: fixed; right: 15px; bottom: 15px; z-index: 1050; width: 52px; height: 52px; border-radius: 50%; background: radial-gradient(circle,#081121 0%,#02060c 100%); border: 2px solid #00ffcc; box-shadow: 0 0 25px rgba(0,255,204,0.6); cursor: pointer; display: flex; align-items: center; justify-content: center; }
+.sarah-fab img { width: 38px; height: 38px; border-radius: 50%; object-fit: cover; border: 1px solid #00ffcc; }
+.sarah-floating-chat-box { position: fixed; right: 15px; bottom: 80px; z-index: 1100; width: 380px; max-width: calc(100vw - 20px); background: rgba(2,10,22,0.97); border: 2px solid rgba(0,255,204,0.7); border-radius: 12px; box-shadow: 0 15px 40px rgba(0,0,0,0.9); display: none; flex-direction: column; overflow: hidden; }
+.sarah-modal-header { background: rgba(1,5,12,0.98); padding: 10px 14px; border-bottom: 1px solid rgba(0,255,204,0.4); display: flex; justify-content: space-between; align-items: center; }
+.sarah-chat-stream { flex: 1; overflow-y: auto; padding: 12px; display: flex; flex-direction: column; gap: 8px; max-height: 280px; }
+.sarah-msg { padding: 8px 12px; border-radius: 6px; font-size: 0.75rem; line-height: 1.4; }
+.sarah-msg.bot { background: rgba(0,255,204,0.07); border-left: 4px solid #00ffcc; color: #d1ffff; }
+.sarah-msg.user { background: rgba(255,170,0,0.09); border-right: 4px solid #ffaa00; color: #ffeedd; }
+.sarah-modal-input-area { padding: 10px; border-top: 1px solid rgba(0,255,204,0.4); background: rgba(1,5,12,0.98); display: flex; gap: 6px; align-items: center; }
+.sarah-modal-input-area textarea { flex: 1; background: #01040a; border: 1px solid rgba(0,255,204,0.5); color: #ffffff; padding: 8px 10px; font-size: 0.75rem; border-radius: 6px; outline: none; resize: none; height: 38px; }
+.futuristic-send-btn { background: rgba(0,255,204,0.2); border: 1px solid #00ffcc; color: #00ffcc; padding: 0 12px; height: 38px; border-radius: 6px; font-family: 'Orbitron', sans-serif; font-weight: 800; font-size: 0.68rem; cursor: pointer; }
+</style>
+</head>
+<body>
+<div id="cyberSpaceBg"><div class="cyber-grid-overlay"></div></div>
+
+<div class="terminal-container">
+  <header>
+    <div>
+      <div class="system-id">TCOM/RJ // PAINEL UNIFICADO • GADE MUNICIPAL</div>
+      <div class="system-sub">SEBINHO (MESQUITA) • CORREDORES TÁTICOS & 92 MUNICÍPIOS AO VIVO</div>
+    </div>
+    <div style="text-align: right;">
+      <div style="font-size: 0.68rem; color: #00ffcc; font-family: 'Orbitron';" id="lblLiveClock">--:--:--</div>
+      <div style="font-size: 0.58rem; color: #88aacc;">ESTADO: <span id="lblHomeostasis" style="color:#00ffcc; font-weight:bold;">ESTÁVEL</span></div>
+    </div>
+  </header>
+
+  <div class="master-grid">
+    <!-- Coluna Esquerda: Corredor 1 & Telemetria Local -->
+    <div class="side-panel">
+      <div class="panel-title">[ CORREDOR 1: AMAZONAS → MENDANHA ]</div>
+      <div class="metric-row"><span>Chatuba / Sebinho</span><span>-22.8059,-43.4384</span></div>
+      <div class="metric-row"><span>Rua Amazonas (Mesquita)</span><span id="valMesq">--°C | --mm</span></div>
+      <div class="metric-row"><span>CA Mendanha / Gericinó</span><span style="color:#ff3366;">ALVO TÁTICO</span></div>
+      
+      <div class="panel-title" style="margin-top: 4px;">[ CORREDOR 2: LIBERDADE → TINGUÁ ]</div>
+      <div class="metric-row"><span>Parque da Liberdade</span><span style="color:#00ffcc;">ATIVO</span></div>
+      <div class="metric-row"><span>Parque São Bento (Caxias)</span><span id="valCax">--°C | --mm</span></div>
+      <div class="metric-row"><span>Serra do Mar (Tinguá)</span><span id="valTingua">-22.6192,-43.4399</span></div>
+    </div>
+
+    <!-- Display Central: Radar Dinâmico PWA Unificado -->
+    <div class="central-tactical-stage">
+      <div class="tactical-hud hud-tl"><span>RADAR ESTADUAL RJ</span><span class="clock-badge" id="radarClockBadge">00:00:00</span></div>
+      <div class="tactical-hud hud-tr" id="hudPrecip">CLIMA: ESTÁVEL</div>
+      
+      <div class="radar-container">
+        <div class="radar-sweep"></div>
+        <canvas id="rainCanvas" width="320" height="320"></canvas>
+
+        <svg class="radar-grid" viewBox="0 0 320 320">
+          <circle cx="160" cy="160" r="125" fill="none" stroke="#00ffcc22" stroke-width="1"></circle>
+          <circle cx="160" cy="160" r="90" fill="none" stroke="#00ffcc22" stroke-width="1"></circle>
+          <circle cx="160" cy="160" r="55" fill="none" stroke="#00ffcc22" stroke-width="1"></circle>
+          <circle cx="160" cy="160" r="20" fill="none" stroke="#00ffcc44" stroke-width="1"></circle>
+          
+          <line x1="160" y1="0" x2="160" y2="320" stroke="#00ffcc11" stroke-width="1" />
+          <line x1="0" y1="160" x2="320" y2="160" stroke="#00ffcc11" stroke-width="1" />
+
+          <!-- Corredor 1: Mendanha -> Sebinho/R. Amazonas (Laranja) -->
+          <line x1="60" y1="250" x2="110" y2="200" stroke="#ff9900" stroke-width="2" class="corridor-line" />
+          
+          <!-- Corredor 2: P. Liberdade -> S. Bento -> Tinguá Serra (Azul) -->
+          <line x1="150" y1="160" x2="240" y2="75" stroke="#00aaff" stroke-width="2" class="corridor-line" />
+
+          <!-- Pulsos de Alerta nas Bases -->
+          <circle cx="60" cy="250" r="8" fill="none" stroke="#ff3366" stroke-width="2" class="pulse-ring" />
+          <circle cx="240" cy="75" r="8" fill="none" stroke="#ff3366" stroke-width="2" class="pulse-ring" />
+
+          <!-- Nodos / Pontos Fixos -->
+          <circle cx="60" cy="250" r="5" fill="#ff3366" />
+          <circle cx="110" cy="200" r="4.5" fill="#00ffcc" />
+          <circle cx="150" cy="160" r="4.5" fill="#00ffcc" />
+          <circle cx="195" cy="115" r="4.5" fill="#ff9900" />
+          <circle cx="240" cy="75" r="5" fill="#ff3366" />
+        </svg>
+
+        <svg class="map-labels" viewBox="0 0 320 320">
+          <text x="25" y="265" fill="#ff3366">MENDANHA</text>
+          <text x="80" y="190" fill="#00ffcc">SEBINHO/R.AMAZONAS</text>
+          <text x="120" y="150" fill="#00ffcc">P.LIBERDADE</text>
+          <text x="200" y="110" fill="#ff9900">S.BENTO</text>
+          <text x="235" y="65" fill="#ff3366">TINGUÁ SERRA</text>
+        </svg>
+      </div>
+
+      <div class="ticker-bar">CORREDOR 1: CHATUBA / RUA AMAZONAS → MENDANHA | CORREDOR 2: PARQUE DA LIBERDADE → S.BENTO → TINGUÁ</div>
+    </div>
+
+    <!-- Coluna Direita: Estado & Telemetria Vital -->
+    <div class="side-panel">
+      <div class="panel-title">[ ESTADO & REGIÃO METROPOLITANA ]</div>
+      <div class="metric-row"><span>Rio de Janeiro (Capital)</span><span id="valRio">--°C | --mm</span></div>
+      <div class="metric-row"><span>Nova Iguaçu</span><span id="valNI">--°C | --mm</span></div>
+      <div class="metric-row"><span>Nilópolis</span><span id="valNil">--°C | --mm</span></div>
+      <div class="metric-row"><span>Petrópolis (Serrana)</span><span id="valPet">--°C | --mm</span></div>
+      
+      <div class="panel-title" style="margin-top: 4px;">[ TELEMETRIA VITAL ]</div>
+      <div class="metric-row"><span>Pulso de Rede</span><span id="lblHeartrate">78 BPM</span></div>
+      <div class="metric-row"><span>Temp Média Sebinho</span><span id="lblTemp">--°C</span></div>
+      <div class="metric-row"><span>Sincronia Satélite</span><span style="color:#00ffcc;">ONLINE</span></div>
+    </div>
+  </div>
+
+  <!-- Bloco Inferior: Painel Analítico Operacional & Alerta Chave Climática -->
+  <div class="bottom-control-section">
+    <!-- Painel Analítico Integrado no Lugar do Mapa -->
+    <div class="analytics-control-panel">
+      <div class="analytics-header">
+        <span>[ PAINEL ANALÍTICO & TELEMETRIA ]</span>
+        <span style="color: #00ffcc; font-size: 0.58rem;">EM TEMPO REAL</span>
+      </div>
+      <div class="analytics-grid">
+        <div class="analytics-card">
+          <div class="analytics-title">🌧️ ACUMULADO PLUVIOMÉTRICO (MM)</div>
+          <div class="bar-chart-row">
+            <span>Sebinho / Amazonas</span>
+            <div class="mini-bar-container"><div class="mini-bar-fill" style="width: 25%; background: #00ffcc;"></div></div>
+            <span id="rainSebinho">-- mm</span>
+          </div>
+          <div class="bar-chart-row">
+            <span>Mendanha (Alvo)</span>
+            <div class="mini-bar-container"><div class="mini-bar-fill" style="width: 60%; background: #ff3366;"></div></div>
+            <span id="rainMendanha">-- mm</span>
+          </div>
+          <div class="bar-chart-row">
+            <span>P. Liberdade</span>
+            <div class="mini-bar-container"><div class="mini-bar-fill" style="width: 15%; background: #00aaff;"></div></div>
+            <span id="rainLiberdade">-- mm</span>
+          </div>
+          <div class="bar-chart-row">
+            <span>Serra Tinguá</span>
+            <div class="mini-bar-container"><div class="mini-bar-fill" style="width: 40%; background: #ffaa00;"></div></div>
+            <span id="rainTingua">-- mm</span>
+          </div>
+        </div>
+
+        <div class="analytics-card">
+          <div class="analytics-title">📊 DIAGNÓSTICO DE RISCO DA BACIA</div>
+          <div class="metric-row-analitico">
+            <span>Saturação Solo (Mendanha):</span>
+            <span style="color: #ffaa00; font-weight: bold;">ESTÁVEL (MODERADO)</span>
+          </div>
+          <div class="metric-row-analitico">
+            <span>Fluxo Hídrico Rio Sarapuí:</span>
+            <span style="color: #00ffcc; font-weight: bold;">LEITO NORMAL</span>
+          </div>
+          <div class="metric-row-analitico">
+            <span>Prontidão Defesa Civil GADE:</span>
+            <span style="color: #00ffcc; font-weight: bold;">ATIVO 24H</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Módulo de Alerta Militar -->
+    <div class="militar-card">
+      <div style="font-family:'Orbitron'; font-size:0.75rem; color:#ff3366; font-weight:bold;">🚨 [ GADE • CHAVE CLIMÁTICA (5 MIN) ]</div>
+      <div style="font-size:0.58rem; color:#ff99bb;">3 MIN ALERTA + 1 MIN PENSAR + 1 MIN ACORDAR</div>
+      <div id="militarTimer" style="font-size:1.1rem; font-weight:900; color:#fff; text-align:center; margin:2px 0; font-family:'Orbitron';">00:00 / 05:00</div>
+      <div id="militarFase" style="font-size:0.62rem; color:#ffd700; text-align:center; font-family:'Orbitron';">AGUARDANDO ATIVAÇÃO TÁTICA</div>
+      <div class="progress-bar"><div id="militarProgress" class="progress-fill"></div></div>
+      <div style="display:flex; gap:5px;">
+        <button class="tactical-btn" id="btnMilitar" onclick="ativarAlertaMilitar()" style="flex:2; background:#ff3366; color:#fff; border-color:#ff3366;">🚨 DISPARAR ALERTA (5 MIN)</button>
+        <button class="tactical-btn" onclick="pararAlertaMilitar()" style="flex:1; background:rgba(255,51,102,0.1); border-color:#ff3366; color:#ff99bb;">🛑 CORTAR</button>
+      </div>
+    </div>
+  </div>
+
+  <footer style="display: flex; justify-content: space-between; font-size: 0.58rem; color: #557788; border-top: 1px solid rgba(0,255,204,0.2); padding-top: 4px;">
+    <span>TCOM/RJ // SALA DE COMANDO GADE • SEBINHO, MESQUITA, RJ</span>
+    <a href="tel:199" style="color: #ff99bb; text-decoration: none; font-weight: bold;">[ DEFESA CIVIL - 199 ]</a>
+  </footer>
+</div>
+
+<button class="sarah-fab" onclick="toggleSarahChat()" title="Conversar com SARAH AI"><img src="https://cdn.imagetourls.com/uploads/tyImg/195w5uur9.png" alt="SARAH AI"></button>
+<div class="sarah-floating-chat-box" id="sarahFloatingChat">
+  <div class="sarah-modal-header"><div style="font-family:'Orbitron'; font-size:0.75rem; color:#00ffcc; font-weight:900;">🤖 SARAH AI - VOZ NATIVA ATIVA</div><button onclick="toggleSarahChat()" style="background:none; border:none; color:#ff3366; font-size:1rem; font-weight:bold; cursor:pointer;">✕</button></div>
+  <div class="sarah-chat-stream" id="sarahChatStream"><div class="sarah-msg bot"><strong>[SARAH IA - VOZ NATIVA]:</strong> Painel PWA unificado ativado sem mapas externos! Telemetria e painel analítico operacionais.</div></div>
+  <div class="sarah-modal-input-area"><textarea id="sarahInputMsg" placeholder="Comando tático..." onkeydown="if(event.key==='Enter' && !event.shiftKey){event.preventDefault(); sendSarahMsg();}"></textarea><button class="futuristic-send-btn" onclick="sendSarahMsg()">ENVIAR</button></div>
+</div>
+<audio id="sarahNativeAudio" preload="auto" style="display:none"></audio>
+
+<script>
+const CLOUDFLARE_WORKER_URL = "https://sarah-envelope.phantrorfirmo08.workers.dev/";
+const SARAH_MP3_URLS = [
+  "https://cdn.jsdelivr.net/gh/rubiokleber1987/Metereologia@main/sarah-feminina.mp3",
+  "https://raw.githubusercontent.com/rubiokleber1987/Metereologia/main/sarah-feminina.mp3"
+];
+
+function getBrasiliaTimeString(){ return new Intl.DateTimeFormat('pt-BR',{timeZone:'America/Sao_Paulo',hour:'2-digit',minute:'2-digit',second:'2-digit',hour12:false}).format(new Date()); }
+function toggleSarahChat(){ const box=document.getElementById('sarahFloatingChat'); box.style.display=box.style.display==='flex'?'none':'flex'; if(box.style.display==='flex') document.getElementById('sarahInputMsg').focus(); }
+function addSarahChatMsg(text,sender){ const stream=document.getElementById('sarahChatStream'); if(!stream) return; const node=document.createElement('div'); node.className=`sarah-msg ${sender}`; node.innerHTML=`<strong>[${sender==='bot'?'SARAH IA':'OPERADOR'}]:</strong> ${text}`; stream.appendChild(node); stream.scrollTop=stream.scrollHeight; }
+
+async function sendSarahMsg(){ 
+  const input=document.getElementById('sarahInputMsg'); 
+  if(!input||!input.value.trim()) return; 
+  const text=input.value; 
+  addSarahChatMsg(text,'user'); 
+  input.value=''; 
+  try{ 
+    const res=await fetch(CLOUDFLARE_WORKER_URL,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({model:"openai/gpt-oss-120b",messages:[{role:"system",content:"SARAH GADE Mesquita RJ. Corredores: Amazonas/Mendanha e Liberdade/Tingua."},{role:"user",content:text}]})}); 
+    const data=await res.json(); 
+    let reply=data?.choices?.[0]?.message?.content||"Análise executada."; 
+    addSarahChatMsg(reply,'bot'); 
+    tocarVozNativa(reply); 
+  }catch(e){ 
+    addSarahChatMsg("Estação TCOM online. Inovação e Esperança!","bot"); 
+  } 
+}
+
+function tocarVozNativa(texto){ 
+  const audio=document.getElementById('sarahNativeAudio');
+  let idx=0;
+  function tryPlay(){
+    if(idx>=SARAH_MP3_URLS.length){
+      if('speechSynthesis' in window){ let msg=new SpeechSynthesisUtterance(texto); msg.lang='pt-BR'; msg.rate=0.9; speechSynthesis.speak(msg); }
+      return;
+    }
+    audio.src=SARAH_MP3_URLS[idx];
+    audio.play().catch(()=>{ idx++; tryPlay(); });
+  }
+  tryPlay();
+}
+
+let militarAtivo=false, militarInterval=null, militarTempo=0, militarAudioCtx=null, militarOsc=null, militarGain=null;
+function tocarSireneMilitar(tipo){
+  try{
+    if(!militarAudioCtx) militarAudioCtx=new (window.AudioContext||window.webkitAudioContext)();
+    if(militarAudioCtx.state==='suspended') militarAudioCtx.resume();
+    if(militarOsc){ try{militarOsc.stop()}catch(e){} }
+    militarOsc=militarAudioCtx.createOscillator();
+    militarGain=militarAudioCtx.createGain();
+    militarOsc.type='sawtooth';
+    if(tipo==='alerta'){
+      militarOsc.frequency.setValueAtTime(400, militarAudioCtx.currentTime);
+      militarOsc.frequency.linearRampToValueAtTime(900, militarAudioCtx.currentTime+1.5);
+      militarOsc.frequency.linearRampToValueAtTime(400, militarAudioCtx.currentTime+3);
+      militarGain.gain.setValueAtTime(0.45, militarAudioCtx.currentTime);
+    }else if(tipo==='acordar'){
+      militarOsc.frequency.setValueAtTime(1200, militarAudioCtx.currentTime);
+      militarGain.gain.setValueAtTime(0.5, militarAudioCtx.currentTime);
+      militarGain.gain.exponentialRampToValueAtTime(0.01, militarAudioCtx.currentTime+0.18);
+    }
+    militarOsc.connect(militarGain); militarGain.connect(militarAudioCtx.destination); militarOsc.start();
+    if(tipo==='acordar') militarOsc.stop(militarAudioCtx.currentTime+0.22); else militarOsc.stop(militarAudioCtx.currentTime+3.1);
+  }catch(e){}
+}
+
+function ativarAlertaMilitar(){
+  if(militarAtivo) return;
+  militarAtivo=true; militarTempo=0;
+  document.body.classList.add('critical-alert');
+  document.getElementById('btnMilitar').innerText="🔴 ALERTA ATIVO - 5 MIN";
+  document.getElementById('militarFase').style.color="#ffd700";
+  addSarahChatMsg("🚨 CHAVE CLIMÁTICA DISPARADA - 5 MIN NO AR!",'bot');
+  tocarVozNativa("Atenção comunidade do Sebinho! Protocolo militar de alerta ativado! Cinco minutos no ar!");
+  militarInterval=setInterval(()=>{
+    militarTempo++;
+    let min=Math.floor(militarTempo/60), seg=militarTempo%60;
+    document.getElementById('militarTimer').innerText=`${String(min).padStart(2,'0')}:${String(seg).padStart(2,'0')} / 05:00`;
+    document.getElementById('militarProgress').style.width=(militarTempo/300*100)+"%";
+    if(militarTempo<=180){
+      document.getElementById('militarFase').innerText=`🔴 FASE 1: ALERTA (${180-militarTempo}s)`;
+      if(militarTempo%4===0) tocarSireneMilitar('alerta');
+    }else if(militarTempo<=240){
+      document.getElementById('militarFase').innerText=`🟡 FASE 2: PENSAR / DOCUMENTOS (${240-militarTempo}s)`;
+      if(militarTempo===181){ tocarVozNativa("Um minuto para pensar! Pegue seus documentos!"); }
+    }else if(militarTempo<=300){
+      document.getElementById('militarFase').innerText=`🔵 FASE 3: ACORDAR / EVACUAÇÃO (${300-militarTempo}s)`;
+      document.getElementById('militarFase').style.color="#00ffff";
+      if(militarTempo%2===0) tocarSireneMilitar('acordar');
+      if(militarTempo===241){ tocarVozNativa("Um minuto para acordar! Evacuação imediata!"); }
+    }
+    if(militarTempo>=300){ pararAlertaMilitar(); document.getElementById('militarFase').innerText="✅ PROTOCOLO FINALIZADO"; addSarahChatMsg("Protocolo finalizado. Comunidade segura.",'bot'); tocarVozNativa("Protocolo finalizado. Comunidade em segurança."); }
+  },1000);
+}
+
+function pararAlertaMilitar(){
+  militarAtivo=false; clearInterval(militarInterval); document.body.classList.remove('critical-alert');
+  document.getElementById('btnMilitar').innerText="🚨 DISPARAR ALERTA (5 MIN)";
+  document.getElementById('militarTimer').innerText="00:00 / 05:00"; document.getElementById('militarProgress').style.width="0%";
+  if(militarOsc){ try{militarOsc.stop()}catch(e){} } if(militarAudioCtx){ try{militarAudioCtx.close(); militarAudioCtx=null;}catch(e){} }
+}
+
+/* Animação das células de chuva dinâmicas no Canvas do Radar */
+const canvas = document.getElementById('rainCanvas');
+const ctx = canvas.getContext('2d');
+let clouds = [
+  { x: 60, y: 240, radius: 25, vx: 0.3, vy: -0.3, color: 'rgba(255, 51, 102, 0.4)' },
+  { x: 160, y: 160, radius: 32, vx: 0.2, vy: -0.2, color: 'rgba(0, 170, 255, 0.3)' },
+  { x: 210, y: 95, radius: 20, vx: 0.25, vy: -0.25, color: 'rgba(255, 153, 0, 0.4)' }
+];
+
+function animateRain() {
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  clouds.forEach(cloud => {
+    cloud.x += cloud.vx;
+    cloud.y += cloud.vy;
+    if (cloud.x > 340) cloud.x = 40;
+    if (cloud.y < -20) cloud.y = 280;
+
+    let gradient = ctx.createRadialGradient(cloud.x, cloud.y, 2, cloud.x, cloud.y, cloud.radius);
+    gradient.addColorStop(0, cloud.color);
+    gradient.addColorStop(1, 'rgba(0,0,0,0)');
+
+    ctx.fillStyle = gradient;
+    ctx.beginPath();
+    ctx.arc(cloud.x, cloud.y, cloud.radius, 0, Math.PI * 2);
+    ctx.fill();
+  });
+  requestAnimationFrame(animateRain);
+}
+animateRain();
+
+/* Sincronização Open-Meteo Real & Atualização dos Blocos Analíticos */
+async function fetchRealData(){
+ try{
+  let [r1,r2,r3,r4,r5,r6,r8]=await Promise.all([
+    fetch(`https://api.open-meteo.com/v1/forecast?latitude=-22.78&longitude=-43.43&current=temperature_2m,relative_humidity_2m,precipitation&timezone=America/Sao_Paulo`),
+    fetch(`https://api.open-meteo.com/v1/forecast?latitude=-22.79&longitude=-43.27&current=temperature_2m,precipitation&timezone=America/Sao_Paulo`),
+    fetch(`https://api.open-meteo.com/v1/forecast?latitude=-22.75&longitude=-43.45&current=temperature_2m,precipitation&timezone=America/Sao_Paulo`),
+    fetch(`https://api.open-meteo.com/v1/forecast?latitude=-22.76&longitude=-43.35&current=temperature_2m,precipitation&timezone=America/Sao_Paulo`),
+    fetch(`https://api.open-meteo.com/v1/forecast?latitude=-22.75&longitude=-43.41&current=temperature_2m,precipitation&timezone=America/Sao_Paulo`),
+    fetch(`https://api.open-meteo.com/v1/forecast?latitude=-22.90&longitude=-43.17&current=temperature_2m,precipitation&timezone=America/Sao_Paulo`),
+    fetch(`https://api.open-meteo.com/v1/forecast?latitude=-22.51&longitude=-43.17&current=temperature_2m,precipitation&timezone=America/Sao_Paulo`)
+  ]);
+  let d1=await r1.json(), d2=await r2.json(), d3=await r3.json(), d4=await r4.json(); 
+  let d5=await r5.json(), d6=await r6.json(), d8=await r8.json();
+  
+  document.getElementById('valMesq').innerText=`${d1.current.temperature_2m}°C | ${d1.current.precipitation}mm`;
+  document.getElementById('valCax').innerText=`${d2.current.temperature_2m}°C | ${d2.current.precipitation}mm`;
+  document.getElementById('valNI').innerText=`${d3.current.temperature_2m}°C | ${d3.current.precipitation}mm`;
+  document.getElementById('valTingua').innerText=`${d4.current.temperature_2m}°C | ${d4.current.precipitation}mm`;
+  document.getElementById('valNil').innerText=`${d5.current.temperature_2m}°C | ${d5.current.precipitation}mm`;
+  document.getElementById('valRio').innerText=`${d6.current.temperature_2m}°C | ${d6.current.precipitation}mm`;
+  document.getElementById('valPet').innerText=`${d8.current.temperature_2m}°C | ${d8.current.precipitation}mm`;
+  
+  // Atualiza dados no painel analítico dinamicamente
+  document.getElementById('rainSebinho').innerText=`${d1.current.precipitation} mm`;
+  document.getElementById('rainMendanha').innerText=`${d3.current.precipitation} mm`;
+  document.getElementById('rainLiberdade').innerText=`${d5.current.precipitation} mm`;
+  document.getElementById('rainTingua').innerText=`${d4.current.precipitation} mm`;
+
+  document.getElementById('lblTemp').innerText=`${d1.current.temperature_2m}°C`;
+  document.getElementById('lblLiveClock').innerText=getBrasiliaTimeString();
+  document.getElementById('radarClockBadge').innerText=getBrasiliaTimeString();
+ }catch(e){}
+}
+fetchRealData(); 
+setInterval(fetchRealData,120000);
+</script>
+</body>
+</html>
