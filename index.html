@@ -1,0 +1,452 @@
+<!DOCTYPE html>
+<html lang="pt-BR" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>CHAVE CLIMÁTICA • CPARC & CENTRAL BIOCIBERNÉTICA</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Orbitron:wght@600;800;900&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <script>
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Plus Jakarta Sans', 'system-ui', 'sans-serif'],
+                        display: ['Orbitron', 'sans-serif'],
+                        mono: ['Share Tech Mono', 'monospace'],
+                    },
+                    colors: {
+                        void: "#010306",
+                        deepSpace: "#060B18",
+                        commandPanel: "#0D152D",
+                        cyberCyan: "#00FFCC",
+                        cyberBlue: "#4FACFE",
+                        cyberGreen: "#10B981",
+                        cyberAmber: "#FF9900",
+                        cyberRose: "#F43F5E"
+                    }
+                }
+            }
+        };
+    </script>
+    <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+    <style>
+        html, body, #root {
+            min-height: 100vh;
+            margin: 0;
+            padding: 0;
+            background-color: #010306;
+            color: #00FFCC;
+            font-family: 'Share Tech Mono', monospace;
+            touch-action: pan-x pan-y;
+        }
+        .cyber-card {
+            background: linear-gradient(135deg, rgba(5,13,20,0.96) 0%, rgba(1,2,4,0.98) 100%);
+            border: 2px solid #00FFCC;
+            box-shadow: 0 0 30px rgba(0,255,204,0.25);
+            border-radius: 20px;
+        }
+        .cyber-button {
+            background: linear-gradient(135deg, #FF9900 0%, #F59E0B 100%);
+            color: #010306 !important;
+            font-family: 'Orbitron', sans-serif;
+            font-weight: 900;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        .cyber-button:hover {
+            box-shadow: 0 0 20px rgba(255, 153, 0, 0.7);
+            transform: translateY(-1px);
+        }
+        .radar-handle {
+            position: fixed;
+            right: 0;
+            top: 44%;
+            z-index: 55;
+            writing-mode: vertical-rl;
+            padding: 16px 8px;
+            border-radius: 12px 0 0 12px;
+            background: linear-gradient(180deg, #00FFCC, #10B981);
+            color: #010306;
+            font-family: 'Orbitron', sans-serif;
+            font-size: 10px;
+            font-weight: 900;
+            letter-spacing: 2px;
+            cursor: pointer;
+            border: none;
+            box-shadow: -5px 0 20px rgba(0, 255, 204, 0.4);
+        }
+        ::-webkit-scrollbar { width: 4px; height: 4px; }
+        ::-webkit-scrollbar-thumb { background: rgba(0,255,204,0.4); border-radius: 999px; }
+    </style>
+</head>
+<body class="pb-24">
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState, useEffect, useRef } = React;
+
+        const MUN_COORDS = {
+            "Angra dos Reis": [-23.0067, -44.3181], "Aperibé": [-21.6264, -42.1058], "Araruama": [-22.8756, -42.3331],
+            "Areal": [-22.2322, -43.1167], "Armação dos Búzios": [-22.7475, -41.8881], "Arraial do Cabo": [-22.9661, -42.0283],
+            "Barra do Piraí": [-22.4708, -43.8247], "Barra Mansa": [-22.5442, -44.1758], "Belford Roxo": [-22.7642, -43.3997],
+            "Bom Jardim": [-22.1558, -42.4189], "Bom Jesus do Itabapoana": [-21.1378, -41.6792], "Cabo Frio": [-22.8858, -42.0186],
+            "Cachoeiras de Macacu": [-22.4644, -42.6517], "Cambuci": [-21.5694, -41.9078], "Campos dos Goytacazes": [-21.7542, -41.3242],
+            "Cantagalo": [-21.9769, -42.3683], "Carapebus": [-22.1797, -41.6669], "Cardoso Moreira": [-21.4883, -41.6167],
+            "Carmo": [-21.9258, -42.6108], "Casimiro de Abreu": [-22.4819, -42.2078], "Comendador Levy Gasparian": [-22.2133, -43.2008],
+            "Conceição de Macabu": [-22.2472, -42.1728], "Cordeiro": [-22.0294, -42.3653], "Duas Barras": [-22.0469, -42.5272],
+            "Duque de Caxias": [-22.7856, -43.3117], "Engenheiro Paulo de Frontin": [-22.5414, -43.6828], "Guapimirim": [-22.5475, -42.9867],
+            "Iguaba Grande": [-22.8419, -42.2225], "Itaboraí": [-22.7461, -42.8556], "Itaguaí": [-22.8519, -43.7753],
+            "Italva": [-21.4175, -41.6789], "Itaocara": [-21.7456, -42.0739], "Itaperuna": [-21.2058, -41.8881],
+            "Itatiaia": [-22.4939, -44.5622], "Japeri": [-22.6419, -43.6558], "Laje do Muriaé": [-21.2169, -42.1331],
+            "Macaé": [-22.375, -41.7864], "Macuco": [-21.9833, -42.5028], "Magé": [-22.655, -43.0408],
+            "Mangaratiba": [-22.9592, -44.0403], "Maricá": [-22.9192, -42.8186], "Mendes": [-22.5297, -43.7331],
+            "Mesquita": [-22.7831, -43.4294], "Miguel Pereira": [-22.455, -43.4683], "Miracema": [-21.4111, -42.1958],
+            "Natividade": [-21.0431, -41.9722], "Nilópolis": [-22.8111, -43.4144], "Niterói": [-22.8833, -43.1036],
+            "Nova Friburgo": [-22.2819, -42.5311], "Nova Iguaçu": [-22.7559, -43.4605], "Paracambi": [-22.6133, -43.7125],
+            "Paraíba do Sul": [-22.1622, -43.2911], "Paraty": [-23.2208, -44.7131], "Paty do Alferes": [-22.4278, -43.4358],
+            "Petrópolis": [-22.5050, -43.1789], "Pinheiral": [-22.515, -44.0019], "Piraí": [-22.6289, -43.8967],
+            "Porciúncula": [-20.9708, -42.0433], "Porto Real": [-22.4183, -44.2833], "Quatis": [-22.4119, -44.2447],
+            "Queimados": [-22.7153, -43.5539], "Quissamã": [-22.1067, -41.4656], "Resende": [-22.4708, -44.4464],
+            "Rio Bonito": [-22.705, -42.6231], "Rio Claro": [-22.7303, -44.1378], "Rio das Flores": [-22.1692, -43.5858],
+            "Rio das Ostras": [-22.5269, -41.9489], "Rio de Janeiro": [-22.9068, -43.1729], "Santa Maria Madalena": [-21.9519, -42.0083],
+            "Santo Antônio de Pádua": [-21.5456, -42.1831], "São Fidélis": [-21.6481, -41.7478], "São Francisco de Itabapoana": [-21.4789, -41.1167],
+            "São Gonçalo": [-22.8267, -43.0558], "São João da Barra": [-21.6403, -41.0511], "São João de Meriti": [-22.8064, -43.3719],
+            "São José de Ubá": [-21.3533, -41.9483], "São José do Vale do Rio Preto": [-22.1558, -42.9239], "São Pedro da Aldeia": [-22.8422, -42.1011],
+            "São Sebastião do Alto": [-21.9575, -42.1333], "Sapucaia": [-22.1481, -42.9133], "Saquarema": [-22.9189, -42.5103],
+            "Seropédica": [-22.7425, -43.7083], "Silva Jardim": [-22.6517, -42.3894], "Sumidouro": [-22.0494, -42.6719],
+            "Tanguá": [-22.7275, -42.7094], "Teresópolis": [-22.4122, -42.9653], "Trajano de Moraes": [-22.0675, -42.0642],
+            "Três Rios": [-22.1156, -43.2125], "Valença": [-22.2436, -43.7008], "Varre-Sai": [-20.9389, -41.8683],
+            "Vassouras": [-22.4036, -43.6625], "Volta Redonda": [-22.5231, -44.1039]
+        };
+
+        const LISTA_92_MUNICIPIOS = Object.keys(MUN_COORDS).sort();
+
+        function App() {
+            const [activeTab, setActiveTab] = useState("biociber");
+            const [radarOpen, setRadarOpen] = useState(false);
+            const [toast, setToast] = useState(null);
+            const [selectedMun, setSelectedMun] = useState("Mesquita");
+            const [weather, setWeather] = useState({ temp: "24.5°C", chuva: "0.0 mm", vento: "12 km/h", status: "ONLINE" });
+            const [searchTerm, setSearchTerm] = useState("");
+            const [chatMsgs, setChatMsgs] = useState([
+                { sender: "sarah", text: "SARAH AI v13.1 • Sala de Controle Biocibernética ativa. 92 municípios sincronizados." }
+            ]);
+            const [inputMsg, setInputMsg] = useState("");
+            const [heartRate, setHeartRate] = useState(78);
+            const [homeostasis, setHomeostasis] = useState("ESTÁVEL");
+
+            // Estados para o Módulo de Vistoria de Campo
+            const [setorVistoria, setSetorVistoria] = useState("🛡️ Defesa Civil Municipal");
+            const [riscoVistoria, setRiscoVistoria] = useState("🟢 Risco Baixo / Monitoramento");
+            const [agenteVistoria, setAgenteVistoria] = useState("");
+            const [localVistoria, setLocalVistoria] = useState("");
+            const [descVistoria, setDescVistoria] = useState("");
+            const [gpsVistoria, setGpsVistoria] = useState({ lt: '', ln: '', lk: '' });
+            const [gpsStVistoria, setGpsStVistoria] = useState("📍 GPS em espera");
+
+            const canvasRef = useRef(null);
+
+            const showToast = (msg) => {
+                setToast(msg);
+                setTimeout(() => setToast(null), 3000);
+            };
+
+            const consultarCidade = async (nome) => {
+                setSelectedMun(nome);
+                showToast(`📡 Consultando ${nome}...`);
+                const coord = MUN_COORDS[nome] || [-22.7831, -43.4294];
+                try {
+                    const res = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${coord[0]}&longitude=${coord[1]}&current=temperature_2m,wind_speed_10m,precipitation&timezone=America/Sao_Paulo`);
+                    const d = await res.json();
+                    if (d?.current) {
+                        setWeather({
+                            temp: `${d.current.temperature_2m}°C`,
+                            chuva: `${d.current.precipitation} mm`,
+                            vento: `${d.current.wind_speed_10m} km/h`,
+                            status: d.current.precipitation > 5 ? "⚠️ ALERTA DE CHUVA" : "ONLINE"
+                        });
+                        setChatMsgs(p => [...p, { sender: "sarah", text: `${nome}: ${d.current.temperature_2m}°C, Chuva: ${d.current.precipitation}mm` }]);
+                    }
+                } catch(e) {
+                    setWeather({ temp: "25°C", chuva: "0.0 mm", vento: "14 km/h", status: "MODO LOCAL" });
+                }
+            };
+
+            const enviarChat = () => {
+                if(!inputMsg.trim()) return;
+                const txt = inputMsg;
+                setChatMsgs(p => [...p, { sender: "user", text: txt }]);
+                setInputMsg("");
+                setTimeout(() => {
+                    setChatMsgs(p => [...p, { sender: "sarah", text: `Comando processado para a rede CPARC de 92 municípios.` }]);
+                }, 700);
+            };
+
+            const capturarGpsVistoria = () => {
+                if (!navigator.geolocation) return showToast("⚠️ GPS não suportado");
+                showToast("🛰 Buscando sinal GPS...");
+                navigator.geolocation.getCurrentPosition(
+                    p => {
+                        const lt = p.coords.latitude.toFixed(6);
+                        const ln = p.coords.longitude.toFixed(6);
+                        const lk = `https://www.google.com/maps?q=${lt},${ln}`;
+                        setGpsVistoria({ lt, ln, lk });
+                        setLocalVistoria(`${lt}, ${ln}`);
+                        setGpsStVistoria("✅ GPS Fixado com Sucesso");
+                        showToast("📍 Localização obtida!");
+                    },
+                    () => setGpsStVistoria("⚠ Erro ao obter GPS"),
+                    { enableHighAccuracy: true, timeout: 10000 }
+                );
+            };
+
+            const copiarRelatorio = () => {
+                const txt = `🚨 *RELATÓRIO TÉCNICO CPARC* 🛡️\nSetor: ${setorVistoria}\nRisco: ${riscoVistoria}\nResponsável: ${agenteVistoria || 'Não informado'}\nLocal: ${localVistoria || selectedMun}\n${gpsVistoria.lk ? `GPS: ${gpsVistoria.lk}\n` : ''}Relato: ${descVistoria || 'Sem descrição.'}\n\n*SARAH AI • Chave Climática • 92 Municípios RJ*`;
+                navigator.clipboard.writeText(txt);
+                showToast("📋 Relatório copiado para a área de transferência!");
+            };
+
+            // Canvas Radar & Biociber Animation
+            useEffect(() => {
+                if (activeTab !== 'biociber') return;
+                const canvas = canvasRef.current;
+                if (!canvas) return;
+                const ctx = canvas.getContext('2d');
+                let animId;
+                let angle = 0;
+
+                const resize = () => {
+                    if (canvas.parentElement) {
+                        canvas.width = canvas.parentElement.clientWidth;
+                        canvas.height = 160;
+                    }
+                };
+                resize();
+                window.addEventListener('resize', resize);
+
+                const draw = () => {
+                    ctx.fillStyle = 'rgba(1,3,6,0.35)';
+                    ctx.fillRect(0, 0, canvas.width, canvas.height);
+                    angle += 0.04;
+                    let cx = canvas.width / 2, cy = canvas.height / 2;
+
+                    ctx.strokeStyle = 'rgba(0,255,204,0.15)';
+                    [30, 60, 90, 120].forEach(r => {
+                        ctx.beginPath(); ctx.arc(cx, cy, r, 0, Math.PI*2); ctx.stroke();
+                    });
+
+                    let x = cx + Math.cos(angle)*100, y = cy + Math.sin(angle)*100;
+                    ctx.strokeStyle = '#00FFCC';
+                    ctx.beginPath(); ctx.moveTo(cx, cy); ctx.lineTo(x, y); ctx.stroke();
+
+                    animId = requestAnimationFrame(draw);
+                };
+                draw();
+
+                return () => {
+                    cancelAnimationFrame(animId);
+                    window.removeEventListener('resize', resize);
+                };
+            }, [activeTab]);
+
+            const filtrados = LISTA_92_MUNICIPIOS.filter(m => m.toLowerCase().includes(searchTerm.toLowerCase()));
+
+            return (
+                <div className="max-w-xl mx-auto p-3 space-y-4">
+                    {toast && (
+                        <div className="fixed top-4 left-1/2 -translate-x-1/2 z-50 cyber-card px-5 py-2.5 text-xs font-bold text-[#00FFCC] shadow-2xl animate-bounce">
+                            {toast}
+                        </div>
+                    )}
+
+                    {/* Cabeçalho */}
+                    <header className="cyber-card p-4 flex items-center justify-between">
+                        <div className="flex items-center gap-3">
+                            <div className="w-11 h-11 rounded-xl border border-[#00FFCC] bg-deepSpace flex items-center justify-center font-display font-black text-xs text-[#00FFCC] shadow-[0_0_15px_rgba(0,255,204,0.4)]">
+                                CPARC
+                            </div>
+                            <div>
+                                <h1 className="font-display text-xs font-black text-white">CHAVE CLIMÁTICA • CPARC</h1>
+                                <p className="text-[9px] text-amber-300 font-bold">92 MUNICÍPIOS DO RIO DE JANEIRO</p>
+                            </div>
+                        </div>
+                        <button onClick={() => setRadarOpen(true)} className="px-3 py-2 cyber-button rounded-xl text-[10px]">
+                            🛰️ RADAR 24H
+                        </button>
+                    </header>
+
+                    {/* Navegação por Abas */}
+                    <nav className="grid grid-cols-4 gap-1.5 bg-black/60 p-1.5 rounded-2xl border border-[#00FFCC]/30">
+                        <button onClick={() => setActiveTab('biociber')} className={`py-2 rounded-xl text-[10px] font-bold transition ${activeTab === 'biociber' ? 'bg-[#00FFCC] text-void font-black shadow-[0_0_15px_rgba(0,255,204,0.5)]' : 'text-[#00FFCC] hover:bg-[#00FFCC]/10'}`}>
+                            ⚡ Central
+                        </button>
+                        <button onClick={() => setActiveTab('municipios')} className={`py-2 rounded-xl text-[10px] font-bold transition ${activeTab === 'municipios' ? 'bg-[#00FFCC] text-void font-black shadow-[0_0_15px_rgba(0,255,204,0.5)]' : 'text-[#00FFCC] hover:bg-[#00FFCC]/10'}`}>
+                            🏛️ 92 Cidades
+                        </button>
+                        <button onClick={() => setActiveTab('vistoria')} className={`py-2 rounded-xl text-[10px] font-bold transition ${activeTab === 'vistoria' ? 'bg-[#00FFCC] text-void font-black shadow-[0_0_15px_rgba(0,255,204,0.5)]' : 'text-[#00FFCC] hover:bg-[#00FFCC]/10'}`}>
+                            📋 Vistoria
+                        </button>
+                        <button onClick={() => setActiveTab('sobre')} className={`py-2 rounded-xl text-[10px] font-bold transition ${activeTab === 'sobre' ? 'bg-[#00FFCC] text-void font-black shadow-[0_0_15px_rgba(0,255,204,0.5)]' : 'text-[#00FFCC] hover:bg-[#00FFCC]/10'}`}>
+                            ℹ️ Sobre
+                        </button>
+                    </nav>
+
+                    {/* Conteúdo da Aba: Central Biocibernética */}
+                    {activeTab === 'biociber' && (
+                        <div className="space-y-4">
+                            <div className="cyber-card p-4 space-y-3">
+                                <div className="flex justify-between items-center border-b border-[#00FFCC]/30 pb-2">
+                                    <span className="font-display text-xs text-[#00FFCC] font-bold">ESTADO ATUAL: <strong className="text-white">{homeostasis}</strong></span>
+                                    <span className="text-[10px] text-emerald-400 bg-emerald-500/10 px-2.5 py-0.5 rounded-full border border-emerald-500/30">● 92 NODES</span>
+                                </div>
+
+                                <div className="relative h-[160px] bg-black rounded-xl border border-[#00FFCC]/50 overflow-hidden flex items-center justify-center">
+                                    <div className="absolute top-2 left-2 text-[9px] bg-black/80 px-2 py-1 rounded border border-[#00FFCC]/30 z-10 space-y-0.5">
+                                        <div>📍 CIDADE: <strong className="text-white">{selectedMun}</strong></div>
+                                        <div>🌡️ TEMP: <strong className="text-[#00FFCC]">{weather.temp}</strong> | 🌧️ CHUVA: <strong className="text-amber-400">{weather.chuva}</strong></div>
+                                        <div>💨 VENTO: <strong className="text-cyan-300">{weather.vento}</strong></div>
+                                    </div>
+                                    <canvas ref={canvasRef} className="absolute inset-0 w-full h-full"></canvas>
+                                    <div className="absolute bottom-1 text-[8px] text-cyan-200 z-10 tracking-widest font-bold">
+                                        MENDANHA ➔ SEBINHO | TINGUÁ ➔ DOM BOSCO
+                                    </div>
+                                </div>
+
+                                <div className="grid grid-cols-2 gap-2">
+                                    <button onClick={() => { setHomeostasis("OTIMIZADO"); showToast("🟢 ATP Injetado na Rede!"); }} className="py-2.5 bg-[#00FFCC]/10 border border-[#00FFCC] text-[#00FFCC] font-display text-[10px] font-bold rounded-xl cursor-pointer">
+                                        🟢 INJETAR ATP
+                                    </button>
+                                    <button onClick={() => { setHomeostasis("ESTRESSE TÉRMICO"); showToast("⚡ Estresse Térmico Simulado!"); }} className="py-2.5 bg-amber-500/10 border border-amber-400 text-amber-300 font-display text-[10px] font-bold rounded-xl cursor-pointer">
+                                        ⚡ ESTRESSE TÉRMICO
+                                    </button>
+                                </div>
+                            </div>
+
+                            {/* Chat SARAH AI */}
+                            <div className="cyber-card p-4 space-y-3">
+                                <div className="font-display text-xs text-[#00FFCC] border-b border-[#00FFCC]/30 pb-2 flex justify-between items-center font-black">
+                                    <span>🤖 SARAH AI NEXUS • ASSISTENTE TÁTICO</span>
+                                    <span className="text-[9px] text-emerald-400">ONLINE</span>
+                                </div>
+                                <div className="h-[140px] overflow-y-auto space-y-2 p-2 bg-black/60 rounded-xl border border-[#00FFCC]/20 text-[11px]">
+                                    {chatMsgs.map((m, i) => (
+                                        <div key={i} className={`p-2 rounded-xl leading-relaxed ${m.sender==='sarah'?'bg-[#00FFCC]/10 border-l-2 border-[#00FFCC] text-emerald-100':'bg-amber-500/10 border-r-2 border-amber-400 text-amber-100 ml-auto'} max-w-[92%]`}>
+                                            <strong>{m.sender==='sarah'?'SARAH IA:':'OP:'}</strong> {m.text}
+                                        </div>
+                                    ))}
+                                </div>
+                                <div className="flex gap-2">
+                                    <input type="text" value={inputMsg} onChange={e=>setInputMsg(e.target.value)} onKeyDown={e=>e.key==='Enter'&&enviarChat()} placeholder="Digite um comando para a SARAH AI..." className="flex-1 bg-black border border-[#00FFCC] text-white p-2.5 rounded-xl text-xs outline-none" />
+                                    <button onClick={enviarChat} className="px-4 py-2.5 cyber-button rounded-xl text-xs">ENVIAR</button>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
+                    {/* Conteúdo da Aba: 92 Municípios */}
+                    {activeTab === 'municipios' && (
+                        <div className="cyber-card p-4 space-y-3">
+                            <div className="font-display text-xs text-[#00FFCC] border-b border-[#00FFCC]/30 pb-2 flex justify-between items-center">
+                                <span>🏛️ OS 92 MUNICÍPIOS DO RJ</span>
+                                <span className="text-[10px] text-cyan-300 font-bold">{filtrados.length} Cidades</span>
+                            </div>
+                            <input type="text" value={searchTerm} onChange={e=>setSearchTerm(e.target.value)} placeholder="🔍 Buscar município do RJ..." className="w-full bg-black border border-[#00FFCC]/40 text-white p-2.5 rounded-xl text-xs outline-none" />
+                            <div className="max-h-[320px] overflow-y-auto grid grid-cols-2 gap-2 p-1">
+                                {filtrados.map((m, i) => (
+                                    <div key={i} onClick={()=>consultarCidade(m)} className={`text-xs p-2.5 rounded-xl border cursor-pointer flex justify-between items-center transition ${selectedMun===m?'bg-[#00FFCC]/30 border-[#00FFCC] text-white font-bold':'bg-black/40 border-[#00FFCC]/20 text-cyan-200 hover:bg-[#00FFCC]/15'}`}>
+                                        <span className="truncate">{m}</span>
+                                        <span className="w-2 h-2 rounded-full bg-emerald-400 shrink-0"></span>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    )}
+
+                    {/* Conteúdo da Aba: Vistoria de Campo */}
+                    {activeTab === 'vistoria' && (
+                        <div className="cyber-card p-4 space-y-3">
+                            <div className="font-display text-xs text-[#00FFCC] border-b border-[#00FFCC]/30 pb-2 font-black">
+                                📋 REGISTRO DE VISTORIA • Cidadão Sensor
+                            </div>
+
+                            <div className="space-y-1">
+                                <label className="text-[10px] text-cyan-300 uppercase">Setor / Órgão Responsável</label>
+                                <select value={setorVistoria} onChange={e=>setSetorVistoria(e.target.value)} className="w-full bg-black border border-[#00FFCC]/40 text-white p-2.5 rounded-xl text-xs">
+                                    <option>🛡️ Defesa Civil Municipal</option>
+                                    <option>🤝 Assistência Social / CRAS</option>
+                                    <option>🌱 Grupo A Chave da Esperança</option>
+                                    <option>👁️ Cidadão Sensor / Comunitário</option>
+                                </select>
+                            </div>
+
+                            <div className="space-y-1">
+                                <label className="text-[10px] text-cyan-300 uppercase">Nível de Risco</label>
+                                <select value={riscoVistoria} onChange={e=>setRiscoVistoria(e.target.value)} className="w-full bg-black border border-[#00FFCC]/40 text-white p-2.5 rounded-xl text-xs font-bold">
+                                    <option>🟢 Risco Baixo / Monitoramento</option>
+                                    <option>🟡 Risco Médio / Atenção</option>
+                                    <option>🟠 Risco Alto / Alerta</option>
+                                    <option>🔴 Risco Muito Alto / Perigo Iminente</option>
+                                </select>
+                            </div>
+
+                            <div className="grid grid-cols-2 gap-2">
+                                <input value={agenteVistoria} onChange={e=>setAgenteVistoria(e.target.value)} placeholder="Nome do Agente" className="w-full bg-black border border-[#00FFCC]/40 text-white p-2.5 rounded-xl text-xs" />
+                                <input value={localVistoria} onChange={e=>setLocalVistoria(e.target.value)} placeholder="Localidade / Rua" className="w-full bg-black border border-[#00FFCC]/40 text-white p-2.5 rounded-xl text-xs" />
+                            </div>
+
+                            <div className="border border-[#00FFCC]/40 bg-black/50 p-3 rounded-xl flex items-center justify-between">
+                                <span className="text-emerald-400 text-xs font-bold">{gpsStVistoria}</span>
+                                <button onClick={capturarGpsVistoria} className="px-4 py-2 cyber-button rounded-xl text-xs">GPS 🛰</button>
+                            </div>
+
+                            <textarea value={descVistoria} onChange={e=>setDescVistoria(e.target.value)} placeholder="Descreva a ocorrência, danos ou situação de risco..." rows="3" className="w-full bg-black border border-[#00FFCC]/40 text-white p-2.5 rounded-xl text-xs resize-none"></textarea>
+
+                            <button onClick={copiarRelatorio} className="w-full py-3 cyber-button rounded-xl text-xs uppercase tracking-widest shadow-lg">
+                                📋 Copiar Relatório Completo
+                            </button>
+                        </div>
+                    )}
+
+                    {/* Conteúdo da Aba: Sobre */}
+                    {activeTab === 'sobre' && (
+                        <div className="cyber-card p-5 space-y-3 text-center">
+                            <h2 className="font-display text-sm font-black text-white">CHAVE CLIMÁTICA • CPARC v13.1</h2>
+                            <p className="text-xs text-slate-300 leading-relaxed">
+                                Central Pública e Automatizada de Resiliência Comunitária • Grupo A Chave da Esperança. Rocha Sobrinho, Mesquita, RJ.
+                            </p>
+                            <div className="text-[10px] text-[#00FFCC] font-bold">
+                                Monitoramento unificado dos 92 municípios do Estado do Rio de Janeiro.
+                            </div>
+                        </div>
+                    )}
+
+                    {/* Modal Radar 24h Lateral */}
+                    {radarOpen && (
+                        <div className="fixed inset-0 z-[100] bg-black/85 backdrop-blur-md flex items-center justify-end" onClick={()=>setRadarOpen(false)}>
+                            <div className="w-full max-w-[600px] h-full cyber-card flex flex-col p-4" onClick={e=>e.stopPropagation()}>
+                                <div className="flex justify-between items-center border-b border-[#00FFCC]/40 pb-3 mb-2">
+                                    <span className="font-display text-xs text-[#00FFCC] font-bold">🛰️ RADAR METEOROLÓGICO 24H • RJ</span>
+                                    <button onClick={()=>setRadarOpen(false)} className="px-3 py-1 bg-rose-500/20 text-rose-300 border border-rose-500/40 rounded-xl text-xs font-bold">✕ Fechar</button>
+                                </div>
+                                <iframe src="https://embed.windy.com/embed2.html?lat=-22.7845&lon=-43.4190&detailLat=-22.7845&detailLon=-43.4190&width=600&height=500&zoom=10&level=surface&overlay=wind&product=ecmwf&menu=&message=&marker=true" className="w-full flex-1 border-none bg-black rounded-xl"></iframe>
+                            </div>
+                        </div>
+                    )}
+                </div>
+            );
+        }
+
+        ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+    </script>
+</body>
+</html>
