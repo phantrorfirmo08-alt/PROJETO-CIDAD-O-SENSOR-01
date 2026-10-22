@@ -1,0 +1,389 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CHAVE CLIMÁTICA ECDM — RADAR COM ANIMAÇÃO METEOROLÓGICA REAL</title>
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Leaflet CSS & JS -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    body { font-family: 'Plus Jakarta Sans', sans-serif; background-color: #030712; color: #e2f1ff; }
+    .font-mono { font-family: 'JetBrains Mono', monospace; }
+    
+    /* Filtro Tático Dark para o mapa real */
+    .leaflet-tile-pane {
+      filter: brightness(0.50) invert(1) contrast(3.8) hue-rotate(200deg) saturate(0.25);
+    }
+
+    /* Animação do Feixe de Radar */
+    @keyframes airportSweep {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+    .animate-airport-sweep {
+      animation: airportSweep 3s linear infinite;
+      transform-origin: center center;
+    }
+
+    /* Animação de Pulso de Alerta Crítico (Granizo / Calor) */
+    @keyframes hailPulse {
+      0%, 100% { filter: drop-shadow(0 0 12px rgba(255,0,30,0.9)); border-color: rgba(255,0,30,1); }
+      50% { filter: drop-shadow(0 0 4px rgba(255,0,30,0.4)); border-color: rgba(255,100,100,0.5); }
+    }
+    .hail-pulse {
+      animation: hailPulse 1.2s infinite ease-in-out;
+    }
+
+    /* Animação Glow da Sarah IA */
+    @keyframes sarahGlow {
+      0%, 100% { box-shadow: 0 0 15px rgba(0,240,255,0.6); }
+      50% { box-shadow: 0 0 25px rgba(0,240,255,0.9); }
+    }
+    .sarah-btn {
+      animation: sarahGlow 2.5s infinite ease-in-out;
+    }
+  </style>
+</head>
+<body class="h-screen w-screen overflow-hidden flex flex-col select-none">
+
+  <!-- ================= METADE SUPERIOR (50%): MAPA + ANIMAÇÃO DE MASSA DE AR E CHUVA EM TEMPO REAL ================= -->
+  <div class="w-full h-1/2 relative bg-slate-950 border-b-2 border-cyan-500/80 shadow-[0_10px_30px_rgba(0,0,0,0.9)] z-10">
+    <!-- Onde o mapa real e as camadas de radar/chuva são renderizados -->
+    <div id="map" class="w-full h-full cursor-crosshair"></div>
+
+    <!-- MÁSCARA DO RADAR TÁTICO GIRANDO NO CENTRO -->
+    <div class="pointer-events-none absolute inset-0 z-[400] flex items-center justify-center overflow-hidden">
+      <div class="relative w-[320px] h-[320px] rounded-full border-2 border-cyan-500/30 bg-cyan-950/10 shadow-[0_0_30px_rgba(0,240,255,0.15)] flex items-center justify-center">
+        <div class="absolute w-[220px] h-[220px] rounded-full border border-cyan-500/20"></div>
+        <div class="absolute w-[110px] h-[110px] rounded-full border border-cyan-500/20"></div>
+        <div class="absolute w-2 h-2 bg-cyan-400 rounded-full shadow-[0_0_8px_#00f0ff]"></div>
+        <div class="absolute top-0 bottom-0 w-px bg-cyan-500/20"></div>
+        <div class="absolute left-0 right-0 h-px bg-cyan-500/20"></div>
+        <div class="absolute inset-0 rounded-full animate-airport-sweep pointer-events-none"
+             style="background: conic-gradient(from 0deg, rgba(0,240,255,0.4) 0deg, rgba(0,240,255,0.04) 45deg, transparent 70deg, transparent 360deg)">
+        </div>
+      </div>
+    </div>
+
+    <!-- Título Flutuante e Status Meteorológico Dinâmico -->
+    <div class="absolute top-2 left-2 z-[450] bg-slate-950/90 border border-cyan-500/60 px-2.5 py-1 rounded text-[9px] font-mono text-cyan-300 backdrop-blur-md flex items-center gap-2">
+      <span class="w-2 h-2 bg-emerald-400 rounded-full animate-ping"></span>
+      <span id="statusMassaAr">RADAR LIVE: MASSA DE CHUVA DESLOCANDO SE → NW (32 km/h)</span>
+    </div>
+
+    <!-- Botão de Centralizar e Alternar Animação de Chuva -->
+    <div class="absolute top-2 right-2 z-[450] flex gap-2">
+      <button onclick="alternarAnimacaoChuva()" id="btnAnim" class="bg-cyan-950 hover:bg-cyan-900 text-cyan-300 font-mono text-[9px] font-bold px-2 py-1.5 rounded border border-cyan-500/50 shadow-lg backdrop-blur-md transition">
+        🌧️ PAUSAR CHUVA
+      </button>
+      <button onclick="focarMesquitaSebinho()" class="bg-slate-900/90 hover:bg-slate-800 text-cyan-400 font-mono text-[9px] font-bold px-2 py-1.5 rounded border border-cyan-500/50 shadow-lg backdrop-blur-md transition">
+        📍 SEBINHO
+      </button>
+    </div>
+  </div>
+
+  <!-- ================= METADE INFERIOR (50%): DADOS, GRÁFICOS E CONTROLES ================= -->
+  <div class="w-full h-1/2 bg-slate-950 p-2.5 overflow-y-auto flex flex-col justify-between gap-2 font-mono z-20">
+    
+    <!-- Título da Seção de Dados -->
+    <div class="flex items-center justify-between border-b border-slate-800 pb-1 shrink-0">
+      <span class="text-[10px] font-bold text-cyan-400 tracking-wider flex items-center gap-1.5">
+        <span class="w-2 h-2 bg-emerald-400 rounded-full animate-ping"></span> 
+        MATRIZ DE MONITORAMENTO CLIMÁTICO — BAIXADA FLUMINENSE
+      </span>
+      <span class="text-[8px] text-amber-400 font-bold">ALERTA LARANJA • VENTO 32 km/h</span>
+    </div>
+
+    <!-- Os 4 Cards de Informação Exatos -->
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-2 shrink-0">
+      <div class="bg-slate-900/90 border border-slate-800 p-2 rounded-xl cursor-pointer hover:border-red-500 transition" onclick="focarPonto(-22.7800, -43.4300, 14)">
+        <div class="text-[8px] text-slate-400 font-bold">CALHA MESQUITA</div>
+        <div class="text-xs md:text-sm font-extrabold text-red-400 mt-0.5">91% (Crítico)</div>
+        <div class="text-[7px] text-slate-500 mt-0.5">Cota: 2.74m • Granizo Ativo</div>
+      </div>
+      <div class="bg-slate-900/90 border border-slate-800 p-2 rounded-xl cursor-pointer hover:border-orange-500 transition" onclick="focarPonto(-22.7750, -43.3100, 13)">
+        <div class="text-[8px] text-slate-400 font-bold">SARAPUÍ COLETOR</div>
+        <div class="text-xs md:text-sm font-extrabold text-orange-400 mt-0.5">84% (Alerta)</div>
+        <div class="text-[7px] text-slate-500 mt-0.5">Cota: 3.35m • Caxias (São Bento)</div>
+      </div>
+      <div class="bg-slate-900/90 border border-slate-800 p-2 rounded-xl cursor-pointer hover:border-yellow-500 transition" onclick="focarPonto(-22.7800, -43.4800, 13)">
+        <div class="text-[8px] text-slate-400 font-bold">MENDANHA ENCOSTA</div>
+        <div class="text-xs md:text-sm font-extrabold text-yellow-400 mt-0.5">76% (Atenção)</div>
+        <div class="text-[7px] text-slate-500 mt-0.5">Saturação 91mm/24h</div>
+      </div>
+      <div class="bg-slate-900/90 border border-slate-800 p-2 rounded-xl cursor-pointer hover:border-cyan-500 transition" onclick="focarPonto(-22.7950, -43.4650, 15)">
+        <div class="text-[8px] text-slate-400 font-bold">ESTAÇÃO SEBINHO</div>
+        <div class="text-xs md:text-sm font-extrabold text-cyan-400 mt-0.5">86.2 mm</div>
+        <div class="text-[7px] text-slate-500 mt-0.5">Rua Amazonas (Risco 3)</div>
+      </div>
+    </div>
+
+    <!-- Diretriz de Resiliência Habitacional -->
+    <div class="bg-slate-900/80 border border-slate-800 rounded-xl p-2 shrink-0 flex items-center justify-between text-[9px]">
+      <div>
+        <span class="text-cyan-300 font-bold">DIRETRIZ DE RESILIÊNCIA HABITACIONAL</span>
+        <div class="text-[7px] text-slate-400">Processo nº 945/2026 • Câmara Municipal de Mesquita</div>
+      </div>
+      <span class="text-amber-400 font-bold">PROTOCOLO ATIVO</span>
+    </div>
+
+    <!-- Botões de Ação na Metade Inferior -->
+    <div class="grid grid-cols-3 gap-2 shrink-0 pt-1">
+      <button onclick="abrirBoletim()" class="bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-bold text-[9px] py-2 rounded transition text-center shadow-lg">
+        📄 BOLETIM OFICIAL
+      </button>
+      <button onclick="toggleSarahChat()" class="sarah-btn bg-cyan-950 hover:bg-cyan-900 border border-cyan-400 text-cyan-200 font-bold text-[9px] py-2 rounded transition text-center flex items-center justify-center gap-1">
+        🤖 SARAH IA
+      </button>
+      <button onclick="iniciarSinteseVoz('Defesa Civil ligando direto para o 199. Atendimento de emergência Baixada Fluminense.')" class="bg-red-700 hover:bg-red-600 text-white font-extrabold text-[9px] py-2 rounded transition text-center shadow-[0_0_10px_rgba(255,0,0,0.5)]">
+        📞 LIGAR 199
+      </button>
+    </div>
+
+  </div>
+
+  <!-- MODAL DE INFORMAÇÃO DO PINO -->
+  <div class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex items-center justify-center p-4" id="infoModal" style="display:none;" onclick="fecharModal(event)">
+    <div class="bg-slate-900 border-2 border-cyan-400 rounded-xl p-4 max-w-md w-full shadow-2xl font-sans" onclick="event.stopPropagation()">
+      <div class="flex justify-between items-center border-b border-slate-800 pb-2 mb-3">
+        <h3 id="modalTitulo" class="text-sm font-bold text-cyan-400 font-mono">STATUS DO SETOR</h3>
+        <button class="text-slate-400 hover:text-white text-base font-bold" onclick="document.getElementById('infoModal').style.display='none'">✕</button>
+      </div>
+      <p id="modalDesc" class="text-slate-200 text-xs leading-relaxed bg-slate-950 p-3 border border-slate-800 rounded font-mono mb-3"></p>
+      <button class="w-full bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-bold text-xs py-2 rounded font-mono transition" onclick="document.getElementById('infoModal').style.display='none'">ENTENDIDO</button>
+    </div>
+  </div>
+
+  <!-- PAINEL DE CHAT DA SARAH IA -->
+  <div id="sarahPanel" class="hidden fixed bottom-16 right-4 w-72 bg-slate-900/95 border border-cyan-500/60 rounded-xl shadow-2xl z-50 backdrop-blur-md flex flex-col overflow-hidden font-sans">
+    <div class="bg-slate-950 px-3 py-2 border-b border-slate-800 flex justify-between items-center">
+      <div class="flex items-center gap-1.5">
+        <div class="w-2 h-2 bg-cyan-400 rounded-full animate-pulse"></div>
+        <span class="text-[10px] font-bold text-cyan-400 font-mono">SARAH IA — TÁTICA</span>
+      </div>
+      <button onclick="toggleSarahChat()" class="text-slate-400 hover:text-white text-xs">✕</button>
+    </div>
+    <div id="sarahMessages" class="p-2.5 text-[11px] text-slate-200 space-y-2 max-h-48 overflow-y-auto font-mono bg-slate-950/60">
+      <div class="bg-cyan-950/50 border border-cyan-500/30 p-2 rounded text-cyan-200">
+        🤖 Olá, Alexander! Estou controlando as animações de chuva, massa de ar e vento em tempo real no radar. Como posso ajudar?
+      </div>
+    </div>
+    <div class="p-2 bg-slate-950 border-t border-slate-800 flex gap-1.5">
+      <input type="text" id="sarahInput" placeholder="Ex: Status do Sebinho..." class="flex-1 bg-slate-900 border border-slate-700 rounded px-2 py-1 text-[11px] text-white focus:border-cyan-400 focus:outline-none font-mono" onkeypress="if(event.key==='Enter') enviarMensagemSarah()">
+      <button onclick="enviarMensagemSarah()" class="bg-cyan-400 hover:bg-cyan-300 text-slate-950 font-bold px-2.5 py-1 rounded text-[11px] font-mono">ENVIAR</button>
+    </div>
+  </div>
+
+  <!-- SCRIPT DE ANIMAÇÃO DE CHUVA E MASSA DE AR EM TEMPO REAL -->
+  <script>
+    let map;
+    let rainLayers = [];
+    let isRainAnimating = true;
+    let rainInterval = null;
+    let rainViewerHost = 'https://tilecache.rainviewer.com';
+    let frames = [];
+    let currentFrame = 0;
+
+    async function initMap() {
+      map = L.map('map', { 
+        center: [-22.7600, -43.4500], 
+        zoom: 11, 
+        zoomControl: true, 
+        attributionControl: false 
+      });
+      
+      L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', { 
+        maxZoom: 18, 
+        subdomains: 'abcd' 
+      }).addTo(map);
+
+      adicionarPinsBaixada();
+      await carregarAnimacaoChuvaMassaAr();
+    }
+
+    // Carrega os dados reais de radar e anima as massas de chuva e vento
+    async function carregarAnimacaoChuvaMassaAr() {
+      try {
+        const res = await fetch('https://api.rainviewer.com/public/weather-maps.json');
+        const data = await res.json();
+        rainViewerHost = data.host;
+        frames = [...(data.radar.past || []), ...(data.radar.nowcast || [])];
+        
+        if (frames.length > 0) {
+          iniciarLoopChuva();
+        }
+      } catch (err) {
+        console.error('Erro ao carregar animação de chuva:', err);
+      }
+    }
+
+    function iniciarLoopChuva() {
+      if (rainInterval) clearInterval(rainInterval);
+      
+      rainInterval = setInterval(() => {
+        if (!isRainAnimating) return;
+
+        if (rainLayers.length > 0) {
+          map.removeLayer(rainLayers[0]);
+          rainLayers.shift();
+        }
+
+        const frame = frames[currentFrame];
+        const tileUrl = rainViewerHost + frame.path + '/256/{z}/{x}/{y}/2/1_1.png';
+        const layer = L.tileLayer(tileUrl, { opacity: 0.70, zIndex: 200 });
+        layer.addTo(map);
+        rainLayers.push(layer);
+
+        const dataHora = new Date(frame.time * 1000).toLocaleTimeString();
+        document.getElementById('statusMassaAr').innerText = `RADAR LIVE: CHUVA E MASSA DE AR [FRAME ${currentFrame + 1}/${frames.length} — ${dataHora}]`;
+
+        currentFrame = (currentFrame + 1) % frames.length;
+      }, 900); // Velocidade da animação da massa de chuva
+    }
+
+    function alternarAnimacaoChuva() {
+      isRainAnimating = !isRainAnimating;
+      const btn = document.getElementById('btnAnim');
+      if (isRainAnimating) {
+        btn.innerText = '🌧️ PAUSAR CHUVA';
+        btn.classList.replace('bg-red-950', 'bg-cyan-950');
+      } else {
+        btn.innerText = '▶ RETOMAR CHUVA';
+        btn.classList.replace('bg-cyan-950', 'bg-red-950');
+      }
+    }
+
+    function adicionarPinsBaixada() {
+      const pinsData = [
+        {
+          lat: -22.7800, lng: -43.4300,
+          html: `<div class="bg-slate-950/95 border-2 border-red-500 p-2 rounded-xl shadow-2xl text-[9px] text-slate-100 whitespace-nowrap hail-pulse cursor-pointer">
+                   ❄ <b>Mesquita Centro</b><br><span class="text-red-400 font-bold">GRANIZO ATIVO (91%)</span>
+                 </div>`,
+          titulo: 'Mesquita Centro',
+          desc: 'Célula convectiva severa com granizo ativo. Calha municipal em nível crítico (91%).'
+        },
+        {
+          lat: -22.7950, lng: -43.4650,
+          html: `<div class="bg-slate-950/95 border border-orange-500 p-2 rounded shadow-2xl text-[9px] text-slate-100 whitespace-nowrap cursor-pointer">
+                   🏘 <b>Com. do Sebinho</b><br><span class="text-orange-400 font-bold">Rua Amazonas (86.2mm)</span>
+                 </div>`,
+          titulo: 'Comunidade do Sebinho (Rua Amazonas)',
+          desc: 'Monitoramento geológico ativo. Solo com alta saturação na encosta.'
+        },
+        {
+          lat: -22.7750, lng: -43.3100,
+          html: `<div class="bg-slate-950/95 border border-amber-500 p-2 rounded shadow-2xl text-[9px] text-slate-100 whitespace-nowrap cursor-pointer">
+                   ⚡ <b>Caxias (São Bento)</b><br><span class="text-orange-400 font-bold">Chuva Torrencial (84%)</span>
+                 </div>`,
+          titulo: 'Duque de Caxias — São Bento',
+          desc: 'Bacia do Rio Sarapuí recebendo grande carga hídrica.'
+        }
+      ];
+
+      pinsData.forEach(p => {
+        const customIcon = L.divIcon({
+          className: 'custom-pin',
+          html: p.html,
+          iconSize: [140, 45],
+          iconAnchor: [70, 22]
+        });
+
+        const marker = L.marker([p.lat, p.lng], { icon: customIcon }).addTo(map);
+        marker.on('click', () => {
+          mostrarInfo(p.titulo, p.desc);
+        });
+      });
+    }
+
+    function focarMesquitaSebinho() {
+      map.flyTo([-22.7800, -43.4300], 14, { animate: true, duration: 1.2 });
+    }
+
+    function focarPonto(lat, lng, zoom) {
+      map.flyTo([lat, lng], zoom || 13, { animate: true, duration: 1.2 });
+    }
+
+    function mostrarInfo(titulo, desc) {
+      document.getElementById('modalTitulo').innerText = titulo.toUpperCase();
+      document.getElementById('modalDesc').innerText = desc;
+      document.getElementById('infoModal').style.display = 'flex';
+      iniciarSinteseVoz(desc);
+    }
+
+    function fecharModal(e) {
+      document.getElementById('infoModal').style.display = 'none';
+    }
+
+    function abrirBoletim() {
+      mostrarInfo('Boletim de Contingência ECDM', 'Alerta Laranja ativo. Mesquita com granizo restrito e Sebinho monitorado. Processo nº 945/2026 em andamento.');
+    }
+
+    function toggleSarahChat() {
+      document.getElementById('sarahPanel').classList.toggle('hidden');
+    }
+
+    function adicionarMensagemSarah(texto, remetente) {
+      const container = document.getElementById('sarahMessages');
+      const div = document.createElement('div');
+      if (remetente === 'bot') {
+        div.className = 'bg-cyan-950/50 border border-cyan-500/30 p-2 rounded text-cyan-200';
+        div.innerHTML = `🤖 ${texto}`;
+      } else {
+        div.className = 'bg-slate-800 p-2 rounded text-slate-100 text-right';
+        div.innerHTML = `👤 ${texto}`;
+      }
+      container.appendChild(div);
+      container.scrollTop = container.scrollHeight;
+    }
+
+    function enviarMensagemSarah() {
+      const input = document.getElementById('sarahInput');
+      const texto = input.value.trim();
+      if (!texto) return;
+
+      adicionarMensagemSarah(texto, 'user');
+      input.value = '';
+
+      setTimeout(() => {
+        let resposta = "Análise tática concluída. Massa de ar e chuva em deslocamento na Baixada.";
+        const t = texto.toLowerCase();
+
+        if (t.includes('mesquita') || t.includes('granizo')) {
+          resposta = "Mesquita Centro registra granizo ativo restrito, bacia em 91%.";
+          focarPonto(-22.7800, -43.4300, 14);
+        } else if (t.includes('sebinho') || t.includes('amazonas')) {
+          resposta = "Comunidade do Sebinho monitorada na Rua Amazonas (86.2mm).";
+          focarPonto(-22.7950, -43.4650, 15);
+        } else if (t.includes('caxias')) {
+          resposta = "Duque de Caxias (São Bento) sob chuva torrencial, Sarapuí em 84%.";
+          focarPonto(-22.7750, -43.3100, 13);
+        }
+
+        adicionarMensagemSarah(resposta, 'bot');
+        iniciarSinteseVoz(resposta);
+      }, 600);
+    }
+
+    function iniciarSinteseVoz(texto) {
+      if (!('speechSynthesis' in window)) return;
+      window.speechSynthesis.cancel();
+      const utt = new SpeechSynthesisUtterance(texto);
+      utt.lang = 'pt-BR';
+      utt.rate = 1.05;
+      window.speechSynthesis.speak(utt);
+    }
+
+    window.onload = function() {
+      initMap();
+    };
+  </script>
+</body>
+</html>
