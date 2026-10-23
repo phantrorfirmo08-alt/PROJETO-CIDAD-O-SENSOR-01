@@ -1,0 +1,561 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta name="theme-color" content="#010306">
+<title>CENTRAL BIOCIBERNÉTICA — 92 MUNICÍPIOS RJ</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Courier New', monospace; -webkit-tap-highlight-color: transparent; }
+html { -webkit-text-size-adjust: 100%; }
+
+/* Organismo Vivo & Design Futurista Baseado no Clima */
+html, body {
+  background-color: #010306;
+  background-image: linear-gradient(rgba(1, 3, 6, 0.85), rgba(1, 3, 6, 0.92)), url('https://images.unsplash.com/photo-1558494949-ef010cbdcc31?q=80&w=1920&auto=format&fit=crop');
+  background-size: cover;
+  background-position: center;
+  background-attachment: fixed;
+  color: #00ffcc;
+  width: 100%;
+  min-height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 8px;
+  transition: background 0.8s ease;
+}
+
+/* Modos climáticos adaptativos automáticos do organismo */
+body.weather-sunny {
+  background-image: linear-gradient(rgba(2, 20, 35, 0.78), rgba(1, 10, 20, 0.88)), url('https://images.unsplash.com/photo-1601297183305-6df142704ea2?q=80&w=1920&auto=format&fit=crop');
+  color: #00ffcc;
+}
+body.weather-cloudy {
+  background-image: linear-gradient(rgba(15, 22, 30, 0.85), rgba(8, 12, 18, 0.92)), url('https://images.unsplash.com/photo-1534088568595-a066f410bcda?q=80&w=1920&auto=format&fit=crop');
+  color: #88ccff;
+}
+body.weather-rainy {
+  background-image: linear-gradient(rgba(5, 15, 25, 0.9), rgba(2, 8, 15, 0.96)), url('https://images.unsplash.com/photo-1519692933481-e162a57d6721?q=80&w=1920&auto=format&fit=crop');
+  color: #33bbff;
+}
+body.critical-alert {
+  background-color: #1a0205 !important;
+  background-image: linear-gradient(rgba(26, 2, 5, 0.92), rgba(26, 2, 5, 0.97)), url('https://images.unsplash.com/photo-1508614589041-895b88991e3e?q=80&w=1920&auto=format&fit=crop') !important;
+  color: #ff99bb !important;
+}
+
+.dashboard {
+  width: 100%;
+  max-width: 680px;
+  background: rgba(4, 10, 18, 0.95);
+  backdrop-filter: blur(10px);
+  border: 2px solid #00ffcc;
+  border-radius: 14px;
+  box-shadow: 0 0 40px rgba(0,255,204,0.35), inset 0 0 15px rgba(0,255,204,0.1);
+  padding: 12px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  position: relative;
+  transition: all 0.5s ease;
+}
+
+body.weather-sunny .dashboard { border-color: #00ffcc; box-shadow: 0 0 40px rgba(0,255,204,0.35); }
+body.weather-cloudy .dashboard { border-color: #66aaff; box-shadow: 0 0 40px rgba(102,170,255,0.3); }
+body.weather-rainy .dashboard { border-color: #3388ff; box-shadow: 0 0 40px rgba(51,136,255,0.4); }
+body.critical-alert .dashboard {
+  border-color: #ff3366;
+  box-shadow: 0 0 50px rgba(255, 51, 102, 0.7);
+  background: rgba(26, 2, 5, 0.96);
+}
+
+header {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  border-bottom: 2px solid rgba(0,255,204,0.4);
+  padding-bottom: 6px;
+}
+.header-title h1 { font-size: 1.15rem; color: inherit; letter-spacing: 1.2px; text-shadow: 0 0 10px rgba(0,255,204,0.6); font-weight: 900; }
+.header-title h2 { font-size: 0.78rem; color: #ffd700; font-weight: bold; }
+
+.vital-box {
+  border: 1px solid currentColor;
+  padding: 6px 10px;
+  background: rgba(0, 255, 204, 0.1);
+  font-size: 0.78rem;
+  border-radius: 8px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.vital-box span { color: #fff; font-weight: bold; }
+
+/* Organismo Vivo & Radar Espacial */
+.radar-container {
+  position: relative;
+  background: #020509;
+  border: 1px solid currentColor;
+  height: 155px;
+  border-radius: 10px;
+  overflow: hidden;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.side-sat { width: 28%; height: 100%; object-fit: cover; opacity: 0.55; filter: contrast(130%); }
+.canvas-wrapper { position: absolute; top: 0; left: 28%; width: 44%; height: 100%; }
+canvas { position: absolute; top:0; left:0; width:100%; height:100%; z-index:5; touch-action: none; }
+#goes19Img, #rainviewerImg { position: absolute; top:0; left:0; width:100%; height:100%; object-fit: cover; opacity:0; transition: opacity 0.6s; z-index:2; pointer-events:none; }
+.hud-overlay { position: absolute; font-size: 0.62rem; background: rgba(2,8,14,0.92); padding: 3px 6px; border-left: 2px solid #00ffcc; z-index: 10; border-radius: 0 4px 4px 0; }
+.hud-top-left { top:5px; left:5px; } .hud-top-right { top:5px; right:5px; color:#ffaa00; border-left-color:#ffaa00; }
+.coords-bar { position: absolute; bottom:0; width:100%; font-size: 0.62rem; background: rgba(1,4,8,0.95); padding: 4px; border-top: 1px solid rgba(0,255,204,0.3); color: #aaffdd; z-index:10; text-align:center; }
+
+/* Chat Largo & Dinâmico da SARAH AI */
+.chat-section {
+  border: 1px solid rgba(0,255,204,0.6);
+  background: rgba(4,10,18,0.92);
+  padding: 8px 10px;
+  border-radius: 10px;
+}
+.chat-header { font-size: 0.8rem; color: inherit; border-bottom: 1px solid rgba(0,255,204,0.3); padding-bottom: 3px; margin-bottom: 5px; font-weight: bold; display: flex; justify-content: space-between; align-items: center; }
+.chat-window {
+  height: 100px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  padding-right: 4px;
+}
+.chat-bubble { font-size: 0.74rem; padding: 6px 9px; border-radius: 6px; max-width: 92%; line-height: 1.3; }
+.bubble-sarah { background: rgba(0, 255, 204, 0.14); border-left: 3px solid #00ffcc; color: #d1ffd6; align-self: flex-start; }
+.bubble-user { background: rgba(255, 170, 0, 0.18); border-right: 3px solid #ffaa00; color: #ffeebb; align-self: flex-end; }
+
+.chat-input-bar { display: flex; gap: 6px; margin-top: 6px; }
+.chat-input-bar input { flex: 1; background: #010306; border: 1px solid currentColor; color: #fff; padding: 7px 10px; font-size: 0.74rem; border-radius: 6px; outline: none; }
+.mic-btn, .send-btn { background: rgba(0,255,204,0.25); border: 1px solid currentColor; color: inherit; padding: 7px 12px; font-size: 0.74rem; font-weight: bold; border-radius: 6px; cursor: pointer; }
+.mic-btn:active, .send-btn:active { background: rgba(0,255,204,0.6); color: #fff; }
+
+/* Seletor e Tabela dos 92 Municípios do RJ com Interatividade */
+.table-section { border: 1px solid rgba(0,255,204,0.5); background: rgba(4,10,18,0.92); padding: 8px 10px; border-radius: 10px; }
+.table-header-flex { display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px; border-bottom: 1px solid rgba(0,255,204,0.3); padding-bottom: 3px; }
+.table-section h3 { font-size: 0.78rem; color: inherit; }
+.municipio-select { background: #010306; border: 1px solid #00ffcc; color: #00ffcc; font-size: 0.7rem; padding: 2px 6px; border-radius: 4px; outline: none; cursor: pointer; }
+table { width:100%; border-collapse: collapse; font-size: 0.72rem; }
+th, td { border: 1px solid rgba(0,255,204,0.3); padding: 5px 7px; text-align: left; }
+th { background: rgba(0,255,204,0.2); color: inherit; }
+td { color: #fff; font-weight: 600; }
+
+/* Botões Futuristas */
+.controls-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 6px;
+}
+.btn {
+  background: rgba(0,255,204,0.12);
+  border: 1px solid currentColor;
+  color: inherit;
+  padding: 8px 4px;
+  font-size: 0.72rem;
+  font-weight: bold;
+  border-radius: 8px;
+  cursor: pointer;
+  text-align: center;
+  min-height: 40px;
+}
+.btn:active { background: rgba(0,255,204,0.4); color: #fff; transform: scale(0.98); }
+.btn-active { background: rgba(0,255,204,0.35) !important; color:#fff !important; box-shadow: 0 0 10px #00ffcc; }
+.btn-emergency { grid-column: span 4; background: rgba(255,51,102,0.25); border-color:#ff3366; color:#ff99bb; font-size: 0.78rem; }
+
+footer { display:flex; justify-content: space-between; font-size: 0.62rem; color: #88aaff; border-top: 1px solid rgba(0,255,204,0.2); padding-top: 5px; }
+</style>
+</head>
+<body>
+<div class="dashboard">
+<header>
+<div class="header-title">
+<h1>CENTRAL BIOCIBERNÉTICA • 92 MUNICÍPIOS RJ</h1>
+<h2>PILOTO: SEBINHO (MESQUITA) &amp; DOM BOSCO (CAXIAS)</h2>
+</div>
+<div class="vital-box">
+<div>ESTADO VIVO: <span id="lblHomeostasis">ESTÁVEL</span></div>
+<div>PULSO: <span id="lblHeartrate">--</span> | TEMP: <span id="lblTemp">--°C</span></div>
+</div>
+</header>
+
+<div class="radar-container">
+<img src="https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?q=80&w=300&auto=format&fit=crop" class="side-sat" alt="Satélite L">
+<div class="canvas-wrapper">
+<img id="goes19Img" alt="GOES-19">
+<img id="rainviewerImg" alt="Radar">
+<div class="hud-overlay hud-top-left" id="hudMode">RADAR + GOES-19</div>
+<div class="hud-overlay hud-top-right" id="hudPrecip">CHUVA: --</div>
+<canvas id="livingMapCanvas"></canvas>
+</div>
+<img src="https://images.unsplash.com/photo-1507499739999-097706ad8914?q=80&w=300&auto=format&fit=crop" class="side-sat" alt="Satélite R">
+<div class="coords-bar" id="coordsSebinho">ORGANISMO VIVO: CARREGANDO MALHA ESTADUAL...</div>
+</div>
+
+<div class="chat-section">
+<div class="chat-header">
+  <span>🤖 SARAH AI NEXUS • CANAL BIOCIBERNÉTICO</span>
+  <span style="font-size:0.65rem; color:#ffd700;" id="lblActiveCity">RJ: 92 MUNICÍPIOS</span>
+</div>
+<div class="chat-window" id="chatWindow">
+<div class="chat-bubble bubble-sarah"><strong>[SARAH IA]:</strong> Organismo vivo ativado. Clique em qualquer município para fixar o monitoramento tático.</div>
+<div class="chat-bubble bubble-user"><strong>[OPERADOR]:</strong> Sistema pronto para varredura estadual.</div>
+<div class="chat-bubble bubble-sarah"><strong>[SARAH IA]:</strong> Afirmativo! Telemetria e voz interativa ativadas.</div>
+</div>
+<div class="chat-input-bar">
+<input type="text" id="userInputMsg" placeholder="Comando ou consulta para a Sarah...">
+<button class="mic-btn" onclick="toggleMic()" id="micBtn">🎙️</button>
+<button class="send-btn" onclick="sendUserMsg()">ENVIAR</button>
+</div>
+</div>
+
+<div class="table-section">
+<div class="table-header-flex">
+  <h3>MATRIZ DE TELEMETRIA DOS MUNICÍPIOS (92 RJ)</h3>
+  <select class="municipio-select" id="selectMunicipio" onchange="mudarMunicipioSelecionado()">
+    <option value="Mesquita">Mesquita (Sebinho)</option>
+    <option value="Duque de Caxias">Duque de Caxias (Dom Bosco)</option>
+    <option value="Nova Iguaçu">Nova Iguaçu</option>
+    <option value="São João de Meriti">São João de Meriti</option>
+    <option value="Belford Roxo">Belford Roxo</option>
+    <option value="Nilópolis">Nilópolis</option>
+    <option value="Rio de Janeiro">Rio de Janeiro</option>
+    <option value="Niterói">Niterói</option>
+    <option value="Petrópolis">Petrópolis</option>
+    <option value="Teresópolis">Teresópolis</option>
+    <option value="Angra dos Reis">Angra dos Reis</option>
+    <option value="Cabo Frio">Cabo Frio</option>
+    <option value="Campos dos Goytacazes">Campos dos Goytacazes</option>
+    <option value="Volta Redonda">Volta Redonda</option>
+    <option value="Maricá">Maricá</option>
+    <option value="Itaboraí">Itaboraí</option>
+    <option value="Magé">Magé</option>
+    <option value="Guapimirim">Guapimirim</option>
+    <option value="Itaguaí">Itaguaí</option>
+    <option value="Paracambi">Paracambi</option>
+  </select>
+</div>
+<table>
+<thead><tr><th>Setor / Município</th><th>Referência Local</th><th>Temperatura</th><th>Precipitação / Vento</th><th>Status Vivo</th></tr></thead>
+<tbody>
+<tr><td id="tdMunNome" style="color:#ffd700; cursor:pointer;" title="Clique para atualizar telemetria">Mesquita</td><td id="tdMunRef">Sebinho (Rua Amazonas)</td><td id="tdMunTemp">--</td><td id="tdMunChuva">--</td><td id="tdMunStatus">--</td></tr>
+</tbody>
+</table>
+</div>
+
+<div class="controls-grid">
+<button class="btn" id="btnGoes19" onclick="toggleGoes19()">🛰️ GOES-19</button>
+<button class="btn" id="btnRain" onclick="toggleRainviewer()">🌧️ RADAR</button>
+<button class="btn" onclick="triggerFever()" style="border-color:#ff3366; color:#ff99bb;">⚡ ESTRESSE</button>
+<button class="btn" onclick="injectNutrients()">🟢 ATP</button>
+<button class="btn btn-emergency" onclick="window.open('tel:199')">📞 DEFESA CIVIL 199 (EMERGÊNCIA OPERACIONAL)</button>
+</div>
+
+<footer><span>BIOCIBERNÉTICA ORGÂNICA v7</span><span id="lblLiveClock">--:--:--</span></footer>
+</div>
+
+<script>
+function getBrasiliaTimeString(){ 
+    return new Intl.DateTimeFormat('pt-BR',{timeZone:'America/Sao_Paulo',hour:'2-digit',minute:'2-digit',second:'2-digit',hour12:false}).format(new Date()); 
+}
+function updateClock(){ 
+    const el = document.getElementById('lblLiveClock');
+    if(el) el.innerText = getBrasiliaTimeString(); 
+} 
+setInterval(updateClock,1000); 
+updateClock();
+
+let audioCtx = null, alarmInterval = null;
+function playAlarmBeep() {
+    try {
+        if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        if (audioCtx.state === 'suspended') audioCtx.resume();
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.type = 'sawtooth';
+        osc.frequency.setValueAtTime(880, audioCtx.currentTime);
+        osc.frequency.exponentialRampToValueAtTime(440, audioCtx.currentTime + 0.2);
+        gain.gain.setValueAtTime(0.3, audioCtx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.25);
+        osc.connect(gain); gain.connect(audioCtx.destination);
+        osc.start(); osc.stop(audioCtx.currentTime + 0.25);
+    } catch(e){}
+}
+function startAlarmSound() { stopAlarmSound(); playAlarmBeep(); alarmInterval = setInterval(playAlarmBeep, 400); }
+function stopAlarmSound() { if (alarmInterval) { clearInterval(alarmInterval); alarmInterval = null; } }
+
+function speakSarah(text) {
+    if (!('speechSynthesis' in window)) return;
+    window.speechSynthesis.cancel();
+    const u = new SpeechSynthesisUtterance(text);
+    u.lang = 'pt-BR'; u.rate = 1.05; u.pitch = 1.0;
+    window.speechSynthesis.speak(u);
+}
+
+function addChatMsg(text, sender) {
+    const chatWindow = document.getElementById('chatWindow');
+    if(!chatWindow) return;
+    const bubble = document.createElement('div');
+    bubble.className = `chat-bubble ${sender === 'sarah' ? 'bubble-sarah' : 'bubble-user'}`;
+    bubble.innerHTML = `<strong>[${sender === 'sarah' ? 'SARAH IA' : 'OPERADOR'}]:</strong> ${text}`;
+    chatWindow.appendChild(bubble);
+    chatWindow.scrollTop = chatWindow.scrollHeight;
+}
+
+function sendUserMsg() {
+    const input = document.getElementById('userInputMsg');
+    if (!input || !input.value.trim()) return;
+    const text = input.value;
+    addChatMsg(text, 'user');
+    input.value = '';
+    setTimeout(() => {
+        addChatMsg("Consulta biocibernética processada na malha dos 92 municípios.", 'sarah');
+    }, 1000);
+}
+
+let micActive = false;
+function toggleMic() {
+    micActive = !micActive;
+    const btn = document.getElementById('micBtn');
+    if(btn) {
+        btn.style.borderColor = micActive ? '#ff3366' : 'currentColor';
+        btn.style.color = micActive ? '#ff3366' : 'inherit';
+    }
+    addChatMsg(micActive ? "Microfone aberto." : "Microfone fechado.", 'sarah');
+}
+
+// ORGANISMO VIVO — CANVAS COM CÉLULAS E PULSAÇÃO
+const canvas = document.getElementById('livingMapCanvas'); 
+const ctx = canvas ? canvas.getContext('2d') : null;
+
+function resizeCanvas(){ 
+    if(!canvas) return;
+    const dpr = window.devicePixelRatio || 1; 
+    const rect = canvas.parentElement.getBoundingClientRect(); 
+    canvas.width = rect.width * dpr; 
+    canvas.height = rect.height * dpr; 
+    if(ctx) ctx.setTransform(dpr,0,0,dpr,0,0); 
+    canvas.style.width = rect.width + 'px'; 
+    canvas.style.height = rect.height + 'px'; 
+} 
+window.addEventListener('resize', resizeCanvas); 
+resizeCanvas();
+
+let heartRate=75, pulsePhase=0, radarAngle=0, isStressed=false; 
+const mendanha={x:0.25,y:0.70}, sebinho={x:0.42,y:0.55}, tingua={x:0.65,y:0.25}, domBosco={x:0.75,y:0.45};
+let bloodCells=[]; 
+for(let i=0;i<24;i++) bloodCells.push({x:Math.random()*400,y:Math.random()*300,vx:(Math.random()-0.5)*0.9,vy:(Math.random()-0.5)*0.9,radius:Math.random()*2.2+1});
+
+function injectNutrients(){ 
+    if (isStressed) return;
+    heartRate = Math.min(115, heartRate + 12); 
+    addChatMsg("ATP injetado - Metabolismo do organismo acelerado.", "sarah"); 
+}
+
+function triggerFever() {
+    isStressed = true;
+    heartRate = 145;
+    document.body.className = "critical-alert";
+    const h1 = document.getElementById('lblHomeostasis');
+    if(h1) { h1.innerText = "CRÍTICO"; h1.style.color = "#ff3366"; }
+
+    const msg = "ALERTA DA DEFESA CIVIL! Estresse hidrometeorológico extremo nas serras do Rio de Janeiro.";
+    addChatMsg(msg, 'sarah');
+    startAlarmSound();
+    speakSarah(msg);
+
+    setTimeout(() => {
+        isStressed = false;
+        heartRate = 75;
+        stopAlarmSound();
+        fetchRealData();
+        addChatMsg("Estresse encerrado. Homeostase do organismo restabelecida.", 'sarah');
+        speakSarah("Sistema normalizado.");
+    }, 8000);
+}
+
+function renderLivingMap(){ 
+    if(!ctx || !canvas) return;
+    const w = canvas.parentElement.clientWidth, h = canvas.parentElement.clientHeight; 
+    ctx.fillStyle = isStressed ? 'rgba(30, 2, 8, 0.45)' : 'rgba(1, 4, 8, 0.38)';
+    ctx.fillRect(0,0,w,h); 
+
+    radarAngle += 0.03 + (heartRate / 2500);
+    let centerX = w / 2, centerY = h / 2;
+
+    ctx.strokeStyle = isStressed ? 'rgba(255, 51, 102, 0.25)' : 'rgba(0, 255, 204, 0.15)';
+    ctx.lineWidth = 1;
+    [20, 45, 70, 95].forEach(r => {
+        ctx.beginPath(); ctx.arc(centerX, centerY, r, 0, Math.PI * 2); ctx.stroke();
+    });
+
+    let sweepX = centerX + Math.cos(radarAngle) * 95;
+    let sweepY = centerY + Math.sin(radarAngle) * 95;
+    ctx.strokeStyle = isStressed ? 'rgba(255, 51, 102, 0.9)' : 'rgba(0, 255, 204, 0.75)';
+    ctx.lineWidth = 1.8;
+    ctx.beginPath(); ctx.moveTo(centerX, centerY); ctx.lineTo(sweepX, sweepY); ctx.stroke();
+
+    pulsePhase += heartRate / 600; 
+    let pulse = Math.sin(pulsePhase) * (isStressed ? 6 : 4); 
+    
+    ctx.fillStyle = isStressed ? 'rgba(255,51,102,0.4)' : 'rgba(0,255,204,0.45)'; 
+    bloodCells.forEach(bc => { 
+        bc.x += bc.vx; bc.y += bc.vy; 
+        if(bc.x < 0) bc.x = w; if(bc.x > w) bc.x = 0; 
+        if(bc.y < 0) bc.y = h; if(bc.y > h) bc.y = 0; 
+        ctx.beginPath(); ctx.arc(bc.x, bc.y, bc.radius, 0, Math.PI * 2); ctx.fill(); 
+    }); 
+
+    let mx = w*mendanha.x, my = h*mendanha.y, sx1 = w*sebinho.x, sy1 = h*sebinho.y, tx = w*tingua.x, ty = h*tingua.y, sx2 = w*domBosco.x, sy2 = h*domBosco.y; 
+    
+    ctx.strokeStyle = '#FF8C00'; ctx.lineWidth = 1.8; ctx.setLineDash([4,4]); 
+    ctx.beginPath(); ctx.moveTo(mx,my); ctx.lineTo(sx1,sy1); ctx.stroke(); 
+    
+    ctx.strokeStyle = '#1E90FF'; ctx.lineWidth = 1.8; ctx.setLineDash([4,4]); 
+    ctx.beginPath(); ctx.moveTo(tx,ty); ctx.lineTo(sx2,sy2); ctx.stroke(); 
+    ctx.setLineDash([]); 
+
+    [{x:sx1, y:sy1, c:isStressed?'#ff3366':'#00ffcc'}, {x:sx2, y:sy2, c:isStressed?'#ff3366':'#ffaa00'}].forEach(s => {
+        ctx.fillStyle = s.c; ctx.beginPath(); ctx.arc(s.x, s.y, 5 + pulse*0.5, 0, Math.PI*2); ctx.fill();
+    }); 
+    [{x:mx, y:my}, {x:tx, y:ty}].forEach(c => {
+        ctx.fillStyle = '#ff3366'; ctx.beginPath(); ctx.arc(c.x, c.y, 4, 0, Math.PI*2); ctx.fill();
+    });
+
+    const hrEl = document.getElementById('lblHeartrate');
+    if(hrEl) hrEl.innerText = Math.round(heartRate) + ' BPM'; 
+    requestAnimationFrame(renderLivingMap); 
+} 
+renderLivingMap();
+
+// COORDENADAS DOS MUNICÍPIOS DO RJ
+const coordsRJ = {
+    "Mesquita": {lat: -22.78, lon: -43.43, ref: "Sebinho (Rua Amazonas)"},
+    "Duque de Caxias": {lat: -22.78, lon: -43.28, ref: "Dom Bosco (Parque da Liberdade)"},
+    "Nova Iguaçu": {lat: -22.75, lon: -43.45, ref: "Centro / Tinguá"},
+    "São João de Meriti": {lat: -22.80, lon: -43.37, ref: "Matriz / Vilar dos Teles"},
+    "Belford Roxo": {lat: -22.76, lon: -43.39, ref: "Centro / Piam"},
+    "Nilópolis": {lat: -22.80, lon: -43.41, ref: "Mirandela"},
+    "Rio de Janeiro": {lat: -22.90, lon: -43.17, ref: "Capital / Centro"},
+    "Niterói": {lat: -22.88, lon: -43.10, ref: "Icaraí / Centro"},
+    "Petrópolis": {lat: -22.51, lon: -43.17, ref: "Serra / Quitandinha"},
+    "Teresópolis": {lat: -22.41, lon: -42.96, ref: "Soberbo / Comary"},
+    "Angra dos Reis": {lat: -23.00, lon: -44.31, ref: "Costa Verde"},
+    "Cabo Frio": {lat: -22.88, lon: -42.01, ref: "Região dos Lagos"},
+    "Campos dos Goytacazes": {lat: -21.75, lon: -41.33, ref: "Norte Fluminense"},
+    "Volta Redonda": {lat: -22.52, lon: -44.10, ref: "Sul Fluminense"},
+    "Maricá": {lat: -22.91, lon: -42.81, ref: "Itaipuaçu / Centro"},
+    "Itaboraí": {lat: -22.74, lon: -42.85, ref: "Manilha / Centro"},
+    "Magé": {lat: -22.65, lon: -43.03, ref: "Piabetá / Suruí"},
+    "Guapimirim": {lat: -22.64, lon: -42.98, ref: "Parque Nacional"},
+    "Itaguaí": {lat: -22.85, lon: -43.77, ref: "Porto / Centro"},
+    "Paracambi": {lat: -22.61, lon: -43.71, ref: "Lages / Centro"}
+};
+
+async function fetchRealData(){
+ try{
+  let sel = document.getElementById('selectMunicipio').value;
+  let loc = coordsRJ[sel] || coordsRJ["Mesquita"];
+  
+  let url = `https://api.open-meteo.com/v1/forecast?latitude=${loc.lat}&longitude=${loc.lon}&current=temperature_2m,relative_humidity_2m,precipitation,wind_speed_10m,weather_code&timezone=America/Sao_Paulo`;
+  let res = await fetch(url);
+  let data = await res.json();
+  let c1 = data.current;
+
+  const tEl = document.getElementById('lblTemp'); if(tEl) tEl.innerText = c1.temperature_2m.toFixed(1) + '°C';
+  const pEl = document.getElementById('hudPrecip'); if(pEl) pEl.innerText = 'CHUVA: ' + c1.precipitation + ' mm';
+  const cEl = document.getElementById('coordsSebinho'); if(cEl) cEl.innerText = `${sel.toUpperCase()}: ${c1.temperature_2m}°C | ${c1.precipitation}mm | ${c1.wind_speed_10m}km/h`;
+  
+  document.getElementById('tdMunNome').innerText = sel;
+  document.getElementById('tdMunRef').innerText = loc.ref;
+  document.getElementById('tdMunTemp').innerText = c1.temperature_2m + '°C';
+  document.getElementById('tdMunChuva').innerText = `${c1.precipitation}mm | ${c1.wind_speed_10m}km/h`;
+
+  let statusText = c1.precipitation > 5 ? "🔴 ALAGAMENTO" : c1.precipitation > 0.5 ? "🟡 ATENÇÃO" : "🟢 ESTÁVEL";
+  document.getElementById('tdMunStatus').innerText = statusText;
+  document.getElementById('lblActiveCity').innerText = `RJ: ${sel}`;
+
+  // ADAPTAÇÃO CLIMÁTICA AUTOMÁTICA DO ORGANISMO VIVO
+  if (!isStressed) {
+      let code = c1.weather_code;
+      let hEl = document.getElementById('lblHomeostasis');
+      
+      if (c1.precipitation > 0.5 || code >= 51) {
+          document.body.className = "weather-rainy";
+          if(h1) { h1.innerText = "CHUVOSO"; h1.style.color = "#33bbff"; }
+      } else if (code >= 1 && code <= 3) {
+          document.body.className = "weather-cloudy";
+          if(h1) { h1.innerText = "NUBLADO"; h1.style.color = "#88ccff"; }
+      } else {
+          document.body.className = "weather-sunny";
+          if(h1) { h1.innerText = "ESTÁVEL / SOL"; h1.style.color = "#00ffcc"; }
+      }
+  }
+
+  // ANÚNCIO INTELIGENTE DA SARAH AI
+  let msgAnuncio = `Foco tático alterado. Monitorando ${sel}. Temperatura de ${c1.temperature_2m} graus, precipitação de ${c1.precipitation} milímetros.`;
+  addChatMsg(`[MONITORAMENTO ATIVO]: ${sel} — Temp: ${c1.temperature_2m}°C | Chuva: ${c1.precipitation}mm`, 'sarah');
+  speakSarah(msgAnuncio);
+
+ }catch(e){ 
+  addChatMsg("Erro de telemetria estadual: "+e.message, 'sarah'); 
+ }
+}
+
+function mudarMunicipioSelecionado() {
+    fetchRealData();
+}
+
+let goes19Ativo=false, rainAtivo=false, rainFrames=[], rainIndex=0, rainTimer=null;
+
+function toggleGoes19(){ 
+  let img = document.getElementById('goes19Img'), btn = document.getElementById('btnGoes19'); 
+  if(!img || !btn) return;
+  if(goes19Ativo){ 
+    img.style.opacity = 0; goes19Ativo = false; btn.classList.remove('btn-active'); btn.innerText = "🛰️ GOES-19"; 
+    addChatMsg("GOES-19 DESLIGADO", 'sarah'); return; 
+  } 
+  img.src = 'https://cdn.star.nesdis.noaa.gov/GOES19/ABI/CONUS/GEOCOLOR/GOES19-CONUS-GEOCOLOR-1000x1000.jpg?t='+Date.now(); 
+  img.style.opacity = 0.68; goes19Ativo = true; btn.classList.add('btn-active'); btn.innerText = "🛰️ GOES-19 ATIVO";
+  addChatMsg("GOES-19 LIGADO - Nuvem real NOAA sobre o RJ", 'sarah');
+}
+
+async function toggleRainviewer(){ 
+  let img = document.getElementById('rainviewerImg'), btn = document.getElementById('btnRain'); 
+  if(!img || !btn) return;
+  if(rainAtivo){ 
+    clearInterval(rainTimer); img.style.opacity = 0; rainAtivo = false; btn.classList.remove('btn-active'); btn.innerText = "🌧️ RADAR"; 
+    addChatMsg("Radar OFF", 'sarah'); return; 
+  } 
+  try{ 
+    let res = await fetch('https://api.rainviewer.com/public/weather-maps.json'); 
+    let data = await res.json(); 
+    rainFrames = data.radar.past.slice(-8); 
+    rainAtivo = true; btn.classList.add('btn-active'); btn.innerText = "🌧️ RADAR ATIVO";
+    rainIndex = 0; 
+    rainTimer = setInterval(()=>{
+      let f = rainFrames[rainIndex]; 
+      img.src = `https://tilecache.rainviewer.com/v2/radar/${f.path}/256/8/99/152.png`; 
+      img.style.opacity = 0.72; 
+      const hud = document.getElementById('hudMode');
+      if(hud) hud.innerText = `RADAR ${new Date(f.time*1000).toLocaleTimeString('pt-BR')}`; 
+      rainIndex = (rainIndex + 1) % rainFrames.length; 
+    },800); 
+    addChatMsg(`Radar Doppler ON - ${rainFrames.length} quadros de precipitação`, 'sarah'); 
+  }catch(e){ 
+    addChatMsg("Erro Radar: "+e.message, 'sarah'); 
+  } 
+}
+
+fetchRealData(); 
+setInterval(fetchRealData, 120000);
+addChatMsg("SISTEMA COM SELETOR DE MUNICÍPIOS E VOZ DA SARAH ATIVO", 'sarah');
+</script>
+</body>
+</html>
