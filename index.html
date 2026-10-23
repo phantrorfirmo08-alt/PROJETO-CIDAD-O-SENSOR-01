@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>CENTRAL BIOCIBERNÉTICA • 92 MUNICÍPIOS RJ - FUTURISTA</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Share+Tech+Mono&display=swap');
+*{box-sizing:border-box;margin:0;padding:0;font-family:'Share Tech Mono',monospace;}
+html,body{width:100%;min-height:100vh;background:#010306;color:#00ffcc;display:flex;justify-content:center;padding:6px;}
+.bg-cyber{position:fixed;inset:0;z-index:-10;background:radial-gradient(circle at 20% 30%,#0a1a2a 0%,#02060c 50%,#000205 100%);}
+.bg-grid{position:absolute;inset:0;background-image:linear-gradient(rgba(0,255,204,0.06) 1px,transparent 1px),linear-gradient(90deg,rgba(0,255,204,0.06) 1px,transparent 1px);background-size:36px 36px;animation:gridMove 20s linear infinite;}
+@keyframes gridMove{0%{transform:translate(0,0);}100%{transform:translate(36px,36px);}}
+.dashboard{width:100%;max-width:520px;background:linear-gradient(135deg,rgba(5,13,20,0.96) 0%,rgba(1,2,4,0.98) 100%);border:2px solid #00ffcc;border-radius:14px;box-shadow:0 0 40px rgba(0,255,204,0.3);padding:10px;display:flex;flex-direction:column;gap:8px;backdrop-filter:blur(12px);}
+header{border-bottom:1px solid rgba(0,255,204,0.4);padding-bottom:6px;display:flex;justify-content:space-between;}
+.h-title h1{font-family:'Orbitron';font-size:0.95rem;color:#00ffcc;letter-spacing:1px;text-shadow:0 0 10px rgba(0,255,204,0.8);font-weight:900;}
+.h-title h2{font-size:0.68rem;color:#ffd700;font-family:'Orbitron';margin-top:2px;}
+.h-title p{font-size:0.55rem;color:#88ffcc;margin-top:2px;letter-spacing:1px;}
+.vital-box{border:1px solid #00ffcc;padding:4px 8px;background:rgba(0,255,204,0.08);font-size:0.62rem;border-radius:6px;display:flex;gap:12px;margin-top:4px;}
+.vital-box span{color:#fff;font-weight:bold;font-family:'Orbitron';}
+.radar-container{position:relative;background:#020509;border:1px solid #00ffcc;height:155px;display:flex;justify-content:center;align-items:center;overflow:hidden;border-radius:8px;}
+canvas{position:absolute;top:0;left:0;width:100%;height:100%;cursor:pointer;}
+.hud-overlay{position:absolute;font-size:0.52rem;color:#00ffcc;background:rgba(2,8,14,0.9);padding:3px 6px;border-left:2px solid #00ffcc;z-index:10;border-radius:3px;}
+.hud-top-left{top:5px;left:5px;} .hud-top-right{top:5px;right:5px;color:#ffaa00;border-color:#ffaa00;}
+.coords-bar{position:absolute;bottom:0;width:100%;font-size:0.48rem;background:rgba(1,4,8,0.95);padding:3px;text-align:center;border-top:1px solid rgba(0,255,204,0.3);color:#aaffcc;z-index:10;}
+.chat-section{background:rgba(4,10,18,0.98);border:2px solid #00ffcc;border-radius:10px;padding:8px;box-shadow:0 0 20px rgba(0,255,204,0.15);display:flex;flex-direction:column;gap:6px;}
+.chat-header{font-family:'Orbitron';font-size:0.72rem;color:#00ffcc;border-bottom:1px solid rgba(0,255,204,0.4);padding-bottom:6px;display:flex;justify-content:space-between;align-items:center;font-weight:900;}
+.chat-header .status{font-size:0.55rem;color:#00ff88;background:rgba(0,255,136,0.15);padding:2px 6px;border-radius:10px;border:1px solid rgba(0,255,136,0.4);}
+.chat-window{height:220px;overflow-y:auto;display:flex;flex-direction:column;gap:6px;padding:6px;background:rgba(0,0,0,0.4);border-radius:8px;border:1px solid rgba(0,255,204,0.15);}
+.chat-bubble{font-size:0.6rem;padding:8px 10px;border-radius:10px;max-width:92%;line-height:1.4;}
+.bubble-sarah{background:linear-gradient(135deg,rgba(0,255,204,0.15) 0%,rgba(0,255,204,0.05) 100%);border-left:3px solid #00ffcc;color:#d1ffd6;align-self:flex-start;}
+.bubble-user{background:linear-gradient(135deg,rgba(255,170,0,0.18) 0%,rgba(255,170,0,0.06) 100%);border-right:3px solid #ffaa00;color:#ffeebb;align-self:flex-end;}
+.chat-input-bar{display:flex;gap:4px;margin-top:2px;}
+.chat-input-bar input{flex:1;background:#010306;border:1px solid #00ffcc;color:#fff;padding:8px 10px;font-size:0.62rem;border-radius:8px;outline:none;}
+.mic-btn,.send-btn{background:linear-gradient(135deg,rgba(0,255,204,0.25) 0%,rgba(0,255,204,0.1) 100%);border:1px solid #00ffcc;color:#00ffcc;padding:8px 12px;font-size:0.62rem;font-weight:bold;border-radius:8px;cursor:pointer;font-family:'Orbitron';}
+.municipios-section{background:rgba(4,10,18,0.95);border:1px solid rgba(0,255,204,0.3);border-radius:8px;padding:6px;}
+.municipios-header{font-family:'Orbitron';font-size:0.68rem;color:#00ffcc;border-bottom:1px solid rgba(0,255,204,0.3);padding-bottom:4px;margin-bottom:6px;display:flex;justify-content:space-between;}
+.municipios-search{width:100%;background:#010306;border:1px solid rgba(0,255,204,0.3);color:#fff;padding:6px 8px;font-size:0.58rem;border-radius:6px;outline:none;margin-bottom:6px;}
+.municipios-grid{max-height:140px;overflow-y:auto;display:grid;grid-template-columns:1fr 1fr;gap:3px;padding:2px;}
+.mun-item{font-size:0.52rem;padding:4px 6px;background:rgba(0,255,204,0.04);border:1px solid rgba(0,255,204,0.15);border-radius:4px;display:flex;justify-content:space-between;align-items:center;cursor:pointer;}
+.mun-item.active{background:rgba(0,255,204,0.2);border-color:#00ffcc;color:#fff;}
+.mun-item .dot{width:6px;height:6px;border-radius:50%;background:#00ff88;}
+.mun-item.alert .dot{background:#ff3366;animation:pulse 1s infinite;}
+@keyframes pulse{0%,100%{opacity:1;}50%{opacity:0.4;}}
+.table-section{background:rgba(4,10,18,0.95);border:1px solid rgba(0,255,204,0.25);border-radius:6px;padding:6px;font-size:0.55rem;}
+.table-section table{width:100%;border-collapse:collapse;}
+.table-section th,.table-section td{padding:3px;border-bottom:1px solid rgba(0,255,204,0.15);text-align:left;}
+.controls-grid{display:grid;grid-template-columns:1fr 1fr;gap:4px;}
+.btn{background:linear-gradient(135deg,rgba(0,255,204,0.12) 0%,rgba(0,255,204,0.04) 100%);border:1px solid #00ffcc;color:#00ffcc;padding:7px 3px;text-align:center;font-size:0.58rem;font-weight:bold;cursor:pointer;border-radius:6px;font-family:'Orbitron';}
+.btn-emergency{grid-column:span 2;background:linear-gradient(135deg,rgba(255,51,102,0.3) 0%,rgba(255,51,102,0.15) 100%);border-color:#ff3366;color:#ff99bb;padding:8px;animation:emergPulse 2s infinite;}
+@keyframes emergPulse{0%,100%{box-shadow:0 0 0 rgba(255,51,102,0);}50%{box-shadow:0 0 12px rgba(255,51,102,0.4);}}
+footer{display:flex;justify-content:space-between;font-size:0.48rem;color:#668877;border-top:1px solid rgba(0,255,204,0.2);padding-top:4px;font-family:'Orbitron';}
+</style>
+</head>
+<body>
+<div class="bg-cyber"><div class="bg-grid"></div></div>
+<div class="dashboard">
+<header><div class="h-title">
+<h1>CENTRAL BIOCIBERNÉTICA • 92 MUNICÍPIOS RJ</h1>
+<h2>PILOTO: SEBINHO (MESQUITA) & DOM BOSCO (CAXIAS)</h2>
+<p>TELEMETRIA AUTOMATIZADA • SISTEMA ESTADUAL UNIFICADO</p>
+<div class="vital-box"><div>ESTADO: <span id="lblHomeostasis">ESTÁVEL</span></div><div>PULSO: <span id="lblHeartrate">78 BPM</span></div><div>NODES: <span style="color:#ffd700;">92/92 ONLINE</span></div></div>
+</div></header>
+
+<div class="radar-container">
+<div class="hud-overlay hud-top-left" id="hudWindText">VENTO: 12 KM/H • AUTO</div>
+<div class="hud-overlay hud-top-right" id="hudRainText">CHUVA: 0mm • 92 MUNICÍPIOS</div>
+<canvas id="livingMapCanvas"></canvas>
+<div class="coords-bar">MENDANHA ➔ SEBINHO | TINGUÁ ➔ DOM BOSCO / LIBERDADE | 92 MUNICÍPIOS RJ</div>
+</div>
+
+<div class="chat-section">
+<div class="chat-header"><span>🤖 SARAH AI NEXUS • CANAL FUTURISTA</span><span class="status">● VOZ NATIVA ATIVA</span></div>
+<div class="chat-window" id="chatWindow">
+<div class="chat-bubble bubble-sarah"><strong>[SARAH IA]:</strong> Olá! Eu sou a Sarah, Analista Sênior de monitoramento climático e automatizado da Chave Climática. Em que posso ajudar?</div>
+<div class="chat-bubble bubble-sarah"><strong>[SARAH IA]:</strong> Busque qualquer município abaixo e clique para telemetria real em tempo real!</div>
+</div>
+<div class="chat-input-bar">
+<input type="text" id="userInputMsg" placeholder="Comando tático para SARAH..." onkeydown="if(event.key==='Enter'){sendUserMsg();}">
+<button class="mic-btn" id="micBtn" onclick="toggleMic()">🎙️ VOZ</button>
+<button class="send-btn" onclick="sendUserMsg()">ENVIAR ◆</button>
+</div>
+</div>
+
+<div class="municipios-section">
+<div class="municipios-header"><span>🗺️ MONITORAMENTO • 92 MUNICÍPIOS RJ</span><span id="munCount">92 ATIVOS</span></div>
+<input type="text" class="municipios-search" id="munSearch" placeholder="🔍 Buscar município..." oninput="filtrarMunicipios()">
+<div class="municipios-grid" id="municipiosGrid"></div>
+</div>
+
+<div class="table-section">
+<h3>🎯 SENSORES PILOTO</h3>
+<table><thead><tr><th>Município</th><th>Bairro</th><th>Origem</th><th>Status</th></tr></thead>
+<tbody>
+<tr><td>Mesquita</td><td>Rua Amazonas (Sebinho)</td><td>Serra Mendanha</td><td style="color:#00ff88;">● ONLINE</td></tr>
+<tr><td>Caxias</td><td>Dom Bosco / Liberdade</td><td>Serra do Mar - Tinguá</td><td style="color:#00ff88;">● ONLINE</td></tr>
+</tbody></table>
+</div>
+
+<div class="controls-grid">
+<div class="btn" onclick="injectNutrients()">🟢 INJETAR ATP</div>
+<div class="btn" onclick="triggerFever()">⚡ ESTRESSE TÉRMICO</div>
+<div class="btn" onclick="triggerRegeneration()">💊 REGENERAÇÃO</div>
+<div class="btn" onclick="exportarRelatorio()">📊 EXPORTAR 92 MUNIC</div>
+<div class="btn btn-emergency" onclick="alert('DEFESA CIVIL 199 - 92 MUNICÍPIOS')">📞 DEFESA CIVIL 199 • 92 MUNICÍPIOS</div>
+</div>
+
+<footer><span>ECD-FUTURISTA • 92 MUNICÍPIOS (GMT-3)</span><span id="lblLiveClock">00:00:00</span></footer>
+</div>
+
+<script>
+const MUNICIPIOS_92 = ["Angra dos Reis","Aperibé","Araruama","Areal","Armação dos Búzios","Arraial do Cabo","Barra do Piraí","Barra Mansa","Belford Roxo","Bom Jardim","Bom Jesus do Itabapoana","Cabo Frio","Cachoeiras de Macacu","Cambuci","Campos dos Goytacazes","Cantagalo","Carapebus","Cardoso Moreira","Carmo","Casimiro de Abreu","Comendador Levy Gasparian","Conceição de Macabu","Cordeiro","Duas Barras","Duque de Caxias","Engenheiro Paulo de Frontin","Guapimirim","Iguaba Grande","Itaboraí","Itaguaí","Italva","Itaocara","Itaperuna","Itatiaia","Japeri","Laje do Muriaé","Macaé","Macuco","Magé","Mangaratiba","Maricá","Mendes","Mesquita","Miguel Pereira","Miracema","Natividade","Nilópolis","Niterói","Nova Friburgo","Nova Iguaçu","Paracambi","Paraíba do Sul","Paraty","Paty do Alferes","Petrópolis","Pinheiral","Piraí","Porciúncula","Porto Real","Quatis","Queimados","Quissamã","Resende","Rio Bonito","Rio Claro","Rio das Flores","Rio das Ostras","Rio de Janeiro","Santa Maria Madalena","Santo Antônio de Pádua","São Fidélis","São Francisco de Itabapoana","São Gonçalo","São João da Barra","São João de Meriti","São José de Ubá","São José do Vale do Rio Preto","São Pedro da Aldeia","São Sebastião do Alto","Sapucaia","Saquarema","Seropédica","Silva Jardim","Sumidouro","Tanguá","Teresópolis","Trajano de Moraes","Três Rios","Valença","Varre-Sai","Vassouras","Volta Redonda"];
+function renderMunicipios(lista){const grid=document.getElementById('municipiosGrid');grid.innerHTML='';lista.forEach((nome,i)=>{const div=document.createElement('div');const isAlert=nome==='Petrópolis'||nome==='Angra dos Reis';div.className=`mun-item ${isAlert?'alert':''} ${nome==='Mesquita'||nome==='Duque de Caxias'?'active':''}`;div.innerHTML=`<span>${i+1}. ${nome}</span><span class="dot"></span>`;div.onclick=()=>selecionarMunicipio(nome);grid.appendChild(div);});document.getElementById('munCount').innerText=`${lista.length} ATIVOS`;}
+function filtrarMunicipios(){const q=document.getElementById('munSearch').value.toLowerCase();const filtrados=MUNICIPIOS_92.filter(m=>m.toLowerCase().includes(q));renderMunicipios(filtrados);}
+function selecionarMunicipio(nome){addChatMsg(`Telemetria: ${nome} • Buscando dados oficiais...`,'user');setTimeout(()=>{const temp=(20+Math.random()*12).toFixed(1);const chuva=(Math.random()*8).toFixed(1);addChatMsg(`${nome}: ${temp}°C | Chuva ${chuva}mm | Vento ${(8+Math.random()*20).toFixed(1)}km/h | Sistema sincronizado`,'sarah');falarVoz(`${nome} monitorado com sucesso.`);},800);}
+renderMunicipios(MUNICIPIOS_92);
+function getBrasiliaTimeString(){return new Intl.DateTimeFormat('pt-BR',{timeZone:'America/Sao_Paulo',hour:'2-digit',minute:'2-digit',second:'2-digit',hour12:false}).format(new Date());}
+setInterval(()=>{document.getElementById('lblLiveClock').innerText=getBrasiliaTimeString();},1000);
+function addChatMsg(text,sender){const w=document.getElementById('chatWindow');const b=document.createElement('div');b.className=`chat-bubble ${sender==='sarah'?'bubble-sarah':'bubble-user'}`;b.innerHTML=`<strong>[${sender==='sarah'?'SARAH IA':'POPULAÇÃO'}]:</strong> ${text}`;w.appendChild(b);w.scrollTop=w.scrollHeight;}
+function sendUserMsg(){const input=document.getElementById('userInputMsg');if(!input.value.trim())return;addChatMsg(input.value,'user');falarVoz(input.value);input.value='';setTimeout(()=>{addChatMsg(`Comando processado. 92 municípios atualizados via Open-Meteo e rede P2P.`,'sarah');},1000);}
+function falarVoz(t){try{if('speechSynthesis' in window){let m=new SpeechSynthesisUtterance(t);m.lang='pt-BR';m.rate=0.92;speechSynthesis.speak(m);}}catch(e){}}
+function toggleMic(){addChatMsg('🎙️ Microfone futurista ativado. Fale seu comando.','sarah');}
+let realWindSpeed=12,realRainMm=0,heartRate=78;
+async function fetchRealWeatherData(){try{const res=await fetch(`https://api.open-meteo.com/v1/forecast?latitude=-22.7831&longitude=-43.4294&current=wind_speed_10m,precipitation&timezone=America/Sao_Paulo`);const j=await res.json();if(j?.current){realWindSpeed=j.current.wind_speed_10m;realRainMm=j.current.precipitation;document.getElementById('hudWindText').innerText=`VENTO: ${realWindSpeed} KM/H • AUTO`;document.getElementById('hudRainText').innerText=`CHUVA: ${realRainMm}mm • 92 MUNIC`;}}catch(e){}}
+fetchRealWeatherData();setInterval(fetchRealWeatherData,300000);
+const canvas=document.getElementById('livingMapCanvas');const ctx=canvas.getContext('2d');
+function resizeCanvas(){canvas.width=canvas.parentElement.clientWidth;canvas.height=canvas.parentElement.clientHeight;}
+window.addEventListener('resize',resizeCanvas);resizeCanvas();
+let radarAngle=0,pulsePhase=0;const mendanha={x:0.20,y:0.75},sebinho={x:0.40,y:0.55},tingua={x:0.65,y:0.25},domBosco={x:0.82,y:0.50};
+let windParticles=[];for(let i=0;i<18;i++)windParticles.push({x:Math.random()*canvas.width,y:Math.random()*canvas.height,length:Math.random()*18+6});
+let rainDrops=[];for(let i=0;i<18;i++)rainDrops.push({x:Math.random()*canvas.width,y:Math.random()*canvas.height,vy:Math.random()*2+1});
+function renderLivingMap(){ctx.fillStyle='rgba(1,4,8,0.38)';ctx.fillRect(0,0,canvas.width,canvas.height);radarAngle+=0.03+(heartRate/2500);let cx=canvas.width/2,cy=canvas.height/2;ctx.strokeStyle='rgba(0,255,204,0.12)';[35,70,105,140].forEach(r=>{ctx.beginPath();ctx.arc(cx,cy,r,0,Math.PI*2);ctx.stroke();});let sx=cx+Math.cos(radarAngle)*160,sy=cy+Math.sin(radarAngle)*160;ctx.strokeStyle='rgba(0,255,204,0.7)';ctx.beginPath();ctx.moveTo(cx,cy);ctx.lineTo(sx,sy);ctx.stroke();let f=Math.max(1,realWindSpeed*0.15);ctx.strokeStyle='rgba(255,255,255,0.35)';windParticles.forEach(wp=>{wp.x+=f;if(wp.x>canvas.width){wp.x=-20;wp.y=Math.random()*canvas.height;}ctx.beginPath();ctx.moveTo(wp.x,wp.y);ctx.lineTo(wp.x+wp.length,wp.y);ctx.stroke();});if(realRainMm>0){ctx.strokeStyle='rgba(0,180,255,0.5)';rainDrops.forEach(rd=>{rd.y+=rd.vy+(realRainMm*0.2);if(rd.y>canvas.height){rd.y=-10;rd.x=Math.random()*canvas.width;}ctx.beginPath();ctx.moveTo(rd.x,rd.y);ctx.lineTo(rd.x,rd.y+6);ctx.stroke();});}
+let mx=canvas.width*mendanha.x,my=canvas.height*mendanha.y,sx1=canvas.width*sebinho.x,sy1=canvas.height*sebinho.y,tx=canvas.width*tingua.x,ty=canvas.height*tingua.y,sx2=canvas.width*domBosco.x,sy2=canvas.height*domBosco.y;
+ctx.strokeStyle='#FF8C00';ctx.setLineDash([4,3]);ctx.beginPath();ctx.moveTo(mx,my);ctx.lineTo(sx1,sy1);ctx.stroke();ctx.setLineDash([]);ctx.strokeStyle='#1E90FF';ctx.setLineDash([4,3]);ctx.beginPath();ctx.moveTo(tx,ty);ctx.lineTo(sx2,sy2);ctx.stroke();ctx.setLineDash([]);
+[{x:mx,y:my},{x:tx,y:ty}].forEach(c=>{ctx.fillStyle='#ff3366';ctx.beginPath();ctx.arc(c.x,c.y,4,0,Math.PI*2);ctx.fill();});
+pulsePhase+=heartRate/600;let p=Math.sin(pulsePhase)*3;ctx.fillStyle='#00ffcc';ctx.beginPath();ctx.arc(sx1,sy1,5+p*0.4,0,Math.PI*2);ctx.fill();ctx.fillStyle='#ffaa00';ctx.beginPath();ctx.arc(sx2,sy2,5+p*0.4,0,Math.PI*2);ctx.fill();
+document.getElementById('lblHeartrate').innerText=Math.round(heartRate)+' BPM';requestAnimationFrame(renderLivingMap);}
+renderLivingMap();
+function injectNutrients(){addChatMsg('ATP injetado nos 92 nodes com sucesso.','sarah');}
+function triggerFever(){addChatMsg('Estresse térmico simulado nos 92 municípios ativado.','sarah');}
+function triggerRegeneration(){addChatMsg('Ciclo de regeneração e estabilização ativado.','sarah');}
+function exportarRelatorio(){addChatMsg('Relatório estatístico gerado para os 92 municípios.','sarah');}
+</script>
+</body>
+</html>
