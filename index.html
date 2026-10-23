@@ -1,0 +1,470 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>CENTRAL BIOCIBERNÉTICA • 92 MUNICÍPIOS RJ - BR/RUSSO</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Share+Tech+Mono&display=swap');
+*{box-sizing:border-box;margin:0;padding:0;font-family:'Share Tech Mono',monospace;}
+html,body{width:100%;min-height:100vh;background:#010306;color:#00ffcc;display:flex;justify-content:center;padding:6px;}
+.bg-cyber{position:fixed;inset:0;z-index:-10;background:radial-gradient(circle at 20% 30%,#0a1a2a 0%,#02060c 50%,#000205 100%);}
+.bg-grid{position:absolute;inset:0;background-image:linear-gradient(rgba(0,255,204,0.06) 1px,transparent 1px),linear-gradient(90deg,rgba(0,255,204,0.06) 1px,transparent 1px);background-size:36px 36px;}
+.dashboard{width:100%;max-width:540px;background:linear-gradient(135deg,rgba(5,13,20,0.96) 0%,rgba(1,2,4,0.98) 100%);border:2px solid #00ffcc;border-radius:14px;box-shadow:0 0 40px rgba(0,255,204,0.3);padding:10px;display:flex;flex-direction:column;gap:8px;}
+body.critical-alert .dashboard{border-color:#ff3366;box-shadow:0 0 60px rgba(255,51,102,0.5);}
+body.russo-alert .dashboard{border-color:#cc0000;box-shadow:0 0 70px rgba(255,0,0,0.6);animation:russoPulse 0.8s infinite;}
+@keyframes russoPulse{0%,100%{box-shadow:0 0 40px rgba(255,0,0,0.4);}50%{box-shadow:0 0 80px rgba(255,0,0,0.8);}}
+
+.radar-container{position:relative;background:#000;border:1px solid #00ffcc;height:175px;border-radius:8px;overflow:hidden;display:flex;justify-content:center;align-items:center;}
+#goes19Img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:0.82;filter:contrast(135%) brightness(95%) saturate(110%);z-index:1;background:#000;}
+canvas{position:absolute;top:0;left:0;width:100%;height:100%;z-index:3;pointer-events:none;}
+.hud-overlay{position:absolute;font-size:0.5rem;background:rgba(2,8,14,0.9);padding:3px 6px;border-left:2px solid #00ffcc;z-index:10;border-radius:3px;}
+.hud-top-left{top:5px;left:5px;} .hud-top-right{top:5px;right:5px;color:#ffaa00;border-color:#ffaa00;}
+.coords-bar{position:absolute;bottom:0;width:100%;font-size:0.46rem;background:rgba(1,4,8,0.95);padding:3px;text-align:center;border-top:1px solid rgba(0,255,204,0.3);z-index:10;}
+
+.chat-section{border:2px solid #00ffcc;border-radius:10px;padding:8px;display:flex;flex-direction:column;gap:6px;background:rgba(4,10,18,0.98);}
+.chat-header{font-family:'Orbitron';font-size:0.7rem;color:#00ffcc;border-bottom:1px solid rgba(0,255,204,0.4);padding-bottom:6px;display:flex;justify-content:space-between;font-weight:900;}
+.chat-window{height:220px;overflow-y:auto;display:flex;flex-direction:column;gap:6px;padding:6px;background:rgba(0,0,0,0.4);border-radius:8px;}
+.chat-bubble{font-size:0.58rem;padding:7px 9px;border-radius:10px;max-width:92%;}
+.bubble-sarah{border-left:3px solid #00ffcc;color:#d1ffd6;align-self:flex-start;background:rgba(0,255,204,0.1);}
+.bubble-russo{border-left:3px solid #cc0000;color:#ffaaaa;align-self:center;text-align:center;max-width:100%;font-family:'Orbitron';background:rgba(255,0,0,0.12);}
+.bubble-user{border-right:3px solid #ffaa00;color:#ffeebb;align-self:flex-end;background:rgba(255,170,0,0.1);}
+.chat-input-bar{display:flex;gap:4px;}
+.chat-input-bar input{flex:1;background:#010306;border:1px solid #00ffcc;color:#fff;padding:8px 10px;font-size:0.6rem;border-radius:8px;outline:none;}
+.mic-btn,.send-btn{border:1px solid #00ffcc;color:#00ffcc;padding:8px 12px;font-size:0.6rem;font-weight:bold;border-radius:8px;cursor:pointer;font-family:'Orbitron';background:rgba(0,255,204,0.2);}
+
+.militar-container{border:2px solid #ff3366;background:rgba(26,2,5,0.92);padding:10px;border-radius:10px;}
+.militar-container.russo-mode{border-color:#cc0000;background:rgba(30,2,2,0.95);}
+.mode-selector{display:flex;gap:4px;margin-bottom:8px;}
+.mode-btn{flex:1;padding:8px;border-radius:6px;border:1px solid #00ffcc;background:rgba(0,255,204,0.08);color:#00ffcc;font-family:'Orbitron';font-size:0.6rem;font-weight:800;cursor:pointer;}
+.mode-btn.active{background:#00ffcc;color:#000;}
+.mode-btn.russo{border-color:#cc0000;color:#ff8888;background:rgba(255,0,0,0.08);}
+.mode-btn.russo.active{background:#cc0000;color:#fff;}
+.progress-bar{width:100%;height:8px;background:rgba(255,255,255,0.1);border-radius:4px;overflow:hidden;margin:8px 0;}
+.progress-fill{height:100%;width:0%;background:linear-gradient(90deg,#ff3366,#ffaa00);transition:width 1s linear;}
+.progress-fill.russo{background:linear-gradient(90deg,#cc0000,#ffaa00);}
+.tactical-btn{padding:12px;border-radius:6px;border:1px solid #ff3366;background:#ff3366;color:#fff;font-family:'Orbitron';font-weight:900;font-size:0.68rem;cursor:pointer;flex:2;}
+.tactical-btn.russo{background:#cc0000;border-color:#cc0000;}
+
+.municipios-section{border:1px solid rgba(0,255,204,0.3);background:rgba(2,8,14,0.95);border-radius:10px;padding:8px;}
+.municipios-search{width:100%;background:#010306;border:1px solid #00ffcc;color:#fff;padding:6px 8px;font-size:0.56rem;border-radius:6px;outline:none;margin-bottom:6px;}
+.municipios-grid{max-height:130px;overflow-y:auto;display:grid;grid-template-columns:1fr 1fr;gap:3px;}
+.mun-item{font-size:0.5rem;padding:4px 6px;background:rgba(0,255,204,0.04);border:1px solid rgba(0,255,204,0.15);border-radius:4px;display:flex;justify-content:space-between;cursor:pointer;}
+.mun-item.active{background:rgba(0,255,204,0.25);border-color:#00ffcc;color:#fff;}
+.mun-item .dot{width:6px;height:6px;border-radius:50%;background:#00ff88;}
+
+footer{display:flex;justify-content:space-between;font-size:0.46rem;color:#668877;border-top:1px solid rgba(0,255,204,0.2);padding-top:4px;font-family:'Orbitron';}
+</style>
+</head>
+<body>
+<div class="bg-cyber"><div class="bg-grid"></div></div>
+<div class="dashboard">
+<header>
+<div class="h-title">
+<h1>CENTRAL BIOCIBERNÉTICA • 92 MUNICÍPIOS RJ</h1>
+<h2>PILOTO: SEBINHO & DOM BOSCO • BR + RUSSO</h2>
+<p id="lblClimaStatus">TELEMETRIA • METEOROLOGIA AO VIVO</p>
+<div class="vital-box" style="display:flex;justify-content:space-between;font-size:0.55rem;margin-top:4px;border:1px solid rgba(0,255,204,0.3);padding:4px;border-radius:6px;">
+<div>ESTADO: <span id="lblHomeostasis">ESTÁVEL</span></div>
+<div>PULSO: <span id="lblHeartrate">78 BPM</span></div>
+<div>MODO: <span id="lblModoAtual" style="color:#ffd700;">BR</span></div>
+</div>
+</div>
+</header>
+
+<div class="radar-container">
+<img id="goes19Img" src="https://cdn.star.nesdis.noaa.gov/GOES19/ABI/CONUS/GEOCOLOR/GOES19-CONUS-GEOCOLOR-1000x1000.jpg" alt="GOES-19 Ao Vivo" onerror="this.src='https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?q=80&w=600&auto=format&fit=crop'">
+<div class="hud-overlay hud-top-left" id="hudWindText">VENTO: -- KM/H</div>
+<div class="hud-overlay hud-top-right" id="hudRainText">CHUVA: 0.0mm</div>
+<canvas id="livingMapCanvas"></canvas>
+<div class="coords-bar" id="coordsBar">NOAA GOES-19 • MUNICÍPIO ATIVO: MESQUITA</div>
+</div>
+
+<div class="militar-container" id="militarBox">
+<div class="mode-selector">
+<button class="mode-btn active" id="btnModoBR" onclick="setModo('BR')">🇧🇷 MODO BR (400→950Hz)</button>
+<button class="mode-btn russo" id="btnModoRU" onclick="setModo('RU')">🇷🇺 MODO RUSSO (330↔440Hz)</button>
+</div>
+<h3 style="font-family:'Orbitron';font-size:0.8rem;color:#ff3366;" id="militarTitle">🚨 CHAVE CLIMÁTICA - MODO BR - 5 MIN</h3>
+<p style="font-size:0.56rem;color:#ff99bb;margin:4px 0;" id="militarDesc">3 MIN TOCANDO + 1 MIN PENSAR + 1 MIN ACORDAR</p>
+<div id="militarTimer" style="font-size:1.5rem;font-weight:900;color:#fff;text-align:center;margin:6px 0;font-family:'Orbitron';">00:00 / 05:00</div>
+<div id="militarFase" style="font-size:0.68rem;color:#ffd700;text-align:center;border:1px solid rgba(255,215,0,0.3);padding:6px;border-radius:6px;">AGUARDANDO</div>
+<div class="progress-bar"><div id="militarProgress" class="progress-fill"></div></div>
+<div style="display:flex;gap:6px;">
+  <button id="btnMilitar" class="tactical-btn" onclick="ativarAlertaMilitar()">🚨 DISPARAR 5 MIN - SOM ALTO</button>
+  <button onclick="pararAlertaMilitar()" style="flex:1;background:rgba(255,51,102,0.1);border:1px solid #ff3366;color:#ff99bb;padding:12px;border-radius:6px;font-family:'Orbitron';cursor:pointer;">🛑 CORTAR</button>
+</div>
+<audio id="sarahMP3" preload="auto" style="display:none"></audio>
+</div>
+
+<div class="chat-section">
+<div class="chat-header"><span>🤖 SARAH AI • METEOROLOGIA &amp; TÁTICA</span><span class="status">● VOZ DUAL</span></div>
+<div class="chat-window" id="chatWindow">
+<div class="chat-bubble bubble-sarah"><strong>[SARAH BR]:</strong> Satélite GOES-19 e telemetria meteorológica sincronizados com sucesso.</div>
+<div class="chat-bubble bubble-russo"><strong>[SARAH RU]:</strong> Режим русский активен! 330↔440Hz ВНИМАНИЕ ВСЕМ!</div>
+</div>
+<div class="chat-input-bar">
+<input type="text" id="userInputMsg" placeholder="Comando BR ou RU..." onkeydown="if(event.key==='Enter'){sendUserMsg();}">
+<button class="mic-btn" onclick="toggleMic()">🎙️ VOZ</button>
+<button class="send-btn" onclick="sendUserMsg()">ENVIAR ◆</button>
+</div>
+</div>
+
+<div class="municipios-section">
+<div style="font-family:'Orbitron';font-size:0.65rem;color:#00ffcc;display:flex;justify-content:space-between;border-bottom:1px solid rgba(0,255,204,0.3);padding-bottom:4px;margin-bottom:6px;">
+<span>🗺️ 92 MUNICÍPIOS</span><span id="munCount">92 ATIVOS</span>
+</div>
+<input type="text" class="municipios-search" id="munSearch" placeholder="🔍 Buscar município..." oninput="filtrarMunicipios()">
+<div class="municipios-grid" id="municipiosGrid"></div>
+</div>
+
+<footer><span>ECD • GOES-19 LIVE • 92 MUNICÍPIOS • GMT-3</span><span id="lblLiveClock">00:00:00</span></footer>
+</div>
+
+<script>
+// ATUALIZAÇÃO GOES-19 AO VIVO
+setInterval(() => {
+    const goesImg = document.getElementById('goes19Img');
+    if (goesImg) {
+        goesImg.src = 'https://cdn.star.nesdis.noaa.gov/GOES19/ABI/CONUS/GEOCOLOR/GOES19-CONUS-GEOCOLOR-1000x1000.jpg?t=' + Date.now();
+    }
+}, 900000);
+
+const MUNICIPIOS_92 = [
+  "Angra dos Reis","Aperibé","Araruama","Areal","Armação dos Búzios","Arraial do Cabo",
+  "Barra do Piraí","Barra Mansa","Belford Roxo","Bom Jardim","Bom Jesus do Itabapoana",
+  "Cabo Frio","Cachoeiras de Macacu","Cambuci","Campos dos Goytacazes","Cantagalo",
+  "Carapebus","Cardoso Moreira","Carmo","Casimiro de Abreu","Comendador Levy Gasparian",
+  "Conceição de Macabu","Cordeiro","Duas Barras","Duque de Caxias","Engenheiro Paulo de Frontin",
+  "Guapimirim","Iguaba Grande","Itaboraí","Itaguaí","Italva","Itaocara","Itaperuna",
+  "Itatiaia","Japeri","Laje do Muriaé","Macaé","Macuco","Magé","Mangaratiba","Maricá",
+  "Mendes","Mesquita","Miguel Pereira","Miracema","Natividade","Nilópolis","Niterói",
+  "Nova Friburgo","Nova Iguaçu","Paracambi","Paraíba do Sul","Paraty","Paty do Alferes",
+  "Petrópolis","Pinheiral","Piraí","Porciúncula","Porto Real","Quatis","Queimados",
+  "Quissamã","Resende","Rio Bonito","Rio Claro","Rio das Flores","Rio das Ostras",
+  "Rio de Janeiro","Santa Maria Madalena","Santo Antônio de Pádua","São Fidélis",
+  "São Francisco de Itabapoana","São Gonçalo","São João da Barra","São João de Meriti",
+  "São José de Ubá","São José do Vale do Rio Preto","São Pedro da Aldeia","São Sebastião do Alto",
+  "Sapucaia","Saquarema","Seropédica","Silva Jardim","Sumidouro","Tanguá","Teresópolis",
+  "Trajano de Moraes","Três Rios","Valença","Varre-Sai","Vassouras","Volta Redonda"
+];
+
+let municipioAtual = "Mesquita";
+
+const coordsRJ = {
+  "Mesquita": {lat: -22.7831, lon: -43.4294},
+  "Duque de Caxias": {lat: -22.7856, lon: -43.3117},
+  "Petrópolis": {lat: -22.5050, lon: -43.1789},
+  "Angra dos Reis": {lat: -23.0067, lon: -44.3181},
+  "Rio de Janeiro": {lat: -22.9068, lon: -43.1729}
+};
+
+async function buscarClimaReal(nomeMun){
+  try {
+    let loc = coordsRJ[nomeMun] || {lat: -22.7831, lon: -43.4294};
+    const res = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${loc.lat}&longitude=${loc.lon}&current=temperature_2m,precipitation,wind_speed_10m,weather_code&timezone=America/Sao_Paulo`);
+    const j = await res.json();
+    if(j?.current){
+      let chuva = j.current.precipitation;
+      let vento = j.current.wind_speed_10m;
+      let temp = j.current.temperature_2m;
+      
+      document.getElementById('hudWindText').innerText = `VENTO: ${vento} KM/H`;
+      document.getElementById('hudRainText').innerText = `CHUVA: ${chuva}mm`;
+      document.getElementById('coordsBar').innerText = `METEOROLOGIA AO VIVO • ${nomeMun.toUpperCase()} • TEMP: ${temp}°C`;
+
+      // Aplica cor de alerta meteorológico real no painel se houver chuva forte
+      if(chuva > 2.0){
+        document.getElementById('lblClimaStatus').innerText = `⚠️ ALERTA DE CHUVA EM ${nomeMun.toUpperCase()}`;
+        document.getElementById('lblClimaStatus').style.color = '#ff3366';
+      } else {
+        document.getElementById('lblClimaStatus').innerText = `TELEMETRIA • MUNICÍPIO: ${nomeMun}`;
+        document.getElementById('lblClimaStatus').style.color = '#00ffcc';
+      }
+    }
+  } catch(e){
+    console.log("Erro ao buscar clima:", e);
+  }
+}
+
+function renderMunicipios(lista){
+  const grid = document.getElementById('municipiosGrid');
+  grid.innerHTML = '';
+  lista.forEach((nome, i)=>{
+    const d = document.createElement('div');
+    d.className = `mun-item ${nome === municipioAtual ? 'active' : ''}`;
+    d.innerHTML = `<span>${i+1}. ${nome}</span><span class="dot"></span>`;
+    d.onclick = () => {
+      municipioAtual = nome;
+      renderMunicipios(MUNICIPIOS_92.filter(m => m.toLowerCase().includes(document.getElementById('munSearch').value.toLowerCase())));
+      addChatMsg(`Foco meteorológico alterado para ${nome}.`, 'user');
+      buscarClimaReal(nome);
+      falar(`Município ${nome} selecionado.`);
+    };
+    grid.appendChild(d);
+  });
+  document.getElementById('munCount').innerText = `${lista.length} ATIVOS`;
+}
+
+function filtrarMunicipios(){
+  const q = document.getElementById('munSearch').value.toLowerCase();
+  renderMunicipios(MUNICIPIOS_92.filter(m => m.toLowerCase().includes(q)));
+}
+renderMunicipios(MUNICIPIOS_92);
+buscarClimaReal("Mesquita");
+setInterval(() => buscarClimaReal(municipioAtual), 300000);
+
+let modoAtual = 'BR';
+function setModo(m){
+  initAudio();
+  modoAtual = m;
+  document.getElementById('lblModoAtual').innerText = m;
+  document.getElementById('btnModoBR').classList.toggle('active', m === 'BR');
+  document.getElementById('btnModoRU').classList.toggle('active', m === 'RU');
+  const box = document.getElementById('militarBox');
+  const title = document.getElementById('militarTitle');
+  const desc = document.getElementById('militarDesc');
+  const coords = document.getElementById('coordsBar');
+  const prog = document.getElementById('militarProgress');
+  const btn = document.getElementById('btnMilitar');
+  
+  if(m === 'BR'){
+    box.classList.remove('russo-mode');
+    title.innerText = '🚨 CHAVE CLIMÁTICA - MODO BR - 5 MIN';
+    desc.innerText = '3 MIN TOCANDO + 1 MIN PENSAR + 1 MIN ACORDAR • 400→950Hz';
+    prog.classList.remove('russo');
+    btn.classList.remove('russo');
+    btn.innerText = '🚨 DISPARAR BR - SOM ALTO';
+    addChatMsg('🇧🇷 Modo BR ativo', 'sarah');
+  } else {
+    box.classList.add('russo-mode');
+    title.innerText = '☢️ ВНИМАНИЕ ВСЕМ! - MODO RUSSO - 5 MIN';
+    desc.innerText = '3 MIN БИТОНАЛЬНЫЙ + 1 MIN ДУМАТЬ + 1 MIN ПРОСЫПАТЬСЯ • 330↔440Hz';
+    prog.classList.add('russo');
+    btn.classList.add('russo');
+    btn.innerText = '☢️ ЗАПУСТИТЬ РУССКИЙ';
+    addChatMsg('🇷🇺 Modo RUSSO! Сирена 330↔440Hz советская!', 'russo');
+    falar('Внимание! Режим русский активирован!', 'ru');
+  }
+}
+
+function getBrasiliaTimeString(){
+  return new Intl.DateTimeFormat('pt-BR',{timeZone:'America/Sao_Paulo',hour:'2-digit',minute:'2-digit',second:'2-digit',hour12:false}).format(new Date());
+}
+setInterval(()=>{document.getElementById('lblLiveClock').innerText = getBrasiliaTimeString();}, 1000);
+
+function addChatMsg(t, s){
+  const w = document.getElementById('chatWindow');
+  const b = document.createElement('div');
+  let c = 'bubble-sarah';
+  if(s === 'user') c = 'bubble-user';
+  if(s === 'russo') c = 'bubble-russo';
+  b.className = `chat-bubble ${c}`;
+  b.innerHTML = `<strong>[${s === 'sarah' ? 'SARAH IA' : s === 'russo' ? 'SARAH RU' : 'POPULAÇÃO'}]:</strong> ${t}`;
+  w.appendChild(b);
+  w.scrollTop = w.scrollHeight;
+}
+
+function sendUserMsg(){
+  const i = document.getElementById('userInputMsg');
+  if(!i.value.trim()) return;
+  let texto = i.value;
+  addChatMsg(texto, 'user');
+  falar(texto, modoAtual === 'RU' ? 'ru' : 'pt');
+  
+  let munEncontrado = MUNICIPIOS_92.find(m => texto.toLowerCase().includes(m.toLowerCase()));
+  if(munEncontrado){
+    municipioAtual = munEncontrado;
+    buscarClimaReal(munEncontrado);
+    addChatMsg(`Foco meteorológico alterado para ${munEncontrado}.`, 'sarah');
+  }
+  i.value = '';
+}
+
+function falar(texto, lang='pt'){
+  try{
+    if('speechSynthesis' in window){
+      window.speechSynthesis.cancel();
+      let u = new SpeechSynthesisUtterance(texto);
+      if(lang === 'ru'){ u.lang = 'ru-RU'; u.rate = 0.75; u.pitch = 0.7; }
+      else { u.lang = 'pt-BR'; u.rate = 0.9; }
+      u.volume = 1.0;
+      speechSynthesis.speak(u);
+    }
+    let a = document.getElementById('sarahMP3');
+    a.src = "https://cdn.jsdelivr.net/gh/rubiokleber1987/Metereologia@main/sarah-feminina.mp3";
+    a.play().catch(()=>{});
+  }catch(e){}
+}
+
+function toggleMic(){
+  addChatMsg('🎙️ Microfone BR/RU', 'sarah');
+}
+
+// SIRENE COM DESBLOQUEIO DE AUDIOContext
+let militarAtivo = false, militarInterval = null, militarTempo = 0, audioCtx = null, sirenOsc = null, sirenGain = null, sirenSweep = null;
+
+function initAudio(){
+  try{
+    if(!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    if(audioCtx.state === 'suspended') audioCtx.resume();
+  }catch(e){}
+}
+
+function tocarSirene(){
+  initAudio();
+  if(!audioCtx) return;
+  if(sirenOsc){try{sirenOsc.stop();}catch(e){}}
+  
+  sirenOsc = audioCtx.createOscillator();
+  sirenGain = audioCtx.createGain();
+  
+  if(modoAtual === 'BR'){
+    sirenOsc.type = 'sawtooth';
+    sirenGain.gain.setValueAtTime(0.6, audioCtx.currentTime);
+    sirenOsc.frequency.setValueAtTime(400, audioCtx.currentTime);
+  } else {
+    // Modo Russo: Onda quadrada alternando entre 330Hz e 440Hz
+    sirenOsc.type = 'square';
+    sirenGain.gain.setValueAtTime(0.65, audioCtx.currentTime);
+    sirenOsc.frequency.setValueAtTime(330, audioCtx.currentTime);
+  }
+  
+  sirenOsc.connect(sirenGain);
+  sirenGain.connect(audioCtx.destination);
+  sirenOsc.start();
+  
+  if(modoAtual === 'BR'){
+    let up = true;
+    sirenSweep = setInterval(()=>{
+      try{
+        if(sirenOsc){
+          if(up){sirenOsc.frequency.exponentialRampToValueAtTime(950, audioCtx.currentTime + 1.0);}
+          else{sirenOsc.frequency.exponentialRampToValueAtTime(380, audioCtx.currentTime + 1.0);}
+          up = !up;
+        }
+      }catch(e){}
+    }, 1100);
+    sirenOsc.stop(audioCtx.currentTime + 3.2);
+  } else {
+    let high = false;
+    sirenSweep = setInterval(()=>{
+      try{
+        if(sirenOsc && audioCtx){
+          sirenOsc.frequency.setValueAtTime(high ? 440 : 330, audioCtx.currentTime);
+          high = !high;
+        }
+      }catch(e){}
+    }, 1200);
+    sirenOsc.stop(audioCtx.currentTime + 3.2);
+  }
+}
+
+function pararSirene(){
+  if(sirenSweep) clearInterval(sirenSweep);
+  if(sirenOsc){
+    try{
+      sirenGain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.15);
+      setTimeout(()=>{try{sirenOsc.stop();}catch(e){}}, 200);
+    }catch(e){}
+    sirenOsc = null;
+  }
+}
+
+function ativarAlertaMilitar(){
+  initAudio();
+  if(militarAtivo) return;
+  militarAtivo = true;
+  militarTempo = 0;
+  
+  document.body.classList.add(modoAtual === 'RU' ? 'russo-alert' : 'critical-alert');
+  document.getElementById('btnMilitar').innerText = modoAtual === 'RU' ? '☢️ В ЭФИРЕ - 5 МИН' : '🔴 NO AR - 5 MIN';
+  
+  if(modoAtual === 'BR'){
+    tocarSirene();
+    falar("Atenção Sebinho! Alerta BR ativado! 5 minutos! 3 tocando, 1 pensar, 1 acordar!");
+    addChatMsg("🚨 BR DISPARADA 5 MIN!", 'sarah');
+  } else {
+    tocarSirene();
+    falar("Внимание! Внимание! Химическая тревога!", "ru");
+    addChatMsg("☢️ ВНИМАНИЕ ВСЕМ! Сирена 330↔440Hz активирована!", "russo");
+  }
+  
+  militarInterval = setInterval(()=>{
+    militarTempo++;
+    let m = Math.floor(militarTempo/60), s = militarTempo%60;
+    document.getElementById('militarTimer').innerText = `${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')} / 05:00`;
+    document.getElementById('militarProgress').style.width = (militarTempo/300*100) + "%";
+    
+    if(militarTempo <= 180){
+      document.getElementById('militarFase').innerText = modoAtual === 'BR' ? `🔴 BR FASE 1 - TOCANDO (${180-militarTempo}s)` : `☢️ RU ФАЗА 1 - БИТОНАЛЬНЫЙ (${180-militarTempo}s)`;
+      if(militarTempo%4 === 0) tocarSirene();
+    } else if(militarTempo <= 240){
+      if(militarTempo === 181){
+        pararSirene();
+        falar(modoAtual === 'BR' ? "Um minuto para pensar!" : "Тишина!", modoAtual === 'RU' ? 'ru' : 'pt');
+      }
+      document.getElementById('militarFase').innerText = modoAtual === 'BR' ? `🟡 BR FASE 2 - PENSAR (${240-militarTempo}s)` : `🟡 RU ФАЗА 2 - ДУМАТЬ (${240-militarTempo}s)`;
+    } else if(militarTempo <= 300){
+      if(militarTempo === 241){
+        tocarSirene();
+        falar(modoAtual === 'BR' ? "Um minuto para acordar!" : "Проснуться!", modoAtual === 'RU' ? 'ru' : 'pt');
+      }
+      document.getElementById('militarFase').innerText = modoAtual === 'BR' ? `🔵 BR FASE 3 - ACORDAR (${300-militarTempo}s)` : `🔵 RU ФАЗА 3 - ПРОСЫПАТЬСЯ (${300-militarTempo}s)`;
+    }
+    
+    if(militarTempo >= 300){
+      pararAlertaMilitar();
+      document.getElementById('militarFase').innerText = modoAtual === 'BR' ? '✅ BR FINALIZADO' : '✅ RU ЗАВЕРШЕН';
+    }
+  }, 1000);
+}
+
+function pararAlertaMilitar(){
+  militarAtivo = false;
+  clearInterval(militarInterval);
+  pararSirene();
+  document.body.classList.remove('critical-alert', 'russo-alert');
+  document.getElementById('btnMilitar').innerText = modoAtual === 'RU' ? '☢️ ЗАПУСТИТЬ РУССКИЙ' : '🚨 DISPARAR BR - SOM ALTO';
+  document.getElementById('militarTimer').innerText = '00:00 / 05:00';
+  document.getElementById('militarProgress').style.width = '0%';
+  document.getElementById('militarFase').innerText = 'AGUARDANDO';
+  if(window.speechSynthesis) window.speechSynthesis.cancel();
+}
+
+const canvas = document.getElementById('livingMapCanvas');
+const ctx = canvas.getContext('2d');
+function resizeCanvas(){
+  canvas.width = canvas.parentElement.clientWidth;
+  canvas.height = canvas.parentElement.clientHeight;
+}
+window.addEventListener('resize', resizeCanvas);
+resizeCanvas();
+
+let radarAngle = 0;
+let heartRate = 78;
+function renderLivingMap(){
+  ctx.fillStyle = 'rgba(1,4,8,0.38)';
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+  radarAngle += 0.03;
+  let cx = canvas.width/2, cy = canvas.height/2;
+  ctx.strokeStyle = 'rgba(0,255,204,0.12)';
+  [35, 70, 105, 140].forEach(r=>{
+    ctx.beginPath(); ctx.arc(cx, cy, r, 0, Math.PI*2); ctx.stroke();
+  });
+  let sx = cx + Math.cos(radarAngle)*160, sy = cy + Math.sin(radarAngle)*160;
+  ctx.strokeStyle = modoAtual === 'RU' ? 'rgba(255,0,0,0.7)' : 'rgba(0,255,204,0.7)';
+  ctx.beginPath(); ctx.moveTo(cx, cy); ctx.lineTo(sx, sy); ctx.stroke();
+  
+  ctx.fillStyle = modoAtual === 'RU' ? '#ff0000' : '#00ffcc';
+  ctx.beginPath(); ctx.arc(canvas.width*0.4, canvas.height*0.55, 5, 0, Math.PI*2); ctx.fill();
+  ctx.fillStyle = '#ffaa00';
+  ctx.beginPath(); ctx.arc(canvas.width*0.82, canvas.height*0.5, 5, 0, Math.PI*2); ctx.fill();
+  
+  document.getElementById('lblHeartrate').innerText = Math.round(heartRate) + ' BPM';
+  requestAnimationFrame(renderLivingMap);
+}
+renderLivingMap();
+</script>
+</body>
+</html>
