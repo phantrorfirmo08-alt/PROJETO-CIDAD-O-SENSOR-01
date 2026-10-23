@@ -1,0 +1,440 @@
+<!DOCTYPE html>
+<html lang="pt-BR" class="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>RARU NEXUS AI - PAINEL TÁTICO MILITAR</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script>
+  tailwind.config = {
+    darkMode: 'class',
+    theme: {
+      extend: {
+        colors: {
+          tactical: {
+            bg: '#030712',
+            card: '#0b1329',
+            border: '#1e3a8a',
+            cyan: '#00f2fe',
+            neon: '#38bdf8',
+            warn: '#f59e0b',
+            danger: '#ef4444',
+            success: '#10b981'
+          }
+        }
+      }
+    }
+  }
+</script>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Orbitron:wght@400;700;900&display=swap');
+  
+  body {
+    background-color: #030712;
+    color: #e2e8f0;
+    font-family: 'Share Tech Mono', monospace;
+    overflow-x: hidden;
+  }
+  
+  h1, h2, h3, .hud-font {
+    font-family: 'Orbitron', sans-serif;
+  }
+
+  /* FORÇAR ORIENTAÇÃO / AVISO DE PAISAGEM */
+  #orientation-warning {
+    display: none;
+    position: fixed;
+    top: 0; left: 0; width: 100vw; height: 100vh;
+    background: #030712;
+    z-index: 99999;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: 20px;
+  }
+
+  @media (orientation: portrait) {
+    #orientation-warning {
+      display: flex;
+    }
+  }
+
+  .glass-hud {
+    background: rgba(11, 19, 41, 0.85);
+    backdrop-filter: blur(12px);
+    border: 1px solid rgba(0, 242, 254, 0.3);
+    box-shadow: 0 0 20px rgba(0, 242, 254, 0.1), inset 0 0 15px rgba(0, 242, 254, 0.05);
+  }
+
+  .hud-glow {
+    text-shadow: 0 0 10px rgba(0, 242, 254, 0.7);
+  }
+
+  .hud-glow-danger {
+    text-shadow: 0 0 10px rgba(239, 68, 68, 0.8);
+  }
+
+  .scanline {
+    background: linear-gradient(to bottom, rgba(255,255,255,0), rgba(255,255,255,0) 50%, rgba(0, 242, 254, 0.05) 50%, rgba(0, 242, 254, 0.05));
+    background-size: 100% 4px;
+  }
+
+  /* Custom Scrollbar */
+  ::-webkit-scrollbar {
+    width: 4px;
+    height: 4px;
+  }
+  ::-webkit-scrollbar-track {
+    background: #030712;
+  }
+  ::-webkit-scrollbar-thumb {
+    background: #00f2fe;
+    border-radius: 2px;
+  }
+</style>
+</head>
+<body class="min-h-screen flex flex-col scanline select-none">
+
+  <!-- AVISO DE ROTAÇÃO OBRIGATÓRIA (MODO PAISAGEM / TÁTICO) -->
+  <div id="orientation-warning">
+    <div class="glass-hud p-8 rounded-2xl max-w-md border-cyan-500">
+      <div class="text-5xl mb-4 animate-bounce">📱🔄</div>
+      <h2 class="text-xl font-black text-cyan-400 mb-2 hud-font">MODO TÁTICO OBRIGATÓRIO</h2>
+      <p class="text-sm text-gray-300 mb-6">Este painel foi projetado sob especificações militares e futuristas. Por favor, **vire o seu smartphone na horizontal (paisagem)** para acessar o sistema de monitoramento RARU NEXUS.</p>
+      <div class="inline-block px-4 py-2 bg-cyan-950 border border-cyan-500 text-cyan-400 text-xs rounded animate-pulse">
+        AGUARDANDO ROTAÇÃO DE TELA...
+      </div>
+    </div>
+  </div>
+
+  <!-- HEADER TÁTICO MILITAR -->
+  <header class="glass-hud border-b border-cyan-500/40 px-4 py-2 flex justify-between items-center z-50">
+    <div class="flex items-center gap-4">
+      <div class="relative">
+        <canvas id="saraCanvas" width="56" height="56" class="rounded-full border-2 border-cyan-400 shadow-[0_0_15px_rgba(0,242,254,0.5)]"></canvas>
+        <span class="absolute bottom-0 right-0 w-3 h-3 bg-emerald-500 rounded-full border-2 border-black animate-ping"></span>
+      </div>
+      <div>
+        <div class="flex items-center gap-2">
+          <h1 class="text-lg font-black text-cyan-400 tracking-wider hud-font hud-glow">RARU NEXUS AI</h1>
+          <span class="px-2 py-0.5 bg-cyan-950 border border-cyan-500/50 text-[10px] text-cyan-300 rounded font-bold">v4.0 TÁTICO</span>
+        </div>
+        <p class="text-[11px] text-gray-400">REDENÇÃO E RESILIÊNCIA URBANA • MESQUITA / RJ (SEBINHO • BASES SARAPUÍ)</p>
+      </div>
+    </div>
+
+    <!-- STATUS DO SISTEMA E ALERTAS -->
+    <div class="flex items-center gap-3">
+      <div class="hidden md:flex flex-col text-right text-xs">
+        <span class="text-gray-400">STATUS OPERACIONAL</span>
+        <span class="text-emerald-400 font-bold">● ONLINE [SECURE LINK]</span>
+      </div>
+      <div class="flex gap-2">
+        <button onclick="triggerAlarm('br')" class="px-3 py-1 bg-amber-600/80 hover:bg-amber-500 text-black font-black text-xs rounded border border-amber-400 shadow-[0_0_10px_rgba(245,158,11,0.5)] transition-all">🚨 ALERTA BR</button>
+        <button onclick="triggerAlarm('ru')" class="px-3 py-1 bg-rose-600/80 hover:bg-rose-500 text-white font-black text-xs rounded border border-rose-400 shadow-[0_0_10px_rgba(239,68,68,0.5)] transition-all">⚠️ ALERTA RUSSO</button>
+        <button onclick="stopAlarm()" class="px-3 py-1 bg-gray-800 hover:bg-gray-700 text-gray-300 text-xs rounded border border-gray-600">SILENCIAR</button>
+      </div>
+    </div>
+  </header>
+
+  <!-- CORPO PRINCIPAL DO PAINEL EM GRID TÁTICO (OTIMIZADO PARA PAISAGEM) -->
+  <main class="flex-1 p-3 grid grid-cols-12 gap-3 max-w-[1920px] w-full mx-auto overflow-hidden">
+    
+    <!-- COLUNA ESQUERDA: MAPA DE TELEMETRIA E 92 MUNICÍPIOS (4 Colunas) -->
+    <section class="col-span-4 flex flex-col gap-3 h-[calc(100vh-80px)]">
+      <!-- Radar e Telemetria -->
+      <div class="glass-hud p-3 rounded-xl flex flex-col gap-2">
+        <div class="flex justify-between items-center border-b border-cyan-500/20 pb-2">
+          <h2 class="text-xs font-bold text-cyan-400 hud-font uppercase flex items-center gap-2">
+            <span class="inline-block w-2 h-2 bg-cyan-400 rounded-full animate-pulse"></span>
+            Radar Bacias & Rios (RJ)
+          </h2>
+          <span class="text-[10px] text-cyan-300/80 bg-cyan-950 px-2 py-0.5 rounded border border-cyan-500/30">92 MUNICÍPIOS</span>
+        </div>
+        <div class="relative bg-gray-950/90 rounded-lg p-2 border border-cyan-500/20 h-28 flex items-center justify-center overflow-hidden">
+          <div class="absolute inset-0 bg-[radial-gradient(#00f2fe_1px,transparent_1px)] [background-size:16px_16px] opacity-15"></div>
+          <div class="absolute w-24 h-24 border border-cyan-500/30 rounded-full animate-ping pointer-events-none"></div>
+          <div class="absolute w-12 h-12 border border-cyan-400/50 rounded-full"></div>
+          <div class="text-center z-10">
+            <p class="text-[10px] text-cyan-400 font-bold">RIO SARAPUÍ • SEBINHO</p>
+            <p class="text-xs text-emerald-400 font-bold" id="water-level">NÍVEL ESTÁVEL: 1.42m</p>
+            <p class="text-[9px] text-gray-400">Vistoria ativa: 13 Temas (Voçoroca)</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Seletor de Municípios Compacto e Dinâmico -->
+      <div class="glass-hud p-3 rounded-xl flex-1 flex flex-col overflow-hidden">
+        <div class="flex justify-between items-center mb-2">
+          <h3 class="text-xs font-bold text-cyan-400 hud-font">SELECIONAR MUNICÍPIO</h3>
+          <input type="text" id="search-mun" oninput="filterMunicipalities()" placeholder="Filtrar..." class="bg-gray-900 border border-cyan-500/30 text-xs px-2 py-1 rounded text-cyan-300 w-28 focus:outline-none focus:border-cyan-400">
+        </div>
+        <div id="municipalities-grid" class="grid grid-cols-2 gap-1.5 overflow-y-auto pr-1 flex-1"></div>
+      </div>
+    </section>
+
+    <!-- COLUNA CENTRAL: AVATAR GRANDE DA SARA E ÁUDIO/VISEMA (5 Colunas) -->
+    <section class="col-span-5 flex flex-col gap-3 h-[calc(100vh-80px)]">
+      <div class="glass-hud p-4 rounded-xl flex-1 flex flex-col items-center justify-between relative overflow-hidden">
+        <!-- Cabeçalho do HUD do Avatar -->
+        <div class="w-full flex justify-between items-center z-10">
+          <div class="flex items-center gap-2">
+            <span class="w-2 h-2 bg-emerald-400 rounded-full animate-pulse"></span>
+            <span class="text-xs font-bold text-cyan-400 hud-font">SARA AI // SINTETIZADOR VISUAL & LABIAL</span>
+          </div>
+          <div class="text-[10px] text-gray-400 bg-black/40 px-2 py-0.5 rounded border border-gray-800">FPS: 60.0</div>
+        </div>
+
+        <!-- CANVAS GRANDE COM O ROSTO DA SARA + BOCA + OLHOS + ONDA -->
+        <div class="relative my-auto flex items-center justify-center w-full">
+          <div class="absolute inset-0 bg-cyan-500/5 blur-2xl rounded-full pointer-events-none"></div>
+          <canvas id="saraChatCanvas" width="520" height="280" class="rounded-xl border border-cyan-500/40 bg-black shadow-[0_0_30px_rgba(0,242,254,0.15)] max-w-full h-auto"></canvas>
+        </div>
+
+        <!-- Barra de Status da Voz & Visemas -->
+        <div class="w-full bg-gray-950/80 border border-cyan-500/30 p-2.5 rounded-lg flex items-center justify-between z-10">
+          <div class="flex items-center gap-2">
+            <span class="text-xs text-cyan-400 font-bold">STATUS DE FALA:</span>
+            <span id="speech-status" class="text-xs text-gray-400">Aguardando comando tático...</span>
+          </div>
+          <button onclick="testSpeech()" class="px-3 py-1 bg-cyan-950 hover:bg-cyan-900 border border-cyan-500 text-cyan-300 text-xs font-bold rounded transition-all">TESTAR VOZ</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- COLUNA DIREITA: TERMINAL DE COMANDOS E LOGS TÁTICOS (3 Colunas) -->
+    <section class="col-span-3 flex flex-col gap-3 h-[calc(100vh-80px)]">
+      <div class="glass-hud p-3 rounded-xl flex-1 flex flex-col overflow-hidden">
+        <div class="flex justify-between items-center border-b border-cyan-500/20 pb-2 mb-2">
+          <h2 class="text-xs font-bold text-cyan-400 hud-font uppercase">Terminal Tático AI</h2>
+          <span class="text-[10px] text-emerald-400 font-mono">SECURE CHAT</span>
+        </div>
+        
+        <!-- Mensagens do Terminal -->
+        <div id="chat-messages" class="flex-1 bg-gray-950/90 border border-cyan-500/20 rounded p-2.5 overflow-y-auto text-xs flex flex-col gap-2 font-mono">
+          <div class="bg-cyan-950/40 border-l-2 border-cyan-400 p-2 rounded">
+            <b class="text-cyan-400">SARAH AI [SISTEMA]:</b><br>
+            Painel tático militar RARU NEXUS carregado. Selecione um município ou envie um comando.
+          </div>
+        </div>
+
+        <!-- Input de Comando -->
+        <div class="flex gap-2 mt-3">
+          <input id="user-input" onkeypress="if(event.key==='Enter')sendCommand()" placeholder="Digite comando tático..." class="flex-1 bg-gray-900 border border-cyan-500/40 rounded px-3 py-2 text-xs text-cyan-300 focus:outline-none focus:border-cyan-400 font-mono">
+          <button onclick="sendCommand()" class="bg-cyan-500 hover:bg-cyan-400 text-black px-4 py-2 rounded font-black text-xs transition-all shadow-[0_0_10px_rgba(0,242,254,0.4)]">EXECUTAR</button>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+<script>
+// === 92 MUNICÍPIOS DO RIO DE JANEIRO ===
+const municipios = ["Mesquita","Nova Iguaçu","Belford Roxo","Duque de Caxias","São João de Meriti","Nilópolis","São Gonçalo","Niterói","Rio de Janeiro","Angra dos Reis","Aperibé","Araruama","Areal","Armação dos Búzios","Arraial do Cabo","Barra do Piraí","Barra Mansa","Bom Jardim","Bom Jesus do Itabapoana","Cabo Frio","Cachoeiras de Macacu","Cambuci","Campos dos Goytacazes","Cantagalo","Carapebus","Cardoso Moreira","Carmo","Casimiro de Abreu","Comendador Levy Gasparian","Conceição de Macabu","Cordeiro","Duas Barras","Engenheiro Paulo de Frontin","Guapimirim","Iguaba Grande","Itaboraí","Itaguaí","Italva","Itaocara","Itaperuna","Itatiaia","Japeri","Laje do Muriaé","Macaé","Macuco","Magé","Mangaratiba","Maricá","Mendes","Miguel Pereira","Miracema","Natividade","Nova Friburgo","Paracambi","Paraíba do Sul","Paraty","Paty do Alferes","Petrópolis","Pinheiral","Piraí","Porciúncula","Porto Real","Quatis","Queimados","Quissamã","Resende","Rio Bonito","Rio Claro","Rio das Flores","Rio das Ostras","Santa Maria Madalena","Santo Antônio de Pádua","São Fidélis","São Francisco de Itabapoana","São João da Barra","São José de Ubá","São José do Vale do Rio Preto","São Pedro da Aldeia","São Sebastião do Alto","Sapucaia","Saquarema","Seropédica","Silva Jardim","Sumidouro","Tanguá","Teresópolis","Trajano de Moraes","Três Rios","Valença","Varre-Sai","Vassouras","Volta Redonda"];
+
+function renderMunicipalities(){
+  let g = document.getElementById('municipalities-grid');
+  g.innerHTML = '';
+  municipios.forEach(m => {
+    let b = document.createElement('button');
+    b.className = 'bg-gray-900/90 border border-cyan-500/20 p-1.5 rounded text-[11px] text-cyan-300 hover:bg-cyan-950 hover:border-cyan-400 text-left truncate transition-all';
+    b.innerText = m;
+    b.onclick = () => selectMunicipality(m);
+    g.appendChild(b);
+  });
+}
+
+function filterMunicipalities(){
+  let q = document.getElementById('search-mun').value.toLowerCase();
+  document.querySelectorAll('#municipalities-grid button').forEach(b => {
+    b.style.display = b.innerText.toLowerCase().includes(q) ? 'block' : 'none';
+  });
+}
+
+function selectMunicipality(nome){
+  appendChatMessage('OPERADOR', 'Selecionado setor: ' + nome);
+  let resp = `${nome}: Telemetria tática ativa na bacia. Nível de risco monitorado pelo RARU NEXUS. Sistema pronto.`;
+  appendChatMessage('SARAH AI', resp);
+  speakText(resp);
+}
+
+// === MOTOR DE AVATAR (ROSTO DE MULHER ESTILIZADO HUD + OLHOS PISCANDO + BOCA LIP-SYNC + ONDA DE ÁUDIO) ===
+let mouthOpen = 0, targetMouth = 0, eyeClose = 0, blinkTimer = 0, vol = 0, isSpeaking = false;
+
+function setupAvatar(canvasId, small) {
+  let c = document.getElementById(canvasId), ctx = c.getContext('2d');
+  function draw() {
+    ctx.clearRect(0, 0, c.width, c.height);
+    let cx = c.width / 2, cy = c.height / 2.1;
+
+    // Fundo Holográfico Interno
+    ctx.fillStyle = '#001a33';
+    ctx.beginPath();
+    ctx.ellipse(cx, cy, c.width * 0.32, c.height * 0.44, 0, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.lineWidth = 1.5;
+    ctx.strokeStyle = '#00f2fe';
+    ctx.stroke();
+
+    // Rosto Estilizado (Contorno da Sara)
+    ctx.fillStyle = '#0a2540';
+    ctx.beginPath();
+    ctx.arc(cx, cy - c.height * 0.05, c.width * 0.22, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Olhos piscando
+    blinkTimer += 0.03;
+    if (blinkTimer > 4 + Math.random() * 3) { eyeClose = 1; blinkTimer = 0; }
+    if (eyeClose > 0) eyeClose -= small ? 0.25 : 0.12;
+    let open = Math.max(0, 1 - eyeClose * 4);
+
+    [-1, 1].forEach(side => {
+      let ex = cx + side * c.width * 0.09, ey = cy - c.height * 0.12;
+      ctx.fillStyle = '#000';
+      ctx.beginPath();
+      ctx.ellipse(ex, ey, c.width * 0.06, c.height * 0.04 * open, 0, 0, Math.PI * 2);
+      ctx.fill();
+      if (open > 0.2) {
+        ctx.fillStyle = '#00ffcc';
+        ctx.beginPath();
+        ctx.arc(ex, ey, c.width * 0.035, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillStyle = '#000';
+        ctx.beginPath();
+        ctx.arc(ex, ey, c.width * 0.012, 0, Math.PI * 2);
+        ctx.fill();
+      }
+    });
+
+    // Boca Lip-Sync Dinâmica
+    mouthOpen += (targetMouth - mouthOpen) * 0.25;
+    let mw = c.width * 0.08 + vol * c.width * 0.04;
+    let mh = 2 + mouthOpen * (small ? 6 : 22);
+    ctx.fillStyle = '#000';
+    ctx.beginPath();
+    ctx.ellipse(cx, cy + c.height * 0.12, mw, mh, 0, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.strokeStyle = '#00f2fe';
+    ctx.stroke();
+
+    // Waveform no Canvas Grande do Chat
+    if (!small && vol > 0.05) {
+      ctx.strokeStyle = '#00f2fe';
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      for (let x = 0; x < c.width; x++) {
+        let y = cy + c.height * 0.32 + Math.sin(x * 0.03 + Date.now() * 0.015) * (vol * 20);
+        if (x === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+      }
+      ctx.stroke();
+    }
+
+    requestAnimationFrame(draw);
+  }
+  draw();
+}
+
+setupAvatar('saraCanvas', true);
+setupAvatar('saraChatCanvas', false);
+
+// === SÍNTESE DE VOZ COM VISEMA ===
+function speakText(t){
+  if(!window.speechSynthesis) return;
+  speechSynthesis.cancel();
+  let u = new SpeechSynthesisUtterance(t);
+  u.lang = 'pt-BR';
+  u.rate = 0.95;
+  
+  u.onstart = () => {
+    isSpeaking = true;
+    targetMouth = 0.3;
+    document.getElementById('speech-status').innerText = 'Transmitindo áudio tático...';
+    document.getElementById('speech-status').className = 'text-xs text-cyan-400 font-bold animate-pulse';
+  };
+  
+  u.onboundary = (e) => {
+    let ch = t.substring(e.charIndex, e.charIndex + 1).toLowerCase();
+    if('aeiou'.includes(ch)) targetMouth = 0.9;
+    else if('bmp'.includes(ch)) targetMouth = 0.05;
+    else if('fvs'.includes(ch)) targetMouth = 0.3;
+    else targetMouth = 0.5 + Math.random() * 0.3;
+    vol = 0.3 + Math.random() * 0.6;
+  };
+  
+  u.onend = () => {
+    isSpeaking = false;
+    targetMouth = 0;
+    vol = 0;
+    document.getElementById('speech-status').innerText = 'Aguardando comando tático...';
+    document.getElementById('speech-status').className = 'text-xs text-gray-400';
+  };
+  
+  speechSynthesis.speak(u);
+  let iv = setInterval(() => {
+    if(!isSpeaking){ clearInterval(iv); vol = 0; return; }
+    vol = 0.2 + Math.random() * 0.5;
+  }, 80);
+}
+
+function testSpeech(){
+  let msg = "Sistema tático RARU NEXUS operando em frequência máxima em Mesquita. Sara online.";
+  appendChatMessage('SARAH AI', msg);
+  speakText(msg);
+}
+
+// === ALERTAS MILITARES DE ÁUDIO ===
+let alarmInterval, audioCtx;
+function triggerAlarm(type){
+  stopAlarm();
+  audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  let speed = type === 'br' ? 400 : 180, tog = false;
+  alarmInterval = setInterval(() => {
+    let o = audioCtx.createOscillator(), g = audioCtx.createGain();
+    o.type = 'square';
+    o.frequency.value = tog ? 880 : 440;
+    g.gain.value = 0.2;
+    o.connect(g);
+    g.connect(audioCtx.destination);
+    o.start();
+    o.stop(audioCtx.currentTime + speed / 1000);
+    tog = !tog;
+  }, speed);
+  appendChatMessage('ALERTA TÁTICO', type === 'br' ? '🚨 Alarme padrão BR ativado.' : '⚠️ Alarme tático Russo ativado.');
+}
+
+function stopAlarm(){
+  if(alarmInterval){
+    clearInterval(alarmInterval);
+    alarmInterval = null;
+    appendChatMessage('ALERTA TÁTICO', 'Alarmes silenciados.');
+  }
+}
+
+// === TERMINAL DE COMANDOS ===
+function sendCommand(){
+  let i = document.getElementById('user-input'), t = i.value.trim();
+  if(!t) return;
+  appendChatMessage('OPERADOR', t);
+  i.value = '';
+  setTimeout(() => {
+    let r = 'Comando tático processado com sucesso no núcleo RARU NEXUS AI.';
+    if(t.toLowerCase().includes('mesquita')) r = 'Mesquita: Sebinho e bacia do Sarapuí monitorados. Resiliência urbana operacional.';
+    appendChatMessage('SARAH AI', r);
+    speakText(r);
+  }, 500);
+}
+
+function appendChatMessage(sender, text){
+  let cont = document.getElementById('chat-messages');
+  let d = document.createElement('div');
+  d.className = sender === 'OPERADOR' ? 'text-right text-cyan-300' : 'text-left text-gray-200';
+  d.innerHTML = `<span class="text-[10px] text-gray-400">[${new Date().toLocaleTimeString()}]</span> <b class="${sender==='SARAH AI'?'text-cyan-400':'text-amber-400'}">${sender}:</b> ${text}`;
+  cont.appendChild(d);
+  cont.scrollTop = cont.scrollHeight;
+}
+
+window.addEventListener('DOMContentLoaded', renderMunicipalities);
+</script>
+</body>
+</html>
