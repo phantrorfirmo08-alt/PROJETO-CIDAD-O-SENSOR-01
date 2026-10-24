@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>RARU NEXUS LITE - COM API DE CLIMA</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<style>
+  body{background:#02040a;color:#fff;font-family:sans-serif}
+  .glass{background:rgba(10,26,51,.9);backdrop-filter:blur(12px);border:1px solid rgba(0,242,254,.25);border-radius:20px}
+</style>
+</head>
+<body class="min-h-screen p-3 max-w-[420px] mx-auto">
+<div class="text-center py-3">
+  <h1 class="text-cyan-400 font-black text-lg tracking-widest">RARU NEXUS LITE</h1>
+  <p class="text-[11px] text-gray-400">API OPEN-METEO • PWA • PRÁTICO</p>
+</div>
+
+<!-- CANVAS SARA PISCANDO -->
+<canvas id="sara" width="400" height="320" class="w-full h-[200px] bg-black rounded-[20px] border border-cyan-400/30"></canvas>
+<div class="flex gap-2 mt-2">
+  <input id="txt" value="Online e conectado à telemetria real." class="flex-1 bg-black border border-cyan-400/30 rounded-xl px-3 py-2 text-xs">
+  <button onclick="falar()" class="bg-cyan-400 text-black font-black px-4 rounded-xl text-xs">FALAR</button>
+</div>
+
+<!-- 4 FUNÇÕES -->
+<div class="grid grid-cols-2 gap-3 mt-4">
+  <!-- 1 RADAR -->
+  <div class="glass p-3">
+    <p class="text-cyan-400 font-bold text-xs">📡 1 RADAR CLIMA</p>
+    <p id="temp" class="text-2xl font-black mt-1">--°C</p>
+    <p id="chuva" class="text-[10px] text-gray-400">Carregando dados...</p>
+    <button onclick="atualizarClima()" class="mt-2 w-full bg-white/10 rounded-lg py-1 text-[10px]">Atualizar Telemetria</button>
+  </div>
+  
+  <!-- 2 ALARME -->
+  <div class="glass p-3">
+    <p class="text-yellow-400 font-bold text-xs">🚨 2 ALARME TÁTICO</p>
+    <div class="grid grid-cols-2 gap-1 mt-2">
+      <button onclick="alarme('br')" class="bg-yellow-600 text-black font-bold text-[10px] py-2 rounded">BR</button>
+      <button onclick="alarme('ru')" class="bg-rose-600 text-white font-bold text-[10px] py-2 rounded">RUSSO</button>
+    </div>
+    <button onclick="pararAlarme()" class="mt-1 w-full bg-zinc-800 text-[10px] py-1 rounded">Parar</button>
+  </div>
+  
+  <!-- 3 SARA CHAT -->
+  <div class="glass p-3">
+    <p class="text-teal-400 font-bold text-xs">💬 3 SARA CHAT</p>
+    <div id="chat" class="bg-black/50 h-20 overflow-y-auto rounded mt-1 p-2 text-[10px]"></div>
+    <div class="flex gap-1 mt-1">
+      <input id="chatIn" placeholder="Pergunte..." class="flex-1 bg-black border border-gray-700 rounded px-2 py-1 text-[10px]">
+      <button onclick="enviarChat()" class="bg-teal-400 text-black px-2 rounded font-bold text-[10px]">></button>
+    </div>
+  </div>
+  
+  <!-- 4 MUNICIPIOS -->
+  <div class="glass p-3">
+    <p class="text-orange-400 font-bold text-xs">🏙️ 4 MUNICÍPIOS</p>
+    <select id="mun" onchange="escolherMun()" class="w-full bg-black border border-gray-700 rounded mt-1 p-1 text-[10px]">
+      <option value="mesquita">Mesquita</option>
+      <option value="nova_iguacu">Nova Iguaçu</option>
+      <option value="belford_roxo">Belford Roxo</option>
+      <option value="caxias">Duque de Caxias</option>
+      <option value="meriti">São João de Meriti</option>
+      <option value="nilopolis">Nilópolis</option>
+      <option value="mage">Magé</option>
+      <option value="sao_goncalo">São Gonçalo</option>
+      <option value="niteroi">Niterói</option>
+      <option value="rio">Rio de Janeiro</option>
+    </select>
+    <p id="munInfo" class="text-[9px] text-gray-400 mt-1">Base Sebinho / Rocha Sobrinho</p>
+  </div>
+</div>
+
+<p class="text-center text-[9px] text-cyan-400/40 mt-4">API Open-Meteo integrada • 4 funções • PWA pronto</p>
+
+<script>
+// Coordenadas reais das cidades da Baixada e Região
+const coords = {
+  mesquita: {lat: -22.7858, lon: -43.4294, name: "Mesquita"},
+  nova_iguacu: {lat: -22.7559, lon: -43.4605, name: "Nova Iguaçu"},
+  belford_roxo: {lat: -22.7642, lon: -43.3997, name: "Belford Roxo"},
+  caxias: {lat: -22.7856, lon: -43.3117, name: "Duque de Caxias"},
+  meriti: {lat: -22.8064, lon: -43.3714, name: "São João de Meriti"},
+  nilopolis: {lat: -22.8117, lon: -43.4111, name: "Nilópolis"},
+  mage: {lat: -22.6528, lon: -43.0431, name: "Magé"},
+  sao_goncalo: {lat: -22.8267, lon: -43.0631, name: "São Gonçalo"},
+  niteroi: {lat: -22.8833, lon: -43.1036, name: "Niterói"},
+  rio: {lat: -22.9068, lon: -43.1729, name: "Rio de Janeiro"}
+};
+
+let mouth=0,target=0,eye=0,blink=0,vol=0,speak=false;
+let c=document.getElementById('sara'),ctx=c.getContext('2d');
+
+function loop(){
+  ctx.clearRect(0,0,400,320);
+  blink+=0.05;if(blink>4+Math.random()*3){eye=1;blink=0;}if(eye>0)eye-=0.18;
+  let open=Math.max(0,1-eye*4);
+  ctx.fillStyle='#0a1a33';ctx.beginPath();ctx.ellipse(200,150,90,110,0,0,Math.PI*2);ctx.fill();
+  [-55,55].forEach(dx=>{
+    ctx.fillStyle='#001a0a';ctx.beginPath();ctx.ellipse(200+dx,120,18,12*open,0,0,Math.PI*2);ctx.fill();
+    if(open>0.2){ctx.fillStyle='#00ff88';ctx.beginPath();ctx.arc(200+dx,120,10,0,Math.PI*2);ctx.fill();ctx.fillStyle='#000';ctx.beginPath();ctx.arc(200+dx,120,3,0,Math.PI*2);ctx.fill();}
+  });
+  mouth+=(target-mouth)*0.3;
+  let mw=28+vol*15,mh=2+mouth*22;
+  ctx.fillStyle='#000';ctx.beginPath();ctx.ellipse(200,200,mw,mh,0,0,Math.PI*2);ctx.fill();
+  ctx.fillStyle=`rgba(0,242,254,${0.4+mouth*0.6})`;ctx.fill();
+  ctx.strokeStyle='#00F2FE88';ctx.beginPath();for(let x=0;x<400;x++){let y=200+Math.sin(x*0.03+Date.now()*0.01)*(vol*12);if(x==0)ctx.moveTo(x,y);else ctx.lineTo(x,y);}ctx.stroke();
+  requestAnimationFrame(loop);
+}
+loop();
+
+function falar(t){
+  let texto=t||document.getElementById('txt').value;
+  speechSynthesis.cancel();
+  let u=new SpeechSynthesisUtterance(texto);u.lang='pt-BR';u.rate=0.95;u.pitch=1.1;
+  u.onstart=()=>{speak=true;target=0.2;};
+  u.onboundary=(e)=>{
+    let ch=texto.substring(e.charIndex,e.charIndex+1).toLowerCase();
+    if('aeiou'.includes(ch))target=0.9;else if('bmp'.includes(ch))target=0.05;else target=0.5;
+    vol=0.5+Math.random()*0.5;
+  };
+  u.onend=()=>{speak=false;target=0;vol=0;};
+  speechSynthesis.speak(u);
+}
+
+async function atualizarClima() {
+  let munKey = document.getElementById('mun').value;
+  let loc = coords[munKey] || coords['mesquita'];
+  
+  document.getElementById('temp').innerText = '...';
+  document.getElementById('chuva').innerText = 'Buscando satélite...';
+
+  try {
+    let res = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${loc.lat}&longitude=${loc.lon}&current=temperature_2m,relative_humidity_2m,rain,precipitation`);
+    let data = await res.json();
+    
+    let temp = data.current.temperature_2m;
+    let hum = data.current.relative_humidity_2m;
+    let rain = data.current.rain || data.current.precipitation || 0;
+    let statusRain = rain > 1.5 ? 'MÉDIO/ALTO' : 'BAIXO';
+
+    document.getElementById('temp').innerText = temp + '°C';
+    document.getElementById('chuva').innerText = `${rain} mm/h • ${hum}% • ${statusRain}`;
+    
+    falar(`Telemetria de ${loc.name} atualizada. ${temp} graus e ${rain} milímetros de chuva por hora.`);
+  } catch (e) {
+    document.getElementById('temp').innerText = 'Erro';
+    document.getElementById('chuva').innerText = 'Falha na conexão';
+    falar('Erro ao conectar com a API de clima.');
+  }
+}
+
+let alarmInt,actx;
+function alarme(tipo){
+  pararAlarme();
+  actx=new (window.AudioContext||window.webkitAudioContext)();
+  let speed=tipo=='br'?350:160,tog=false;
+  alarmInt=setInterval(()=>{
+    let o=actx.createOscillator(),g=actx.createGain();
+    o.type='square';o.frequency.value=tog?900:400;g.gain.value=0.15;
+    o.connect(g);g.connect(actx.destination);o.start();
+    o.stop(actx.currentTime+speed/1000);tog=!tog;
+  },speed);
+  falar(tipo=='br'?'Alarme brasileiro ativado':'Alarme russo ativado');
+}
+
+function pararAlarme(){
+  if(alarmInt){clearInterval(alarmInt);alarmInt=null;}
+}
+
+function enviarChat(){
+  let i=document.getElementById('chatIn');
+  if(!i.value)return;
+  let ch=document.getElementById('chat');
+  ch.innerHTML+='<div><b class="text-teal-400">Você:</b> '+i.value+'</div>';
+  let r='Comando processado para: '+i.value;
+  ch.innerHTML+='<div><b class="text-cyan-400">Sara:</b> '+r+'</div>';
+  ch.scrollTop=ch.scrollHeight;
+  falar(r);
+  i.value='';
+}
+
+function escolherMun(){
+  let mSelect = document.getElementById('mun');
+  let mName = mSelect.options[mSelect.selectedIndex].text;
+  document.getElementById('munInfo').innerText = mName + ' - monitoramento ativo';
+  atualizarClima();
+}
+
+window.onload=()=>{
+  atualizarClima();
+};
+</script>
+</body>
+</html>
