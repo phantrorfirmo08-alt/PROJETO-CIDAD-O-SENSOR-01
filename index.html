@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>SARAH AI - VISTORIA PRO</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+<script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+<script crossorigin src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<style>
+ body{background:#02040A;color:#E5E7EB;font-family:'JetBrains Mono',monospace}
+ .panel{background:#0B1120;border:1px solid rgba(255,255,255,.08);border-radius:18px}
+ .label{font-size:10px;letter-spacing:.08em;font-weight:700;color:#64748B;text-transform:uppercase}
+ .x{position:absolute;top:4px;right:4px;width:20px;height:20px;background:#111;color:#fff;border-radius:50%;display:grid;place-items:center;font-weight:900;font-size:11px;border:1px solid #fff;cursor:pointer}
+</style>
+</head>
+<body class="p-3 flex justify-center">
+<div id="root" class="w-full max-w-[540px]"></div>
+<script type="text/babel">
+const {useState,useRef}=React;
+const MUNICIPIOS=[{n:"Mesquita",lat:-22.7858,lon:-43.4294},{n:"Nova Iguaçu",lat:-22.7559,lon:-43.4605},{n:"Belford Roxo",lat:-22.7642,lon:-43.3997},{n:"Duque de Caxias",lat:-22.7856,lon:-43.3117},{n:"São Gonçalo",lat:-22.8267,lon:-43.0631},{n:"Rio de Janeiro",lat:-22.9068,lon:-43.1729}];
+const RISCOS=["R1 - BAIXO / PREVENTIVO","R2 - MODERADO / ATENCAO","R3 - ALTO / ALERTA ENCOSTA","R4 - IMINENTE / EVACUACAO","RH - HIDROLOGICO","RE - ESTRUTURAL"];
+const ORGAOS=["COMPDEC / SEDEC-RJ","GADE - CHAVE DA ESPERANCA","BOM DIA COMUNIDADE","CIDADAO SENSOR (RCS)","INEA / SERLA","CEMADEN / INPE","CRAS / CREAS","SUS / VIGILANCIA","DEFESA CIVIL MUNICIPAL","NUPDECs - 92 MUNICIPIOS RJ","CIDADAO - PARTICIPACAO DIRETA"];
+
+function App(){
+ const [mun,setMun]=useState(MUNICIPIOS[0]); const [fotos,setFotos]=useState([]); const [camOn,setCamOn]=useState(false); const [ia,setIa]=useState(''); const [nome,setNome]=useState(''); const [docId,setDocId]=useState(''); const [bairro,setBairro]=useState(''); const [risco,setRisco]=useState(RISCOS[0]); const [org,setOrg]=useState(ORGAOS[3]); const [rel,setRel]=useState('');
+ const videoRef=useRef(null); const streamRef=useRef(null);
+ const startCam=async()=>{ const s=await navigator.mediaDevices.getUserMedia({video:{facingMode:{ideal:"environment"}}}); streamRef.current=s; setCamOn(true); setTimeout(()=>{ if(videoRef.current){ videoRef.current.srcObject=s; videoRef.current.play().catch(()=>{});} },150);};
+ const stopCam=()=>{ if(streamRef.current) streamRef.current.getTracks().forEach(t=>t.stop()); setCamOn(false);};
+ const capturar=()=>{ const v=videoRef.current; if(!v||v.videoWidth===0) return; const c=document.createElement('canvas'); c.width=400; c.height=Math.round(400*(v.videoHeight/v.videoWidth)); const ctx=c.getContext('2d'); ctx.drawImage(v,0,0,c.width,c.height); ctx.fillStyle='rgba(0,0,0,.88)'; ctx.fillRect(0,c.height-38,c.width,38); ctx.fillStyle='#fff'; ctx.font='700 9px monospace'; ctx.fillText(`${new Date().toLocaleString('pt-BR')} | ${mun.n} | ${bairro} | ${nome}`,6,c.height-14); const url=c.toDataURL('image/jpeg',0.35); setFotos(p=>[...p,url]); if(!ia) setIa('SARAH-AI: ANALISE EM PROCESSAMENTO'); };
+
+ const enviar=async()=>{
+  if(!nome||!bairro){ alert('PREENCHA RESPONSAVEL E BAIRRO'); return;}
+  if(fotos.length===0){ alert('CAPTURE AO MENOS 1 FOTO'); return;}
+  const prot=`PROT-VIST-${mun.n.slice(0,3).toUpperCase()}-2026-${Math.floor(Math.random()*8999+1000)}`;
+  const raw=`${prot}-${nome}-${Date.now()}`; const buf=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(raw)); const hash=Array.from(new Uint8Array(buf)).map(b=>b.toString(16).padStart(2,'0')).join('');
+  
+  const {jsPDF}=window.jspdf; const doc=new jsPDF(); doc.setFillColor(8,12,20); doc.rect(0,0,210,297,'F'); doc.setTextColor(255,255,255); doc.setFont('helvetica','bold'); doc.setFontSize(11); doc.text(`VISTORIA TECNICA - ${prot}`,14,18);
+  doc.setFont('helvetica','normal'); doc.setFontSize(9); doc.text(`RESPONSAVEL: ${nome} | DOC: ${docId}`,14,24); doc.text(`MUNICIPIO: ${mun.n} | BAIRRO: ${bairro} | COORD: ${mun.lat.toFixed(4)},${mun.lon.toFixed(4)}`,14,29); doc.text(`RISCO: ${risco} | ORGAO: ${org}`,14,34); doc.text(`IA: ${ia}`,14,39);
+  const linhas=doc.splitTextToSize(`RELATO: ${rel}`,182); doc.text(linhas,14,46);
+  let y=70; fotos.forEach((f,i)=>{ if(y>210){doc.addPage(); y=10;} try{ doc.addImage(f,'JPEG',14+(i%2)*90,y,82,46);}catch{} if(i%2==1) y+=50; }); doc.setFontSize(7); doc.setTextColor(120,120,120); doc.text(`HASH SHA-256: ${hash}`,14,290);
+  const pdfBlob=doc.output('blob');
+
+  const texto=`VISTORIA TECNICA SARAH AI
+PROTOCOLO: ${prot}
+RESPONSAVEL: ${nome}
+MUNICIPIO: ${mun.n} - BAIRRO: ${bairro}
+RISCO: ${risco}
+ORGAO: ${org}
+IA: ${ia}
+RELATO: ${rel}
+FOTOS: ${fotos.length}
+HASH: ${hash}`;
+
+  const pdfFile=new File([pdfBlob], `${prot}.pdf`, {type:'application/pdf'});
+  const fotoFiles=await Promise.all(fotos.map(async (d,i)=>{ const r=await fetch(d); const b=await r.blob(); return new File([b], `FOTO_${i+1}.jpg`, {type:'image/jpeg'}); }));
+  const allFiles=[pdfFile,...fotoFiles];
+
+  if(navigator.canShare && navigator.canShare({files: allFiles})){
+    await navigator.share({title: prot, text: texto, files: allFiles});
+  } else {
+    const url=URL.createObjectURL(pdfBlob); window.open(url,'_blank');
+  }
+ };
+
+ return (
+ <div className="panel p-4 space-y-4">
+   <div className="flex justify-between items-center"><p className="label">Modulo Vistoria Isolado V11</p><button onClick={stopCam} className="text-[10px] text-slate-500 border border-slate-700 px-2 py-1 rounded">FECHAR</button></div>
+   
+   <select value={mun.n} onChange={e=>setMun(MUNICIPIOS.find(m=>m.n===e.target.value))} className="w-full bg-black border border-white/10 rounded-xl p-3 text-xs">{MUNICIPIOS.map((m,i)=><option key={i} value={m.n}>{m.n}</option>)}</select>
+
+   <div className="bg-black border border-white/10 rounded-xl p-2">
+     <div className="flex justify-between items-center"><p className="label">Camera 400px</p>{!camOn?<button onClick={startCam} className="text-[10px] border border-white/20 px-3 py-1 rounded-lg">LIGAR CAMERA</button>:<button onClick={stopCam} className="text-[10px] border border-red-500/30 text-red-300 px-3 py-1 rounded-lg">DESLIGAR</button>}</div>
+     <div className="mt-2 bg-[#080A12] rounded-lg overflow-hidden"><video ref={videoRef} autoPlay playsInline muted style={{width:'100%',height:'200px',objectFit:'cover',display:camOn?'block':'none'}}></video>{!camOn && <div className="h-[200px] grid place-items-center text-[11px] text-slate-600">CAMERA DESLIGADA</div>}</div>
+     {camOn && <button onClick={capturar} className="w-full mt-2 py-3 bg-white text-black font-black rounded-xl text-xs">CAPTURAR</button>}
+     {fotos.length>0 && <div className="flex gap-2 overflow-x-auto mt-2">{fotos.map((f,i)=><div key={i} className="relative shrink-0"><img src={f} className="w-20 h-20 object-cover rounded-lg"/><div className="x" onClick={()=>setFotos(fotos.filter((_,idx)=>idx!==i))}>X</div></div>)}</div>}
+   </div>
+
+   <input value={nome} onChange={e=>setNome(e.target.value)} placeholder="RESPONSAVEL TECNICO" className="w-full bg-black border border-white/10 rounded-xl p-3 text-xs"/>
+   <div className="grid grid-cols-2 gap-2"><input value={docId} onChange={e=>setDocId(e.target.value)} placeholder="CPF / ID" className="bg-black border border-white/10 rounded-xl p-3 text-xs"/><input value={bairro} onChange={e=>setBairro(e.target.value)} placeholder="BAIRRO" className="bg-black border border-white/10 rounded-xl p-3 text-xs"/></div>
+   <div className="grid grid-cols-2 gap-2"><select value={risco} onChange={e=>setRisco(e.target.value)} className="bg-black border border-white/10 rounded-xl p-3 text-[11px]">{RISCOS.map((r,i)=><option key={i}>{r}</option>)}</select><select value={org} onChange={e=>setOrg(e.target.value)} className="bg-black border border-white/10 rounded-xl p-3 text-[11px]">{ORGAOS.map((o,i)=><option key={i}>{o}</option>)}</select></div>
+   <textarea value={rel} onChange={e=>setRel(e.target.value)} rows="3" placeholder="RELATO E PREVENCAO" className="w-full bg-black border border-white/10 rounded-xl p-3 text-xs"></textarea>
+
+   <button onClick={enviar} className="w-full py-4 bg-white text-black font-black rounded-xl text-[13px] tracking-wide">ENVIAR RELATORIO</button>
+   <p className="text-[9px] text-slate-600 text-center tracking-widest">PROTOCOLO COM HASH SHA-256 + CARIMBO UNIVERSAL</p>
+ </div>);
+}
+ReactDOM.createRoot(document.getElementById('root')).render(<App/>);
+</script>
+</body>
+</html>
