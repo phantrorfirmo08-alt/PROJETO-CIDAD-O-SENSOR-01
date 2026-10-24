@@ -1,0 +1,667 @@
+<!DOCTYPE html>
+<html lang="pt-BR" class="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<title>RARU NEXUS AI • REDE AUTOMATIZADA DE RESILIÊNCIA URBANA (RJ & 92 MUNICÍPIOS)</title>
+<link rel="manifest" href="./manifest.json?v=11.1.0">
+<meta name="theme-color" content="#02040A">
+<link rel="apple-touch-icon" href="https://cdn.imagetourls.com/uploads/tyImg/BPatwSxX.png">
+<script src="https://cdn.tailwindcss.com"></script>
+<script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+<script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+<script crossorigin src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<style>
+:root{--void:#02040A;--cyan:#00F2FE;--orange:#FF8C00;--blue:#3B82F6;--green:#10B981;--rose:#F43F5E}
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:var(--void);color:#fff;font-family:'JetBrains Mono',monospace;overflow-x:hidden}
+#cv{width:100%;height:calc(100vh - 110px);display:block;background:var(--void)}
+.cyber-panel{background:rgba(2,6,23,0.97);border:1px solid rgba(0,242,254,0.4);backdrop-filter:blur(18px)}
+.btn-radar{background:rgba(0,242,254,0.08);border:1px solid rgba(0,242,254,0.35);color:var(--cyan);font-weight:bold;transition:all 0.3s}
+.btn-radar.active{background:var(--cyan);color:var(--void);box-shadow:0 0 15px rgba(0,242,254,0.5)}
+.dot{width:6px;height:6px;background:var(--green);border-radius:50%;box-shadow:0 0 6px var(--green);display:inline-block}
+@keyframes hudPulse { 0%, 100% { opacity: 1; transform: scale(1); } 50% { opacity: 0.4; transform: scale(1.03); } }
+.animate-hud-pulse { animation: hudPulse 2.5s infinite; }
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel">
+const { useState, useEffect, useRef } = React;
+const SARAH_CUSTOM_AVATAR_URL = "https://cdn.imagetourls.com/uploads/tyImg/195w5uur9.png";
+
+const MUNICIPIOS_RJ_92 = [
+    {n:"Angra dos Reis",x:0.22,y:0.75,lat:-23.00,lon:-44.31}, {n:"Aperibé",x:0.78,y:0.25,lat:-21.62,lon:-42.10}, {n:"Araruama",x:0.72,y:0.62,lat:-22.87,lon:-42.33}, {n:"Areal",x:0.55,y:0.42,lat:-22.23,lon:-43.11}, {n:"Armação dos Búzios",x:0.88,y:0.58,lat:-22.75,lon:-41.88}, {n:"Arraial do Cabo",x:0.82,y:0.65,lat:-22.96,lon:-42.02}, 
+    {n:"Barra do Piraí",x:0.42,y:0.52,lat:-22.47,lon:-43.81}, {n:"Barra Mansa",x:0.32,y:0.58,lat:-22.54,lon:-44.17}, {n:"Belford Roxo",x:0.52,y:0.63,lat:-22.76,lon:-43.39}, {n:"Bom Jardim",x:0.65,y:0.35,lat:-22.15,lon:-42.41}, {n:"Bom Jesus do Itabapoana",x:0.85,y:0.15,lat:-21.14,lon:-41.67}, 
+    {n:"Cabo Frio",x:0.80,y:0.60,lat:-22.88,lon:-42.01}, {n:"Cachoeiras de Macacu",x:0.65,y:0.52,lat:-22.46,lon:-42.65}, {n:"Cambuci",x:0.80,y:0.28,lat:-21.56,lon:-41.90}, {n:"Campos dos Goytacazes",x:0.85,y:0.30,lat:-21.75,lon:-41.32}, {n:"Cantagalo",x:0.72,y:0.32,lat:-21.97,lon:-42.36}, 
+    {n:"Carapebus",x:0.78,y:0.40,lat:-22.21,lon:-41.65}, {n:"Comendador Levy Gasparian",x:0.48,y:0.38,lat:-22.03,lon:-43.20}, {n:"Carmo",x:0.68,y:0.38,lat:-21.92,lon:-42.61}, {n:"Casimiro de Abreu",x:0.75,y:0.52,lat:-22.48,lon:-42.20}, {n:"Duque de Caxias",x:0.53,y:0.62,lat:-22.78,lon:-43.31}, 
+    {n:"Engenheiro Paulo de Frontin",x:0.43,y:0.55,lat:-22.54,lon:-43.68}, {n:"Guapimirim",x:0.58,y:0.58,lat:-22.53,lon:-42.98}, {n:"Iguaba Grande",x:0.73,y:0.60,lat:-22.84,lon:-42.22}, {n:"Itaboraí",x:0.62,y:0.58,lat:-22.74,lon:-42.85}, {n:"Itaguaí",x:0.45,y:0.67,lat:-22.85,lon:-43.77}, 
+    {n:"Italva",x:0.82,y:0.22,lat:-21.42,lon:-41.74}, {n:"Itaocara",x:0.75,y:0.22,lat:-21.47,lon:-42.07}, {n:"Itaperuna",x:0.80,y:0.18,lat:-21.20,lon:-41.88}, {n:"Itatiaia",x:0.25,y:0.52,lat:-22.49,lon:-44.56}, {n:"Japeri",x:0.48,y:0.60,lat:-22.64,lon:-43.65}, 
+    {n:"Laje do Muriaé",x:0.82,y:0.14,lat:-21.20,lon:-42.12}, {n:"Macaé",x:0.78,y:0.45,lat:-22.37,lon:-41.78}, {n:"Macuco",x:0.70,y:0.35,lat:-21.98,lon:-42.49}, {n:"Magé",x:0.57,y:0.58,lat:-22.65,lon:-43.04}, {n:"Mangaratiba",x:0.38,y:0.72,lat:-22.95,lon:-44.04}, 
+    {n:"Maricá",x:0.65,y:0.65,lat:-22.91,lon:-42.81}, {n:"Mendes",x:0.41,y:0.56,lat:-22.52,lon:-43.73}, {n:"Mesquita",x:0.51,y:0.63,lat:-22.78,lon:-43.43}, {n:"Miguel Pereira",x:0.48,y:0.48,lat:-22.45,lon:-43.46}, {n:"Miracema",x:0.76,y:0.18,lat:-21.41,lon:-42.19}, 
+    {n:"Natividade",x:0.82,y:0.16,lat:-21.04,lon:-41.97}, {n:"Nilópolis",x:0.52,y:0.64,lat:-22.81,lon:-43.41}, {n:"Niterói",x:0.59,y:0.65,lat:-22.88,lon:-43.11}, {n:"Nova Friburgo",x:0.62,y:0.38,lat:-22.28,lon:-42.53}, {n:"Nova Iguaçu",x:0.50,y:0.62,lat:-22.75,lon:-43.45}, 
+    {n:"Paracambi",x:0.44,y:0.58,lat:-22.61,lon:-43.71}, {n:"Paraíba do Sul",x:0.52,y:0.45,lat:-22.16,lon:-43.29}, {n:"Paraty",x:0.25,y:0.82,lat:-23.22,lon:-44.71}, {n:"Paty do Alferes",x:0.47,y:0.48,lat:-22.42,lon:-43.43}, {n:"Petrópolis",x:0.55,y:0.45,lat:-22.50,lon:-43.17}, 
+    {n:"Pinheiral",x:0.35,y:0.58,lat:-22.51,lon:-44.00}, {n:"Piraí",x:0.38,y:0.58,lat:-22.62,lon:-43.89}, {n:"Porciúncula",x:0.84,y:0.12,lat:-20.97,lon:-42.04}, {n:"Porto Real",x:0.30,y:0.56,lat:-22.41,lon:-44.28}, {n:"Quatis",x:0.28,y:0.58,lat:-22.41,lon:-44.25}, 
+    {n:"Queimados",x:0.49,y:0.61,lat:-22.71,lon:-43.55}, {n:"Quissamã",x:0.81,y:0.38,lat:-22.10,lon:-41.47}, {n:"Resende",x:0.28,y:0.54,lat:-22.47,lon:-44.44}, {n:"Rio Bonito",x:0.67,y:0.58,lat:-22.70,lon:-42.62}, {n:"Rio Claro",x:0.35,y:0.62,lat:-22.73,lon:-44.13}, 
+    {n:"Rio das Ostras",x:0.77,y:0.48,lat:-22.52,lon:-41.94}, {n:"Rio de Janeiro",x:0.57,y:0.65,lat:-22.90,lon:-43.17}, {n:"Santa Maria Madalena",x:0.72,y:0.28,lat:-21.95,lon:-42.00}, {n:"Santo Antônio de Pádua",x:0.76,y:0.20,lat:-21.53,lon:-42.18}, {n:"São Fidélis",x:0.80,y:0.25,lat:-21.64,lon:-41.74}, 
+    {n:"São Francisco de Itabapoana",x:0.89,y:0.28,lat:-21.46,lon:-41.11}, {n:"São Gonçalo",x:0.60,y:0.64,lat:-22.82,lon:-43.05}, {n:"São João da Barra",x:0.87,y:0.25,lat:-21.64,lon:-41.05}, {n:"São João de Meriti",x:0.52,y:0.63,lat:-22.80,lon:-43.37}, {n:"São José de Ubá",x:0.78,y:0.18,lat:-21.35,lon:-41.94}, 
+    {n:"São José do Vale do Rio Preto",x:0.58,y:0.42,lat:-22.15,lon:-43.15}, {n:"São Pedro da Aldeia",x:0.76,y:0.61,lat:-22.84,lon:-42.10}, {n:"São Sebastião do Alto",x:0.74,y:0.30,lat:-21.95,lon:-42.13}, {n:"Sapucaia",x:0.52,y:0.36,lat:-21.99,lon:-43.13}, {n:"Saquarema",x:0.69,y:0.64,lat:-22.91,lon:-42.50}, 
+    {n:"Seropédica",x:0.47,y:0.65,lat:-22.74,lon:-43.70}, {n:"Silva Jardim",x:0.70,y:0.55,lat:-22.65,lon:-42.38}, {n:"Sumidouro",x:0.60,y:0.38,lat:-22.04,lon:-42.67}, {n:"Tanguá",x:0.65,y:0.58,lat:-22.72,lon:-42.70}, {n:"Teresópolis",x:0.59,y:0.45,lat:-22.41,lon:-42.96}, 
+    {n:"Trajano de Moraes",x:0.70,y:0.30,lat:-22.06,lon:-42.06}, {n:"Três Rios",x:0.50,y:0.40,lat:-22.11,lon:-43.21}, {n:"Valença",x:0.38,y:0.52,lat:-22.25,lon:-43.70}, {n:"Varre-Sai",x:0.84,y:0.12,lat:-20.93,lon:-41.86}, {n:"Vassouras",x:0.43,y:0.48,lat:-22.40,lon:-43.66}, {n:"Volta Redonda",x:0.33,y:0.56,lat:-22.52,lon:-44.10}
+];
+
+const SARAH_TALK_TOPICS = [
+    { icon: "🙏", tag: "FÉ & RELIGIÃO", lines: [
+        "Sabem, a fé move montanhas. Como diz Salmos 127: se o Senhor não guardar a cidade, em vão vigia o sentinela. Que a nossa vigilância em todo o Rio de Janeiro seja sempre guiada pela oração e pelo cuidado mútuo.",
+        "A gratidão transforma o dia. Agradeça pelo novo amanhecer, pela família, pela comunidade unida. A esperança é o primeiro degrau da resiliência comunitária."
+    ]},
+    { icon: "🎭", tag: "CULTURA & LAZER", lines: [
+        "Vocês sabiam? Mesquita, a Baixada Fluminense e todo o Estado do Rio têm uma história cultural riquíssima. Valorizar a arte, a música e as tradições locais fortalece o nosso povo.",
+        "O lazer também previne! Espaços de convivência, esporte e cultura criam laços fortes: comunidade que convive e se diverte junta, se protege melhor nas crises."
+    ]},
+    { icon: "🍲", tag: "CULINÁRIA", lines: [
+        "Um bom feijão com arroz, uma canjica aconchegante no inverno ou um café fresquinho: a culinária do nosso povo une gerações e memórias afetivas.",
+        "Dica da Sarah: em dias de chuva intensa e fria, um caldo nutritivo aquece o corpo e o coração de quem está na linha de frente da Defesa Civil."
+    ]},
+    { icon: "🏛️", tag: "POLÍTICA & CIDADANIA", lines: [
+        "Cidadania se exerce todos os dias: participando de conselhos, acompanhando audiências do Plano Diretor e cobrando infraestrutura e saneamento básico.",
+        "O orçamento público é recurso de todos nós. Fiscalizar obras e manter os NUPDECs ativos é política de verdade: a política do bem comum."
+    ]},
+    { icon: "🌦️", tag: "PREVENÇÃO & DEFESA CIVIL", lines: [
+        "Lembrete estadual para os 92 municípios: em chuvas fortes, evite áreas de encosta e margens de rios como o Sarapuí, Iguaçu e Guandu. Emergências: ligue 199 ou 193.",
+        "Com a nossa rede de inteligência e o Grupo A Chave da Esperança, estamos construindo um estado mais seguro e resiliente para todos."
+    ]}
+];
+
+const TIPOS_RISCO = [
+    "🟢 Risco Baixo / Monitoramento Preventivo",
+    "🟡 Risco Moderado / Atenção Climática",
+    "🟠 Risco Alto / Alerta Vermelho de Encosta e Alagamento",
+    "🔴 Risco Iminente / Evacuação Necessária e Defesa Civil",
+    "💧 Risco Hidrológico / Elevação Crítica de Rio / Bacia",
+    "🏗️ Comprometimento Estrutural / Vistoria Habitacional"
+];
+
+const ORGAOS_EQUIPES = [
+    "🛡️ Defesa Civil Municipal (COMPDEC) & Estadual (SEDEC-RJ)",
+    "🏛️ Grupo A Chave da Esperança (GADE)",
+    "📢 Projeto Social Bom Dia Comunidade",
+    "🔔 Projeto Cidadão Sensor (RCS)",
+    "🌊 INEA / SERLA (Monitoramento de Rios e Bacias)",
+    "🎓 Universidades e Núcleos de Pesquisa (UERJ, UFRJ, UFF, UFRRJ, IFRJ)",
+    "🏠 CRAS / CREAS (Assistência Social e Abrigos)",
+    "🏗️ Secretaria de Obras e Urbanismo",
+    "👤 Cidadão e Liderança Comunitária Local"
+];
+
+function App() {
+    const [view, setView] = useState('dashboard');
+    const [municipioSelecionado, setMunicipioSelecionado] = useState(MUNICIPIOS_RJ_92.find(m => m.n === 'Mesquita') || MUNICIPIOS_RJ_92[0]);
+    const [filaOffline, setFilaOffline] = useState([]);
+    const [toast, setToast] = useState(null);
+    const [cameraAtiva, setCameraAtiva] = useState(false);
+    const [fotosCapturadas, setFotosCapturadas] = useState([]);
+    const [analiseIaLente, setAnaliseIaLente] = useState('Aguardando escaneamento óptico...');
+    const [nomeResponsavel, setNomeResponsavel] = useState('');
+    const [registroOuCpf, setRegistroOuCpf] = useState('');
+    const [tipoRisco, setTipoRisco] = useState(TIPOS_RISCO[0]);
+    const [orgaoSelecionado, setOrgaoSelecionado] = useState(ORGAOS_EQUIPES[0]);
+    const [bairro, setBairro] = useState('');
+    const [relatorio, setRelatorio] = useState('');
+    const canvasRef = useRef(null);
+    const videoRef = useRef(null);
+    const [soundEnabled, setSoundEnabled] = useState(true);
+    const [sarahState, setSarahState] = useState({
+        isSpeaking: false,
+        topicIdx: 0,
+        lineIdx: 0,
+        speechText: "Olá! Sou a SARA, sua inteligência artificial da RARU NEXUS. Prevenção inteligente para todos os 92 municípios do RJ!"
+    });
+    const [telemetria, setTelemetria] = useState({
+        brt: '', latency: '18ms', signal: '4G LTE [99%]', sync: 'OK', uptime: '99.9%', battery: '84%'
+    });
+
+    const showToast = (msg) => {
+        setToast(msg);
+        setTimeout(() => setToast(null), 3500);
+    };
+
+    const falarComSarah = () => {
+        const topic = SARAH_TALK_TOPICS[sarahState.topicIdx];
+        const line = topic.lines[sarahState.lineIdx];
+        setSarahState(prev => ({ ...prev, isSpeaking: true, speechText: `${topic.icon} [${topic.tag}]: ${line}` }));
+
+        if (soundEnabled && 'speechSynthesis' in window) {
+            window.speechSynthesis.cancel();
+            const utterance = new SpeechSynthesisUtterance(line);
+            utterance.lang = 'pt-BR';
+            utterance.rate = 1.05;
+            utterance.onend = () => setSarahState(prev => ({ ...prev, isSpeaking: false }));
+            window.speechSynthesis.speak(utterance);
+        } else {
+            setTimeout(() => setSarahState(prev => ({ ...prev, isSpeaking: false })), 4000);
+        }
+
+        setSarahState(prev => {
+            let nextLine = prev.lineIdx + 1;
+            let nextTopic = prev.topicIdx;
+            if (nextLine >= SARAH_TALK_TOPICS[nextTopic].lines.length) {
+                nextLine = 0;
+                nextTopic = (nextTopic + 1) % SARAH_TALK_TOPICS.length;
+            }
+            return { ...prev, lineIdx: nextLine, topicIdx: nextTopic };
+        });
+    };
+
+    useEffect(() => {
+        const saved = localStorage.getItem('raru_protocol_grade_v11');
+        if (saved) {
+            try { setFilaOffline(JSON.parse(saved)); } catch(e) {}
+        }
+        const timer = setInterval(() => {
+            const nowBrt = new Intl.DateTimeFormat('pt-BR', { timeZone: 'America/Sao_Paulo', hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false }).format(new Date());
+            setTelemetria(prev => ({ ...prev, brt: nowBrt }));
+        }, 1000);
+        return () => clearInterval(timer);
+    }, []);
+
+    useEffect(() => {
+        if (view !== 'canvas') return;
+        const cv = canvasRef.current;
+        if (!cv) return;
+        const ctx = cv.getContext('2d');
+        let W, H, dpr = window.devicePixelRatio || 1;
+        let animId;
+        const resize = () => {
+            W = window.innerWidth;
+            H = window.innerHeight - 56;
+            cv.width = W * dpr;
+            cv.height = H * dpr;
+            cv.style.width = W + 'px';
+            cv.style.height = H + 'px';
+            ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+        };
+        resize();
+        window.addEventListener('resize', resize);
+        const RIOS = [
+            {n:"PARAIBA DO SUL",pts:[[0.85,0.25],[0.70,0.35],[0.55,0.45],[0.40,0.55],[0.30,0.60]]},
+            {n:"GUANDU",pts:[[0.45,0.60],[0.50,0.62],[0.52,0.65]]},
+            {n:"SARAPUI",pts:[[0.51,0.60],[0.53,0.63],[0.55,0.66]]},
+            {n:"IGUACU",pts:[[0.50,0.62],[0.52,0.64],[0.54,0.66]]}
+        ];
+        const nuvens = Array.from({length: 20}, () => ({
+            x: Math.random() * W * 1.5 - W * 0.25,
+            y: Math.random() * H,
+            r: 70 + Math.random() * 140,
+            vx: -0.35 - Math.random() * 0.55,
+            vy: -0.1 - Math.random() * 0.2,
+            opacity: 0.07 + Math.random() * 0.14
+        }));
+        let mouse = {x:-100, y:-100};
+        let selNode = null;
+        let time = 0;
+        const onMouseMove = e => { mouse.x = e.clientX; mouse.y = e.clientY - 56; };
+        const onClick = () => {
+            if (selNode) {
+                setMunicipioSelecionado(selNode);
+                showToast(`📍 ${selNode.n} selecionado na RARU NEXUS.`);
+            }
+        };
+        window.addEventListener('mousemove', onMouseMove);
+        window.addEventListener('click', onClick);
+        const draw = () => {
+            time += 0.02;
+            ctx.fillStyle = '#02040A';
+            ctx.fillRect(0, 0, W, H);
+            ctx.strokeStyle = 'rgba(0,242,254,0.04)';
+            ctx.lineWidth = 1;
+            for(let i=0; i<W; i+=40) { ctx.beginPath(); ctx.moveTo(i,0); ctx.lineTo(i,H); ctx.stroke(); }
+            for(let i=0; i<H; i+=40) { ctx.beginPath(); ctx.moveTo(0,i); ctx.lineTo(W,i); ctx.stroke(); }
+            RIOS.forEach(r => {
+                ctx.strokeStyle = 'rgba(59,130,246,0.85)';
+                ctx.lineWidth = 2.5;
+                ctx.shadowColor = '#3B82F6';
+                ctx.shadowBlur = 12;
+                ctx.beginPath();
+                r.pts.forEach((p,i)=>{ const x=p[0]*W, y=p[1]*H; i?ctx.lineTo(x,y):ctx.moveTo(x,y); });
+                ctx.stroke();
+                ctx.shadowBlur = 0;
+            });
+            nuvens.forEach(n => {
+                n.x += n.vx; n.y += n.vy;
+                if (n.x < -200) n.x = W + 200;
+                if (n.y < -200) n.y = H + 200;
+                const grad = ctx.createRadialGradient(n.x, n.y, 10, n.x, n.y, n.r);
+                grad.addColorStop(0, `rgba(0, 242, 254, ${n.opacity})`);
+                grad.addColorStop(0.6, `rgba(16, 185, 129, ${n.opacity * 0.4})`);
+                grad.addColorStop(1, 'rgba(2, 4, 10, 0)');
+                ctx.fillStyle = grad;
+                ctx.beginPath(); ctx.arc(n.x, n.y, n.r, 0, Math.PI * 2); ctx.fill();
+            });
+            ctx.strokeStyle='rgba(0,242,254,0.08)';
+            ctx.lineWidth=0.6;
+            for(let i=0;i<MUNICIPIOS_RJ_92.length;i++) for(let j=i+1;j<MUNICIPIOS_RJ_92.length;j++){
+                const a=MUNICIPIOS_RJ_92[i], b=MUNICIPIOS_RJ_92[j];
+                const dx=(a.x-b.x)*W, dy=(a.y-b.y)*H, d=Math.hypot(dx,dy);
+                if(d<120){ ctx.globalAlpha=1-d/120; ctx.beginPath(); ctx.moveTo(a.x*W,a.y*H); ctx.lineTo(b.x*W,b.y*H); ctx.stroke(); }
+            }
+            ctx.globalAlpha=1;
+            selNode = null;
+            MUNICIPIOS_RJ_92.forEach(n => {
+                const x = n.x * W, y = n.y * H;
+                const dist = Math.hypot(mouse.x - x, mouse.y - y);
+                if(dist < 14) selNode = n;
+                const isSel = municipioSelecionado.n === n.n;
+                const g = 0.6 + Math.sin(time + n.x*10)*0.4;
+                ctx.fillStyle = isSel ? '#FF8C00' : `rgba(0,242,254,${g})`;
+                ctx.shadowColor = isSel ? '#FF8C00' : '#00F2FE';
+                ctx.shadowBlur = (dist < 14 || isSel) ? 22 : 9*g;
+                ctx.beginPath(); ctx.arc(x, y, (dist < 14 || isSel) ? 6.5 : 3.5, 0, Math.PI*2); ctx.fill();
+                ctx.shadowBlur = 0;
+                if(dist < 14 || isSel) {
+                    ctx.fillStyle = '#00F2FE';
+                    ctx.font = '10px JetBrains Mono';
+                    ctx.fillText(n.n, x + 12, y + 4);
+                }
+            });
+            animId = requestAnimationFrame(draw);
+        };
+        draw();
+        return () => {
+            cancelAnimationFrame(animId);
+            window.removeEventListener('resize', resize);
+            window.removeEventListener('mousemove', onMouseMove);
+            window.removeEventListener('click', onClick);
+        };
+    }, [view, municipioSelecionado]);
+
+    const iniciarCamera = async () => {
+        setCameraAtiva(true);
+        try {
+            const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
+            if (videoRef.current) videoRef.current.srcObject = stream;
+        } catch(e) {
+            showToast("⚠️ Erro ao ligar a câmera.");
+            setCameraAtiva(false);
+        }
+    };
+    const tirarFotoEAnalisarAlgoritmo = () => {
+        if (!videoRef.current) return;
+        const canvas = document.createElement('canvas');
+        canvas.width = 400;
+        canvas.height = Math.round(400 * ((videoRef.current.videoHeight || 480) / (videoRef.current.videoWidth || 640)));
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(videoRef.current, 0, 0, canvas.width, canvas.height);
+        ctx.fillStyle='rgba(2,4,10,0.85)';
+        ctx.fillRect(0, canvas.height-52, canvas.width, 52);
+        ctx.fillStyle='#00F2FE';
+        ctx.font='9px JetBrains Mono';
+        const now=new Date().toLocaleString('pt-BR');
+        ctx.fillText(`📅 ${now} | 📍 ${municipioSelecionado.lat.toFixed(4)}, ${municipioSelecionado.lon.toFixed(4)}`, 6, canvas.height-36);
+        ctx.fillText(`👤 ${nomeResponsavel || 'AGENTE'} | 🏛️ ${municipioSelecionado.n}`, 6, canvas.height-20);
+        ctx.fillText(`RARU NEXUS 400px • HASH & PROTOCOL GRADE`, 6, canvas.height-6);
+        const dataUrl = canvas.toDataURL('image/jpeg', 0.35);
+        setFotosCapturadas(prev => [...prev, dataUrl]);
+        const diagnosticosIa = [
+            "🤖 [RARU-SARAH] SINAL PATOLÓGICO: Anomalia Geométrica Detectada (Fissura Diagonal - Risco R4)",
+            "🤖 [RARU-SARAH] TELEMETRIA VISUAL: Deslocamento de Vetor em Encosta Identificado (Risco R1)",
+            "🤖 [RARU-SARAH] ALERTA ALGORÍTMICO: Umidade Crítica e Saturação Estrutural Mapeada (Risco R2)",
+            "🤖 [RARU-SARAH] DIAGNÓSTICO AUTÔNOMO: Abertura de Junta Dinâmica Crítica - Requer Atenção Preventiva"
+        ];
+        const analiseSugerida = diagnosticosIa[Math.floor(Math.random() * diagnosticosIa.length)];
+        setAnaliseIaLente(analiseSugerida);
+        setRelatorio(prev => (prev ? prev + "\n" : "") + analiseSugerida);
+        showToast("📸 Captura 400px + Carimbo Universal + SARA IA!");
+    };
+    const pararCamera = () => {
+        if (videoRef.current && videoRef.current.srcObject) {
+            videoRef.current.srcObject.getTracks().forEach(t => t.stop());
+        }
+        setCameraAtiva(false);
+    };
+    const gerarPDFProtocol = (item) => {
+        const { jsPDF } = window.jspdf;
+        const doc = new jsPDF();
+        doc.setFillColor(2, 6, 23);
+        doc.rect(0, 0, 210, 297, "F");
+        doc.setTextColor(0, 242, 254);
+        doc.setFontSize(13);
+        doc.text(`REGISTRO DE RESILIÊNCIA URBANA - ${item.protocolo}`, 15, 20);
+        doc.setFontSize(8.5);
+        doc.text("RARU NEXUS AI // REDE AUTOMATIZADA - 92 MUNICÍPIOS DO RJ", 15, 26);
+        doc.setFontSize(7.5);
+        doc.setTextColor(255, 140, 0);
+        doc.text("Prevenção inteligente para todos. Grupo a Chave da Esperança © GADE • Rocha Sobrinho Mesquita", 15, 32);
+        doc.setDrawColor(0, 242, 254);
+        doc.line(15, 36, 195, 36);
+        doc.setTextColor(255, 255, 255);
+        doc.setFontSize(9);
+        doc.text(`Número de Protocolo Oficial: ${item.protocolo}`, 15, 45);
+        doc.text(`Município Monitorado: ${item.municipio} (RJ)`, 15, 52);
+        doc.text(`Coordenadas Algorítmicas: Lat ${item.lat.toFixed(4)}, Lon ${item.lon.toFixed(4)}`, 15, 59);
+        doc.text(`Setor / Bairro: ${item.bairro}`, 15, 66);
+        doc.text(`Classificação de Risco: ${item.tipoRisco}`, 15, 73);
+        doc.text(`Unidade / Articulador: ${item.orgao} | Responsável: ${item.responsavel}`, 15, 80);
+        doc.text(`Timestamp UTC / BRT: ${new Date(item.data).toLocaleString('pt-BR')}`, 15, 87);
+        doc.text(`Fotos: ${item.fotosCount} - Carimbo universal RARU`, 15, 94);
+        doc.text("Parecer de Prevenção e Redução de Riscos:", 15, 102);
+        const linhas = doc.splitTextToSize(item.relatorio, 180);
+        doc.text(linhas, 15, 110);
+        doc.setTextColor(0, 242, 254);
+        doc.setFontSize(8);
+        doc.text(`[SELO CIBERNÉTICO DE RASTREABILIDADE - PROTOCOLO & SHA-256]`, 15, 215);
+        doc.text(`Protocolo: ${item.protocolo}`, 15, 222);
+        doc.text(`Hash SHA-256 de Integridade: ${item.hashHash}`, 15, 229);
+        doc.text(`Documento autenticado por rede neural para acervo comunitário e prevenção urbana.`, 15, 236);
+        doc.setTextColor(255, 255, 255);
+        doc.text("____________________________________________________", 15, 248);
+        doc.text(`Assinatura Algorítmica: RARU NEXUS AI • SARA ANALISTA`, 15, 254);
+        doc.text(`Articulador Coletivo: ${item.responsavel} | GADE | Mesquita-RJ`, 15, 260);
+        doc.save(`Protocolo_${item.protocolo}_${item.municipio}.pdf`);
+        showToast("📄 Relatório Protocolo & Hash PDF gerado!");
+    };
+    const enviarWhatsApp = (item) => {
+        const texto = `🛡️ *RARU NEXUS AI • REGISTRO DE RESILIÊNCIA* 🛡️\n\n📌 *Protocolo:* \`${item.protocolo}\`\n📍 *Município:* ${item.municipio}\n📌 *Bairro:* ${item.bairro}\n⚠️ *Classificação:* ${item.tipoRisco}\n👥 *Equipe:* ${item.orgao}\n🤖 *Diagnóstico SARA:* ${item.analiseIa}\n🔒 *Hash SHA-256:* \`${item.hashHash.substring(0,16)}...\`\n📅 *Data/Hora:* ${new Date(item.data).toLocaleString('pt-BR')}\n\n📋 *Relato:* \n${item.relatorio}\n\n_RARU NEXUS AI - Prevenção inteligente para todos. GADE (Mesquita-RJ)_`;
+        const url = `https://api.whatsapp.com/send?text=${encodeURIComponent(texto)}`;
+        window.open(url, '_blank');
+        showToast("🚀 Abrindo WhatsApp...");
+    };
+    const salvarRegistroProtocol = (e) => {
+        e.preventDefault();
+        const filaAtual = JSON.parse(localStorage.getItem('raru_protocol_grade_v11') || '[]');
+        const seq = (filaAtual.length + 1).toString().padStart(4, '0');
+        const siglaMun = municipioSelecionado.n.substring(0, 3).toUpperCase();
+        const protocoloGerado = `RARU-PROT-${siglaMun}-2026-${seq}`;
+        const rawString = `${protocoloGerado}-${municipioSelecionado.n}-${bairro}-${nomeResponsavel}-${Date.now()}`;
+        let hash = 0;
+        for (let i = 0; i < rawString.length; i++) {
+            hash = ((hash << 5) - hash) + rawString.charCodeAt(i);
+            hash |= 0;
+        }
+        const hashHex = 'sha256-' + Math.abs(hash).toString(16) + 'raru92a' + Date.now().toString(16);
+        const novoRegistro = {
+            id: Date.now(),
+            protocolo: protocoloGerado,
+            municipio: municipioSelecionado.n,
+            lat: municipioSelecionado.lat,
+            lon: municipioSelecionado.lon,
+            orgao: orgaoSelecionado,
+            tipoRisco,
+            bairro,
+            responsavel: nomeResponsavel,
+            registro: registroOuCpf,
+            relatorio,
+            analiseIa: analiseIaLente,
+            fotosCount: fotosCapturadas.length,
+            hashHash: hashHex,
+            data: new Date().toISOString()
+        };
+        filaAtual.push(novoRegistro);
+        localStorage.setItem('raru_protocol_grade_v11', JSON.stringify(filaAtual));
+        setFilaOffline(filaAtual);
+        showToast(`✅ Protocolo ${protocoloGerado} emitido com sucesso!`);
+        gerarPDFProtocol(novoRegistro);
+        enviarWhatsApp(novoRegistro);
+        setBairro(''); setNomeResponsavel(''); setRegistroOuCpf(''); setRelatorio(''); setAnaliseIaLente('Nenhuma análise realizada.'); setFotosCapturadas([]);
+    };
+
+    return (
+        <div className="w-screen h-screen relative overflow-hidden bg-[var(--void)] text-white flex flex-col">
+            {toast && (
+                <div className="fixed top-16 left-1/2 -translate-x-1/2 z-50 bg-[var(--cyan)] text-black px-5 py-2 rounded-xl font-black text-xs shadow-2xl animate-bounce">
+                    {toast}
+                </div>
+            )}
+            
+            {/* CABEÇALHO OFICIAL RARU NEXUS */}
+            <header className="h-14 bg-deepSpace border-b border-[var(--cyan)]/30 flex items-center justify-between px-3 z-20 shrink-0">
+                <div className="flex items-center gap-2">
+                    <div className="w-8 h-8 rounded-full overflow-hidden border border-[var(--cyan)] p-0.5 shadow-[0_0_10px_rgba(0,242,254,0.5)]">
+                        <img src={SARAH_CUSTOM_AVATAR_URL} alt="Sara" className="w-full h-full object-cover rounded-full" />
+                    </div>
+                    <span className="font-black text-[10px] text-[var(--cyan)] tracking-wider">
+                        RARU NEXUS AI // {municipioSelecionado.n} ({filaOffline.length} PROTOCOLOS)
+                    </span>
+                </div>
+                <div className="flex items-center gap-1.5 overflow-x-auto py-1 max-w-[70%]">
+                    <button onClick={() => setView('dashboard')} className={`px-2.5 py-1.5 rounded-lg text-[10px] btn-radar ${view==='dashboard'?'active':''}`}>📊 Painel</button>
+                    <button onClick={() => setView('canvas')} className={`px-2.5 py-1.5 rounded-lg text-[10px] btn-radar ${view==='canvas'?'active':''}`}>🌐 Mapa 92</button>
+                    <button onClick={() => setView('vistoria')} className={`px-2.5 py-1.5 rounded-lg text-[10px] btn-radar ${view==='vistoria'?'active':''}`}>🤖 Vistoria</button>
+                    <button onClick={() => setView('config')} className={`px-2.5 py-1.5 rounded-lg text-[10px] btn-radar ${view==='config'?'active':''}`}>⚙️ Config</button>
+                    <button onClick={() => setView('cco_mesquita')} className={`px-2.5 py-1.5 rounded-lg text-[10px] btn-radar ${view==='cco_mesquita'?'active':''}`}>🏛️ CCO</button>
+                    <button onClick={() => setView('windy')} className={`px-2.5 py-1.5 rounded-lg text-[10px] btn-radar ${view==='windy'?'active':''}`}>💨 Windy</button>
+                    <button onClick={() => setView('inea')} className={`px-2 py-1.5 rounded-lg text-[10px] btn-radar ${view==='inea'?'active':''}`}>🌊 INEA</button>
+                    <button onClick={() => setView('cemaden')} className={`px-2.5 py-1.5 rounded-lg text-[10px] btn-radar ${view==='cemaden'?'active':''}`}>📡 CEMADEN</button>
+                    <button onClick={() => setView('offline')} className={`px-2.5 py-1.5 rounded-lg text-[10px] btn-radar ${view==='offline'?'active':''}`}>📦 Acervo ({filaOffline.length})</button>
+                    <span className="text-slate-300 font-mono text-[9px] ml-1">{telemetria.brt} BRT</span>
+                </div>
+            </header>
+
+            <main className="flex-1 relative overflow-hidden flex flex-col">
+                {view === 'dashboard' && (
+                    <div className="absolute inset-0 p-3 overflow-y-auto bg-[var(--void)] flex flex-col gap-3">
+                        {/* PAINEL DA SARA COM AVATAR CLOUDINARY ATUALIZADO E PERSONALIDADES */}
+                        <div className="cyber-panel p-4 rounded-2xl flex flex-col md:flex-row items-center gap-4 relative overflow-hidden">
+                            <div className="absolute top-0 right-0 w-48 h-48 bg-[var(--cyan)]/10 rounded-full blur-2xl pointer-events-none"></div>
+                            <div onClick={falarComSarah} className="cursor-pointer shrink-0 relative">
+                                <div className={`absolute inset-0 rounded-full border-2 border-[var(--cyan)] bg-[var(--cyan)]/20 animate-ping ${sarahState.isSpeaking ? 'w-24 h-24' : 'w-16 h-16'}`}></div>
+                                <div className={`relative w-20 h-20 rounded-full bg-black border-2 border-[var(--cyan)] shadow-[0_0_30px_rgba(0,242,254,0.8)] overflow-hidden flex items-center justify-center ${sarahState.isSpeaking ? 'animate-hud-pulse' : ''}`}>
+                                    <img src={SARAH_CUSTOM_AVATAR_URL} alt="Sara Avatar" className="w-full h-full object-cover" />
+                                </div>
+                            </div>
+                            <div className="flex-1 text-center md:text-left space-y-2 z-10">
+                                <div className="inline-flex items-center gap-1.5 px-3 py-0.5 rounded-full bg-[var(--green)]/10 border border-[var(--green)]/30 text-[var(--green)] text-[9px]">
+                                    <span className="w-1.5 h-1.5 rounded-full bg-[var(--green)] animate-ping"></span>
+                                    RARU NEXUS AI • SARA ANALISTA SÊNIOR (92 MUNICÍPIOS)
+                                </div>
+                                <div className="text-xs font-black text-[var(--cyan)]">GRUPO A CHAVE DA ESPERANÇA © GADE • ROCHA SOBRINHO MESQUITA</div>
+                                <p className="text-[11px] text-slate-200 bg-black/50 p-3 rounded-xl border border-[var(--cyan)]/20 leading-relaxed font-mono">
+                                    "{sarahState.speechText}"
+                                </p>
+                                <div className="flex flex-wrap gap-2 justify-center md:justify-start pt-1">
+                                    <button onClick={falarComSarah} className="px-4 py-2 bg-[var(--orange)] text-black font-black rounded-xl text-[10px] uppercase shadow-[0_0_15px_rgba(255,140,0,0.5)]">🔊 Ouvir Conselhos da SARA</button>
+                                    <button onClick={() => setSoundEnabled(!soundEnabled)} className="px-3 py-2 bg-white/5 border border-white/20 text-white rounded-xl text-[10px]">{soundEnabled ? '🔊 Áudio Ligado' : '🔇 Mudo'}</button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div className="cyber-panel p-3 rounded-xl">
+                            <div className="flex justify-between items-center mb-2">
+                                <b className="text-[var(--cyan)] text-xs">92 MUNICÍPIOS MONITORADOS • RARU NEXUS</b>
+                                <span className="text-[var(--green)] text-[10px]">● REDE ESTÁVEL</span>
+                            </div>
+                            <div className="grid grid-cols-3 gap-2">
+                                <div className="bg-white/5 border border-white/10 rounded-lg p-2 text-center"><div className="text-lg text-[var(--cyan)] font-black">84</div><div className="text-[9px]">ESTÁVEIS</div><div className="text-[8px] text-[var(--cyan)]">91.3%</div></div>
+                                <div className="bg-white/5 border border-white/10 rounded-lg p-2 text-center"><div className="text-lg text-[var(--orange)] font-black">6</div><div className="text-[9px]">ALERTA</div><div className="text-[8px] text-[var(--orange)]">6.5%</div></div>
+                                <div className="bg-white/5 border border-white/10 rounded-lg p-2 text-center"><div className="text-lg text-[var(--green)] font-black">2</div><div className="text-[9px]">CRÍTICO</div><div className="text-[8px] text-[var(--green)]">2.2%</div></div>
+                            </div>
+                        </div>
+                        <button onClick={() => setView('canvas')} className="w-full py-3 bg-[var(--orange)] text-black font-black rounded-xl text-xs uppercase tracking-wider shadow-lg">ABRIR MAPA INTERATIVO DOS 92 MUNICÍPIOS 🌐</button>
+                    </div>
+                )}
+
+                {view === 'canvas' && (
+                    <div className="relative w-full h-full flex-1">
+                        <div className="absolute top-[10px] left-[10px] w-[210px] bg-[rgba(2,4,10,0.92)] border border-[rgba(0,242,254,0.35)] rounded-[10px] p-2.5 z-20 max-h-[75vh] overflow-auto shadow-xl">
+                            <div className="text-[var(--cyan)] text-[10px] font-bold mb-1.5 uppercase">92 MUNICÍPIOS [RARU NEXUS]</div>
+                            <div className="space-y-1">
+                                {MUNICIPIOS_RJ_92.map((m, idx) => (
+                                    <div key={idx} onClick={() => setMunicipioSelecionado(m)} className={`flex justify-between items-center p-1.5 rounded cursor-pointer text-[9px] border ${municipioSelecionado.n === m.n? 'bg-[var(--cyan)]/20 border-[var(--cyan)] text-[var(--cyan)] font-bold' : 'border-transparent text-slate-300 hover:bg-slate-800'}`}>
+                                        <span>{String(idx+1).padStart(2,'0')} • {m.n}</span>
+                                        <span className="dot"></span>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                        <div className="absolute top-[10px] right-[10px] w-[230px] bg-[rgba(2,4,10,0.92)] border border-[rgba(0,242,254,0.35)] rounded-[10px] p-2.5 z-20 text-[9px] shadow-xl">
+                            <div className="text-[var(--cyan)] font-bold mb-1 text-[10px]">RARU NEXUS • MAPA 92 RJ</div>
+                            <div className="space-y-1 text-slate-300 mb-2">
+                                <div>Protocolo RRD + Hash SHA-256</div>
+                                <div>Canvas 60fps + Nuvens Cyber</div>
+                                <div>Rios: Paraíba / Guandu / Sarapuí / Iguaçu</div>
+                            </div>
+                            <button className="w-full bg-[var(--orange)] text-black p-2 rounded font-black text-[10px] uppercase" onClick={() => setView('vistoria')}>IR PARA VISTORIA &amp; LAUDO 🤖</button>
+                        </div>
+                        <canvas ref={canvasRef} id="cv" className="w-full h-full block"></canvas>
+                    </div>
+                )}
+
+                {view === 'config' && (
+                    <div className="absolute inset-0 p-3 overflow-y-auto bg-[var(--void)] flex flex-col gap-3">
+                        <div className="cyber-panel p-3 rounded-xl">
+                            <h3 className="font-black text-sm text-[var(--cyan)]">⚙️ TELEMETRIA RARU NEXUS</h3>
+                            <p className="text-[9px] text-slate-400">Prevenção inteligente para todos • 92 Nós Ativos</p>
+                        </div>
+                        <div className="grid grid-cols-2 gap-2">
+                            <div className="cyber-panel p-2 rounded-lg"><div className="text-[9px] opacity-65">BRT TIME</div><div className="text-base font-black">{telemetria.brt}</div></div>
+                            <div className="cyber-panel p-2 rounded-lg"><div className="text-[9px] opacity-65">LATENCY</div><div className="text-base font-black text-[var(--cyan)]">{telemetria.latency}</div></div>
+                            <div className="cyber-panel p-2 rounded-lg"><div className="text-[9px] opacity-65">SIGNAL</div><div className="text-base font-black text-[var(--cyan)]">{telemetria.signal}</div></div>
+                            <div className="cyber-panel p-2 rounded-lg"><div className="text-[9px] opacity-65">UPTIME</div><div className="text-base font-black text-[var(--cyan)]">{telemetria.uptime}</div></div>
+                        </div>
+                    </div>
+                )}
+
+                {view === 'cco_mesquita' && (
+                    <div className="absolute inset-0 flex flex-col items-center justify-center bg-[var(--void)] p-6 text-center overflow-y-auto">
+                        <div className="cyber-panel p-8 rounded-2xl max-w-xl space-y-4 my-auto">
+                            <div className="text-3xl">🏛️</div>
+                            <h3 className="font-bold text-sm text-[var(--cyan)]">CCO - CENTRO DE CONTROLE OPERACIONAL (MESQUITA)</h3>
+                            <a href="https://cco.mesquita.rj.gov.br" target="_blank" rel="noopener noreferrer" className="inline-block px-4 py-2 bg-[var(--cyan)] text-black font-bold rounded-xl text-xs">Acessar CCO Mesquita ↗</a>
+                        </div>
+                    </div>
+                )}
+
+                {view === 'windy' && (
+                    <iframe src="https://embed.windy.com/embed2.html?lat=-22.7845&lon=-43.4190&width=650&height=550&zoom=9&level=surface&overlay=wind&product=ecmwf" className="w-full h-full border-none" sandbox="allow-scripts allow-same-origin allow-popups" allowFullScreen></iframe>
+                )}
+
+                {view === 'inea' && (
+                    <div className="absolute inset-0 flex flex-col items-center justify-center bg-[var(--void)] p-6 text-center">
+                        <div className="cyber-panel p-8 rounded-2xl max-w-md space-y-4">
+                            <div className="text-3xl">🌊</div>
+                            <h3 className="font-bold text-xs text-[var(--cyan)]">INEA - TELEMETRIA HIDROLÓGICA (RJ)</h3>
+                            <a href="https://www.inea.rj.gov.br" target="_blank" rel="noopener noreferrer" className="inline-block px-4 py-2 bg-[var(--cyan)] text-black font-bold rounded-xl text-xs">Portal INEA ↗</a>
+                        </div>
+                    </div>
+                )}
+
+                {view === 'cemaden' && (
+                    <div className="absolute inset-0 flex flex-col items-center justify-center bg-[var(--void)] p-6 text-center">
+                        <div className="cyber-panel p-8 rounded-2xl max-w-md space-y-4">
+                            <div className="text-3xl">📡</div>
+                            <h3 className="font-bold text-xs text-[var(--cyan)]">CEMADEN - ALERTAS DE RISCO</h3>
+                            <a href="https://www.gov.br/cemaden" target="_blank" rel="noopener noreferrer" className="inline-block px-4 py-2 bg-[var(--cyan)] text-black font-bold rounded-xl text-xs">Portal CEMADEN ↗</a>
+                        </div>
+                    </div>
+                )}
+
+                {/* ABA DE VISTORIA OFICIAL DO SISTEMA */}
+                {view === 'vistoria' && (
+                    <div className="absolute inset-0 p-3 overflow-y-auto flex items-start justify-center bg-black/80 backdrop-blur-md">
+                        <div className="w-full max-w-2xl cyber-panel p-4 rounded-2xl space-y-3 my-4">
+                            <div className="flex items-center justify-between border-b border-[var(--cyan)]/30 pb-2">
+                                <h3 className="font-black text-xs text-[var(--cyan)]">🔒 VISTORIA RARU NEXUS &amp; LAUDO TÉCNICO ({municipioSelecionado.n})</h3>
+                                <button onClick={() => setView('dashboard')} className="px-2 py-1 bg-rose-500/20 text-rose-400 border border-rose-500/40 rounded-lg text-[9px] font-bold">Fechar</button>
+                            </div>
+                            <div className="p-3 bg-[var(--void)] border border-[var(--cyan)]/30 rounded-xl space-y-2">
+                                <div className="flex items-center justify-between">
+                                    <span className="font-mono text-[10px] font-bold text-[var(--cyan)]">📷 CÂMERA 400px + CARIMBO UNIVERSAL + SARA IA</span>
+                                    {!cameraAtiva ? (
+                                        <button type="button" onClick={iniciarCamera} className="px-3 py-1 bg-[var(--cyan)]/20 border border-[var(--cyan)] text-[var(--cyan)] rounded-lg text-[10px] font-bold">Ligar Câmera</button>
+                                    ) : (
+                                        <button type="button" onClick={pararCamera} className="px-3 py-1 bg-[var(--rose)]/20 border border-[var(--rose)] text-[var(--rose)] rounded-lg text-[10px] font-bold">Desligar</button>
+                                    )}
+                                </div>
+                                {cameraAtiva && (
+                                    <div className="space-y-2">
+                                        <video ref={videoRef} autoPlay playsInline className="w-full h-44 object-cover rounded-lg border border-[var(--cyan)]/50"></video>
+                                        <button type="button" onClick={tirarFotoEAnalisarAlgoritmo} className="w-full py-2 bg-[var(--green)] text-black font-bold rounded-lg text-xs">📸 Capturar Foto 400px + Carimbo + SARA IA</button>
+                                    </div>
+                                )}
+                                {fotosCapturadas.length > 0 && (
+                                    <div className="flex gap-2 overflow-x-auto py-1">
+                                        {fotosCapturadas.map((f, i) => (
+                                            <img key={i} src={f} className="w-16 h-16 object-cover rounded-lg border border-[var(--cyan)]/50" />
+                                        ))}
+                                    </div>
+                                )}
+                            </div>
+                            <form onSubmit={salvarRegistroProtocol} className="space-y-2">
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                                    <div>
+                                        <label className="block font-mono text-[10px] text-slate-300 mb-1">Articulador / Responsável:</label>
+                                        <input type="text" value={nomeResponsavel} onChange={e=>setNomeResponsavel(e.target.value)} placeholder="Seu Nome / Liderança GADE" required className="w-full bg-[var(--void)] border border-[var(--cyan)]/40 rounded-xl p-2 font-mono text-xs text-white"/>
+                                    </div>
+                                    <div>
+                                        <label className="block font-mono text-[10px] text-slate-300 mb-1">ID / CPF / Matrícula:</label>
+                                        <input type="text" value={registroOuCpf} onChange={e=>setRegistroOuCpf(e.target.value)} placeholder="Ex: CPF ou Credencial" required className="w-full bg-[var(--void)] border border-[var(--cyan)]/40 rounded-xl p-2 font-mono text-xs text-white"/>
+                                    </div>
+                                </div>
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                                    <div>
+                                        <label className="block font-mono text-[10px] text-slate-300 mb-1">Tipologia de Risco:</label>
+                                        <select value={tipoRisco} onChange={e=>setTipoRisco(e.target.value)} className="w-full bg-[var(--void)] border border-[var(--cyan)]/40 rounded-xl p-2 font-mono text-[10px] text-[var(--cyan)]">
+                                            {TIPOS_RISCO.map((tr,i)=><option key={i} value={tr}>{tr}</option>)}
+                                        </select>
+                                    </div>
+                                    <div>
+                                        <label className="block font-mono text-[10px] text-slate-300 mb-1">Unidade / Coletivo:</label>
+                                        <select value={orgaoSelecionado} onChange={e=>setOrgaoSelecionado(e.target.value)} className="w-full bg-[var(--void)] border border-[var(--cyan)]/40 rounded-xl p-2 font-mono text-[10px] text-[var(--cyan)]">
+                                            {ORGAOS_EQUIPES.map((o,i)=><option key={i} value={o}>{o}</option>)}
+                                        </select>
+                                    </div>
+                                </div>
+                                <div>
+                                    <label className="block font-mono text-[10px] text-slate-300 mb-1">Bairro / Localidade:</label>
+                                    <input type="text" value={bairro} onChange={e=>setBairro(e.target.value)} placeholder="Ex: Rocha Sobrinho / Sebinho / Centro" required className="w-full bg-[var(--void)] border border-[var(--cyan)]/40 rounded-xl p-2 font-mono text-xs text-white"/>
+                                </div>
+                                <div>
+                                    <label className="block font-mono text-[10px] text-slate-300 mb-1">Relato &amp; Prevenção Urbana:</label>
+                                    <textarea rows="3" value={relatorio} onChange={e=>setRelatorio(e.target.value)} placeholder="Descreva condições locais e ações preventivas..." required className="w-full bg-[var(--void)] border border-[var(--cyan)]/40 rounded-xl p-2 font-mono text-xs text-white"></textarea>
+                                </div>
+                                <button type="submit" className="w-full py-3 bg-[var(--orange)] text-black font-black rounded-xl uppercase text-xs shadow-lg">Emitir Protocolo Oficial &amp; Hash SHA-256 + PDF + WhatsApp 🚀</button>
+                            </form>
+                        </div>
+                    </div>
+                )}
+
+                {view === 'offline' && (
+                    <div className="absolute inset-0 p-4 overflow-y-auto flex items-center justify-center bg-black/80 backdrop-blur-md">
+                        <div className="w-full max-w-2xl cyber-panel p-4 rounded-2xl space-y-3">
+                            <div className="flex items-center justify-between border-b border-[var(--cyan)]/30 pb-2">
+                                <h3 className="font-black text-xs text-[var(--cyan)]">📦 ACERVO RARU NEXUS • PROTOCOLOS ({filaOffline.length})</h3>
+                                {filaOffline.length > 0 && (
+                                    <button onClick={() => { localStorage.removeItem('raru_protocol_grade_v11'); setFilaOffline([]); showToast("🗑️ Acervo limpo."); }} className="px-3 py-1 bg-[var(--rose)]/20 text-[var(--rose)] border border-[var(--rose)] rounded-lg text-[10px] font-bold">Limpar</button>
+                                )}
+                            </div>
+                            {filaOffline.length === 0 ? (
+                                <p className="font-mono text-xs text-slate-400 py-10 text-center">Nenhum protocolo emitido até o momento.</p>
+                            ) : (
+                                <div className="space-y-2 max-h-96 overflow-y-auto">
+                                    {filaOffline.map((item, idx) => (
+                                        <div key={idx} className="p-2.5 bg-[var(--void)] border border-[var(--cyan)]/30 rounded-xl flex items-center justify-between">
+                                            <div>
+                                                <div className="font-bold text-[10px] text-[var(--cyan)]">{item.protocolo} - {item.municipio}</div>
+                                                <div className="font-mono text-[9px] text-slate-300">{item.bairro} | {item.tipoRisco.slice(0,30)} | {item.fotosCount} fotos</div>
+                                                <div className="font-mono text-[8px] text-emerald-400">HASH: {item.hashHash.substring(0,22)}...</div>
+                                            </div>
+                                            <div className="flex gap-1.5">
+                                                <button onClick={() => gerarPDFProtocol(item)} className="px-2.5 py-1 bg-[var(--cyan)]/20 border border-[var(--cyan)] text-[var(--cyan)] rounded-lg text-[10px] font-bold">PDF</button>
+                                                <button onClick={() => enviarWhatsApp(item)} className="px-2.5 py-1 bg-[var(--green)]/20 border border-green-500/40 text-[var(--green)] rounded-lg text-[10px] font-bold">Wpp</button>
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
+                        </div>
+                    </div>
+                )}
+            </main>
+        </div>
+    );
+}
+ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+</script>
+</body>
+</html>
