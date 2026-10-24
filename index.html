@@ -1,0 +1,462 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>RARU NEXUS NEXUS-X • SALA DE MONITORAMENTO & SARAH</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+<script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+<script crossorigin src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+<style>
+  :root {
+    --neon-cyan: #00f2fe;
+    --neon-blue: #0072ff;
+    --dark-bg: #030712;
+    --hud-glass: rgba(5, 13, 26, 0.85);
+    --green: #10B981;
+  }
+
+  body {
+    background-color: var(--dark-bg);
+    color: #e2e8f0;
+    font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    overflow-x: hidden;
+  }
+
+  .cyber-glass {
+    background: var(--hud-glass);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid rgba(0, 242, 254, 0.2);
+    box-shadow: 0 0 20px rgba(0, 0, 0, 0.8), inset 0 0 15px rgba(0, 242, 254, 0.05);
+    border-radius: 16px;
+    position: relative;
+  }
+
+  .cyber-glass::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0; height: 1px;
+    background: linear-gradient(90deg, transparent, var(--neon-cyan), transparent);
+  }
+
+  /* Avatar Compacto (140px) com Aura de Vento e Respiração Cibernética */
+  .sara-holobox {
+    position: relative;
+    width: 100%;
+    height: 140px;
+    background: #000;
+    border-radius: 16px;
+    overflow: hidden;
+    border: 1.5px solid rgba(0, 242, 254, 0.4);
+    box-shadow: 0 0 15px rgba(0, 242, 254, 0.2), inset 0 0 10px rgba(0, 242, 254, 0.1);
+    transition: all 0.4s ease;
+  }
+
+  .sara-holobox::after {
+    content: '';
+    position: absolute;
+    inset: -4px;
+    border-radius: 18px;
+    border: 2px solid rgba(0, 242, 254, 0.6);
+    box-shadow: 0 0 15px rgba(0, 242, 254, 0.4), inset 0 0 15px rgba(0, 242, 254, 0.4);
+    opacity: 0.7;
+    pointer-events: none;
+    animation: auraRespiracao 3.5s infinite ease-in-out;
+  }
+
+  @keyframes auraRespiracao {
+    0%, 100% { transform: scale(1); opacity: 0.4; box-shadow: 0 0 10px rgba(0, 242, 254, 0.2), inset 0 0 10px rgba(0, 242, 254, 0.2); }
+    50% { transform: scale(1.02); opacity: 0.9; box-shadow: 0 0 25px rgba(0, 242, 254, 0.8), inset 0 0 25px rgba(0, 242, 254, 0.7); }
+  }
+
+  .sara-holobox.active-transmission::after {
+    animation: auraInalacao 0.9s infinite ease-in-out;
+    border-color: #ffffff;
+  }
+
+  @keyframes auraInalacao {
+    0%, 100% { transform: scale(0.99); opacity: 0.5; box-shadow: 0 0 10px rgba(0, 242, 254, 0.5); }
+    50% { transform: scale(1.03); opacity: 1; box-shadow: 0 0 35px rgba(0, 242, 254, 1), inset 0 0 30px rgba(255, 255, 255, 0.8); }
+  }
+
+  .sara-holobox img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: center 20%;
+    filter: contrast(1.15) saturate(1.1);
+  }
+
+  .hud-badge {
+    position: absolute;
+    bottom: 8px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(3, 7, 18, 0.85);
+    padding: 3px 10px;
+    border-radius: 6px;
+    font-size: 8px;
+    font-weight: 700;
+    letter-spacing: 1.5px;
+    color: var(--neon-cyan);
+    border: 1px solid rgba(0, 242, 254, 0.3);
+    text-transform: uppercase;
+    z-index: 10;
+  }
+
+  .cyber-btn {
+    background: linear-gradient(135deg, rgba(0, 242, 254, 0.15), rgba(0, 114, 255, 0.15));
+    border: 1px solid rgba(0, 242, 254, 0.4);
+    color: #fff;
+    font-weight: 600;
+    transition: all 0.2s ease;
+    cursor: pointer;
+  }
+
+  .cyber-btn:active { transform: scale(0.97); }
+
+  .cyber-btn-primary {
+    background: linear-gradient(135deg, #00f2fe, #0072ff);
+    color: #030712;
+    font-weight: 800;
+    box-shadow: 0 0 15px rgba(0, 242, 254, 0.4);
+  }
+
+  .cyber-input {
+    background: rgba(3, 7, 18, 0.9);
+    border: 1px solid rgba(0, 242, 254, 0.3);
+    color: #fff;
+    border-radius: 10px;
+    outline: none;
+    transition: all 0.2s;
+  }
+
+  .cyber-input:focus {
+    border-color: var(--neon-cyan);
+    box-shadow: 0 0 10px rgba(0, 242, 254, 0.25);
+  }
+
+  ::-webkit-scrollbar { width: 3px; }
+  ::-webkit-scrollbar-thumb { background: rgba(0, 242, 254, 0.4); border-radius: 3px; }
+</style>
+</head>
+<body class="min-h-screen p-3 max-w-[440px] mx-auto flex flex-col justify-between">
+
+  <div id="root"></div>
+
+  <script type="text/babel">
+    const { useState, useEffect } = React;
+    const SARAH_AVATAR_URL = "https://cdn.imagetourls.com/uploads/tyImg/195w5uur9.png";
+
+    const SARAH_TEMAS = [
+      { icon: "🙏", tag: "FÉ & RELIGIÃO", text: "A fé move montanhas e sustenta o nosso caminhar. Como diz Salmos 127: se o Senhor não guardar a cidade, em vão vigia o sentinela. Que nossa vigilância seja guiada pela oração e pelo cuidado mútuo." },
+      { icon: "🎭", tag: "CULTURA & LAZER", text: "A Baixada Fluminense e todo o Estado do Rio transbordam arte, samba, história e resistência. Comunidade que convive e se diverte junta, se protege melhor nas crises." },
+      { icon: "🍲", tag: "CULINÁRIA", text: "Um bom feijão com arroz, um café fresquinho ou aquela canjica aconchegante unem gerações e memórias afetivas. Em dias de chuva forte, um caldo nutritivo conforta quem está na linha de frente." },
+      { icon: "🏛️", tag: "CIDADANIA", text: "Cidadania se exerce todos os dias: participando de conselhos, acompanhando planos diretores, fiscalizando obras e mantendo os NUPDECs ativos. A política do bem comum." },
+      { icon: "🌦️", tag: "DEFESA CIVIL", text: "Alerta estadual para os 92 municípios do RJ: em chuvas intensas, evite encostas e margens de rios como Sarapuí, Iguaçu e Guandu. Emergências: ligue 199 ou 193." }
+    ];
+
+    const COORDS = {
+      mesquita: {lat: -22.7858, lon: -43.4294, name: "Mesquita"},
+      nova_iguacu: {lat: -22.7559, lon: -43.4605, name: "Nova Iguaçu"},
+      belford_roxo: {lat: -22.7642, lon: -43.3997, name: "Belford Roxo"},
+      caxias: {lat: -22.7856, lon: -43.3117, name: "Duque de Caxias"},
+      sao_joao_meriti: {lat: -22.8064, lon: -43.3714, name: "São João de Meriti"},
+      nilopolis: {lat: -22.8117, lon: -43.4111, name: "Nilópolis"},
+      queimados: {lat: -22.7169, lon: -43.5531, name: "Queimados"},
+      japeri: {lat: -22.6419, lon: -43.6556, name: "Japeri"},
+      seropedica: {lat: -22.7447, lon: -43.7114, name: "Seropédica"},
+      itaguai: {lat: -22.8519, lon: -43.7781, name: "Itaguaí"},
+      rio_de_janeiro: {lat: -22.9068, lon: -43.1729, name: "Rio de Janeiro"},
+      niteroi: {lat: -22.8833, lon: -43.1036, name: "Niterói"},
+      sao_goncalo: {lat: -22.8267, lon: -43.0631, name: "São Gonçalo"},
+      petropolis: {lat: -22.505, lon: -43.1786, name: "Petrópolis"},
+      teresopolis: {lat: -22.4122, lon: -42.9653, name: "Teresópolis"},
+      nova_friburgo: {lat: -22.2819, lon: -42.5311, name: "Nova Friburgo"},
+      campos_dos_goytacazes: {lat: -21.7542, lon: -41.3242, name: "Campos dos Goytacazes"},
+      volta_redonda: {lat: -22.5231, lon: -44.1039, name: "Volta Redonda"}
+    };
+
+    function AppRoom() {
+      const [temaIdx, setTemaIdx] = useState(0);
+      const [falando, setFalando] = useState(false);
+      const [statusText, setStatusText] = useState("SARA: STANDBY (RESPIRAÇÃO ATIVA)");
+      const [temp, setTemp] = useState("--°C");
+      const [chuva, setChuva] = useState("Sincronizando...");
+      const [munKey, setMunKey] = useState("mesquita");
+      const [munName, setMunName] = useState("Mesquita (Base)");
+      const [chatLog, setChatLog] = useState([['SARA', 'Sistema integrado pronto.']]);
+      const [chatInput, setChatInput] = useState("");
+      const [customTxt, setCustomTxt] = useState("Sistemas de telemetria operando com aura de vento ativa.");
+
+      const falar = (textoParaFalar, statusCustom) => {
+        const texto = textoParaFalar || customTxt;
+        if ('speechSynthesis' in window) {
+          window.speechSynthesis.cancel();
+          const u = new SpeechSynthesisUtterance(texto);
+          u.lang = 'pt-BR';
+          u.rate = 0.95;
+          u.pitch = 1.1;
+
+          u.onstart = () => {
+            setFalando(true);
+            setStatusText(statusCustom || "SARA: TRANSMITINDO ALERTA...");
+          };
+
+          u.onend = () => {
+            setFalando(false);
+            setStatusText("SARA: STANDBY (RESPIRAÇÃO ATIVA)");
+          };
+
+          window.speechSynthesis.speak(u);
+        } else {
+          setFalando(true);
+          setTimeout(() => setFalando(false), 3000);
+        }
+      };
+
+      const falarSarahTema = (idx) => {
+        const t = SARAH_TEMAS[idx];
+        setTemaIdx(idx);
+        setCustomTxt(t.text);
+        falar(t.text, `SARA: ${t.tag}`);
+      };
+
+      const atualizarClima = async () => {
+        const loc = COORDS[munKey] || COORDS['mesquita'];
+        setTemp('...');
+        setChuva('Buscando satélite...');
+        try {
+          const res = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${loc.lat}&longitude=${loc.lon}&current=temperature_2m,relative_humidity_2m,rain,precipitation`);
+          const data = await res.json();
+          const t = data.current.temperature_2m;
+          const h = data.current.relative_humidity_2m;
+          const r = data.current.rain || data.current.precipitation || 0;
+          const st = r > 1.5 ? 'CRÍTICO' : 'ESTÁVEL';
+
+          setTemp(t + '°C');
+          setChuva(`${r}mm/h • ${h}% • ${st}`);
+          falar(`Telemetria de ${loc.name} atualizada. ${t} graus e ${r} milímetros de chuva por hora.`, "SARA: TELEMETRIA OK");
+        } catch (e) {
+          setTemp('ERRO');
+          setChuva('Falha de link');
+          falar('Erro de conexão com o satélite meteorológico.', "SARA: ERRO DE LINK");
+        }
+      };
+
+      useEffect(() => {
+        atualizarClima();
+      }, [munKey]);
+
+      const dispararAlarme = (tipo) => {
+        if ('AudioContext' in window || 'webkitAudioContext' in window) {
+          const actx = new (window.AudioContext || window.webkitAudioContext)();
+          let speed = tipo === 'br' ? 350 : 160;
+          let tog = false;
+          const interval = setInterval(() => {
+            try {
+              const o = actx.createOscillator();
+              const g = actx.createGain();
+              o.type = 'square';
+              o.frequency.value = tog ? 900 : 400;
+              g.gain.value = 0.15;
+              o.connect(g);
+              g.connect(actx.destination);
+              o.start();
+              o.stop(actx.currentTime + speed / 1000);
+              tog = !tog;
+            } catch(err) {}
+          }, speed);
+          window.currentAlarmInterval = interval;
+        }
+        falar(tipo === 'br' ? 'Alarme padrão brasileiro ativado' : 'Alarme tático russo ativado', "SARA: ALERTA TÁTICO");
+      };
+
+      const pararAlarme = () => {
+        if (window.currentAlarmInterval) {
+          clearInterval(window.currentAlarmInterval);
+          window.currentAlarmInterval = null;
+        }
+        falar("Alarmes desativados.", "SARA: STANDBY");
+      };
+
+      const enviarChat = () => {
+        if (!chatInput.trim()) return;
+        const q = chatInput;
+        const resp = `Comando processado: ${q}`;
+        setChatLog(prev => [...prev, ['USER', q], ['SARA', resp]]);
+        setChatInput("");
+        falar(resp, "SARA: COMANDO EXECUTADO");
+      };
+
+      return (
+        <div className="w-full flex flex-col justify-between space-y-2.5">
+          <div>
+            {/* TOP APP BAR */}
+            <div className="flex items-center justify-between pb-2.5 border-b border-cyan-500/20 mb-2.5">
+              <div className="flex items-center space-x-2">
+                <svg className="w-5 h-5 text-cyan-400 animate-pulse" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M9 3v2m6-2v2M9 19v2m6-2v2M5 9H3m2 6H3m18-6h-2m2 6h-2M7 19h10a2 2 0 002-2V7a2 2 0 00-2-2H7a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
+                <div>
+                  <h1 className="text-cyan-400 font-black text-xs tracking-widest leading-none">RARU NEXUS</h1>
+                  <p className="text-[8px] text-gray-400 font-mono tracking-wider">CYBER DEFENSE HUD • SARAH INTEGRATED</p>
+                </div>
+              </div>
+              <div className="flex items-center space-x-1 bg-black/50 border border-cyan-500/30 px-2 py-0.5 rounded-full">
+                <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-ping"></span>
+                <span className="text-[9px] font-mono text-cyan-300">ONLINE</span>
+              </div>
+            </div>
+
+            {/* HOLOGRAPHIC SARA COMPACT & AURA VENTO */}
+            <div className={`sara-holobox mb-2.5 ${falando ? 'active-transmission' : ''}`}>
+              <img src={SARAH_AVATAR_URL} alt="Sarah HUD Visual" />
+              <div className="hud-badge">{statusText}</div>
+            </div>
+
+            {/* SELETOR DE PERSONALIDADES / TÓPICOS DA SARAH */}
+            <div className="bg-black/60 p-2.5 rounded-xl border border-cyan-500/30 mb-2.5 space-y-2">
+              <div className="flex justify-between items-center text-[9px] font-mono text-cyan-400">
+                <span>{SARAH_TEMAS[temaIdx].icon} {SARAH_TEMAS[temaIdx].tag}</span>
+                <span className="text-slate-400">Toque para ouvir a Sarah</span>
+              </div>
+              <p className="text-[10px] text-slate-200 font-mono italic">"{SARAH_TEMAS[temaIdx].text}"</p>
+              <div className="grid grid-cols-5 gap-1 pt-1">
+                {SARAH_TEMAS.map((t, i) => (
+                  <button 
+                    key={i} 
+                    onClick={() => falarSarahTema(i)}
+                    className={`py-1 rounded-lg text-[9px] font-bold font-mono transition-all border ${temaIdx === i ? 'bg-cyan-400 text-black border-cyan-400 shadow-[0_0_10px_rgba(0,242,254,0.5)]' : 'bg-white/5 border-white/10 text-slate-300 hover:bg-white/10'}`}
+                  >
+                    {t.icon}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* SPEECH COMMAND CONSOLE */}
+            <div className="flex gap-2 mb-2.5">
+              <input 
+                id="txt" 
+                value={customTxt} 
+                onChange={(e) => setCustomTxt(e.target.value)} 
+                className="flex-1 cyber-input px-3 py-2 text-[11px] font-mono" 
+              />
+              <button onClick={() => falar(customTxt, "SARA: TRANSMITINDO...")} className="cyber-btn-primary px-4 py-2 rounded-xl text-[11px] flex items-center justify-center space-x-1">
+                <svg className="w-3.5 h-3.5 fill-current" viewBox="0 0 24 24"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3z"/><path d="M19 10v1a7 7 0 0 1-14 0v-1H3v1a9 9 0 0 0 8 8.94V22h2v-2.06A9 9 0 0 0 21 11v-1h-2z"/></svg>
+                <span>FALAR</span>
+              </button>
+            </div>
+
+            {/* 4 CORE MODULES GRID */}
+            <div className="grid grid-cols-2 gap-2.5">
+              
+              {/* MODULE 1: WEATHER RADAR */}
+              <div className="cyber-glass p-2.5 flex flex-col justify-between">
+                <div>
+                  <div className="flex items-center justify-between mb-1">
+                    <span className="text-[9px] font-bold tracking-wider text-cyan-400 uppercase">Radar Clima</span>
+                    <svg className="w-3.5 h-3.5 text-cyan-400" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M3 15a4 4 0 004 4h10a4 4 0 004-4M3 9a4 4 0 014-4h10a4 4 0 014 4m-8 4v4m0-8v.01"/></svg>
+                  </div>
+                  <p className="text-xl font-black text-white font-mono mt-0.5">{temp}</p>
+                  <p className="text-[9px] text-gray-400 font-mono mt-0.5">{chuva}</p>
+                </div>
+                <button onClick={atualizarClima} className="cyber-btn mt-2.5 w-full rounded-lg py-1 text-[9px] font-mono tracking-wider flex items-center justify-center space-x-1">
+                  <span>ATUALIZAR</span>
+                </button>
+              </div>
+
+              {/* MODULE 2: TACTICAL ALARM */}
+              <div className="cyber-glass p-2.5 flex flex-col justify-between">
+                <div>
+                  <div className="flex items-center justify-between mb-1">
+                    <span className="text-[9px] font-bold tracking-wider text-yellow-400 uppercase">Alarme Tático</span>
+                    <svg className="w-3.5 h-3.5 text-yellow-400" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/></svg>
+                  </div>
+                  <div className="grid grid-cols-2 gap-1 mt-1.5">
+                    <button onClick={() => dispararAlarme('br')} className="cyber-btn bg-yellow-500/15 border-yellow-500/40 text-yellow-400 font-bold text-[9px] py-1.5 rounded-lg">BR</button>
+                    <button onClick={() => dispararAlarme('ru')} className="cyber-btn bg-rose-500/15 border-rose-500/40 text-rose-400 font-bold text-[9px] py-1.5 rounded-lg">RUSSO</button>
+                  </div>
+                </div>
+                <button onClick={pararAlarme} className="cyber-btn mt-2 w-full bg-zinc-900/80 border-zinc-700 text-gray-300 text-[9px] py-1 rounded-lg font-mono">PARAR ALARME</button>
+              </div>
+
+              {/* MODULE 3: SARA CHAT HUD */}
+              <div className="cyber-glass p-2.5 flex flex-col justify-between">
+                <div>
+                  <div className="flex items-center justify-between mb-1">
+                    <span className="text-[9px] font-bold tracking-wider text-teal-400 uppercase">Sara Chat HUD</span>
+                    <svg className="w-3.5 h-3.5 text-teal-400" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/></svg>
+                  </div>
+                  <div className="bg-black/60 h-14 overflow-y-auto rounded-lg mt-1 p-1.5 text-[8px] font-mono border border-gray-800 space-y-1">
+                    {chatLog.map((log, idx) => (
+                      <div key={idx} className={log[0] === 'SARA' ? 'text-teal-300' : 'text-cyan-400'}>
+                        &gt; {log[0]}: {log[1]}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+                <div className="flex gap-1 mt-1.5">
+                  <input 
+                    value={chatInput} 
+                    onChange={(e) => setChatInput(e.target.value)} 
+                    onKeyDown={(e) => e.key === 'Enter' && enviarChat()} 
+                    placeholder="Comando..." 
+                    className="flex-1 cyber-input px-2 py-1 text-[9px] font-mono" 
+                  />
+                  <button onClick={enviarChat} className="cyber-btn bg-teal-500/20 border-teal-500/50 text-teal-300 px-2 rounded-lg font-bold text-xs flex items-center justify-center">&gt;</button>
+                </div>
+              </div>
+
+              {/* MODULE 4: MUNICIPALITIES */}
+              <div className="cyber-glass p-2.5 flex flex-col justify-between">
+                <div>
+                  <div className="flex items-center justify-between mb-1">
+                    <span className="text-[9px] font-bold tracking-wider text-orange-400 uppercase">Municípios RJ</span>
+                    <svg className="w-3.5 h-3.5 text-orange-400" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><path strokeLinecap="round" strokeLinejoin="round" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+                  </div>
+                  <select 
+                    value={munKey} 
+                    onChange={(e) => {
+                      setMunKey(e.target.value);
+                      const opt = e.target.options[e.target.selectedIndex];
+                      setMunName(opt.text);
+                    }} 
+                    className="w-full cyber-input mt-1 p-1 text-[9px] font-mono"
+                  >
+                    <option value="mesquita">Mesquita (Base)</option>
+                    <option value="nova_iguacu">Nova Iguaçu</option>
+                    <option value="belford_roxo">Belford Roxo</option>
+                    <option value="caxias">Duque de Caxias</option>
+                    <option value="sao_joao_meriti">São João de Meriti</option>
+                    <option value="nilopolis">Nilópolis</option>
+                    <option value="queimados">Queimados</option>
+                    <option value="japeri">Japeri</option>
+                    <option value="seropedica">Seropédica</option>
+                    <option value="itaguai">Itaguaí</option>
+                    <option value="rio_de_janeiro">Rio de Janeiro</option>
+                    <option value="niteroi">Niterói</option>
+                    <option value="sao_goncalo">São Gonçalo</option>
+                    <option value="petropolis">Petrópolis</option>
+                    <option value="teresopolis">Teresópolis</option>
+                    <option value="nova_friburgo">Nova Friburgo</option>
+                    <option value="campos_dos_goytacazes">Campos dos Goytacazes</option>
+                    <option value="volta_redonda">Volta Redonda</option>
+                  </select>
+                </div>
+                <p className="text-[8px] text-gray-400 font-mono mt-1">{munName} • ATIVO</p>
+              </div>
+
+            </div>
+          </div>
+
+          <p className="text-center text-[8px] text-cyan-400/40 font-mono mt-3">RARU NEXUS ENGINE • SARAH AI NEXUS • OPEN-METEO SYNC</p>
+        </div>
+      );
+    }
+
+    ReactDOM.createRoot(document.getElementById('root')).render(<AppRoom />);
+  </script>
+</body>
+</html>
