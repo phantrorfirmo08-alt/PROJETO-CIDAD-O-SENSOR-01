@@ -1,0 +1,479 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>RARU NEXUS AI V11.4 Plus - SALA DE OPERAÇÕES</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+<script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+<script crossorigin src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<style>
+ body{background:#02040A;color:#E5E7EB;font-family:'JetBrains Mono',monospace}
+ .panel{background:#0B1120;border:1px solid rgba(255,255,255,.15);border-radius:18px}
+ .label{font-size:11px;letter-spacing:.08em;font-weight:800;color:#94A3B8;text-transform:uppercase}
+ .btn{width:100%;padding:14px;border-radius:14px;font-weight:900;font-size:12px;letter-spacing:.04em}
+ .x{position:absolute;top:4px;right:4px;width:20px;height:20px;background:#111;color:#fff;border-radius:50%;display:grid;place-items:center;font-weight:900;border:1px solid #fff;cursor:pointer;font-size:11px}
+ @keyframes pisca { 0%,100% { opacity: 1; transform: scale(1); } 50% { opacity: .7; transform: scale(1.02); } }
+ .pisca { animation: pisca 1.5s infinite; }
+</style>
+</head>
+<body class="p-2 flex justify-center">
+<div id="root" class="w-full max-w-[640px]"></div>
+
+<script type="text/babel">
+const {useState, useRef} = React;
+
+const MUNICIPIOS = [
+  "Mesquita (Base Anfitriã Oficial - Rocha Sobrinho)",
+  "Nova Iguaçu (Baixada Fluminense)",
+  "Duque de Caxias (Baixada Fluminense)",
+  "São João de Meriti (Baixada Fluminense)",
+  "Belford Roxo (Baixada Fluminense)",
+  "Nilópolis (Baixada Fluminense)",
+  "São Gonçalo (Região Metropolitana)",
+  "Niterói (Região Metropolitana)",
+  "Petrópolis (Região Serrana)",
+  "Angra dos Reis",
+  "Aperibé",
+  "Araruama",
+  "Areal",
+  "Armação dos Búzios",
+  "Arraial do Cabo",
+  "Barra do Piraí",
+  "Barra Mansa",
+  "Bom Jardim",
+  "Bom Jesus do Itabapoana",
+  "Cabo Frio",
+  "Cachoeiras de Macacu",
+  "Cambuci",
+  "Campos dos Goytacazes",
+  "Cantagalo",
+  "Carapebus",
+  "Cardoso Moreira",
+  "Carmo",
+  "Casimiro de Abreu",
+  "Comendador Levy Gasparian",
+  "Conceição de Macabu",
+  "Cordeiro",
+  "Duas Barras",
+  "Engenheiro Paulo de Frontin",
+  "Guapimirim",
+  "Iguaba Grande",
+  "Itaboraí",
+  "Itaguaí",
+  "Italva",
+  "Itaocara",
+  "Itaperuna",
+  "Itatiaia",
+  "Japeri",
+  "Laje do Muriaé",
+  "Macaé",
+  "Macuco",
+  "Magé",
+  "Mangaratiba",
+  "Maricá",
+  "Mendes",
+  "Miguel Pereira",
+  "Miracema",
+  "Natividade",
+  "Nova Friburgo",
+  "Paracambi",
+  "Paraíba do Sul",
+  "Paraty",
+  "Paty do Alferes",
+  "Pinheiral",
+  "Piraí",
+  "Porciúncula",
+  "Porto Real",
+  "Quatis",
+  "Queimados",
+  "Quissamã",
+  "Resende",
+  "Rio Bonito",
+  "Rio Claro",
+  "Rio das Flores",
+  "Rio das Ostras",
+  "Rio de Janeiro (Capital)",
+  "Santa Maria Madalena",
+  "Santo Antônio de Pádua",
+  "São Fidélis",
+  "São Francisco de Itabapoana",
+  "São João da Barra",
+  "São José de Ubá",
+  "São José do Vale do Rio Preto",
+  "São Pedro da Aldeia",
+  "São Sebastião do Alto",
+  "Sapucaia",
+  "Saquarema",
+  "Seropédica",
+  "Silva Jardim",
+  "Sumidouro",
+  "Tanguá",
+  "Teresópolis",
+  "Trajano de Moraes",
+  "Três Rios",
+  "Valença",
+  "Varre-Sai",
+  "Vassouras",
+  "Volta Redonda"
+];
+
+const RISCOS = ["R1 - BAIXO / PREVENTIVO", "R2 - MODERADO / ATENCAO", "R3 - ALTO / ALERTA", "R4 - IMINENTE / EVACUACAO"];
+
+function App() {
+  const [autenticado, setAutenticado] = useState(false);
+  const [senha, setSenha] = useState('');
+  const [erroSenha, setErroSenha] = useState(false);
+
+  const [mun, setMun] = useState(MUNICIPIOS[0]);
+  const [fotos, setFotos] = useState([]);
+  const [camOn, setCamOn] = useState(false);
+  const [nome, setNome] = useState('');
+  const [bairro, setBairro] = useState('');
+  const [risco, setRisco] = useState(RISCOS[0]);
+  const [rel, setRel] = useState('');
+  const [chuva, setChuva] = useState(12);
+  const [vento, setVento] = useState(18);
+
+  const [statusBR, setStatusBR] = useState('AGUARDANDO');
+  const [timerBR, setTimerBR] = useState('00:00 / 05:00');
+  const [statusRU, setStatusRU] = useState('AGUARDANDO');
+  const [timerRU, setTimerRU] = useState('00:00 / 05:00');
+
+  const videoRef = useRef(null);
+  const streamRef = useRef(null);
+  const audioCtxRef = useRef(null);
+  const oscRef = useRef(null);
+  const intervalRef = useRef(null);
+
+  const fazerLogin = () => {
+    if(senha === 'sarah2026') {
+      setAutenticado(true);
+      setErroSenha(false);
+    } else {
+      setErroSenha(true);
+    }
+  };
+
+  const startCam = async () => {
+    try {
+      const s = await navigator.mediaDevices.getUserMedia({video:{facingMode:{ideal:"environment"}, width:{ideal:1280}}});
+      streamRef.current = s;
+      setCamOn(true);
+      setTimeout(()=>{ if(videoRef.current){ videoRef.current.srcObject = s; videoRef.current.play().catch(()=>{}); } }, 150);
+    } catch(e) { alert('Câmera indisponível.'); }
+  };
+
+  const stopCam = () => {
+    if(streamRef.current) streamRef.current.getTracks().forEach(t => t.stop());
+    setCamOn(false);
+  };
+
+  const capturar = () => {
+    const v = videoRef.current;
+    if(!v || v.videoWidth == 0) return;
+    const c = document.createElement('canvas');
+    c.width = 400;
+    c.height = Math.round(400 * v.videoHeight / v.videoWidth);
+    const ctx = c.getContext('2d');
+    ctx.drawImage(v, 0, 0, c.width, c.height);
+    ctx.fillStyle = 'rgba(0,0,0,.9)';
+    ctx.fillRect(0, c.height - 36, c.width, 36);
+    ctx.fillStyle = '#fff';
+    ctx.font = '700 9px monospace';
+    ctx.fillText(new Date().toLocaleString('pt-BR') + ' | ' + mun + ' | ' + bairro, 6, c.height - 12);
+    setFotos(p => [...p, c.toDataURL('image/jpeg', 0.35)]);
+  };
+
+  const gerarPDFBlob = async (prot, hash) => {
+    const {jsPDF} = window.jspdf;
+    const doc = new jsPDF('p', 'mm', 'a4');
+    doc.setFillColor(8, 12, 20);
+    doc.rect(0, 0, 210, 297, 'F');
+    doc.setTextColor(255, 255, 255);
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(11);
+    doc.text('VISTORIA - ' + prot, 10, 14);
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(9);
+    doc.text('RESPONSAVEL: ' + nome + ' | ' + mun + ' | BAIRRO: ' + bairro, 10, 20);
+    doc.text('RISCO: ' + risco, 10, 25);
+    const linhas = doc.splitTextToSize(rel, 190);
+    doc.text(linhas, 10, 34);
+    let y = 50;
+    for(let i=0; i<fotos.length; i++) {
+      if(y > 210) { doc.addPage(); doc.setFillColor(8, 12, 20); doc.rect(0, 0, 210, 297, 'F'); y = 10; }
+      try { doc.addImage(fotos[i], 'JPEG', 10 + (i%2)*95, y, 88, 50); } catch {}
+      if(i%2 == 1) y += 55;
+      else if(i == fotos.length - 1) y += 55;
+    }
+    doc.setFontSize(6);
+    doc.text('HASH: ' + hash, 10, 290);
+    return doc.output('blob');
+  };
+
+  const enviarRelatorio = async () => {
+    if(!nome || !bairro) { alert('Preencha Responsável e Bairro'); return; }
+    const prot = 'PROT-RJC-2026-' + Math.floor(Math.random()*8999+1000);
+    const raw = prot + '-' + Date.now();
+    const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(raw));
+    const hash = Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2,'0')).join('');
+    const texto = 'VISTORIA SARAH AI\nPROTOCOLO: ' + prot + '\nRESPONSAVEL: ' + nome + '\nLOCAL: ' + mun + ' - ' + bairro + '\nRISCO: ' + risco + '\nFOTOS: ' + fotos.length;
+    const fotoFiles = await Promise.all(fotos.map(async (d, i) => {
+      const r = await fetch(d);
+      const b = await r.blob();
+      return new File([b], 'FOTO_' + (i+1) + '.jpg', {type:'image/jpeg'});
+    }));
+    if(navigator.canShare && fotoFiles.length > 0 && navigator.canShare({files: fotoFiles})) {
+      await navigator.share({title: prot, text: texto, files: fotoFiles});
+    } else {
+      window.open('https://wa.me/?text=' + encodeURIComponent(texto), '_blank');
+    }
+  };
+
+  const enviarPDF = async () => {
+    if(!nome || !bairro) { alert('Preencha Responsável e Bairro'); return; }
+    const prot = 'PROT-RJC-2026-' + Math.floor(Math.random()*8999+1000);
+    const raw = prot + '-' + Date.now();
+    const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(raw));
+    const hash = Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2,'0')).join('');
+    const blob = await gerarPDFBlob(prot, hash);
+    const pdfFile = new File([blob], prot + '.pdf', {type:'application/pdf'});
+    if(navigator.canShare && navigator.canShare({files:[pdfFile]})) {
+      await navigator.share({title: prot, text: 'PDF ' + prot, files:[pdfFile]});
+    } else {
+      const url = URL.createObjectURL(blob);
+      window.open(url, '_blank');
+    }
+  };
+
+  const initAudio = () => {
+    if(!audioCtxRef.current) audioCtxRef.current = new (window.AudioContext || window.webkitAudioContext)();
+  };
+
+  const pararSirenes = () => {
+    if(intervalRef.current) clearInterval(intervalRef.current);
+    if(oscRef.current) { try{ oscRef.current.stop(); }catch{} oscRef.current = null; }
+    setStatusBR('AGUARDANDO');
+    setStatusRU('AGUARDANDO');
+    setTimerBR('00:00 / 05:00');
+    setTimerRU('00:00 / 05:00');
+  };
+
+  const tocarSomBR = () => {
+    initAudio();
+    if(oscRef.current) return;
+    const ctx = audioCtxRef.current;
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(440, ctx.currentTime);
+    gain.gain.setValueAtTime(0.4, ctx.currentTime);
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+    osc.start();
+    oscRef.current = osc;
+    let dir = 1;
+    intervalRef.current = setInterval(() => {
+      if(!oscRef.current) return;
+      let f = oscRef.current.frequency.value;
+      if(f > 880) dir = -1;
+      if(f < 440) dir = 1;
+      oscRef.current.frequency.linearRampToValueAtTime(f + dir * 8, ctx.currentTime + 0.1);
+    }, 100);
+  };
+
+  const tocarSomRU = () => {
+    initAudio();
+    if(oscRef.current) return;
+    const ctx = audioCtxRef.current;
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.type = 'sawtooth';
+    osc.frequency.setValueAtTime(600, ctx.currentTime);
+    gain.gain.setValueAtTime(0.35, ctx.currentTime);
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+    osc.start();
+    oscRef.current = osc;
+    let on = true;
+    intervalRef.current = setInterval(() => {
+      on = !on;
+      gain.gain.setValueAtTime(on ? 0.35 : 0.05, ctx.currentTime);
+    }, 400);
+  };
+
+  const formatSec = (s) => {
+    let m = Math.floor(s/60).toString().padStart(2,'0');
+    let ss = (s%60).toString().padStart(2,'0');
+    return m + ':' + ss;
+  };
+
+  const iniciarBR = () => {
+    pararSirenes();
+    let sec = 0;
+    tocarSomBR();
+    setStatusBR('TOCANDO - ALERTA MÁXIMO (3 MIN)');
+    intervalRef.current = setInterval(() => {
+      sec++;
+      setTimerBR(formatSec(sec) + ' / 05:00');
+      if(sec === 180) {
+        if(oscRef.current) { try{ oscRef.current.stop(); }catch{} oscRef.current = null; }
+        setStatusBR('PAUSA DE LUCIDEZ (1 MIN)');
+      }
+      if(sec === 240) {
+        tocarSomBR();
+        setStatusBR('EVACUAÇÃO FINAL (1 MIN)');
+      }
+      if(sec >= 300) {
+        pararSirenes();
+        setStatusBR('PROTOCOLO CONCLUÍDO');
+      }
+    }, 1000);
+  };
+
+  const iniciarRU = () => {
+    pararSirenes();
+    let sec = 0;
+    tocarSomRU();
+    setStatusRU('TOCANDO - ALERTA TÁTICO (3 MIN)');
+    intervalRef.current = setInterval(() => {
+      sec++;
+      setTimerRU(formatSec(sec) + ' / 05:00');
+      if(sec === 180) {
+        if(oscRef.current) { try{ oscRef.current.stop(); }catch{} oscRef.current = null; }
+        setStatusRU('PAUSA DE LUCIDEZ (1 MIN)');
+      }
+      if(sec === 240) {
+        tocarSomRU();
+        setStatusRU('ALERTA FINAL (1 MIN)');
+      }
+      if(sec >= 300) {
+        pararSirenes();
+        setStatusRU('PROTOCOLO CONCLUÍDO');
+      }
+    }, 1000);
+  };
+
+  if (!autenticado) {
+    return (
+      <div className="w-full max-w-[420px] panel p-6 space-y-4 shadow-2xl mt-10">
+        <div className="text-center space-y-1">
+          <p className="text-[10px] text-blue-400 font-bold tracking-widest">ACESSO RESTRITO - ADMINISTRADOR</p>
+          <h1 className="text-base font-black text-white">RARU NEXUS AI V11.4 Plus</h1>
+          <p className="text-[10px] text-slate-400">Rede Automatizada de Resiliência Urbana, Mesquita - RJ</p>
+          <p className="text-[9px] text-slate-500 italic">"Prevenção inteligente para todos."</p>
+        </div>
+        <div className="space-y-3 pt-2">
+          <div>
+            <label className="label">Senha do Operador</label>
+            <input type="password" value={senha} onChange={e=>setSenha(e.target.value)} placeholder="Digite a senha (sarah2026)..." className="w-full mt-1 bg-black border border-white/20 rounded-xl p-3 text-sm text-white focus:outline-none focus:border-blue-500"/>
+          </div>
+          <button onClick={fazerLogin} className="btn bg-blue-600 hover:bg-blue-500 text-white">ACESSAR CENTRAL</button>
+          {erroSenha && <p className="text-[10px] text-red-400 text-center">Senha incorreta. Acesso negado.</p>}
+        </div>
+        <div className="text-center pt-2 border-t border-white/5">
+          <p className="text-[9px] text-slate-500">Grupo a Chave da Esperança © GADE • Rocha Sobrinho Mesquita RJ</p>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-3 w-full">
+      <div className="panel p-3 flex justify-between items-center">
+        <div>
+          <h2 className="text-xs font-black text-white">RARU NEXUS AI V11.4 Plus</h2>
+          <p className="text-[9px] text-slate-400">Grupo a Chave da Esperança © GADE • Rocha Sobrinho</p>
+        </div>
+        <button onClick={()=>setAutenticado(false)} className="bg-red-900/30 border border-red-500/40 text-red-400 px-3 py-1.5 rounded-xl text-[9px] font-bold">BLOQUEAR</button>
+      </div>
+
+      <div className="panel p-3 space-y-2">
+        <div className="flex justify-between items-center">
+          <p className="label">MAPA TÁTICO ESTADUAL - 92 MUNICÍPIOS (RJ)</p>
+          <span className="text-[10px] px-2 py-1 rounded-full bg-blue-900/30 text-blue-300 font-bold">Base Ativa</span>
+        </div>
+        <div className="bg-black border border-blue-500/30 rounded-xl p-4 text-center space-y-2">
+          <div className="pisca inline-block bg-red-600 text-white font-black px-4 py-2 rounded-xl text-xs border border-red-400">
+            📍 MESQUITA (ROCHA SOBRINHO / SEBINHO) - BASE ANFITRIÃ
+          </div>
+          <p className="text-[10px] text-slate-400">Malha de monitoramento unificada operando para todos os 92 municípios do Estado do Rio de Janeiro.</p>
+        </div>
+      </div>
+
+      <div className="panel p-3 space-y-3">
+        <div className="flex justify-between items-center"><p className="label">TELEMETRIA & MUNICÍPIO EM FOCO</p><span className="text-[10px] px-3 py-1 rounded-full bg-emerald-900/30 text-emerald-300 font-bold">ONLINE</span></div>
+        <div>
+          <label className="label mb-1 block">SELECIONAR MUNICÍPIO (92 RJ):</label>
+          <select value={mun} onChange={e=>setMun(e.target.value)} className="w-full bg-black border border-white/20 rounded-xl p-3 text-[12px] font-bold text-white">
+            {MUNICIPIOS.map((m,i)=><option key={i} value={m}>{m}</option>)}
+          </select>
+        </div>
+        <div className="bg-black border border-white/10 rounded-xl p-3">
+          <p className="label">Condição Climática Atual:</p>
+          <p className="text-[11px] text-emerald-300 mt-1">• Município: {mun} | Chuva: {chuva} mm/h | Vento: {vento} km/h (Seguro)</p>
+        </div>
+      </div>
+
+      <div className="panel p-4 space-y-3">
+        <p className="label">SISTEMA ALERTA CRÍTICO - BR + RU (PROTOCOLO 5 MINUTOS)</p>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-3 pt-1">
+          <div className="bg-black border border-white/10 rounded-xl p-3 space-y-2">
+            <p className="text-[10px] font-bold text-white">ALERTA BRASILEIRO (CEMADEN)</p>
+            <div className="flex gap-2">
+              <button onClick={iniciarBR} className="btn bg-white text-black py-2">DISPARAR BR</button>
+              <button onClick={pararSirenes} className="btn bg-black border border-white/20 text-white py-2">PARAR</button>
+            </div>
+            <p className="text-[10px] text-yellow-400 font-bold pt-1">STATUS: {statusBR} ({timerBR})</p>
+          </div>
+          <div className="bg-black border border-white/10 rounded-xl p-3 space-y-2">
+            <p className="text-[10px] font-bold text-white">ALERTA TÁTICO (PADRÃO RUSSO)</p>
+            <div className="flex gap-2">
+              <button onClick={iniciarRU} className="btn bg-[#E5E7EB] text-black py-2">DISPARAR RU</button>
+              <button onClick={pararSirenes} className="btn bg-black border border-white/20 text-white py-2">PARAR</button>
+            </div>
+            <p className="text-[10px] text-yellow-400 font-bold pt-1">STATUS: {statusRU} ({timerRU})</p>
+          </div>
+        </div>
+      </div>
+
+      <div className="panel p-3 space-y-3">
+        <p className="label">VISTORIA DE CAMPO - {mun.split('(')[0]}</p>
+        <div className="bg-black border border-white/10 rounded-xl p-2 space-y-2">
+          <div className="flex justify-between items-center"><span className="label">Câmera</span>{!camOn?<button onClick={startCam} className="text-[10px] bg-white text-black font-bold px-3 py-1 rounded">LIGAR</button>:<button onClick={stopCam} className="text-[10px] text-red-400 border px-3 py-1 rounded">DESLIGAR</button>}</div>
+          <div className="bg-[#000] rounded-lg overflow-hidden"><video ref={videoRef} autoPlay playsInline muted style={{width:'100%', height:'180px', objectFit:'cover', display:camOn?'block':'none'}}></video>{!camOn && <div className="h-[180px] grid place-items-center text-[11px] text-slate-600">CÂMERA DESLIGADA</div>}</div>
+          {camOn && <button onClick={capturar} className="w-full py-2 bg-white text-black font-bold rounded-lg text-xs">CAPTURAR FOTO COM CARIMBO</button>}
+          {fotos.length>0 && <div className="flex gap-2 overflow-x-auto">{fotos.map((f,i)=><div key={i} className="relative shrink-0"><img src={f} className="w-16 h-16 object-cover rounded"/><div className="x" onClick={()=>setFotos(fotos.filter((_,idx)=>idx!==i))}>X</div></div>)}</div>}
+        </div>
+        <input value={nome} onChange={e=>setNome(e.target.value)} placeholder="RESPONSÁVEL TÉCNICO *" className="w-full bg-black border border-white/10 rounded-xl p-3 text-xs text-white"/>
+        <div className="grid grid-cols-2 gap-2">
+          <input value={bairro} onChange={e=>setBairro(e.target.value)} placeholder="BAIRRO *" className="bg-black border border-white/10 rounded-xl p-3 text-xs text-white"/>
+          <select value={risco} onChange={e=>setRisco(e.target.value)} className="bg-black border border-white/10 rounded-xl p-3 text-[11px] text-white">
+            {RISCOS.map((r,i)=><option key={i}>{r}</option>)}
+          </select>
+        </div>
+        <textarea value={rel} onChange={e=>setRel(e.target.value)} rows="2" placeholder="RELATO DE PREVENÇÃO" className="w-full bg-black border border-white/10 rounded-xl p-3 text-xs text-white"></textarea>
+        <div className="grid grid-cols-1 gap-2">
+          <button onClick={enviarRelatorio} className="w-full py-3 bg-[#25D366] text-black font-black rounded-xl text-xs">ENVIAR RELATÓRIO + FOTOS (WHATSAPP)</button>
+          <button onClick={enviarPDF} className="w-full py-3 bg-white text-black font-black rounded-xl text-xs">GERAR E ENVIAR PDF OFICIAL</button>
+        </div>
+      </div>
+
+      <div className="panel p-3 grid grid-cols-2 gap-2">
+        <div className="bg-black border border-white/10 rounded-xl p-3 text-center"><p className="label">BOMBEIROS</p><p className="text-red-400 font-black text-lg">193</p></div>
+        <div className="bg-black border border-white/10 rounded-xl p-3 text-center"><p className="label">DEFESA CIVIL</p><p className="text-amber-300 font-black text-lg">199</p></div>
+        <div className="bg-black border border-white/10 rounded-xl p-3 text-center"><p className="label">SAMU / SAÚDE</p><p className="text-blue-300 font-black text-lg">192</p></div>
+        <div className="bg-black border border-white/10 rounded-xl p-3 text-center"><p className="label">APOIO EMOCIONAL</p><p className="text-emerald-300 font-black text-lg">188</p></div>
+      </div>
+
+    </div>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<App/>);
+</script>
+</body>
+</html>
