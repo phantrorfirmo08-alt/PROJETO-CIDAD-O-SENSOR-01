@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>NEXUS ULTRA • VOICES SYSTEM</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Space+Grotesk:wght@400;700&display=swap');
+*{box-sizing:border-box;margin:0;padding:0;}
+body{background:#020208;color:#fff;font-family:'Space Grotesk',sans-serif;display:flex;justify-content:center;padding:6px;min-height:100vh;}
+.b{max-width:640px;width:100%;display:flex;flex-direction:column;gap:8px;}
+.bn{background:#300;border:1px solid red;border-radius:12px;padding:14px;text-align:center;font-weight:900;cursor:pointer;font-family:'Orbitron';font-size:0.7rem;letter-spacing:1px;animation:p 1s infinite;}
+@keyframes p{0%,100%{opacity:1}50%{opacity:.5}}
+.bn.ok{background:#030;border-color:#0f8;color:#0f8;animation:none;}
+.g{background:linear-gradient(135deg,rgba(255,255,255,.08),rgba(255,255,255,.02));border:1px solid rgba(255,255,255,0.12);border-radius:16px;padding:12px;backdrop-filter:blur(12px);}
+.tabs{display:flex;gap:4px;margin:6px 0;}
+.t{flex:1;padding:8px;border-radius:20px;border:0;font-weight:900;font-size:9px;cursor:pointer;font-family:'Orbitron';}
+.t.a{background:#fff;color:#000;box-shadow:0 0 10px rgba(255,255,255,0.3);}
+.t.i{background:#222;color:#888;}
+.prog{height:6px;background:#000;border-radius:10px;overflow:hidden;border:1px solid rgba(255,255,255,0.1);}
+.f{height:100%;width:0%;transition:1s;}
+.f.br{background:linear-gradient(90deg,#ff0a54,#ffcc00);}
+.f.ru{background:linear-gradient(90deg,red,#ffcc00);}
+.btn{flex:2;padding:12px;border-radius:10px;border:0;font-weight:900;font-family:'Orbitron';font-size:0.65rem;cursor:pointer;}
+.brb{background:linear-gradient(135deg,#ff0a54,#ff4d00);color:#fff;box-shadow:0 0 15px rgba(255,10,84,0.4);}
+.rub{background:linear-gradient(135deg,red,#800);color:#fff;box-shadow:0 0 15px rgba(255,0,0,0.5);}
+.ctrl{display:flex;gap:4px;margin:6px 0;}
+.ctrl input{flex:1;background:#000;color:#fff;border:1px solid rgba(255,255,255,0.15);border-radius:8px;padding:8px;font-size:0.6rem;}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:4px;max-height:280px;overflow-y:auto;background:rgba(0,0,0,0.4);padding:6px;border-radius:10px;border:1px solid rgba(255,255,255,0.06);}
+.vb{padding:8px 10px;border-radius:8px;border:1px solid rgba(255,255,255,0.1);font-weight:800;font-size:0.55rem;color:#fff;cursor:pointer;font-family:'Orbitron';display:flex;justify-content:space-between;align-items:center;transition:transform 0.1s;}
+.vb:active{transform:scale(0.97);}
+.vb.fav{border-color:#ffcc00;box-shadow:0 0 8px rgba(255,204,0,0.4);}
+#ck{text-align:center;font-family:'Orbitron';font-size:0.7rem;color:rgba(255,255,255,0.6);margin-top:4px;}
+</style>
+</head>
+<body>
+<div class="b">
+  <div id="bn" class="bn" onclick="U()">🔒 CLIQUE 1X - LIBERA ÁUDIO E VOZES • BYPASS ULTRA</div>
+  
+  <div class="g">
+    <div style="display:flex;justify-content:space-between;align-items:center;">
+      <b id="mt" style="color:#ff0a54;font-family:'Orbitron';font-size:0.75rem;">🚨 CHAVE CLIMÁTICA ULTRA</b>
+      <b id="tm" style="font-family:'Orbitron';font-size:0.7rem;">00:00/05:00</b>
+    </div>
+    <div class="tabs">
+      <button id="bBR" class="t a" onclick="SM('BR')">🇧🇷 BR 400→950</button>
+      <button id="bRU" class="t i" onclick="SM('RU')">🇷🇺 RU 330↔440</button>
+    </div>
+    <div id="fs" style="text-align:center;color:#ffcc00;font-size:9px;font-family:'Orbitron';margin:4px 0;">AGUARDANDO COMANDO</div>
+    <div class="prog"><div id="pr" class="f br"></div></div>
+    <div style="display:flex;gap:6px;margin-top:8px;">
+      <button id="bAc" class="btn brb" onclick="AL()">🚨 DISPARAR ULTRA</button>
+      <button onclick="ST()" style="flex:1;background:rgba(255,255,255,0.05);color:#aaa;border:1px solid rgba(255,255,255,0.15);border-radius:10px;font-family:'Orbitron';font-size:0.6rem;cursor:pointer;">🛑 CORTAR</button>
+    </div>
+  </div>
+
+  <div class="g">
+    <div class="tabs">
+      <button id="t32" class="t a" onclick="S32()">⭐ 32 VOZES</button>
+      <button id="t10" class="t i" onclick="S10()">🎲 10K NODES</button>
+      <button id="tf" class="t i" onclick="SF()">💛 FAVORITOS</button>
+    </div>
+    <div class="ctrl">
+      <input id="ci" placeholder="Digite o texto para sintetizar...">
+      <button onclick="CH()" style="background:#00ffd1;color:#000;border:0;border-radius:8px;padding:8px 12px;font-weight:900;font-family:'Orbitron';font-size:0.6rem;cursor:pointer;">🇷🇺 RUSSA</button>
+      <button onclick="RV()" style="background:#ff0a54;color:#fff;border:0;border-radius:8px;padding:8px 12px;font-weight:900;font-family:'Orbitron';font-size:0.6rem;cursor:pointer;">🎲 RAND</button>
+    </div>
+    <div id="g" class="grid"></div>
+  </div>
+
+  <div id="ck">00:00:00</div>
+</div>
+
+<script>
+let C = null, OK = false, MV = '32', V = [], V32 = [], FV = new Set(JSON.parse(localStorage.getItem('nf') || '[]')), MD = 'BR', AT = false, IT = null, TT = 0, OS = null, OG = null, SW = null, AC = null;
+
+function U() {
+  try {
+    if (!C) C = new (window.AudioContext || window.webkitAudioContext)();
+    if (C.state === 'suspended') C.resume();
+    OK = true;
+    AC = C;
+    let b = document.getElementById('bn');
+    b.className = 'bn ok';
+    b.innerText = '🔓 BYPASS ATIVO - SISTEMA DE VOZES LIBERADO';
+  } catch(e) {}
+}
+
+function FO(o, t) {
+  if (!OK) U();
+  try {
+    if ('speechSynthesis' in window) {
+      window.speechSynthesis.cancel();
+      let u = new SpeechSynthesisUtterance(t || o.t);
+      u.lang = o.l;
+      u.rate = o.r;
+      u.pitch = o.p;
+      u.volume = 1;
+      let vs = window.speechSynthesis.getVoices();
+      if (vs.length) {
+        let v = vs.find(x => x.lang.includes(o.l)) || vs[o.i % vs.length];
+        if (v) u.voice = v;
+      }
+      window.speechSynthesis.speak(u);
+    }
+  } catch(e) {}
+}
+
+function CH() {
+  let i = document.getElementById('ci');
+  if (i.value) FO({l: 'ru-RU', r: 0.72, p: 0.62, i: 0, t: i.value}, i.value);
+}
+
+function RV() {
+  let L = MV === '32' ? V32 : MV === 'fav' ? V.filter(v => FV.has(v.id)) : V;
+  if (L.length === 0) return;
+  let o = L[Math.floor(Math.random() * L.length)];
+  if (o) FO(o);
+}
+
+let D = [
+  ['SARAH', 'pt-BR', 0.92, 1.05], ['MASC GRAVE', 'pt-BR', 0.85, 0.55], ['JOVEM M', 'pt-BR', 1.1, 0.9],
+  ['JOVEM F', 'pt-BR', 1.05, 1.35], ['REPORTER', 'pt-BR', 0.9, 1], ['JORNAL', 'pt-BR', 0.88, 0.95],
+  ['RADIO AM', 'pt-BR', 0.92, 0.8], ['FM JOVEM', 'pt-BR', 1, 0.85], ['VELHO', 'pt-BR', 0.7, 0.5],
+  ['CRIANCA', 'pt-BR', 1.25, 1.6], ['ROBO', 'pt-BR', 0.6, 0.3], ['RUSSA', 'ru-RU', 0.72, 0.62],
+  ['USA', 'en-US', 0.85, 0.9], ['UK', 'en-GB', 0.85, 0.95], ['JAP', 'ja-JP', 1.1, 1.4],
+  ['FR', 'fr-FR', 0.9, 1.1], ['GER', 'de-DE', 0.8, 0.7], ['ESP', 'es-ES', 0.95, 1],
+  ['ITA', 'it-IT', 0.95, 1.05], ['NARRADOR', 'pt-BR', 0.8, 0.6], ['SUSPENSE', 'pt-BR', 0.65, 0.5],
+  ['ALEGRE', 'pt-BR', 1.2, 1.3], ['NEUTRA', 'pt-BR', 1, 1], ['HOMEM', 'pt-BR', 0.9, 0.75],
+  ['MULHER', 'pt-BR', 0.88, 0.9], ['ADO M', 'pt-BR', 1.15, 1], ['ADO F', 'pt-BR', 1.15, 1.25],
+  ['ESPORTE', 'pt-BR', 1.1, 0.8], ['VILAO', 'pt-BR', 0.6, 0.45], ['HEROI', 'pt-BR', 0.85, 0.7],
+  ['CANTADA', 'pt-BR', 0.95, 0.75], ['WHISPER', 'pt-BR', 0.7, 0.85]
+];
+
+function B32() {
+  D.forEach((v, i) => {
+    V32.push({l: v[1], r: v[2], p: v[3], i: i, t: v[0], n: v[0], id: i, q: true});
+  });
+}
+
+function B10() {
+  let L = ['pt-BR', 'ru-RU', 'en-US', 'ja-JP', 'fr-FR', 'de-DE', 'es-ES', 'it-IT', 'en-GB', 'pt-PT'];
+  for (let i = 0; i < 10000; i++) {
+    let lg = L[i % L.length];
+    let pi = +(0.2 + (i % 180) * 0.01).toFixed(2);
+    let ra = +(0.4 + (i % 120) * 0.01).toFixed(2);
+    V.push({l: lg, r: ra, p: pi, i: i, t: 'Voz ' + (i + 1), n: (i + 1) + ' P' + pi, id: i, q: false});
+  }
+}
+
+function MB(o) {
+  let b = document.createElement('button');
+  b.className = 'vb' + (FV.has(o.id) ? ' fav' : '');
+  b.style.background = `hsl(${(o.q ? o.p * 60 : o.id * 0.7) % 360}, 70%, 45%)`;
+  b.innerHTML = `<span>${o.n}</span><span>${FV.has(o.id) ? '⭐' : '🔊'}</span>`;
+  b.onclick = () => FO(o);
+  
+  let t = null;
+  const toggleFav = (e) => {
+    e.preventDefault();
+    FV.has(o.id) ? FV.delete(o.id) : FV.add(o.id);
+    localStorage.setItem('nf', JSON.stringify([...FV]));
+    RW();
+  };
+  b.oncontextmenu = toggleFav;
+  b.onmousedown = () => { t = setTimeout(() => { toggleFav(window.event); }, 600); };
+  b.onmouseup = () => clearTimeout(t);
+  b.ontouchstart = () => { t = setTimeout(() => { toggleFav(window.event); }, 600); };
+  b.ontouchend = () => clearTimeout(t);
+  
+  return b;
+}
+
+function RW() {
+  let g = document.getElementById('g');
+  g.innerHTML = '';
+  let L = MV === '32' ? V32 : MV === 'fav' ? V.filter(v => FV.has(v.id)) : V;
+  let f = document.createDocumentFragment();
+  L.slice(0, MV === '10k' ? 200 : 100).forEach(o => f.appendChild(MB(o)));
+  g.appendChild(f);
+}
+
+function S32() { MV = '32'; document.getElementById('t32').className = 't a'; document.getElementById('t10').className = 't i'; document.getElementById('tf').className = 't i'; RW(); }
+function S10() { MV = '10k'; document.getElementById('t10').className = 't a'; document.getElementById('t32').className = 't i'; document.getElementById('tf').className = 't i'; RW(); }
+function SF() { MV = 'fav'; document.getElementById('tf').className = 't a'; document.getElementById('t32').className = 't i'; document.getElementById('t10').className = 't i'; RW(); }
+
+B32(); B10(); RW();
+
+function SM(m) {
+  MD = m;
+  document.getElementById('bBR').className = m === 'BR' ? 't a' : 't i';
+  document.getElementById('bRU').className = m === 'RU' ? 't a' : 't i';
+  let pr = document.getElementById('pr');
+  let mt = document.getElementById('mt');
+  let bAc = document.getElementById('bAc');
+  if (m === 'BR') {
+    pr.className = 'f br';
+    mt.innerText = '🚨 BR 400→950Hz';
+    mt.style.color = '#ff0a54';
+    bAc.className = 'btn brb';
+  } else {
+    pr.className = 'f ru';
+    mt.innerText = '☢️ RU 330↔440Hz';
+    mt.style.color = 'red';
+    bAc.className = 'btn rub';
+  }
+}
+
+function TS() {
+  if (!C) U();
+  if (!AC) return;
+  if (OS) { try { OS.stop(); } catch(e) {} }
+  OS = AC.createOscillator();
+  OG = AC.createGain();
+  if (MD === 'BR') {
+    OS.type = 'sawtooth';
+    OG.gain.setValueAtTime(0.75, AC.currentTime);
+    OS.frequency.setValueAtTime(400, AC.currentTime);
+  } else {
+    OS.type = 'square';
+    OG.gain.setValueAtTime(0.8, AC.currentTime);
+    OS.frequency.setValueAtTime(330, AC.currentTime);
+  }
+  OS.connect(OG);
+  OG.connect(AC.destination);
+  OS.start();
+  if (MD === 'BR') {
+    let up = true;
+    SW = setInterval(() => {
+      if (OS) {
+        if (up) OS.frequency.exponentialRampToValueAtTime(950, AC.currentTime + 1);
+        else OS.frequency.exponentialRampToValueAtTime(380, AC.currentTime + 1);
+        up = !up;
+      }
+    }, 1100);
+    OS.stop(AC.currentTime + 3.2);
+  } else {
+    let hi = false;
+    SW = setInterval(() => {
+      if (OS) {
+        OS.frequency.setValueAtTime(hi ? 440 : 330, AC.currentTime);
+        hi = !hi;
+      }
+    }, 1200);
+    OS.stop(AC.currentTime + 3.2);
+  }
+}
+
+function AL() {
+  if (!C) U();
+  if (AT) return;
+  AT = true;
+  TT = 0;
+  let tm = document.getElementById('tm');
+  let pr = document.getElementById('pr');
+  let fs = document.getElementById('fs');
+
+  if (MD === 'BR') {
+    TS();
+    FO({l: 'pt-BR', r: 0.92, p: 0.9, t: 'Alerta BR 5 minutos ativo'}, 'Alerta BR 5 minutos ativo');
+  } else {
+    TS();
+    FO({l: 'ru-RU', r: 0.72, p: 0.62, t: 'Внимание тревога'}, 'Внимание тревога');
+  }
+  IT = setInterval(() => {
+    TT++;
+    let m = Math.floor(TT / 60), s = TT % 60;
+    tm.innerText = `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}/05:00`;
+    pr.style.width = (TT / 300 * 100) + '%';
+    fs.innerText = TT <= 180 ? `🔴 TOCANDO (${180 - TT}s)` : TT <= 240 ? `🟡 PENSAR (${240 - TT}s)` : `🔵 ACORDAR (${300 - TT}s)`;
+    if (TT % 4 === 0 && TT <= 180) TS();
+    if (TT >= 300) ST();
+  }, 1000);
+}
+
+function ST() {
+  AT = false;
+  clearInterval(IT);
+  if (SW) clearInterval(SW);
+  if (OS) {
+    try {
+      OG.gain.exponentialRampToValueAtTime(0.001, AC.currentTime + 0.15);
+      setTimeout(() => { try { OS.stop(); } catch(e) {} }, 200);
+    } catch(e) {}
+  }
+  document.getElementById('tm').innerText = '00:00/05:00';
+  document.getElementById('pr').style.width = '0%';
+  document.getElementById('fs').innerText = 'AGUARDANDO COMANDO';
+  if ('speechSynthesis' in window) window.speechSynthesis.cancel();
+}
+
+setInterval(() => {
+  document.getElementById('ck').innerText = new Intl.DateTimeFormat('pt-BR', {
+    timeZone: 'America/Sao_Paulo', hour: '2-digit', minute: '2-digit', second: '2-digit'
+  }).format(new Date());
+}, 1000);
+
+if ('speechSynthesis' in window) window.speechSynthesis.getVoices();
+</script>
+</body>
+</html>
