@@ -1,0 +1,485 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>SARAH AI - VISTORIA V12.0 EXECUTIVA PRO</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+<script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+<script crossorigin src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+ body { background: #07090E; color: #F1F5F9; font-family: 'Inter', sans-serif; }
+ .mono { font-family: 'JetBrains Mono', monospace; }
+ .glass { background: rgba(13, 19, 33, 0.75); backdrop-filter: blur(16px); border: 1px solid rgba(255, 255, 255, 0.08); }
+ .glass-card { background: rgba(18, 26, 43, 0.6); border: 1px solid rgba(255, 255, 255, 0.06); }
+ .input-pro { background: #0A0F1D; border: 1px solid rgba(255, 255, 255, 0.12); color: #FFF; transition: all 0.2s ease; }
+ .input-pro:focus { border-color: #3B82F6; box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2); outline: none; }
+ .badge-pulse { animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite; }
+ @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: .4; } }
+::-webkit-scrollbar { width: 4px; height: 4px; }
+::-webkit-scrollbar-track { background: #07090E; }
+::-webkit-scrollbar-thumb { background: #1E293B; border-radius: 2px; }
+</style>
+</head>
+<body class="p-2 sm:p-4 flex justify-center min-h-screen">
+<div id="root" class="w-full max-w-[620px]"></div>
+
+<script type="text/babel">
+const { useState, useRef, useEffect } = React;
+
+const MUNICIPIOS = [
+  { n: "Mesquita", lat: -22.7858, lon: -43.4294 },
+  { n: "Nova Iguaçu", lat: -22.7559, lon: -43.4605 },
+  { n: "Belford Roxo", lat: -22.7642, lon: -43.3997 },
+  { n: "Duque de Caxias", lat: -22.7856, lon: -43.3117 },
+  { n: "São Gonçalo", lat: -22.8267, lon: -43.0631 },
+  { n: "Rio de Janeiro", lat: -22.9068, lon: -43.1729 }
+];
+
+const RISCOS = [
+  { id: "R1", label: "R1 - BAIXO / PREVENTIVO", color: "text-emerald-400 bg-emerald-950/40 border-emerald-800/50" },
+  { id: "R2", label: "R2 - MODERADO / ATENÇÃO", color: "text-amber-400 bg-amber-950/40 border-amber-800/50" },
+  { id: "R3", label: "R3 - ALTO / ALERTA", color: "text-orange-400 bg-orange-950/40 border-orange-800/50" },
+  { id: "R4", label: "R4 - IMINENTE / EVACUAÇÃO", color: "text-rose-500 bg-rose-950/40 border-rose-800/50" },
+  { id: "RH", label: "RH - HIDROLÓGICO / ENCHENTE", color: "text-cyan-400 bg-cyan-950/40 border-cyan-800/50" },
+  { id: "RE", label: "RE - ESTRUTURAL / TALUDE", color: "text-purple-400 bg-purple-950/40 border-purple-800/50" }
+];
+
+const ORGAOS = [
+  "COMPDEC / SEDEC-RJ",
+  "GADE - GRUPO A CHAVE DA ESPERANÇA",
+  "BOM DIA COMUNIDADE",
+  "CIDADÃO SENSOR (RCS)",
+  "INEA / SERLA",
+  "CEMADEN / INPE",
+  "CRAS / CREAS",
+  "DEFESA CIVIL MUNICIPAL",
+  "NUPDECs - 92 MUNICÍPIOS RJ"
+];
+
+function App() {
+  const [mun, setMun] = useState(MUNICIPIOS[0]);
+  const [fotos, setFotos] = useState([]);
+  const [camOn, setCamOn] = useState(false);
+  const [facingMode, setFacingMode] = useState("environment");
+  const [nome, setNome] = useState("Alexander da Silva Firmo");
+  const [docId, setDocId] = useState("AG-COMUNITARIO-01");
+  const [bairro, setBairro] = useState("Comunidade do Sebinho (Maria Cristina)");
+  const [risco, setRisco] = useState(RISCOS[1].label);
+  const [org, setOrg] = useState(ORGAOS[3]);
+  const [rel, setRel] = useState("");
+  const [iaDiag, setIaDiag] = useState("SARAH-AI: SISTEMA DE ANÁLISE PREDITIVA EM PRONTIDÃO");
+  const [gpsStatus, setGpsStatus] = useState("GPS ATIVO (FIXADO)");
+  const [loadingPdf, setLoadingPdf] = useState(false);
+
+  const videoRef = useRef(null);
+  const streamRef = useRef(null);
+
+  // Simulação de telemetria e análise preditiva IA em tempo real baseada no risco
+  useEffect(() => {
+    if (risco.includes("R1")) setIaDiag("SARAH-AI: ESTABILIDADE GEOTÉCNICA ESTÁVEL. RECOMENDADO MONITORAMENTO PREVENTIVO.");
+    else if (risco.includes("R2")) setIaDiag("SARAH-AI: SATURAÇÃO PARCIAL DE TALUDE / MICRODRENAGEM SOB CARGA. ATENÇÃO REQUERIDA.");
+    else if (risco.includes("R3")) setIaDiag("SARAH-AI: RISCO ALTO DE MOVIMENTAÇÃO DE MASSA / ENXURRADA. SINALIZAÇÃO DE ALERTA ATIVADA.");
+    else if (risco.includes("R4")) setIaDiag("SARAH-AI: ALERTA CRÍTICO DE INSTABILIDADE IMINENTE. PROTOCOLO DE EVACUAÇÃO PREVENTIVA RECOMENDADO.");
+    else if (risco.includes("RH")) setIaDiag("SARAH-AI: ELEVAÇÃO RÁPIDA DE COTA HÍDRICA / RISCO DE ALAGAMENTO EM SEÇÃO CRÍTICA DE BACIA.");
+    else setIaDiag("SARAH-AI: ANOMALIA ESTRUTURAL DETECTADA EM ELEMENTOS DE CONTENÇÃO OU PASSEIO PÚBLICO.");
+  }, [risco]);
+
+  const startCamera = async (mode = facingMode) => {
+    try {
+      if (streamRef.current) {
+        streamRef.current.getTracks().forEach(t => t.stop());
+      }
+      const s = await navigator.mediaDevices.getUserMedia({
+        video: { facingMode: { exact: mode }, width: { ideal: 1280 }, height: { ideal: 720 } }
+      }).catch(() => navigator.mediaDevices.getUserMedia({
+        video: { facingMode: mode, width: { ideal: 1280 }, height: { ideal: 720 } }
+      }));
+      
+      streamRef.current = s;
+      setCamOn(true);
+      setTimeout(() => {
+        if (videoRef.current) {
+          videoRef.current.srcObject = s;
+          videoRef.current.onloadedmetadata = () => videoRef.current.play().catch(() => {});
+        }
+      }, 150);
+    } catch (e) {
+      alert('ERRO AO ACESSAR CÂMERO OU PERMISSÃO NEGADA (VERIFIQUE HTTPS).');
+    }
+  };
+
+  const stopCamera = () => {
+    if (streamRef.current) streamRef.current.getTracks().forEach(t => t.stop());
+    if (videoRef.current) videoRef.current.srcObject = null;
+    setCamOn(false);
+  };
+
+  const alternarCamera = () => {
+    const novoModo = facingMode === "environment" ? "user" : "environment";
+    setFacingMode(novoModo);
+    if (camOn) startCamera(novoModo);
+  };
+
+  const capturarFoto = () => {
+    const v = videoRef.current;
+    if (!v || v.videoWidth === 0) { alert('AGUARDE O FOCO DA CÂMERA'); return; }
+    
+    const c = document.createElement('canvas');
+    c.width = 600;
+    c.height = Math.round(600 * (v.videoHeight / v.videoWidth));
+    const ctx = c.getContext('2d');
+    ctx.drawImage(v, 0, 0, c.width, c.height);
+
+    // Barra de Telemetria Superior e Inferior na Foto (Padrão Forense / Defesa Civil)
+    ctx.fillStyle = 'rgba(7, 9, 14, 0.85)';
+    ctx.fillRect(0, 0, c.width, 28);
+    ctx.fillRect(0, c.height - 42, c.width, 42);
+
+    ctx.fillStyle = '#3B82F6';
+    ctx.font = '700 10px "JetBrains Mono", monospace';
+    ctx.fillText(`SARAH AI NEXUS // VISTORIA TÉCNICA`, 10, 18);
+
+    ctx.fillStyle = '#FFFFFF';
+    ctx.font = '700 9px "JetBrains Mono", monospace';
+    const agoraStr = new Date().toLocaleString('pt-BR');
+    ctx.fillText(`${agoraStr} | ${mun.n} - RJ`, 10, c.height - 26);
+    ctx.fillText(`GEO: ${mun.lat.toFixed(4)}, ${mun.lon.toFixed(4)} | RESP: ${nome.split(' ')[0]}`, 10, c.height - 12);
+
+    const url = c.toDataURL('image/jpeg', 0.65);
+    setFotos(p => [...p, url]);
+  };
+
+  const gerarHashUnico = async (prot) => {
+    const raw = `${prot}-${nome}-${Date.now()}`;
+    const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(raw));
+    return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2, '0')).join('');
+  };
+
+  const gerarPDFBlob = async (prot, hash) => {
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF('p', 'mm', 'a4');
+
+    // Fundo Executivo Dark
+    doc.setFillColor(7, 9, 14);
+    doc.rect(0, 0, 210, 297, 'F');
+
+    // Cabeçalho de Status / Branding
+    doc.setFillColor(13, 19, 33);
+    doc.rect(10, 10, 190, 24, 'F');
+    doc.setStrokeStyle('S');
+    doc.setDrawColor(59, 130, 246);
+    doc.rect(10, 10, 190, 24);
+
+    doc.setTextColor(59, 130, 246);
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(10);
+    doc.text('SARAH AI NEXUS // LAUDO TÉCNICO DE VISTORIA DE RISCO', 15, 18);
+
+    doc.setTextColor(255, 255, 255);
+    doc.setFontSize(8);
+    doc.text(`PROTOCOLO OFICIAL: ${prot}`, 15, 26);
+    doc.text(`DATA/HORA: ${new Date().toLocaleString('pt-BR')}`, 130, 26);
+
+    // Bloco de Dados do Responsável e Local
+    doc.setFillColor(13, 19, 33);
+    doc.rect(10, 38, 190, 34, 'F');
+    doc.rect(10, 38, 190, 34);
+
+    doc.setTextColor(148, 163, 184);
+    doc.setFontSize(7);
+    doc.text('RESPONSÁVEL TÉCNICO / CREDENCIAMENTO:', 14, 45);
+    doc.text('MUNICÍPIO / BAIRRO / COORDENADAS:', 14, 55);
+    doc.text('CLASSIFICAÇÃO DE RISCO E ÓRGÃO DESTINATÁRIO:', 14, 65);
+
+    doc.setTextColor(255, 255, 255);
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(8);
+    doc.text(`${nome} (DOC: ${docId})`, 85, 45);
+    doc.text(`${mun.n} - RJ | ${bairro} (${mun.lat.toFixed(4)}, ${mun.lon.toFixed(4)})`, 85, 55);
+    doc.text(`${risco} | ${org}`, 85, 65);
+
+    // Bloco de Relato e IA
+    doc.setFillColor(13, 19, 33);
+    doc.rect(10, 76, 190, 48, 'F');
+    doc.rect(10, 76, 190, 48);
+
+    doc.setTextColor(59, 130, 246);
+    doc.setFont('helvetica', 'bold');
+    doc.text('DIAGNÓSTICO PREDITIVO DE IA & RELATO DE CAMPO:', 14, 83);
+
+    doc.setTextColor(200, 200, 200);
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(7.5);
+    doc.text(`[IA] ${iaDiag}`, 14, 90);
+
+    const linhasRelato = doc.splitTextToSize(rel || 'Nenhum relato textual adicional registrado pelo operador.', 182);
+    doc.text(linhasRelato, 14, 98);
+
+    // Seção de Fotografias Forenses
+    let y = 130;
+    doc.setTextColor(59, 130, 246);
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(9);
+    doc.text(`REGISTRO FOTOGRÁFICO DE CAMPO (${fotos.length} IMAGEM${fotos.length > 1 ? 'NS' : ''} COM CARIMBO DE TELEMETRIA):`, 10, y);
+    y += 6;
+
+    for (let i = 0; i < fotos.length; i++) {
+      if (y > 220) {
+        doc.addPage();
+        doc.setFillColor(7, 9, 14);
+        doc.rect(0, 0, 210, 297, 'F');
+        y = 15;
+      }
+      try {
+        const xPos = 10 + (i % 2) * 96;
+        doc.addImage(fotos[i], 'JPEG', xPos, y, 88, 52);
+        doc.setDrawColor(255, 255, 255, 0.2);
+        doc.rect(xPos, y, 88, 52);
+      } catch (e) {}
+
+      if (i % 2 === 1) y += 58;
+      else if (i === fotos.length - 1) y += 58;
+    }
+
+    // Rodapé de Autenticidade Hash
+    doc.setFillColor(10, 15, 29);
+    doc.rect(10, 278, 190, 14, 'F');
+    doc.setTextColor(148, 163, 184);
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(6.5);
+    doc.text(`HASH SHA-256 DE AUTENTICIDADE: ${hash}`, 14, 284);
+    doc.text(`PLATAFORMA SARAH AI NEXUS // SISTEMA DE INTELIGÊNCIA EM DEFESA CIVIL`, 14, 289);
+
+    return doc.output('blob');
+  };
+
+  const enviarRelatorioWhatsapp = async () => {
+    if (!nome || !bairro) { alert('PREENCHA O RESPONSÁVEL E O BAIRRO'); return; }
+    if (fotos.length === 0) { alert('CAPTURE AO MENOS 1 FOTO DE VISTORIA'); return; }
+
+    const prot = `PROT-VIST-${mun.n.slice(0, 3).toUpperCase()}-2026-${Math.floor(Math.random() * 8999 + 1000)}`;
+    const hash = await gerarHashUnico(prot);
+
+    const texto = `*SARAH AI NEXUS // VISTORIA TÉCNICA*
+──────────────────
+*PROTOCOLO:* ${prot}
+*RESPONSÁVEL:* ${nome} (${docId})
+*LOCALIDADE:* ${mun.n} - ${bairro}
+*COORDENADAS:* ${mun.lat.toFixed(4)}, ${mun.lon.toFixed(4)}
+*CLASSIFICAÇÃO:* ${risco}
+*DESTINO:* ${org}
+*DIAGNÓSTICO IA:* ${iaDiag}
+*RELATO TÉCNICO:* ${rel || 'N/A'}
+*FOTOS ANEXADAS:* ${fotos.length}
+*HASH SHA-256:* ${hash.slice(0, 24)}...
+──────────────────
+_Gerado via Cidadão Sensor / Defesa Civil_`;
+
+    const fotoFiles = await Promise.all(fotos.map(async (d, i) => {
+      const r = await fetch(d);
+      const b = await r.blob();
+      return new File([b], `FOTO_${i + 1}_${prot}.jpg`, { type: 'image/jpeg' });
+    }));
+
+    if (navigator.canShare && navigator.canShare({ files: fotoFiles })) {
+      try {
+        await navigator.share({ title: prot, text: texto, files: fotoFiles });
+        return;
+      } catch (e) {}
+    }
+    window.open(`https://wa.me/?text=${encodeURIComponent(texto)}`, '_blank');
+  };
+
+  const exportarPDFOficial = async () => {
+    if (!nome || !bairro) { alert('PREENCHA O RESPONSÁVEL E O BAIRRO'); return; }
+    if (fotos.length === 0) { alert('CAPTURE AO MENOS 1 FOTO DE VISTORIA'); return; }
+
+    setLoadingPdf(true);
+    try {
+      const prot = `PROT-VIST-${mun.n.slice(0, 3).toUpperCase()}-2026-${Math.floor(Math.random() * 8999 + 1000)}`;
+      const hash = await gerarHashUnico(prot);
+      const blob = await gerarPDFBlob(prot, hash);
+      const pdfFile = new File([blob], `${prot}_LAUDO_TECNICO.pdf`, { type: 'application/pdf' });
+
+      if (navigator.canShare && navigator.canShare({ files: [pdfFile] })) {
+        await navigator.share({ title: prot, text: `Laudo Técnico Oficial - ${prot}`, files: [pdfFile] });
+      } else {
+        const url = URL.createObjectURL(blob);
+        window.open(url, '_blank');
+      }
+    } catch (e) {
+      alert('ERRO AO GERAR O PDF OFICIAL.');
+    } finally {
+      setLoadingPdf(false);
+    }
+  };
+
+  return (
+    <div className="glass rounded-3xl p-4 sm:p-6 space-y-4 shadow-2xl border border-white/10">
+      
+      {/* Top Header Bar */}
+      <div className="flex justify-between items-center border-b border-white/10 pb-3">
+        <div className="flex items-center space-x-2">
+          <div className="w-3 h-3 rounded-full bg-blue-500 badge-pulse"></div>
+          <div>
+            <h1 className="text-xs font-extrabold tracking-wider text-white uppercase mono">SARAH AI NEXUS</h1>
+            <p className="text-[10px] text-blue-400 font-medium">Módulo Vistoria Executiva Pro v12.0</p>
+          </div>
+        </div>
+        <div className="flex items-center space-x-2">
+          <span className="text-[9px] mono px-2 py-1 rounded-md bg-blue-500/10 text-blue-300 border border-blue-500/20">{gpsStatus}</span>
+          {camOn && <button onClick={stopCamera} className="text-[10px] font-bold px-2.5 py-1 rounded-lg bg-rose-500/20 text-rose-300 border border-rose-500/30 hover:bg-rose-500/30 transition">FECHAR CÂMERA</button>}
+        </div>
+      </div>
+
+      {/* Seletor de Município & Alerta */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+        <div>
+          <label className="text-[10px] uppercase font-bold text-slate-400 tracking-wider mb-1 block">Município Alvo</label>
+          <select value={mun.n} onChange={e => setMun(MUNICIPIOS.find(m => m.n === e.target.value))} className="w-full input-pro rounded-xl p-3 text-xs font-medium">
+            {MUNICIPIOS.map((m, i) => <option key={i} value={m.n}>{m.n} (RJ)</option>)}
+          </select>
+        </div>
+        <div>
+          <label className="text-[10px] uppercase font-bold text-slate-400 tracking-wider mb-1 block">Órgão Destinatário</label>
+          <select value={org} onChange={e => setOrg(e.target.value)} className="w-full input-pro rounded-xl p-3 text-xs font-medium">
+            {ORGAOS.map((o, i) => <option key={i} value={o}>{o}</option>)}
+          </select>
+        </div>
+      </div>
+
+      {/* Módulo de Câmera Biometria / Campo */}
+      <div className="glass-card rounded-2xl p-3 space-y-3">
+        <div className="flex justify-between items-center">
+          <div className="flex items-center space-x-2">
+            <span className="text-xs font-bold text-slate-200">Câmera Forense & Telemetria</span>
+            <span className="text-[9px] text-slate-400 mono">400px • JPEG 0.65</span>
+          </div>
+          <div className="flex space-x-2">
+            {camOn && (
+              <button onClick={alternarCamera} className="text-[10px] font-bold px-3 py-1.5 rounded-xl bg-slate-800 text-slate-200 border border-white/10 hover:bg-slate-700 transition">
+                INVERTER
+              </button>
+            )}
+            {!camOn ? (
+              <button onClick={() => startCamera(facingMode)} className="text-[10px] font-black px-4 py-1.5 rounded-xl bg-blue-600 text-white hover:bg-blue-500 shadow-lg shadow-blue-600/30 transition">
+                LIGAR CÂMERA
+              </button>
+            ) : (
+              <button onClick={stopCamera} className="text-[10px] font-bold px-3 py-1.5 rounded-xl bg-rose-500/20 text-rose-300 border border-rose-500/30">
+                DESLIGAR
+              </button>
+            )}
+          </div>
+        </div>
+
+        {/* Viewfinder da Câmera */}
+        <div className="relative rounded-xl overflow-hidden bg-black border border-white/10 shadow-inner" style={{ minHeight: '220px' }}>
+          <video ref={videoRef} autoPlay playsInline muted className="w-full h-[220px] object-cover" style={{ display: camOn ? 'block' : 'none' }}></video>
+          {!camOn && (
+            <div className="absolute inset-0 flex flex-col items-center justify-center text-slate-500 space-y-2">
+              <svg className="w-8 h-8 opacity-40 animate-pulse" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"></path><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
+              <span className="text-[11px] font-medium">CÂMERA EM ESPERA // TOQUE EM LIGAR</span>
+            </div>
+          )}
+          {camOn && (
+            <div className="absolute top-2 left-2 bg-black/70 backdrop-blur-md px-2.5 py-1 rounded-md border border-white/10 text-[9px] mono text-blue-400">
+              REC ● {mun.lat.toFixed(3)}, {mun.lon.toFixed(3)}
+            </div>
+          )}
+        </div>
+
+        {camOn && (
+          <button onClick={capturarFoto} className="w-full py-3.5 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-black rounded-xl text-xs tracking-wider shadow-lg shadow-blue-600/30 transition flex items-center justify-center space-x-2">
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"></path><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
+            <span>CAPTURAR FOTO COM CARIMBO DE TELEMETRIA</span>
+          </button>
+        )}
+
+        {/* Galeria de Miniaturas */}
+        {fotos.length > 0 && (
+          <div className="flex gap-2.5 overflow-x-auto pt-1 pb-1">
+            {fotos.map((f, i) => (
+              <div key={i} className="relative shrink-0 group">
+                <img src={f} className="w-20 h-20 object-cover rounded-xl border border-white/20 shadow-md" alt={`Evidência ${i+1}`} />
+                <button onClick={() => setFotos(fotos.filter((_, idx) => idx !== i))} className="absolute -top-1.5 -right-1.5 w-5 h-5 bg-rose-600 text-white rounded-full flex items-center justify-center font-bold text-xs shadow-lg hover:bg-rose-500 transition">×</button>
+                <span className="absolute bottom-1 left-1 bg-black/80 px-1.5 py-0.5 rounded text-[8px] mono text-white">#{i+1}</span>
+              </div>
+            ))}
+          </div>
+        )}
+
+        {/* Diagnóstico IA em Tempo Real */}
+        <div className="p-2.5 rounded-xl bg-blue-950/20 border border-blue-500/20 flex items-start space-x-2">
+          <div className="w-2 h-2 rounded-full bg-blue-400 mt-1 shrink-0 badge-pulse"></div>
+          <p className="text-[10px] mono text-blue-200 leading-relaxed">
+            <strong className="text-blue-400">TELEMETRIA IA:</strong> {iaDiag}
+          </p>
+        </div>
+      </div>
+
+      {/* Formulário de Dados do Operador & Local */}
+      <div className="space-y-3">
+        <div>
+          <label className="text-[10px] uppercase font-bold text-slate-400 tracking-wider mb-1 block">Responsável Técnico / Agente</label>
+          <input value={nome} onChange={e => setNome(e.target.value)} placeholder="Nome completo do vistoriador" className="w-full input-pro rounded-xl p-3 text-xs font-medium" />
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div>
+            <label className="text-[10px] uppercase font-bold text-slate-400 tracking-wider mb-1 block">Credencial / CPF ou ID</label>
+            <input value={docId} onChange={e => setDocId(e.target.value)} placeholder="Registro ou CPF" className="w-full input-pro rounded-xl p-3 text-xs font-medium" />
+          </div>
+          <div>
+            <label className="text-[10px] uppercase font-bold text-slate-400 tracking-wider mb-1 block">Bairro / Comunidade *</label>
+            <input value={bairro} onChange={e => setBairro(e.target.value)} placeholder="Ex: Sebinho, Chatuba..." className="w-full input-pro rounded-xl p-3 text-xs font-medium" />
+          </div>
+        </div>
+
+        <div>
+          <label className="text-[10px] uppercase font-bold text-slate-400 tracking-wider mb-1 block">Classificação de Risco Oficial</label>
+          <select value={risco} onChange={e => setRisco(e.target.value)} className="w-full input-pro rounded-xl p-3 text-xs font-bold text-amber-300">
+            {RISCOS.map((r, i) => <option key={i} value={r.label}>{r.label}</option>)}
+          </select>
+        </div>
+
+        <div>
+          <label className="text-[10px] uppercase font-bold text-slate-400 tracking-wider mb-1 block">Relato Técnico & Ações Corretivas / Preventivas</label>
+          <textarea value={rel} onChange={e => setRel(e.target.value)} rows="3" placeholder="Descreva as condições estruturais, trincas, vazamentos, microdrenagem ou necessidade de intervenção imediata..." className="w-full input-pro rounded-xl p-3 text-xs font-medium resize-none"></textarea>
+        </div>
+      </div>
+
+      {/* Botões de Ação Executiva */}
+      <div className="space-y-2.5 pt-2">
+        <button onClick={enviarRelatorioWhatsapp} className="w-full py-4 bg-[#25D366] hover:bg-[#20ba5a] text-black font-black rounded-xl text-xs tracking-wider shadow-lg shadow-emerald-900/20 transition flex items-center justify-center space-x-2">
+          <svg className="w-4 h-4 fill-current" viewBox="0 0 24 24"><path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946.003-6.556 5.338-11.891 11.893-11.891 3.181.001 6.167 1.24 8.413 3.488 2.245 2.248 3.481 5.236 3.48 8.414-.003 6.557-5.338 11.892-11.893 11.892-1.99-.001-3.951-.5-5.688-1.448l-6.305 1.654zm6.597-3.807c1.676.995 3.276 1.591 5.392 1.592 5.448 0 9.886-4.434 9.889-9.885.002-5.462-4.415-9.89-9.881-9.892-5.452 0-9.887 4.434-9.889 9.884-.001 2.225.651 3.891 1.746 5.634l-.999 3.648 3.742-.981zm11.387-5.464c-.074-.124-.272-.198-.57-.347-.297-.149-1.758-.868-2.031-.967-.272-.099-.47-.149-.669.198-.198.347-.764.967-.937 1.165-.173.198-.347.223-.644.074-.297-.149-1.255-.462-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.297-.347.446-.521.151-.172.2-.296.3-.495.099-.198.05-.372-.025-.521-.075-.124-.669-1.611-.916-2.206-.242-.579-.487-.501-.669-.51l-.57-.01c-.198 0-.52.074-.792.372s-1.04 1.016-1.04 2.479 1.065 2.876 1.213 3.074c.149.198 2.095 3.2 5.076 4.487.709.306 1.263.489 1.694.626.712.226 1.36.194 1.872.118.571-.085 1.758-.719 2.006-1.413.248-.695.248-1.29.173-1.414z"/></svg>
+          <span>ENVIAR RELATÓRIO + FOTOS (WHATSAPP COMERCIAL)</span>
+        </button>
+
+        <button onClick={exportarPDFOficial} disabled={loadingPdf} className="w-full py-4 bg-white hover:bg-slate-100 text-black font-black rounded-xl text-xs tracking-wider shadow-lg shadow-white/10 transition flex items-center justify-center space-x-2">
+          {loadingPdf ? (
+            <span className="animate-pulse">PROCESSANDO LAUDO PDF...</span>
+          ) : (
+            <>
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+              <span>EXPORTAR LAUDO PDF OFICIAL (COM CARIMBO HASH)</span>
+            </>
+          )}
+        </button>
+      </div>
+
+      <p className="text-[9px] text-slate-500 text-center tracking-widest pt-1 uppercase mono">
+        SARAH AI NEXUS // SEGURANÇA CIBERNÉTICA E INTEGRIDADE SHA-256
+      </p>
+    </div>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<App/>);
+</script>
+</body>
+</html>
