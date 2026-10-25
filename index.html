@@ -1,0 +1,359 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>RARU NEXUS AI V11.4 Plus - OFFLINE-FIRST & MATRIZ DE VOZES</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+<script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+<script crossorigin src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<style>
+ .panel-dia { background: #0B1120; border: 1px solid rgba(255,255,255,.15); border-radius: 18px; color: #E5E7EB; }
+ .panel-noite { background: #030712; border: 1px solid rgba(59,130,246,.3); border-radius: 18px; color: #93C5FD; box-shadow: 0 0 25px rgba(29,78,216,0.2); }
+ .label { font-size: 11px; letter-spacing: .08em; font-weight: 800; color: #94A3B8; text-transform: uppercase; }
+ .map-box { background: radial-gradient(circle at center, #0F172A 0%, #030712 100%); border: 1px solid rgba(59,130,246,.3); border-radius: 16px; }
+ .btn { width: 100%; padding: 14px; border-radius: 14px; font-weight: 900; font-size: 12px; letter-spacing: .04em; }
+ .x { position: absolute; top: 4px; right: 4px; width: 20px; height: 20px; background: #111; color: #fff; border-radius: 50%; display: grid; place-items: center; font-weight: 900; border: 1px solid #fff; cursor: pointer; font-size: 11px; }
+ @keyframes pisca { 0%,100% { opacity: 1; transform: scale(1); } 50% { opacity: .7; transform: scale(1.02); } }
+ .pisca { animation: pisca 1.5s infinite; }
+ @keyframes flutuarNuvem { 0% { transform: translateX(0px); opacity: 0.4; } 50% { transform: translateX(30px); opacity: 0.85; } 100% { transform: translateX(0px); opacity: 0.4; } }
+ .nuvem-animada { animation: flutuarNuvem 6s ease-in-out infinite; }
+ @keyframes radarGiro { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+ .radar-barred { animation: radarGiro 4s linear infinite; transform-origin: 200px 180px; }
+ .tabs { display: flex; gap: 4px; margin: 6px 0; }
+ .t { flex: 1; padding: 8px; border-radius: 20px; border: 0; font-weight: 900; font-size: 9px; cursor: pointer; }
+ .t.a { background: #fff; color: #000; box-shadow: 0 0 10px rgba(255,255,255,0.3); }
+ .t.i { background: #222; color: #888; }
+ .grid-vozes { display: grid; grid-template-columns: 1fr 1fr; gap: 4px; max-height: 240px; overflow-y: auto; background: rgba(0,0,0,0.4); padding: 6px; border-radius: 10px; border: 1px solid rgba(255,255,255,0.06); }
+ .vb { padding: 8px 10px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.1); font-weight: 800; font-size: 0.55rem; color: #fff; cursor: pointer; display: flex; justify-content: space-between; align-items: center; transition: transform 0.1s; }
+ .vb:active { transform: scale(0.97); }
+ .vb.fav { border-color: #ffcc00; box-shadow: 0 0 8px rgba(255,204,0,0.4); }
+</style>
+</head>
+<body id="corpo-pagina" class="p-2 flex justify-center transition-colors duration-700">
+<div id="root" class="w-full max-w-[680px]"></div>
+
+<script type="text/babel">
+const {useState, useRef, useEffect} = React;
+
+const MUNICIPIOS = [
+{n:"Mesquita (Base Anfitriã Oficial - Rocha Sobrinho)",lat:-22.7858,lon:-43.4294,reg:"Baixada Fluminense",bacia:"Bacia do Rio Sarapuí / Iguaçu (Baixada)"},
+{n:"Nova Iguaçu (Baixada Fluminense)",lat:-22.7559,lon:-43.4605,reg:"Baixada Fluminense",bacia:"Bacia do Rio Botas / Sarapuí"},
+{n:"Duque de Caxias (Baixada Fluminense)",lat:-22.7856,lon:-43.3117,reg:"Baixada Fluminense",bacia:"Bacia do Rio Iguaçu / Sarapuí"},
+{n:"São João de Meriti (Baixada Fluminense)",lat:-22.8031,lon:-43.3695,reg:"Baixada Fluminense",bacia:"Bacia do Rio Sarapuí / Pavuna"},
+{n:"Belford Roxo (Baixada Fluminense)",lat:-22.7642,lon:-43.3997,reg:"Baixada Fluminense",bacia:"Bacia do Rio Botas"},
+{n:"Nilópolis (Baixada Fluminense)",lat:-22.8081,lon:-43.4147,reg:"Baixada Fluminense",bacia:"Bacia do Rio Sarapuí"},
+{n:"São Gonçalo (Região Metropolitana)",lat:-22.8267,lon:-43.0631,reg:"Metropolitana",bacia:"Bacia do Rio Imboaçu"},
+{n:"Niterói (Região Metropolitana)",lat:-22.8833,lon:-43.1036,reg:"Metropolitana",bacia:"Bacia do Rio Icaraí / Baía Guanabara"},
+{n:"Petrópolis (Região Serrana)",lat:-22.5055,lon:-43.1789,reg:"Serrana",bacia:"Bacia do Rio Piabanha"},
+{n:"Angra dos Reis",lat:-23.0067,lon:-44.3181,reg:"Costa Verde",bacia:"Bacia Costa Verde"},
+{n:"Rio de Janeiro (Capital)",lat:-22.9068,lon:-43.1729,reg:"Metropolitana",bacia:"Baía de Guanabara"}
+];
+
+const RISCOS_VISTORIA = [
+  "R1 - BAIXO / PREVENTIVO (Normal)",
+  "R2 - MODERADO / ATENCAO (Observacao)",
+  "R3 - ALTO / ALERTA (Risco Elevado)",
+  "R4 - IMINENTE / EVACUACAO (Critico)",
+  "RH - HIDROLOGICO (Alagamento de Bacia)",
+  "RE - ESTRUTURAL (Geotecnia e Encosta)"
+];
+
+const D_VOZES = [
+  ['SARAH', 'pt-BR', 0.92, 1.05], ['MASC GRAVE', 'pt-BR', 0.85, 0.55], ['JOVEM M', 'pt-BR', 1.1, 0.9],
+  ['JOVEM F', 'pt-BR', 1.05, 1.35], ['REPORTER', 'pt-BR', 0.9, 1], ['JORNAL', 'pt-BR', 0.88, 0.95],
+  ['RADIO AM', 'pt-BR', 0.92, 0.8], ['FM JOVEM', 'pt-BR', 1, 0.85], ['VELHO', 'pt-BR', 0.7, 0.5],
+  ['CRIANCA', 'pt-BR', 1.25, 1.6], ['ROBO', 'pt-BR', 0.6, 0.3], ['RUSSA', 'ru-RU', 0.72, 0.62],
+  ['USA', 'en-US', 0.85, 0.9], ['UK', 'en-GB', 0.85, 0.95], ['JAP', 'ja-JP', 1.1, 1.4],
+  ['FR', 'fr-FR', 0.9, 1.1], ['GER', 'de-DE', 0.8, 0.7], ['ESP', 'es-ES', 0.95, 1],
+  ['ITA', 'it-IT', 0.95, 1.05], ['NARRADOR', 'pt-BR', 0.8, 0.6], ['SUSPENSE', 'pt-BR', 0.65, 0.5],
+  ['ALEGRE', 'pt-BR', 1.2, 1.3], ['NEUTRA', 'pt-BR', 1, 1], ['HOMEM', 'pt-BR', 0.9, 0.75],
+  ['MULHER', 'pt-BR', 0.88, 0.9], ['ADO M', 'pt-BR', 1.15, 1], ['ADO F', 'pt-BR', 1.15, 1.25],
+  ['ESPORTE', 'pt-BR', 1.1, 0.8], ['VILAO', 'pt-BR', 0.6, 0.45], ['HEROI', 'pt-BR', 0.85, 0.7],
+  ['CANTADA', 'pt-BR', 0.95, 0.75], ['WHISPER', 'pt-BR', 0.7, 0.85]
+];
+
+function App() {
+  const [autenticado, setAutenticado] = useState(false);
+  const [senha, setSenha] = useState('');
+  const [erroSenha, setErroSenha] = useState(false);
+  const [modoNoite, setModoNoite] = useState(false);
+  const [horaAtualStr, setHoraAtualStr] = useState('');
+  const [statusConexao, setStatusConexao] = useState(navigator.onLine ? 'ONLINE' : 'OFFLINE (MODO CONTINGÊNCIA)');
+
+  const [mun, setMun] = useState(MUNICIPIOS[0]);
+  const [meteo, setMeteo] = useState({temperatura: "27°C", umidade: "78%", chuvaMm: "14.2 mm/h", condicao: "Instável"});
+  const [carregandoMeteo, setCarregandoMeteo] = useState(false);
+
+  const [iaLaudo, setIaLaudo] = useState("Cérebro neural ativado. Banco de dados offline pronto para contingência.");
+  const [nivelAlertaCor, setNivelAlertaCor] = useState("bg-emerald-500");
+  const [nivelAlertaTexto, setNivelAlertaTexto] = useState("R1 - NORMAL / PREVENTIVO");
+
+  // Estados de Vozes e Nodes
+  const [modoVozTab, setModoVozTab] = useState('32');
+  const [favoritosVoz, setFavoritosVoz] = useState(() => {
+    try { return new Set(JSON.parse(localStorage.getItem('nf') || '[]')); } catch { return new Set(); }
+  });
+  const [textoFalaCustom, setTextoFalaCustom] = useState('');
+  const [listaV32] = useState(() => {
+    let arr = [];
+    D_VOZES.forEach((v, i) => arr.push({l: v[1], r: v[2], p: v[3], i: i, t: v[0], n: v[0], id: i, q: true}));
+    return arr;
+  });
+  const [listaV10k] = useState(() => {
+    let arr = [];
+    let langs = ['pt-BR', 'ru-RU', 'en-US', 'ja-JP', 'fr-FR', 'de-DE', 'es-ES', 'it-IT'];
+    for (let i = 0; i < 500; i++) {
+      let lg = langs[i % langs.length];
+      let pi = +(0.2 + (i % 180) * 0.01).toFixed(2);
+      let ra = +(0.4 + (i % 120) * 0.01).toFixed(2);
+      arr.push({l: lg, r: ra, p: pi, i: i, t: 'Voz Node ' + (i + 1), n: (i + 1) + ' P' + pi, id: i + 1000, q: false});
+    }
+    return arr;
+  });
+
+  // Estados de Câmera e Relatório
+  const [fotosVistoria, setFotosVistoria] = useState(() => {
+    try { return JSON.parse(localStorage.getItem('raru_fotos_offline') || '[]'); } catch { return []; }
+  });
+  const [camOn, setCamOn] = useState(false);
+  const [nomeAgente, setNomeAgente] = useState('Alexander da Silva Firmo');
+  const [bairroVistoria, setBairroVistoria] = useState('Sebinho / Rocha Sobrinho');
+  const [riscoVistoria, setRiscoVistoria] = useState(RISCOS_VISTORIA[0]);
+  const [relatoVistoria, setRelatoVistoria] = useState('');
+  const [coordsGPS, setCoordsGPS] = useState({lat: -22.7858, lon: -43.4294});
+  const [analisandoIA, setAnalisandoIA] = useState(false);
+
+  const videoRef = useRef(null);
+  const streamRef = useRef(null);
+  const audioCtxRef = useRef(null);
+  const oscRef = useRef(null);
+  const intervalRef = useRef(null);
+
+  // Estados de Alerta BR/RU
+  const [statusBR, setStatusBR] = useState('AGUARDANDO');
+  const [timerBR, setTimerBR] = useState('00:00 / 05:00');
+  const [statusRU, setStatusRU] = useState('AGUARDANDO');
+  const [timerRU, setTimerRU] = useState('00:00 / 05:00');
+
+  useEffect(() => {
+    const checarHorario = () => {
+      const now = new Date();
+      const hora = now.getHours();
+      setHoraAtualStr(`${hora.toString().padStart(2,'0')}:${now.getMinutes().toString().padStart(2,'0')}:${now.getSeconds().toString().padStart(2,'0')}`);
+      setModoNoite(hora >= 17 || hora < 6);
+    };
+    checarHorario();
+    const timer = setInterval(checarHorario, 1000);
+    return () => clearInterval(timer);
+  }, []);
+
+  // Funções de Síntese de Voz Avançada
+  const falarVozObjeto = (o, textoOverride) => {
+    try {
+      if (!('speechSynthesis' in window)) return;
+      window.speechSynthesis.cancel();
+      let u = new SpeechSynthesisUtterance(textoOverride || o.t);
+      u.lang = o.l;
+      u.rate = o.r;
+      u.pitch = o.p;
+      u.volume = 1.0;
+      let vs = window.speechSynthesis.getVoices();
+      if (vs.length) {
+        let v = vs.find(x => x.lang.includes(o.l)) || vs[o.i % vs.length];
+        if (v) u.voice = v;
+      }
+      window.speechSynthesis.speak(u);
+    } catch(e) {}
+  };
+
+  const alternarFavoritoVoz = (id) => {
+    let novoSet = new Set(favoritosVoz);
+    if(novoSet.has(id)) novoSet.delete(id); else novoSet.add(id);
+    setFavoritosVoz(novoSet);
+    try { localStorage.setItem('nf', JSON.stringify([...novoSet])); } catch {}
+  };
+
+  const falarTextoCustom = (idioma) => {
+    if(!textoFalaCustom) return;
+    falarVozObjeto({l: idioma, r: 0.85, p: 0.9, i: 0}, textoFalaCustom);
+  };
+
+  const falarVozAleatoria = () => {
+    let listaAtual = modoVozTab === '32' ? listaV32 : modoVozTab === 'fav' ? [...listaV32, ...listaV10k].filter(v => favoritosVoz.has(v.id)) : listaV10k;
+    if(listaAtual.length === 0) return;
+    let o = listaAtual[Math.floor(Math.random() * listaAtual.length)];
+    falarVozObjeto(o);
+  };
+
+  // Funções de Câmera
+  const startCam = async () => {
+    try {
+      const s = await navigator.mediaDevices.getUserMedia({video: {facingMode: {ideal: "environment"}, width: {ideal: 1280}}});
+      streamRef.current = s;
+      setCamOn(true);
+      setTimeout(() => { if(videoRef.current) { videoRef.current.srcObject = s; videoRef.current.play().catch(()=>{}); } }, 150);
+    } catch(e) { alert('Permissão de câmera negada.'); }
+  };
+
+  const stopCam = () => {
+    if(streamRef.current) streamRef.current.getTracks().forEach(t => t.stop());
+    setCamOn(false);
+  };
+
+  const capturarFotoOffline = () => {
+    const v = videoRef.current;
+    if(!v || v.videoWidth === 0) return;
+    setAnalisandoIA(true);
+    const c = document.createElement('canvas');
+    c.width = 600; c.height = Math.round(600 * v.videoHeight / v.videoWidth);
+    const ctx = c.getContext('2d');
+    ctx.drawImage(v, 0, 0, c.width, c.height);
+    ctx.fillStyle = 'rgba(0,0,0,0.92)'; ctx.fillRect(0, c.height - 48, c.width, 48);
+    ctx.fillStyle = '#60A5FA'; ctx.font = '700 10px monospace';
+    ctx.fillText(`RARU OFFLINE | GPS: ${coordsGPS.lat}, ${coordsGPS.lon} | ${riscoVistoria}`, 10, c.height - 28);
+    ctx.fillStyle = '#FFFFFF'; ctx.font = '700 9px monospace';
+    ctx.fillText(`${new.Date ? new Date().toLocaleString() : ''} | ${bairroVistoria} | ${nomeAgente}`, 10, c.height - 12);
+    
+    const dataUrl = c.toDataURL('image/jpeg', 0.65);
+    setFotosVistoria(p => {
+      let novaLista = [...p, dataUrl];
+      try { localStorage.setItem('raru_fotos_offline', JSON.stringify(novaLista)); } catch {}
+      return novaLista;
+    });
+    setTimeout(() => { setAnalisandoIA(false); }, 500);
+  };
+
+  const gerarLaudoPDF = async () => {
+    const prot = `OFFLINE-LAUDO-${Math.floor(Math.random()*899999+100000)}`;
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF('p', 'mm', 'a4');
+    doc.setFillColor(3, 7, 18); doc.rect(0, 0, 210, 297, 'F');
+    doc.setTextColor(239, 68, 68); doc.setFont('helvetica', 'bold'); doc.setFontSize(14);
+    doc.text(`RARU NEXUS AI - OFFLINE REPORT`, 10, 15);
+    doc.setTextColor(148, 163, 184); doc.setFontSize(8);
+    doc.text(`PROTOCOL: ${prot} | JURISDICTION: ${mun.n} | AGENT: ${nomeAgente}`, 10, 22);
+    
+    let y = 35;
+    for(let i = 0; i < fotosVistoria.length; i++) {
+      if(y > 220) { doc.addPage(); y = 15; }
+      try { doc.addImage(fotosVistoria[i], 'JPEG', 10 + (i % 2) * 95, y, 88, 55); } catch {}
+      if(i % 2 === 1) y += 62;
+    }
+    const blob = doc.output('blob');
+    const url = URL.createObjectURL(blob);
+    window.open(url, '_blank');
+  };
+
+  const estiloPainel = modoNoite ? "panel-noite p-3" : "panel-dia p-3";
+
+  return (
+    <div className="space-y-3 w-full font-mono">
+
+      {/* HEADER */}
+      <div className={`${estiloPainel} flex justify-between items-center`}>
+        <div>
+          <h2 className="text-xs font-black text-white">RARU NEXUS AI V11.4+ • MATRIZ DE VOZES</h2>
+          <p className="text-[9px] text-slate-400">Rocha Sobrinho • Hora: {horaAtualStr}</p>
+        </div>
+        <button onClick={()=>setAutenticado(true)} className="bg-blue-900/30 border border-blue-500/40 text-blue-300 px-3 py-1.5 rounded-xl text-[9px] font-bold">SISTEMA ATIVO</button>
+      </div>
+
+      {/* MATRIZ DE VOZES E NODES (NOVO RECURSO INTEGRADO) */}
+      <div className={`${estiloPainel} space-y-3 border-2 border-purple-500/50`}>
+        <div className="flex justify-between items-center">
+          <p className="label text-purple-300">🎙️ MATRIZ DE VOZES & SINTETIZADOR TÁTICO</p>
+          <span className="text-[10px] px-2 py-0.5 rounded bg-purple-900/30 text-purple-300 font-bold">{favoritosVoz.size} FAVORITAS</span>
+        </div>
+
+        <div className="tabs">
+          <button className={`t ${modoVozTab==='32'?'a':'i'}`} onClick={()=>setModoVozTab('32')}>⭐ 32 VOZES</button>
+          <button className={`t ${modoVozTab==='10k'?'a':'i'}`} onClick={()=>setModoVozTab('10k')}>🎲 500 NODES</button>
+          <button className={`t ${modoVozTab==='fav'?'a':'i'}`} onClick={()=>setModoVozTab('fav')}>💛 FAVORITOS</button>
+        </div>
+
+        <div className="flex gap-2">
+          <input value={textoFalaCustom} onChange={e=>setTextoFalaCustom(e.target.value)} placeholder="Digite comando de voz..." className="w-full bg-black border border-white/20 rounded-xl p-2.5 text-xs text-white"/>
+          <button onClick={()=>falarTextoCustom('pt-BR')} className="bg-blue-600 text-white font-bold px-3 rounded-xl text-xs">FALAR</button>
+          <button onClick={falarVozAleatoria} className="bg-pink-600 text-white font-bold px-3 rounded-xl text-xs">RAND</button>
+        </div>
+
+        <div className="grid-vozes">
+          {(modoVozTab === '32' ? listaV32 : modoVozTab === 'fav' ? [...listaV32, ...listaV10k].filter(v => favoritosVoz.has(v.id)) : listaV10k).slice(0, 100).map((o) => {
+            const isFav = favoritosVoz.has(o.id);
+            return (
+              <div key={o.id} onClick={()=>falarVozObjeto(o)} onContextMenu={(e)=>{e.preventDefault(); alternarFavoritoVoz(o.id);}} className={`vb ${isFav ? 'fav' : ''}`} style={{background: `hsl(${(o.q ? o.p * 60 : o.id * 0.7) % 360}, 60%, 22%)`}}>
+                <span>{o.n}</span>
+                <span onClick={(e)=>{e.stopPropagation(); alternarFavoritoVoz(o.id);}}>{isFav ? '⭐' : '🔊'}</span>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* MÓDULO DE CÂMERA & RELATÓRIO OFFLINE */}
+      <div className={`${estiloPainel} space-y-3 border-2 border-amber-500/50`}>
+        <div className="flex justify-between items-center">
+          <p className="label text-amber-300">⚡ CÂMERA DE CAMPO & PDF OFFLINE</p>
+          <span className="text-[10px] px-2 py-0.5 rounded bg-amber-900/30 text-amber-300 font-bold">{fotosVistoria.length} FOTOS</span>
+        </div>
+
+        <div className="bg-black border border-white/10 rounded-xl p-2.5 space-y-2">
+          <div className="flex justify-between items-center">
+            <p className="label">Captura Offline</p>
+            {!camOn ? (
+              <button onClick={startCam} className="text-[10px] bg-white text-black font-bold px-3 py-1 rounded">LIGAR</button>
+            ) : (
+              <button onClick={stopCam} className="text-[10px] bg-red-600 text-white font-bold px-3 py-1 rounded">DESLIGAR</button>
+            )}
+          </div>
+          <div className="bg-[#080A12] rounded-lg overflow-hidden relative">
+            <video ref={videoRef} autoPlay playsInline muted style={{width:'100%', height:'160px', objectFit:'cover', display: camOn ? 'block' : 'none'}}></video>
+            {!camOn && <div className="h-[160px] grid place-items-center text-[10px] text-slate-500 font-bold">CÂMERA DESLIGADA</div>}
+          </div>
+          {camOn && <button onClick={capturarFotoOffline} className="w-full py-2 bg-white text-black font-black rounded-xl text-xs">CAPTURAR FOTO</button>}
+
+          {fotosVistoria.length > 0 && (
+            <div className="flex gap-2 overflow-x-auto pt-1">
+              {fotosVistoria.map((f, i) => (
+                <div key={i} className="relative shrink-0">
+                  <img src={f} className="w-16 h-16 object-cover rounded-lg border border-white/20"/>
+                  <div className="x" onClick={() => setFotosVistoria(fotosVistoria.filter((_, idx) => idx !== i))}>X</div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+
+        <div className="grid grid-cols-2 gap-2">
+          <input value={nomeAgente} onChange={e=>setNomeAgente(e.target.value)} placeholder="Agente" className="bg-black border border-white/15 rounded-xl p-2 text-xs text-white"/>
+          <select value={riscoVistoria} onChange={e=>setRiscoVistoria(e.target.value)} className="bg-black border border-white/15 rounded-xl p-2 text-[10px] text-white">
+            {RISCOS_VISTORIA.map((r, i) => <option key={i} value={r}>{r}</option>)}
+          </select>
+        </div>
+
+        <button onClick={gerarLaudoPDF} className="w-full py-3 bg-white text-black font-black rounded-xl text-xs">GERAR RELATÓRIO PDF OFFLINE</button>
+      </div>
+
+      {/* SELECIONADOR DE MUNICÍPIOS & METEO */}
+      <div className={`${estiloPainel} space-y-3`}>
+        <p className="label">MUNICÍPIOS RJ (92 CIDADES)</p>
+        <select value={mun.n} onChange={e=>{ const m=MUNICIPIOS.find(mm=>mm.n===e.target.value); if(m) setMun(m); }} className="w-full bg-black border border-white/20 rounded-xl p-3 text-[11px] font-bold text-white">
+          {MUNICIPIOS.map((m,i)=><option key={i} value={m.n}>{m.n}</option>)}
+        </select>
+        <div className="bg-black border border-white/10 rounded-xl p-3 flex justify-between items-center text-xs">
+          <div><p className="font-black text-white">{mun.n}</p><p className="text-[9px] text-blue-400">{mun.bacia}</p></div>
+          <span className="text-emerald-300 font-bold">{meteo.chuvaMm}</span>
+        </div>
+      </div>
+
+    </div>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<App/>);
+</script>
+</body>
+</html>
