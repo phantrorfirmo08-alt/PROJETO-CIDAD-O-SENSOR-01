@@ -1,0 +1,458 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SARAH AI NEXUS V19.0 - BASE ROCHA SOBRINHO (92 Municípios & Alarme Militar)</title>
+    <style>
+        :root {
+            --bg-color: #030812;
+            --panel-bg: rgba(5, 15, 30, 0.92);
+            --border-primary: #00f0ff;
+            --border-secondary: #ff8800;
+            --text-primary: #e0f7ff;
+            --text-secondary: #ffaa33;
+            --accent-green: #00ff66;
+            --accent-red: #ff2a2a;
+            --glow-blue: 0 0 10px rgba(0, 240, 255, 0.4);
+            --glow-orange: 0 0 10px rgba(255, 136, 0, 0.4);
+            --glow-red: 0 0 12px rgba(255, 42, 42, 0.6);
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Courier New', Courier, monospace; }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-primary);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow-x: hidden;
+            background-image: 
+                linear-gradient(rgba(0, 240, 255, 0.03) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(0, 240, 255, 0.03) 1px, transparent 1px);
+            background-size: 20px 20px;
+        }
+
+        .dashboard-container {
+            width: 1480px;
+            height: 940px;
+            background: var(--panel-bg);
+            border: 2px solid var(--border-primary);
+            box-shadow: var(--glow-blue), inset 0 0 30px rgba(0, 240, 255, 0.1);
+            padding: 15px;
+            display: grid;
+            grid-template-rows: 50px 1fr 40px;
+            grid-template-columns: 2fr 1.1fr;
+            gap: 15px;
+            position: relative;
+        }
+
+        /* Efeito Scanline Cibernética */
+        .dashboard-container::before {
+            content: " ";
+            display: block;
+            position: absolute;
+            top: 0; left: 0; bottom: 0; right: 0;
+            background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%);
+            background-size: 100% 4px;
+            z-index: 10;
+            pointer-events: none;
+        }
+
+        /* CABEÇALHO */
+        header {
+            grid-column: 1 / -1;
+            border-bottom: 1px solid var(--border-primary);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding-bottom: 5px;
+        }
+
+        .logo-area h1 { font-size: 20px; color: var(--border-primary); text-shadow: var(--glow-blue); letter-spacing: 2px; }
+        .logo-area p { font-size: 9px; color: var(--text-secondary); letter-spacing: 1px; }
+
+        .header-status { display: flex; gap: 15px; font-size: 11px; align-items: center; }
+        .status-badge { display: flex; align-items: center; gap: 5px; }
+        .dot { width: 7px; height: 7px; background-color: var(--accent-green); border-radius: 50%; box-shadow: 0 0 8px var(--accent-green); }
+        .dot.orange { background-color: var(--border-secondary); box-shadow: var(--glow-orange); }
+        .dot.red { background-color: var(--accent-red); box-shadow: var(--glow-red); animation: blink 1s infinite; }
+
+        @keyframes blink { 0% { opacity: 0.3; } 50% { opacity: 1; } 100% { opacity: 0.3; } }
+
+        /* PAINEL ESQUERDO: MAPA & BACIAS */
+        .left-panel {
+            border: 1px solid var(--border-primary);
+            padding: 12px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            position: relative;
+            background: rgba(0, 10, 20, 0.6);
+        }
+
+        .panel-title { font-size: 12px; font-weight: bold; color: var(--border-primary); margin-bottom: 5px; letter-spacing: 1px; }
+        .map-wrapper { position: relative; flex-grow: 1; display: flex; justify-content: center; align-items: center; }
+
+        /* Seletor de Paletas */
+        .palette-selector { position: absolute; top: 5px; right: 5px; z-index: 20; display: flex; gap: 4px; }
+        .palette-btn { background: rgba(0,0,0,0.7); border: 1px solid var(--border-primary); color: var(--text-primary); font-size: 9px; padding: 2px 5px; cursor: pointer; transition: 0.3s; }
+        .palette-btn:hover, .palette-btn.active { background: var(--border-primary); color: var(--bg-color); }
+
+        .municipality-node { cursor: pointer; transition: all 0.2s ease; }
+        .municipality-node:hover circle { fill: #ffffff !important; r: 6px; filter: drop-shadow(0 0 6px #fff); }
+
+        /* PAINEL DIREITO */
+        .right-panel { display: flex; flex-direction: column; gap: 10px; overflow-y: auto; max-height: 850px; padding-right: 2px; }
+        .sub-widget { border: 1px solid var(--border-secondary); background: rgba(20, 10, 0, 0.4); padding: 10px; box-shadow: var(--glow-orange); position: relative; }
+        .sub-widget.blue-border { border-color: var(--border-primary); box-shadow: var(--glow-blue); }
+        .sub-widget.red-border { border-color: var(--accent-red); box-shadow: var(--glow-red); background: rgba(30, 5, 5, 0.5); }
+
+        .widget-title { font-size: 11px; color: var(--text-secondary); margin-bottom: 6px; border-bottom: 1px dashed rgba(255,136,0,0.3); padding-bottom: 3px; display: flex; justify-content: space-between; }
+        .blue-border .widget-title { color: var(--border-primary); border-bottom-color: rgba(0,240,255,0.3); }
+        .red-border .widget-title { color: var(--accent-red); border-bottom-color: rgba(255,42,42,0.3); }
+
+        .ai-intel-box { background: rgba(0, 20, 40, 0.6); border: 1px solid var(--border-primary); padding: 8px; font-size: 11px; margin-top: 5px; }
+        .ai-intel-box p { margin-bottom: 4px; }
+        .highlight-val { color: var(--border-primary); font-weight: bold; }
+
+        /* BOTÕES DE ALARME MILITAR V20.0 */
+        .grid-btns { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 5px; }
+        button {
+            background: #1a0000; border: 2px solid var(--accent-red); color: var(--accent-red);
+            padding: 10px 4px; font-weight: bold; cursor: pointer;
+            font-size: 10px; letter-spacing: 1px; transition: 0.2s;
+        }
+        button:hover { background: var(--accent-red); color: #000; box-shadow: var(--glow-red); }
+        button.br { border-color: var(--accent-green); color: var(--accent-green); background: #001a0f; }
+        button.br:hover { background: var(--accent-green); color: #000; box-shadow: 0 0 10px var(--accent-green); }
+        .btn-parar {
+            grid-column: span 2;
+            background: #400000; border-color: #ff0000; color: #fff;
+            font-size: 12px; margin-top: 2px;
+        }
+
+        .camera-viewport { height: 70px; background: #000; border: 1px inset var(--border-primary); position: relative; overflow: hidden; display: flex; justify-content: center; align-items: center; }
+        .camera-grid { position: absolute; width: 100%; height: 100%; background-image: radial-gradient(circle, rgba(0,240,255,0.2) 1px, transparent 1px); background-size: 15px 15px; }
+
+        .canvas-container { width: 100%; height: 65px; background: rgba(0,0,0,0.5); position: relative; }
+        canvas { width: 100%; height: 100%; display: block; }
+
+        .eta-section { margin-top: 5px; font-size: 10px; }
+        .progress-bar { width: 100%; height: 5px; background: rgba(255,255,255,0.1); border: 1px solid var(--border-secondary); margin-top: 3px; position: relative; overflow: hidden; }
+        .progress-fill { width: 100%; height: 100%; background: var(--accent-green); box-shadow: 0 0 8px var(--accent-green); }
+
+        footer { grid-column: 1 / -1; border-top: 1px solid var(--border-primary); display: flex; justify-content: space-between; align-items: center; font-size: 10px; color: var(--text-secondary); }
+
+        /* Temas de Paletas Dinâmicos */
+        body.theme-cyber-blue { --border-primary: #00f0ff; --border-secondary: #0099ff; --text-primary: #e0f7ff; --text-secondary: #70d6ff; }
+        body.theme-neon-purple { --border-primary: #c084fc; --border-secondary: #f43f5e; --text-primary: #fae8ff; --text-secondary: #fb7185; }
+        body.theme-matrix-green { --border-primary: #00ff66; --border-secondary: #a3e635; --text-primary: #ecfccb; --text-secondary: #bef264; }
+    </style>
+</head>
+<body class="theme-cyber-blue">
+
+    <div class="dashboard-container">
+        <!-- CABEÇALHO -->
+        <header>
+            <div class="logo-area">
+                <h1>SARAH AI NEXUS V19.0</h1>
+                <p>BASE OFICIAL ROCHA SOBRINHO • 92 MUNICÍPIOS & SUB-REDE WI-FI</p>
+            </div>
+            <div class="header-status">
+                <div class="status-badge"><div class="dot"></div> STATUS: ONLINE</div>
+                <div class="status-badge"><div class="dot orange"></div> AMEAÇA: MODERADA</div>
+                <div class="status-badge"><div class="dot red" id="sirene-status-dot"></div> SIRENE: <span id="lblSIRENE">STANDBY</span></div>
+                <div id="live-clock">2026-10-26 13:47:00 BRT</div>
+            </div>
+        </header>
+
+        <!-- MAPA & BACIAS (ESQUERDA) -->
+        <section class="left-panel">
+            <div class="palette-selector">
+                <button class="palette-btn active" onclick="setTheme('theme-cyber-blue', this)">Cian</button>
+                <button class="palette-btn" onclick="setTheme('theme-neon-purple', this)">Purple</button>
+                <button class="palette-btn" onclick="setTheme('theme-matrix-green', this)">Matrix</button>
+            </div>
+
+            <div class="panel-title">MAPA DE CONVERGÊNCIA • REDE 92 MUNICÍPIOS & BACIAS HIDROGRÁFICAS</div>
+            
+            <div class="map-wrapper">
+                <svg viewBox="0 0 650 380" width="100%" height="100%">
+                    <path d="M80,60 Q320,20 560,90 T600,300 Q380,360 120,330 T80,60" fill="rgba(0,30,50,0.5)" stroke="var(--border-primary)" stroke-width="2" />
+                    
+                    <!-- Bacias Hidrográficas Visíveis -->
+                    <g id="bacias-hidrograficas" opacity="0.8">
+                        <path d="M150,220 Q220,250 310,210 T420,180" fill="none" stroke="#00d2ff" stroke-width="2.5" stroke-dasharray="6,2"/>
+                        <text x="160" y="210" fill="#00d2ff" font-size="9">Bacia Hidrográfica: Guandu</text>
+                        <path d="M100,100 Q300,80 520,130" fill="none" stroke="#00d2ff" stroke-width="3"/>
+                        <text x="250" y="95" fill="#00d2ff" font-size="9">Bacia Paraíba do Sul</text>
+                        <path d="M420,250 Q500,280 580,230" fill="none" stroke="#00d2ff" stroke-width="2" stroke-dasharray="4,2"/>
+                        <text x="440" y="270" fill="#00d2ff" font-size="9">Bacia Lagos São João</text>
+                        <path d="M280,180 Q320,210 350,230" fill="none" stroke="#00d2ff" stroke-width="2.5"/>
+                        <text x="290" y="170" fill="#00d2ff" font-size="9">Bacia Baía de Guanabara</text>
+                    </g>
+
+                    <g transform="translate(325, 205)">
+                        <circle cx="0" cy="0" r="40" fill="none" stroke="var(--border-secondary)" stroke-width="1" opacity="0.7"/>
+                        <circle cx="0" cy="0" r="25" fill="none" stroke="var(--border-secondary)" stroke-width="1.5"/>
+                        <circle cx="0" cy="0" r="4" fill="var(--border-secondary)" />
+                    </g>
+                    <text x="215" y="275" fill="var(--text-secondary)" font-size="10" font-weight="bold">NÓ CENTRAL - ROCHA SOBRINHO / SEBINHO</text>
+
+                    <!-- Municípios Clicáveis dos 92 -->
+                    <g class="municipality-node" onclick="selecionarMunicipio('São João de Meriti', '-22.8058° S', '-43.3719° W', 'Guandu / Guanabara', '28.4°C', '79%', '1012.8 hPa', 'Estável (Wi-Fi Ativo)')">
+                        <circle cx="280" cy="195" r="4.5" fill="var(--border-primary)" />
+                        <text x="210" y="193" fill="var(--text-primary)" font-size="9">São João de Meriti</text>
+                    </g>
+
+                    <g class="municipality-node" onclick="selecionarMunicipio('Rio de Janeiro', '-22.9068° S', '-43.1729° W', 'Baía de Guanabara', '29.1°C', '82%', '1013.0 hPa', 'Moderado (Sub-rede Conectada)')">
+                        <circle cx="310" cy="225" r="4.5" fill="var(--border-primary)" />
+                        <text x="325" y="235" fill="var(--text-primary)" font-size="9">Rio de Janeiro</text>
+                    </g>
+
+                    <g class="municipality-node" onclick="selecionarMunicipio('Nova Iguaçu', '-22.7559° S', '-43.4511° W', 'Guandu', '27.5°C', '85%', '1012.1 hPa', 'Atenção (Sensor de Encosta Wi-Fi)')">
+                        <circle cx="255" cy="190" r="4.5" fill="var(--border-secondary)" />
+                        <text x="175" y="178" fill="var(--text-primary)" font-size="9">Nova Iguaçu</text>
+                    </g>
+
+                    <g class="municipality-node" onclick="selecionarMunicipio('Petrópolis', '-22.5103° S', '-43.1788° W', 'Paraíba do Sul', '22.1°C', '91%', '1009.5 hPa', 'Crítico (Alerta Geológico Ativo)')">
+                        <circle cx="330" cy="115" r="4.5" fill="var(--accent-red)" />
+                        <text x="345" y="112" fill="var(--text-primary)" font-size="9">Petrópolis</text>
+                    </g>
+                </svg>
+            </div>
+
+            <div class="eta-section">
+                <div style="display: flex; justify-content: space-between;">
+                    <span>STATUS DA SUB-REDE FÍSICA (PLACAS WI-FI / MUNICÍPIOS)</span>
+                    <span style="color: var(--accent-green); font-weight: bold;">92 / 92 CONECTADOS (ONLINE)</span>
+                </div>
+                <div class="progress-bar"><div class="progress-fill"></div></div>
+            </div>
+        </section>
+
+        <!-- PAINEL DIREITO: CENTRAL DE ALARMES & WIDGETS -->
+        <section class="right-panel">
+            
+            <!-- CENTRAL DE ALARME MILITAR V20.0 -->
+            <div class="sub-widget red-border">
+                <div class="widget-title">
+                    <span style="color: var(--accent-red);">CENTRAL DE ALARME MILITAR V20.0</span>
+                    <span style="color: var(--accent-red);">CEMADEN & RUSSO</span>
+                </div>
+                
+                <div class="grid-btns">
+                    <button class="br" onclick="btn_CMAD_5MIN()">🇧🇷 CMAD<br>5 MIN</button>
+                    <button class="br" onclick="btn_CMAD_3MIN()">🇧🇷 CMAD<br>3 MIN</button>
+                    <button class="br" onclick="btn_CMAD_1MIN()">🇧🇷 CMAD<br>1 MIN</button>
+                    <button onclick="btn_RUSSO_5MIN()">🇷🇺 RUSSO<br>5 MIN</button>
+                    <button style="grid-column: span 2; background:#ff2a2a; color:#000;" onclick="btn_RUSSO_1x1()">⏸️ RUSSO 1m TOCA / 1m PAUSA</button>
+                    <button class="btn-parar" onclick="btn_PARAR_TODOS()">🛑 PARAR TODOS OS ALARMES</button>
+                </div>
+                <div style="margin-top:8px; font-size:9px; color:#888;">
+                    FREQ: CEMADEN 850Hz | RUSSO 330↔440Hz GOST<br>
+                    CHAIN: COMPRESSOR 20:1 + LIMITER MILITAR
+                </div>
+            </div>
+
+            <!-- PAINEL DE INTELIGÊNCIA DO MUNICÍPIO -->
+            <div class="sub-widget blue-border" style="flex-grow: 1;">
+                <div class="widget-title">
+                    <span>SARAH AI • PAINEL TÁTICO DOS 92 MUNICÍPIOS</span>
+                    <span style="color: var(--accent-green);">ATIVO</span>
+                </div>
+                
+                <div class="ai-intel-box" id="aiResponseBox">
+                    <p style="color: var(--text-secondary); font-style: italic;">> Clique em qualquer município no mapa para extrair telemetria e sub-rede Wi-Fi.</p>
+                    <p><strong>Município Alvo:</strong> <span class="highlight-val" id="m-name">Nenhum selecionado</span></p>
+                    <p><strong>Coordenadas GPS:</strong> <span id="m-coords">--</span></p>
+                    <p><strong>Bacia de Influência:</strong> <span id="m-bacia">--</span></p>
+                    <p><strong>Telemetria / Wi-Fi:</strong> <span id="m-temp">--</span></p>
+                    <p><strong>Status Operacional:</strong> <span id="m-status" style="color: var(--accent-green);">Aguardando...</span></p>
+                </div>
+            </div>
+
+            <!-- VISOR DE CÂMERA -->
+            <div class="sub-widget">
+                <div class="widget-title">VISOR DE CÂMERA CIBERNÉTICA</div>
+                <div class="camera-viewport">
+                    <div class="camera-grid"></div>
+                    <div style="position: absolute; color: var(--border-primary); font-size: 10px; z-index: 2;">[ ZOOM 4.2x • SENSOR WI-FI ATIVO ]</div>
+                </div>
+            </div>
+
+            <!-- GRÁFICO PREDITIVO -->
+            <div class="sub-widget blue-border">
+                <div class="widget-title">NÍVEL DE CURVA — ANÁLISE PREDITIVA</div>
+                <div class="canvas-container"><canvas id="predictionCanvas"></canvas></div>
+            </div>
+        </section>
+
+        <!-- RODAPÉ -->
+        <footer>
+            <div>• SISTEMA: OPERACIONAL • 92 MUNICÍPIOS & SUB-REDE WI-FI</div>
+            <div>• BASE ROCHA SOBRINHO: LINK ESTÁVEL • LATÊNCIA 12ms</div>
+            <div>• MOTOR DE ALARME MILITAR V20.0 ATIVO</div>
+        </footer>
+    </div>
+
+    <script>
+        // ============================================
+        // SISTEMA DE ALARME MILITAR PROFISSIONAL (V20.0)
+        // BASE OFICIAL ROCHA SOBRINHO
+        // ============================================
+        let AudioCore = {
+            ctx: null,
+            masterGain: null,
+            compressor: null,
+            oscillators: [],
+            timers: [],
+            init() {
+                if (!this.ctx) {
+                    this.ctx = new (window.AudioContext || window.webkitAudioContext)();
+                    this.compressor = this.ctx.createDynamicsCompressor();
+                    this.compressor.threshold.setValueAtTime(-12, this.ctx.currentTime);
+                    this.compressor.knee.setValueAtTime(5, this.ctx.currentTime);
+                    this.compressor.ratio.setValueAtTime(20, this.ctx.currentTime);
+                    this.compressor.attack.setValueAtTime(0.002, this.ctx.currentTime);
+                    this.compressor.release.setValueAtTime(0.1, this.ctx.currentTime);
+                    this.masterGain = this.ctx.createGain();
+                    this.masterGain.gain.setValueAtTime(1.0, this.ctx.currentTime);
+                    this.compressor.connect(this.masterGain);
+                    this.masterGain.connect(this.ctx.destination);
+                }
+                if (this.ctx.state === 'suspended') this.ctx.resume();
+            },
+            stopAll() {
+                this.timers.forEach(t => { clearInterval(t); clearTimeout(t); });
+                this.timers = [];
+                this.oscillators.forEach(o => { try{o.stop();}catch(e){} });
+                this.oscillators = [];
+                document.getElementById('lblSIRENE').innerText = 'STANDBY';
+                document.getElementById('sirene-status-dot').className = 'dot';
+            }
+        };
+
+        function tocar_CMAD(ms) {
+            AudioCore.init(); AudioCore.stopAll();
+            let osc = AudioCore.ctx.createOscillator();
+            let gain = AudioCore.ctx.createGain();
+            let filter = AudioCore.ctx.createBiquadFilter();
+            osc.type = 'sine';
+            osc.frequency.setValueAtTime(850, AudioCore.ctx.currentTime);
+            filter.type = 'bandpass'; filter.frequency.setValueAtTime(850, AudioCore.ctx.currentTime); filter.Q.setValueAtTime(2, AudioCore.ctx.currentTime);
+            gain.gain.setValueAtTime(0.95, AudioCore.ctx.currentTime);
+            osc.connect(filter); filter.connect(gain); gain.connect(AudioCore.compressor);
+            osc.start(); AudioCore.oscillators.push(osc);
+            let on = true;
+            let pulse = setInterval(() => {
+                try { gain.gain.setValueAtTime(on?0.95:0.001, AudioCore.ctx.currentTime); on=!on; } catch(e){}
+            }, on ? 1000 : 350);
+            AudioCore.timers.push(pulse);
+            if (ms) AudioCore.timers.push(setTimeout(() => AudioCore.stopAll(), ms));
+            document.getElementById('lblSIRENE').innerText = 'CMAD TOCANDO'; 
+            document.getElementById('sirene-status-dot').className = 'dot red';
+        }
+
+        function tocar_RUSSO(ms) {
+            AudioCore.init(); AudioCore.stopAll();
+            let osc = AudioCore.ctx.createOscillator();
+            let gain = AudioCore.ctx.createGain();
+            let filter = AudioCore.ctx.createBiquadFilter();
+            osc.type = 'sine';
+            osc.frequency.setValueAtTime(330, AudioCore.ctx.currentTime);
+            filter.type = 'bandpass'; filter.frequency.setValueAtTime(385, AudioCore.ctx.currentTime); filter.Q.setValueAtTime(1.5, AudioCore.ctx.currentTime);
+            gain.gain.setValueAtTime(0.95, AudioCore.ctx.currentTime);
+            osc.connect(filter); filter.connect(gain); gain.connect(AudioCore.compressor);
+            osc.start(); AudioCore.oscillators.push(osc);
+            let high = false;
+            let alt = setInterval(() => {
+                try { osc.frequency.setValueAtTime(high?440:330, AudioCore.ctx.currentTime); high=!high; } catch(e){}
+            }, 900);
+            AudioCore.timers.push(alt);
+            if (ms) AudioCore.timers.push(setTimeout(() => AudioCore.stopAll(), ms));
+            document.getElementById('lblSIRENE').innerText = 'RUSSO TOCANDO'; 
+            document.getElementById('sirene-status-dot').className = 'dot red';
+        }
+
+        function tocar_RUSSO_1x1() {
+            AudioCore.init(); AudioCore.stopAll();
+            let cicloTocando = true;
+            function ciclo() {
+                if (cicloTocando) {
+                    tocar_RUSSO(60*1000);
+                    document.getElementById('lblSIRENE').innerText = 'RUSSO 1m TOCA'; 
+                } else {
+                    AudioCore.stopAll();
+                    document.getElementById('lblSIRENE').innerText = 'RUSSO 1m PAUSA';
+                }
+                cicloTocando = !cicloTocando;
+            }
+            ciclo();
+            AudioCore.timers.push(setInterval(ciclo, 60*1000));
+        }
+
+        function btn_CMAD_5MIN() { tocar_CMAD(5*60*1000); }
+        function btn_CMAD_3MIN() { tocar_CMAD(3*60*1000); }
+        function btn_CMAD_1MIN() { tocar_CMAD(1*60*1000); }
+        function btn_RUSSO_5MIN() { tocar_RUSSO(5*60*1000); }
+        function btn_RUSSO_1x1() { tocar_RUSSO_1x1(); }
+        function btn_PARAR_TODOS() { AudioCore.stopAll(); }
+
+        // --- INTERAÇÕES DO PAINEL ---
+        function setTheme(themeName, btnElement) {
+            document.body.className = themeName;
+            document.querySelectorAll('.palette-btn').forEach(btn => btn.classList.remove('active'));
+            if(btnElement) btnElement.classList.add('active');
+        }
+
+        setInterval(() => {
+            const now = new Date();
+            document.getElementById('live-clock').innerText = now.toISOString().slice(0, 10) + ' ' + now.toTimeString().slice(0, 8) + ' BRT';
+        }, 1000);
+
+        function selecionarMunicipio(name, lat, lon, bacia, temp, umidade, pressao, status) {
+            document.getElementById('m-name').innerText = name;
+            document.getElementById('m-coords').innerText = `LAT: ${lat} | LONG: ${lon}`;
+            document.getElementById('m-bacia').innerText = bacia;
+            document.getElementById('m-temp').innerText = `${temp} (Umidade: ${umidade}) | Pressão: ${pressao}`;
+            
+            const statusEl = document.getElementById('m-status');
+            statusEl.innerText = status;
+            statusEl.style.color = status.includes('Crítico') || status.includes('Atenção') ? 'var(--accent-red)' : 'var(--accent-green)';
+        }
+
+        // --- CANVAS PREDITIVO ---
+        const canvas = document.getElementById('predictionCanvas');
+        const ctx = canvas.getContext('2d');
+        function resizeCanvas() {
+            canvas.width = canvas.parentElement.clientWidth;
+            canvas.height = canvas.parentElement.clientHeight;
+            drawChart();
+        }
+        function drawChart() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            const points = [30, 42, 38, 52, 68, 62, 76, 72, 85, 79];
+            const stepX = canvas.width / (points.length - 1);
+            ctx.beginPath();
+            ctx.strokeStyle = getComputedStyle(document.body).getPropertyValue('--border-primary').trim();
+            ctx.lineWidth = 2;
+            points.forEach((val, index) => {
+                const x = index * stepX;
+                const y = canvas.height - (val / 100) * canvas.height;
+                if (index === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+            });
+            ctx.stroke();
+            ctx.lineTo(canvas.width, canvas.height);
+            ctx.lineTo(0, canvas.height);
+            ctx.fillStyle = 'rgba(0, 240, 255, 0.08)';
+            ctx.fill();
+        }
+        window.addEventListener('resize', resizeCanvas);
+        window.onload = resizeCanvas;
+    </script>
+</body>
+</html>
