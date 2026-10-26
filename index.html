@@ -1,0 +1,382 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>SARAH AI - VISTORIA V16.2 STABLE PRO</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+<script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+<script crossorigin src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700;800&family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+ body { background: #04060A; color: #F1F5F9; font-family: 'Inter', sans-serif; -webkit-tap-highlight-color: transparent; }
+ .mono { font-family: 'JetBrains Mono', monospace; }
+ .glass { background: rgba(9, 14, 25, 0.96); backdrop-filter: blur(20px); border: 1px solid rgba(255, 255, 255, 0.12); }
+ .glass-card { background: rgba(14, 21, 37, 0.9); border: 1px solid rgba(255, 255, 255, 0.1); }
+ .input-pro { background: #070A14; border: 1px solid rgba(255, 255, 255, 0.2); color: #FFF; font-size: 14px; font-weight: 600; }
+ .input-pro:focus { border-color: #3B82F6; outline: none; box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.3); }
+ @keyframes radarPulse { 0% { r: 10px; opacity: 0.9; } 70% { r: 48px; opacity: 0; } 100% { r: 10px; opacity: 0; } }
+ .radar-ring { animation: radarPulse 2.2s infinite; transform-origin: center; }
+</style>
+</head>
+<body class="p-2 sm:p-4 flex justify-center min-h-screen">
+<div id="root" class="w-full max-w-[1400px]"></div>
+
+<script type="text/babel">
+const { useState, useRef, useEffect } = React;
+
+const MUNICIPIOS_RJ_92 = [
+ "Mesquita (Base Oficial - Rocha Sobrinho)",
+ "Nova Iguaçu",
+ "Duque de Caxias",
+ "São João de Meriti",
+ "Belford Roxo",
+ "Nilópolis",
+ "São Gonçalo",
+ "Niterói",
+ "Petrópolis",
+ "Angra dos Reis",
+ "Aperibé",
+ "Araruama",
+ "Areal",
+ "Armação dos Búzios",
+ "Arraial do Cabo",
+ "Barra do Piraí",
+ "Barra Mansa",
+ "Bom Jardim",
+ "Bom Jesus do Itabapoana",
+ "Cabo Frio",
+ "Cachoeiras de Macacu",
+ "Cambuci",
+ "Campos dos Goytacazes",
+ "Cantagalo",
+ "Carapebus",
+ "Cardoso Moreira",
+ "Carmo",
+ "Casimiro de Abreu",
+ "Comendador Levy Gasparian",
+ "Conceição de Macabu",
+ "Cordeiro",
+ "Duas Barras",
+ "Engenheiro Paulo de Frontin",
+ "Guapimirim",
+ "Iguaba Grande",
+ "Itaboraí",
+ "Itaguaí",
+ "Italva",
+ "Itaocara",
+ "Itaperuna",
+ "Itatiaia",
+ "Japeri",
+ "Laje do Muriaé",
+ "Macaé",
+ "Macuco",
+ "Magé",
+ "Mangaratiba",
+ "Maricá",
+ "Mendes",
+ "Miguel Pereira",
+ "Miracema",
+ "Natividade",
+ "Nova Friburgo",
+ "Paracambi",
+ "Paraíba do Sul",
+ "Paraty",
+ "Paty do Alferes",
+ "Pinheiral",
+ "Piraí",
+ "Porciúncula",
+ "Porto Real",
+ "Quatis",
+ "Queimados",
+ "Quissamã",
+ "Resende",
+ "Rio Bonito",
+ "Rio Claro",
+ "Rio das Flores",
+ "Rio das Ostras",
+ "Rio de Janeiro (Capital)",
+ "Santa Maria Madalena",
+ "Santo Antônio de Pádua",
+ "São Fidélis",
+ "São Francisco de Itabapoana",
+ "São João da Barra",
+ "São José de Ubá",
+ "São José do Vale do Rio Preto",
+ "São Pedro da Aldeia",
+ "São Sebastião do Alto",
+ "Sapucaia",
+ "Saquarema",
+ "Seropédica",
+ "Silva Jardim",
+ "Sumidouro",
+ "Tanguá",
+ "Teresópolis",
+ "Trajano de Moraes",
+ "Três Rios",
+ "Valença",
+ "Varre-Sai",
+ "Vassouras",
+ "Volta Redonda"
+].map(m => ({ n: m, lat: -22.7858, lon: -43.4294 }));
+
+const RISCOS = [
+  "R1 - BAIXO / PREVENTIVO",
+  "R2 - MODERADO / ATENÇÃO",
+  "R3 - ALTO / ALERTA",
+  "R4 - IMINENTE / EVACUAÇÃO",
+  "RH - HIDROLÓGICO / ENCHENTE",
+  "RE - ESTRUTURAL / TALUDE"
+];
+
+const ORGAOS = [
+  "COMPDEC / SEDEC-RJ",
+  "GADE - GRUPO A CHAVE DA ESPERANÇA",
+  "BOM DIA COMUNIDADE",
+  "CIDADÃO SENSOR (RCS)",
+  "INEA / SERLA",
+  "CEMADEN / INPE",
+  "CRAS / CREAS",
+  "DEFESA CIVIL MUNICIPAL",
+  "NUPDECs - 92 MUNICÍPIOS RJ"
+];
+
+function App() {
+  const [mun, setMun] = useState(MUNICIPIOS_RJ_92[0]);
+  const [fotos, setFotos] = useState([]);
+  const [camOn, setCamOn] = useState(false);
+  const [facingMode, setFacingMode] = useState("environment");
+  const [nome, setNome] = useState("Alexander da Silva Firmo");
+  const [docId, setDocId] = useState("AG-COMUNITARIO-01");
+  const [bairro, setBairro] = useState("Comunidade do Sebinho (Maria Cristina)");
+  const [risco, setRisco] = useState(RISCOS[1]);
+  const [org, setOrg] = useState(ORGAOS[3]);
+  const [rel, setRel] = useState("");
+
+  const videoRef = useRef(null);
+  const streamRef = useRef(null);
+
+  const startCamera = async (mode = facingMode) => {
+    try {
+      if (streamRef.current) streamRef.current.getTracks().forEach(t => t.stop());
+      const s = await navigator.mediaDevices.getUserMedia({
+        video: { facingMode: { exact: mode }, width: { ideal: 1280 }, height: { ideal: 720 } }
+      }).catch(() => navigator.mediaDevices.getUserMedia({ video: true }));
+
+      streamRef.current = s;
+      setCamOn(true);
+      setTimeout(() => {
+        if (videoRef.current) {
+          videoRef.current.srcObject = s;
+          videoRef.current.play().catch(() => {});
+        }
+      }, 100);
+    } catch (e) {
+      alert('ERRO DE CÂMERA: PERMISSÃO NEGADA OU HTTPS NECESSÁRIO.');
+    }
+  };
+
+  const stopCamera = () => {
+    if (streamRef.current) streamRef.current.getTracks().forEach(t => t.stop());
+    if (videoRef.current) videoRef.current.srcObject = null;
+    setCamOn(false);
+  };
+
+  const capturarFoto = () => {
+    const v = videoRef.current;
+    if (!v || v.videoWidth === 0) { alert('AGUARDE O FOCO DA CÂMERA'); return; }
+    
+    const c = document.createElement('canvas');
+    c.width = 900;
+    c.height = Math.round(900 * (v.videoHeight / v.videoWidth));
+    const ctx = c.getContext('2d');
+    ctx.drawImage(v, 0, 0, c.width, c.height);
+
+    ctx.fillStyle = 'rgba(4, 6, 10, 0.95)';
+    ctx.fillRect(0, 0, c.width, 42);
+    ctx.fillRect(0, c.height - 60, c.width, 60);
+
+    ctx.fillStyle = '#3B82F6';
+    ctx.font = '800 15px monospace';
+    ctx.fillText(`SARAH AI NEXUS // VISTORIA FORENSE TÁTICA`, 16, 27);
+
+    ctx.fillStyle = '#FFFFFF';
+    ctx.font = '700 13px monospace';
+    const agoraStr = new Date().toLocaleString('pt-BR');
+    ctx.fillText(`${agoraStr} | ${mun.n}`, 16, c.height - 35);
+    ctx.fillText(`GEO: ${mun.lat.toFixed(4)}, ${mun.lon.toFixed(4)} | RESP: ${nome.split(' ')[0]}`, 16, c.height - 15);
+
+    setFotos(p => [...p, c.toDataURL('image/jpeg', 0.85)]);
+  };
+
+  const enviarWhatsapp = () => {
+    if (!nome || !bairro) { alert('PREENCHA RESPONSÁVEL E BAIRRO'); return; }
+    if (fotos.length === 0) { alert('CAPTURE AO MENOS 1 FOTO'); return; }
+
+    const prot = `PROT-${Math.floor(Math.random() * 8999 + 1000)}`;
+    const texto = `*SARAH AI NEXUS // VISTORIA*
+*PROT:* ${prot}
+*RESP:* ${nome}
+*LOCAL:* ${mun.n} - ${bairro}
+*RISCO:* ${risco}
+*FOTOS:* ${fotos.length}`;
+    window.open(`https://wa.me/?text=${encodeURIComponent(texto)}`, '_blank');
+  };
+
+  return (
+    <div className="glass rounded-3xl p-4 sm:p-6 space-y-6 shadow-2xl w-full">
+      
+      {/* Top Header */}
+      <div className="flex justify-between items-center border-b border-white/10 pb-3">
+        <div className="flex items-center space-x-3">
+          <div className="w-3.5 h-3.5 rounded-full bg-blue-500 animate-pulse"></div>
+          <h1 className="text-sm font-black text-white uppercase mono">SARAH AI NEXUS // V16.2 STABLE</h1>
+        </div>
+        <span className="text-[10px] mono px-2.5 py-1 rounded bg-blue-500/20 text-blue-300">92 MUNICÍPIOS RJ</span>
+      </div>
+
+      {/* MAPA TÁTICO SVG AMPLIADO COM LETRAS GRANDES */}
+      <div className="glass-card rounded-2xl p-4 border border-blue-500/40 space-y-3 shadow-xl">
+        <div className="flex justify-between items-center">
+          <span className="text-xs font-black uppercase text-blue-400 mono">📡 RADAR TÁTICO GEOGRÁFICO (RJ)</span>
+          <span className="text-xs font-bold text-emerald-400 mono">ALVO: {mun.n}</span>
+        </div>
+
+        <div className="w-full rounded-xl overflow-hidden border border-blue-500/40 bg-[#04060A]">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1100 420" width="100%" height="100%" style={{background:'#04060A', display:'block'}}>
+            <defs>
+              <linearGradient id="mBg" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stop-color="#090E19"/><stop offset="100%" stop-color="#020408"/>
+              </linearGradient>
+              <style>{`
+                .mlabel { font-size: 13.5px; font-family: monospace; font-weight: 700; fill: #CBD5E1; }
+                .mlabel-pro { font-size: 15px; font-family: monospace; font-weight: 800; fill: #FFFFFF; }
+              `}</style>
+            </defs>
+            <rect width="1100" height="420" fill="url(#mBg)"/>
+            <g stroke="#ffffff" stroke-opacity="0.06" stroke-width="1">
+              <path d="M 0,70 H 1100 M 0,140 H 1100 M 0,210 H 1100 M 0,280 H 1100 M 0,350 H 1100" />
+            </g>
+            <g transform="translate(60, 30)">
+              <circle cx="490" cy="270" r="5" fill="#3B82F6"/><text x="506" y="275" className="mlabel">Rio de Janeiro</text>
+              <circle cx="680" cy="285" r="5" fill="#3B82F6"/><text x="696" y="290" className="mlabel">Niterói</text>
+              <circle cx="400" cy="190" r="6" fill="#3B82F6"/><text x="416" y="195" className="mlabel-pro">Duque de Caxias</text>
+              <circle cx="290" cy="140" r="6" fill="#3B82F6"/><text x="160" y="135" className="mlabel-pro">Nova Iguaçu</text>
+              <circle cx="360" cy="215" r="6" fill="#3B82F6"/><text x="376" y="220" className="mlabel-pro">São João de Meriti</text>
+              <circle cx="330" cy="160" r="6" fill="#3B82F6"/><text x="180" y="165" className="mlabel-pro">Belford Roxo</text>
+              
+              {/* Marcador Mesquita / Sebinho */}
+              <g transform="translate(330, 160)">
+                <circle cx="0" cy="0" r="34" fill="none" stroke="#25D366" strokeWidth="2.5" className="radar-ring"/>
+                <circle cx="0" cy="0" r="8" fill="#25D366"/>
+                <rect x="-95" y="-42" width="190" height="30" rx="6" fill="#070A14" stroke="#25D366" strokeWidth="2"/>
+                <text x="0" y="-23" fill="#25D366" fontSize="12" fontWeight="900" textAnchor="middle" fontFamily="monospace">MESQUITA // SEBINHO</text>
+              </g>
+            </g>
+          </svg>
+        </div>
+      </div>
+
+      {/* Grid: Câmera & Formulário */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        
+        {/* Câmera */}
+        <div className="glass-card rounded-2xl p-4 space-y-3">
+          <div className="flex justify-between items-center">
+            <span className="text-xs font-bold uppercase text-slate-200">Câmera Forense</span>
+            {!camOn ? (
+              <button onClick={() => startCamera(facingMode)} className="px-4 py-2 bg-blue-600 text-white font-black rounded-xl text-xs">LIGAR CÂMERA</button>
+            ) : (
+              <button onClick={stopCamera} className="px-3 py-2 bg-rose-500/20 text-rose-300 font-bold rounded-xl text-xs">DESLIGAR</button>
+            )}
+          </div>
+
+          <div className="relative rounded-xl overflow-hidden bg-black border border-white/10" style={{ minHeight: '260px' }}>
+            <video ref={videoRef} autoPlay playsInline muted className="w-full h-[260px] object-cover" style={{ display: camOn ? 'block' : 'none' }}></video>
+            {!camOn && (
+              <div className="absolute inset-0 flex items-center justify-center text-slate-500 text-xs font-semibold">
+                CÂMERA EM ESPERA
+              </div>
+            )}
+          </div>
+
+          {camOn && (
+            <button onClick={capturarFoto} className="w-full py-3.5 bg-blue-600 text-white font-black rounded-xl text-xs tracking-wider">
+              CAPTURAR FOTO COM CARIMBO
+            </button>
+          )}
+
+          {fotos.length > 0 && (
+            <div className="flex gap-2 overflow-x-auto pt-1">
+              {fotos.map((f, i) => (
+                <div key={i} className="relative shrink-0">
+                  <img src={f} className="w-20 h-20 object-cover rounded-xl border border-white/20" alt="" />
+                  <button onClick={() => setFotos(fotos.filter((_, idx) => idx !== i))} className="absolute -top-1 -right-1 w-5 h-5 bg-rose-600 text-white rounded-full text-xs font-bold">×</button>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* Formulário & Seletor dos 92 Municípios */}
+        <div className="glass-card rounded-2xl p-4 space-y-3">
+          <span className="text-xs font-bold uppercase text-slate-200">Parâmetros Oficiais</span>
+          
+          <div>
+            <label className="text-[11px] font-bold text-slate-300 uppercase mb-1 block">Município Alvo (92 RJ)</label>
+            <select value={mun.n} onChange={e => setMun(municipios_map(e.target.value))} className="w-full input-pro rounded-xl p-3 text-xs font-bold">
+              {MUNICIPIOS_RJ_92.map((m, i) => <option key={i} value={m}>{m}</option>)}
+            </select>
+          </div>
+
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="text-[11px] font-bold text-slate-300 uppercase mb-1 block">Responsável</label>
+              <input value={nome} onChange={e => setNome(e.target.value)} className="w-full input-pro rounded-xl p-3 text-xs font-bold" />
+            </div>
+            <div>
+              <label className="text-[11px] font-bold text-slate-300 uppercase mb-1 block">Bairro / Local</label>
+              <input value={bairro} onChange={e => setBairro(e.target.value)} className="w-full input-pro rounded-xl p-3 text-xs font-bold" />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="text-[11px] font-bold text-slate-300 uppercase mb-1 block">Risco</label>
+              <select value={risco} onChange={e => setRisco(e.target.value)} className="w-full input-pro rounded-xl p-3 text-xs font-bold text-amber-300">
+                {RISCOS.map((r, i) => <option key={i} value={r}>{r}</option>)}
+              </select>
+            </div>
+            <div>
+              <label className="text-[11px] font-bold text-slate-300 uppercase mb-1 block">Órgão Destino</label>
+              <select value={org} onChange={e => setOrg(e.target.value)} className="w-full input-pro rounded-xl p-3 text-xs font-bold">
+                {ORGAOS.map((o, i) => <option key={i} value={o}>{o}</option>)}
+              </select>
+            </div>
+          </div>
+
+          <div>
+            <label className="text-[11px] font-bold text-slate-300 uppercase mb-1 block">Relato Técnico</label>
+            <textarea value={rel} onChange={e => setRel(e.target.value)} rows="2" className="w-full input-pro rounded-xl p-3 text-xs resize-none" placeholder="Observações..."></textarea>
+          </div>
+        </div>
+      </div>
+
+      {/* Ação WhatsApp */}
+      <button onClick={enviarWhatsapp} className="w-full py-4 bg-[#25D366] text-black font-black rounded-xl text-xs tracking-wider shadow-lg">
+        ENVIAR RELATÓRIO + FOTOS (WHATSAPP)
+      </button>
+
+    </div>
+  );
+}
+
+function municipios_map(nomeMun) {
+  return { n: nomeMun, lat: -22.7858, lon: -43.4294 };
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<App/>);
+</script>
+</body>
+</html>
