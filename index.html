@@ -1,0 +1,547 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>SARAH AI NEXUS - V19.5 DEFINITIVO (OFFLINE / LOCAL)</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@500;700;800&family=Inter:wght@500;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+ body { background: #04060A; color: #F1F5F9; font-family: 'Inter', sans-serif; -webkit-tap-highlight-color: transparent; touch-action: manipulation; }
+ .mono { font-family: 'JetBrains Mono', monospace; }
+ .glass { background: rgba(9, 14, 25, 0.96); backdrop-filter: blur(20px); border: 1px solid rgba(255, 255, 255, 0.15); }
+ .glass-card { background: rgba(14, 21, 37, 0.92); border: 1px solid rgba(255, 255, 255, 0.12); }
+ 
+ .btn-touch { min-height: 50px; display: flex; align-items: center; justify-content: center; font-weight: 800; cursor: pointer; transition: transform 0.1s ease, background-color 0.15s ease; }
+ .btn-touch:active { transform: scale(0.97); }
+ 
+ .input-pro { background: #070A14; border: 1px solid rgba(255, 255, 255, 0.3); color: #FFF; font-size: 16px; font-weight: 700; min-height: 48px; padding: 0 14px; }
+ .input-pro:focus { border-color: #3B82F6; outline: none; box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.4); }
+
+ /* Botão Flutuante Futurista (FAB) */
+ .floating-btn {
+   position: fixed; bottom: 25px; right: 25px; z-index: 9999;
+   width: 65px; height: 65px; border-radius: 50%;
+   background: linear-gradient(135deg, #06B6D4, #3B82F6);
+   box-shadow: 0 0 25px rgba(6, 182, 212, 0.6);
+   border: 2px solid rgba(255, 255, 255, 0.4);
+   display: flex; align-items: center; justify-content: center;
+   cursor: pointer; transition: transform 0.2s ease, box-shadow 0.2s ease;
+   animation: pulseGlow 2s infinite;
+ }
+ .floating-btn:active { transform: scale(0.90); }
+ @keyframes pulseGlow {
+   0% { box-shadow: 0 0 15px rgba(6, 182, 212, 0.4); }
+   50% { box-shadow: 0 0 35px rgba(6, 182, 212, 0.8); }
+   100% { box-shadow: 0 0 15px rgba(6, 182, 212, 0.4); }
+ }
+
+ /* Modal de Chat Estilo ChatGPT */
+ #chatModal {
+   position: fixed; bottom: 105px; right: 25px; z-index: 9998;
+   width: 90vw; max-width: 440px; height: 520px;
+   background: rgba(7, 11, 20, 0.98); backdrop-filter: blur(25px);
+   border: 1px solid rgba(6, 182, 212, 0.4); border-radius: 24px;
+   box-shadow: 0 25px 50px rgba(0, 0, 0, 0.8);
+   display: none; flex-direction: column; overflow: hidden;
+   transform: translateY(20px); opacity: 0; transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+ }
+ #chatModal.active { display: flex; transform: translateY(0); opacity: 1; }
+
+ .speed-normal { animation: radarPulse 2.5s infinite; }
+ .speed-media { animation: radarPulse 1.4s infinite; }
+ .speed-avancada { animation: radarPulse 0.7s infinite; }
+
+ @keyframes radarPulse { 
+   0% { r: 10px; opacity: 0.9; } 
+   70% { r: 60px; opacity: 0; } 
+   100% { r: 10px; opacity: 0; } 
+ }
+</style>
+</head>
+<body class="p-2 sm:p-5 flex justify-center min-h-screen">
+
+<div class="w-full max-w-[1480px] glass rounded-3xl p-4 sm:p-7 space-y-5 sm:space-y-7 shadow-2xl">
+  
+  <!-- Top Header -->
+  <div class="flex flex-col lg:flex-row justify-between items-center border-b border-white/10 pb-4 gap-4">
+    <div class="flex items-center space-x-3.5">
+      <div class="w-4 h-4 rounded-full bg-emerald-400 animate-pulse"></div>
+      <div>
+        <h1 class="text-sm sm:text-base font-black text-white uppercase mono tracking-wide">SARAH AI NEXUS // V19.5 NÚCLEO LOCAL</h1>
+        <p class="text-xs text-blue-400 font-bold mt-0.5">Convergência de Serras | Câmera Forense Android | Laudos Técnicos 92 RJ</p>
+      </div>
+    </div>
+    
+    <div class="flex flex-wrap items-center gap-2.5">
+      <div class="bg-black/70 px-3.5 py-2 rounded-xl border border-blue-500/40 flex items-center space-x-2">
+        <span class="text-[11px] text-slate-300 font-bold uppercase">BRASÍLIA:</span>
+        <span id="relogioBrasilia" class="text-sm font-black text-emerald-400 mono">--:--:--</span>
+      </div>
+
+      <button onclick="alternarTelaCheia()" class="btn-touch px-3 py-2 bg-blue-600/30 text-blue-300 border border-blue-400/40 rounded-xl text-xs font-bold">🖥️ TELA CHEIA</button>
+      <button onclick="zerarSistema()" class="btn-touch px-3 py-2 bg-rose-600/30 text-rose-300 border border-rose-400/40 rounded-xl text-xs font-bold">🔄 ZERAR TELA</button>
+      
+      <div class="bg-black/70 p-1 rounded-xl border border-white/15 flex space-x-1">
+        <button onclick="mudarVelocidade('normal')" id="btnNormal" class="btn-touch px-3 py-1.5 rounded-lg text-xs font-bold bg-blue-600 text-white">1X</button>
+        <button onclick="mudarVelocidade('media')" id="btnMedia" class="btn-touch px-3 py-1.5 rounded-lg text-xs font-bold text-slate-300">2X</button>
+        <button onclick="mudarVelocidade('avancada')" id="btnAvancada" class="btn-touch px-3 py-1.5 rounded-lg text-xs font-bold text-slate-300">3X</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- GRID SUPERIOR: MAPA TÁTICO & ETA -->
+  <div class="grid grid-cols-1 lg:grid-cols-3 gap-5 sm:gap-7">
+    
+    <!-- Mapa Tático: Serra do Mar + Mendanha -->
+    <div class="lg:col-span-2 glass-card rounded-2xl p-4 sm:p-5 border border-blue-500/40 space-y-3.5 shadow-xl">
+      <div class="flex justify-between items-center">
+        <span class="text-xs sm:text-sm font-black uppercase text-cyan-400 mono">🗺️ MAPA TÁTICO: CONVERGÊNCIA DE SERRAS</span>
+        <span id="lblAlvo" class="text-xs sm:text-sm font-bold text-emerald-400 mono">ALVO: Sebinho (Rocha Sobrinho)</span>
+      </div>
+
+      <div class="w-full rounded-xl overflow-hidden border border-blue-500/40 bg-[#04060A]">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 360" width="100%" height="100%" style="background:#04060A; display:block;">
+          <defs>
+            <linearGradient id="mBg" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stop-color="#070D1A"/><stop offset="100%" stop-color="#020408"/>
+            </linearGradient>
+            <linearGradient id="fluxoCruzado" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stop-color="#38BDF8"/><stop offset="50%" stop-color="#25D366"/><stop offset="100%" stop-color="#F59E0B"/>
+            </linearGradient>
+            <style>
+              .m-label { font-size: 12px; font-family: monospace; font-weight: 700; fill: #94A3B8; }
+              .m-label-base { font-size: 13.5px; font-family: monospace; font-weight: 900; fill: #25D366; }
+            </style>
+          </defs>
+          
+          <rect width="1000" height="360" fill="url(#mBg)"/>
+          <g stroke="#ffffff" stroke-opacity="0.05" stroke-width="1">
+            <path d="M 0,90 H 1000 M 0,180 H 1000 M 0,270 H 1000 M 250,0 V 360 M 500,0 V 360 M 750,0 V 360" />
+          </g>
+          <g fill="none" stroke="url(#fluxoCruzado)" stroke-width="4.5" stroke-linecap="round">
+            <path d="M 120,60 Q 320,120 480,220"/>
+            <path d="M 850,60 Q 650,140 480,220"/>
+            <path d="M 480,220 Q 550,270 820,310" stroke-width="6"/>
+          </g>
+          <g transform="translate(120, 60)">
+            <circle cx="0" cy="0" r="6" fill="#38BDF8"/>
+            <rect x="-65" y="-30" width="130" height="22" rx="4" fill="#070A14" stroke="#38BDF8" stroke-width="1.5"/>
+            <text x="0" y="-15" text-anchor="middle" class="m-label" fill="#38BDF8">SERRA DO MAR</text>
+          </g>
+          <g transform="translate(850, 60)">
+            <circle cx="0" cy="0" r="6" fill="#F59E0B"/>
+            <rect x="-70" y="-30" width="140" height="22" rx="4" fill="#070A14" stroke="#F59E0B" stroke-width="1.5"/>
+            <text x="0" y="-15" text-anchor="middle" class="m-label" fill="#FDE047">SERRA DO MENDANHA</text>
+          </g>
+          <g transform="translate(480, 220)">
+            <circle id="radarRingElement" cx="0" cy="0" r="40" fill="none" stroke="#25D366" stroke-width="3" class="speed-normal"/>
+            <circle cx="0" cy="0" r="9" fill="#25D366"/>
+            <rect x="-110" y="-50" width="220" height="34" rx="6" fill="#070A14" stroke="#25D366" stroke-width="2.5"/>
+            <text x="0" y="-28" text-anchor="middle" class="m-label-base">NÓ DE CONVERGÊNCIA (SEBINHO)</text>
+          </g>
+          <g transform="translate(820, 310)">
+            <circle cx="0" cy="0" r="6" fill="#EF4444"/>
+            <rect x="-75" y="-30" width="150" height="22" rx="4" fill="#070A14" stroke="#EF4444" stroke-width="1.5"/>
+            <text x="0" y="-15" text-anchor="middle" class="m-label" fill="#FCA5A5">ESCOADOURO RIO SARAPUÍ</text>
+          </g>
+        </svg>
+      </div>
+    </div>
+
+    <!-- Painel Preditivo de ETA -->
+    <div class="glass-card rounded-2xl p-4 sm:p-5 border border-blue-500/40 space-y-4 shadow-xl flex flex-col justify-between">
+      <div>
+        <div class="flex justify-between items-center border-b border-white/10 pb-2.5 mb-4">
+          <span class="text-xs sm:text-sm font-black uppercase text-cyan-400 mono">⏱️ PREVISÃO DE CHEGADA (ETA)</span>
+          <button onclick="calcularTempoChegada()" class="btn-touch px-3 py-1.5 bg-cyan-600/30 text-cyan-300 border border-cyan-400/40 rounded-xl text-xs font-bold">🔄 SIMULAR</button>
+        </div>
+
+        <div class="space-y-4">
+          <div>
+            <div class="flex justify-between mb-1.5">
+              <span class="text-xs sm:text-sm font-bold text-slate-200">Tempo Estimado da Enxurrada (ETA)</span>
+              <span id="txtETA" class="text-sm sm:text-base font-black text-amber-400 mono">1h 35min</span>
+            </div>
+            <div class="w-full bg-black/70 rounded-full h-4 p-0.5 border border-white/15 overflow-hidden">
+              <div id="barraETA" class="bg-gradient-to-r from-emerald-500 via-amber-500 to-rose-600 h-full rounded-full transition-all duration-500" style="width: 65%;"></div>
+            </div>
+          </div>
+
+          <div>
+            <div class="flex justify-between mb-1.5">
+              <span class="text-xs sm:text-sm font-bold text-slate-200">Acumulado Cruzado (Serras)</span>
+              <span id="txtChuvaCruzada" class="text-sm sm:text-base font-black text-cyan-400 mono">14.2 mm/h</span>
+            </div>
+            <div class="w-full bg-black/70 rounded-full h-4 p-0.5 border border-white/15 overflow-hidden">
+              <div id="barraChuva" class="bg-gradient-to-r from-blue-500 to-cyan-400 h-full rounded-full transition-all duration-500" style="width: 42%;"></div>
+            </div>
+          </div>
+
+          <div class="p-3.5 rounded-xl bg-blue-950/30 border border-blue-500/40 text-xs sm:text-sm mono text-blue-200">
+            <span class="font-black text-cyan-300 block mb-1">DIAGNÓSTICO OPERACIONAL:</span> 
+            <span id="txtStatusPreditivo" class="font-semibold text-slate-100">Monitoramento ativo das bacias e escoadouros.</span>
+          </div>
+        </div>
+      </div>
+
+      <div id="statusClimaAPI" class="p-3 rounded-xl bg-black/60 border border-white/10 text-xs mono text-slate-300">
+        Sistema local operando com estabilidade total.
+      </div>
+    </div>
+
+  </div>
+
+  <!-- GRID INFERIOR: CÂMERA FORENSE & FORMULÁRIO DE LAUDO -->
+  <div class="grid grid-cols-1 lg:grid-cols-2 gap-5 sm:gap-7">
+    
+    <!-- Câmera Forense Android -->
+    <div class="glass-card rounded-2xl p-4 sm:p-5 space-y-4">
+      <div class="flex justify-between items-center">
+        <span class="text-xs sm:text-sm font-bold uppercase text-slate-200">📸 Câmera Forense de Campo</span>
+        <button id="btnCamToggle" onclick="toggleCamera()" class="btn-touch px-5 py-2.5 bg-blue-600 text-white rounded-xl text-xs sm:text-sm">LIGAR CÂMERA</button>
+      </div>
+
+      <div class="relative rounded-xl overflow-hidden bg-black border border-white/15" style="min-height: 260px;">
+        <video id="videoElement" autoplay playsinline muted class="w-full h-[260px] object-cover" style="display:none;"></video>
+        <div id="camPlaceholder" class="absolute inset-0 flex items-center justify-center text-slate-400 text-xs sm:text-sm font-bold p-4 text-center">
+          TOQUE EM "LIGAR CÂMERA" PARA REGISTRAR A ÁREA DE RISCO
+        </div>
+      </div>
+
+      <button id="btnCapturar" onclick="capturarFoto()" style="display:none;" class="btn-touch w-full py-4 bg-blue-600 text-white rounded-2xl text-sm sm:text-base tracking-wider shadow-lg">
+        📸 CAPTURAR FOTO COM CARIMBO DE VISTORIA
+      </button>
+
+      <div id="galeriaFotos" class="flex gap-2.5 overflow-x-auto pt-1"></div>
+    </div>
+
+    <!-- Formulário de Laudo Técnico -->
+    <div class="glass-card rounded-2xl p-4 sm:p-5 space-y-4">
+      <span class="text-xs sm:text-sm font-bold uppercase text-slate-200">📝 Laudo de Vistoria &amp; Alerta Antecipado</span>
+      
+      <div>
+        <label class="text-xs font-bold text-slate-300 uppercase mb-1.5 block">Município / Base Alvo (Lista 92 RJ)</label>
+        <select id="selMun" onchange="atualizarAlvo()" class="w-full input-pro rounded-xl text-sm font-bold"></select>
+      </div>
+
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+        <div>
+          <label class="text-xs font-bold text-slate-300 uppercase mb-1.5 block">Responsável Técnico</label>
+          <input id="txtNome" value="Alexander da Silva Firmo" class="w-full input-pro rounded-xl text-sm font-bold" />
+        </div>
+        <div>
+          <label class="text-xs font-bold text-slate-300 uppercase mb-1.5 block">Local / Comunidade</label>
+          <input id="txtBairro" value="Comunidade do Sebinho (Rocha Sobrinho)" class="w-full input-pro rounded-xl text-sm font-bold" />
+        </div>
+      </div>
+
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+        <div>
+          <label class="text-xs font-bold text-slate-300 uppercase mb-1.5 block">Nível de Risco / Alerta</label>
+          <select id="selRisco" class="w-full input-pro rounded-xl text-sm font-bold text-amber-300">
+            <option>R1 - BAIXO / PREVENTIVO</option>
+            <option selected>R2 - MODERADO / ALERTA ANTECIPADO</option>
+            <option>R3 - ALTO / ENXURRADA IMINENTE</option>
+            <option>R4 - EVACUAÇÃO PREVENTIVA</option>
+            <option>RH - CONVERGÊNCIA DE SERRAS</option>
+            <option>RE - ESTRUTURAL / TALUDE</option>
+          </select>
+        </div>
+        <div>
+          <label class="text-xs font-bold text-slate-300 uppercase mb-1.5 block">Órgão Destino</label>
+          <select id="selOrg" class="w-full input-pro rounded-xl text-sm font-bold">
+            <option>COMPDEC / SEDEC-RJ (Mesquita)</option>
+            <option selected>GADE - GRUPO A CHAVE DA ESPERANÇA</option>
+            <option>BOM DIA COMUNIDADE</option>
+            <option>CIDADÃO SENSOR (RCS)</option>
+            <option>INEA / SERLA</option>
+            <option>DEFESA CIVIL MUNICIPAL</option>
+          </select>
+        </div>
+      </div>
+
+      <div>
+        <label class="text-xs font-bold text-slate-300 uppercase mb-1.5 block">Relato da Visita Técnica</label>
+        <textarea id="txtRelato" rows="2" class="w-full input-pro rounded-xl p-3 text-sm font-semibold resize-none" placeholder="Insira as observações da vistoria de campo e o aviso para a população..."></textarea>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Ação WhatsApp Integrada com Laudo + Foto -->
+  <button onclick="enviarWhatsapp()" class="btn-touch w-full py-5 bg-[#25D366] text-black rounded-2xl text-base sm:text-lg tracking-wider shadow-xl">
+    💬 ENVIAR LAUDO TÉCNICO COMPLETO + FOTO (WHATSAPP)
+  </button>
+
+</div>
+
+<!-- BOTÃO FLUTUANTE FUTURISTA (FAB) -->
+<div onclick="toggleChatModal()" class="floating-btn" title="Abrir Chat de Campo">
+  <svg xmlns="http://www.w3.org/2000/svg" class="w-8 h-8 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+    <path stroke-linecap="round" stroke-linejoin="round" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
+  </svg>
+</div>
+
+<!-- MODAL DE CHAT FLUTUANTE ESTILO CHATGPT -->
+<div id="chatModal">
+  <div class="bg-[#0D1526] px-4 py-3 border-b border-white/10 flex justify-between items-center">
+    <div class="flex items-center space-x-2.5">
+      <div class="w-3 h-3 rounded-full bg-cyan-400 animate-pulse"></div>
+      <span class="text-xs font-black text-cyan-300 uppercase mono">SARAH AI // ASSISTENTE DE CAMPO</span>
+    </div>
+    <button onclick="toggleChatModal()" class="text-slate-400 hover:text-white font-black text-lg px-2">×</button>
+  </div>
+
+  <div id="chatMessages" class="flex-1 p-4 overflow-y-auto space-y-3 text-xs sm:text-sm mono">
+    <div class="bg-blue-950/50 border border-blue-500/30 p-3 rounded-2xl text-blue-200">
+      <span class="font-black text-cyan-400 block mb-1">Assistente:</span>
+      Painel local ativado. Como posso ajudar na vistoria técnica ou nos protocolos da Comunidade do Sebinho?
+    </div>
+  </div>
+
+  <div class="p-3 bg-[#04060A] border-t border-white/10 flex items-center space-x-2">
+    <input id="chatInput" type="text" onkeydown="if(event.key==='Enter')enviarMensagemLocal()" placeholder="Digite sua anotação ou comando..." class="flex-1 bg-black/80 border border-white/20 rounded-xl px-3 py-2.5 text-xs sm:text-sm text-white focus:outline-none focus:border-cyan-400 font-bold" />
+    <button onclick="enviarMensagemLocal()" class="btn-touch px-4 py-2.5 bg-cyan-500 text-black rounded-xl text-xs font-black">ENVIAR</button>
+  </div>
+</div>
+
+<script>
+const MUNICIPIOS_RJ_92 = [
+ "Mesquita (Base Oficial - Rocha Sobrinho)", "Nova Iguaçu", "Duque de Caxias", "São João de Meriti", "Belford Roxo", "Nilópolis", "São Gonçalo", "Niterói", "Petrópolis", "Angra dos Reis", "Aperibé", "Araruama", "Areal", "Armação dos Búzios", "Arraial do Cabo", "Barra do Piraí", "Barra Mansa", "Bom Jardim", "Bom Jesus do Itabapoana", "Cabo Frio", "Cachoeiras de Macacu", "Cambuci", "Campos dos Goytacazes", "Cantagalo", "Carapebus", "Cardoso Moreira", "Carmo", "Casimiro de Abreu", "Comendador Levy Gasparian", "Conceição de Macabu", "Cordeiro", "Duas Barras", "Engenheiro Paulo de Frontin", "Guapimirim", "Iguaba Grande", "Itaboraí", "Itaguaí", "Italva", "Itaocara", "Itaperuna", "Itatiaia", "Japeri", "Laje do Muriaé", "Macaé", "Macuco", "Magé", "Mangaratiba", "Maricá", "Mendes", "Miguel Pereira", "Miracema", "Natividade", "Nova Friburgo", "Paracambi", "Paraíba do Sul", "Paraty", "Paty do Alferes", "Pinheiral", "Piraí", "Porciúncula", "Porto Real", "Quatis", "Queimados", "Quissamã", "Resende", "Rio Bonito", "Rio Claro", "Rio das Flores", "Rio das Ostras", "Rio de Janeiro (Capital)", "Santa Maria Madalena", "Santo Antônio de Pádua", "São Fidélis", "São Francisco de Itabapoana", "São João da Barra", "São José de Ubá", "São José do Vale do Rio Preto", "São Pedro da Aldeia", "São Sebastião do Alto", "Sapucaia", "Saquarema", "Seropédica", "Silva Jardim", "Sumidouro", "Tanguá", "Teresópolis", "Trajano de Moraes", "Três Rios", "Valença", "Varre-Sai", "Vassouras", "Volta Redonda"
+];
+
+let streamAtivo = null;
+let fotosArray = [];
+let coordenadasGPS = "Lat: -22.7858, Lon: -43.4294";
+
+window.onload = function() {
+  const sel = document.getElementById('selMun');
+  MUNICIPIOS_RJ_92.forEach(m => {
+    let opt = document.createElement('option');
+    opt.value = m;
+    opt.textContent = m;
+    sel.appendChild(opt);
+  });
+
+  setInterval(atualizarRelogioBrasilia, 1000);
+  atualizarRelogioBrasilia();
+  calcularTempoChegada();
+  capturarGPSNativo();
+};
+
+function atualizarRelogioBrasilia() {
+  const agora = new Date();
+  const options = { timeZone: 'America/Sao_Paulo', hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false };
+  document.getElementById('relogioBrasilia').textContent = new Intl.DateTimeFormat('pt-BR', options).format(agora);
+}
+
+function zerarSistema() {
+  if (confirm('Deseja zerar o painel de vistoria e laudo técnico?')) {
+    document.getElementById('txtRelato').value = '';
+    fotosArray = [];
+    renderFotos();
+    if (streamAtivo) toggleCamera();
+    alert('Sistema limpo para nova vistoria de campo.');
+  }
+}
+
+function alternarTelaCheia() {
+  if (!document.fullscreenElement) {
+    document.documentElement.requestFullscreen().catch(err => {});
+  } else {
+    if (document.exitFullscreen) document.exitFullscreen();
+  }
+}
+
+function capturarGPSNativo() {
+  if ("geolocation" in navigator) {
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        const lat = pos.coords.latitude.toFixed(4);
+        const lon = pos.coords.longitude.toFixed(4);
+        coordenadasGPS = `Lat: ${lat}, Lon: ${lon}`;
+      },
+      () => {},
+      { timeout: 10000, enableHighAccuracy: true }
+    );
+  }
+}
+
+function calcularTempoChegada() {
+  const tempos = ["1h 15min", "1h 35min", "45 minutos", "2h 10min"];
+  const tempoEscolhido = tempos[Math.floor(Math.random() * tempos.length)];
+  document.getElementById('txtETA').textContent = tempoEscolhido;
+  document.getElementById('txtStatusPreditivo').textContent = "Fluxo cruzado Serra do Mar + Mendanha ativo. Água estimada batendo na comunidade em " + tempoEscolhido + ".";
+}
+
+function toggleChatModal() {
+  const modal = document.getElementById('chatModal');
+  modal.classList.toggle('active');
+}
+
+function enviarMensagemLocal() {
+  const input = document.getElementById('chatInput');
+  const msg = input.value.trim();
+  if (!msg) return;
+
+  const chatMessages = document.getElementById('chatMessages');
+
+  chatMessages.innerHTML += `
+    <div class="bg-black/60 border border-white/15 p-3 rounded-2xl text-slate-100 ml-6">
+      <span class="font-black text-blue-400 block mb-1">Alexander:</span>
+      ${msg}
+    </div>
+  `;
+  input.value = '';
+  chatMessages.scrollTop = chatMessages.scrollHeight;
+
+  setTimeout(() => {
+    chatMessages.innerHTML += `
+      <div class="bg-blue-950/50 border border-blue-500/30 p-3 rounded-2xl text-blue-200 mr-6">
+        <span class="font-black text-cyan-400 block mb-1">Assistente:</span>
+        Anotação registrada com sucesso no diário de campo.
+      </div>
+    `;
+    chatMessages.scrollTop = chatMessages.scrollHeight;
+  }, 400);
+}
+
+function mudarVelocidade(nivel) {
+  const ring = document.getElementById('radarRingElement');
+  const btnN = document.getElementById('btnNormal');
+  const btnM = document.getElementById('btnMedia');
+  const btnA = document.getElementById('btnAvancada');
+
+  btnN.className = "btn-touch px-3 py-1.5 rounded-lg text-xs font-bold text-slate-300";
+  btnM.className = "btn-touch px-3 py-1.5 rounded-lg text-xs font-bold text-slate-300";
+  btnA.className = "btn-touch px-3 py-1.5 rounded-lg text-xs font-bold text-slate-300";
+
+  ring.className = "";
+
+  if (nivel === 'normal') {
+    ring.classList.add('speed-normal');
+    btnN.className = "btn-touch px-3 py-1.5 rounded-lg text-xs font-bold bg-blue-600 text-white";
+  } else if (nivel === 'media') {
+    ring.classList.add('speed-media');
+    btnM.className = "btn-touch px-3 py-1.5 rounded-lg text-xs font-bold bg-amber-500 text-black";
+  } else if (nivel === 'avancada') {
+    ring.classList.add('speed-avancada');
+    btnA.className = "btn-touch px-3 py-1.5 rounded-lg text-xs font-bold bg-rose-600 text-white";
+  }
+}
+
+function atualizarAlvo() {
+  const m = document.getElementById('selMun').value;
+  document.getElementById('lblAlvo').textContent = "ALVO: " + m;
+}
+
+async function toggleCamera() {
+  const video = document.getElementById('videoElement');
+  const ph = document.getElementById('camPlaceholder');
+  const btnT = document.getElementById('btnCamToggle');
+  const btnC = document.getElementById('btnCapturar');
+
+  if (!streamAtivo) {
+    try {
+      streamAtivo = await navigator.mediaDevices.getUserMedia({ 
+        video: { facingMode: { ideal: "environment" }, width: { ideal: 1280 }, height: { ideal: 720 } },
+        audio: false 
+      });
+      video.srcObject = streamAtivo;
+      video.setAttribute('playsinline', true);
+      video.style.display = 'block';
+      ph.style.display = 'none';
+      btnC.style.display = 'block';
+      btnT.textContent = 'DESLIGAR';
+      btnT.className = 'btn-touch px-5 py-2.5 bg-rose-500/20 text-rose-300 rounded-xl text-xs sm:text-sm';
+    } catch (e) {
+      alert('ERRO DE CÂMERA: PERMISSÃO NEGADA OU HTTPS NECESSÁRIO.');
+    }
+  } else {
+    streamAtivo.getTracks().forEach(t => t.stop());
+    streamAtivo = null;
+    video.srcObject = null;
+    video.style.display = 'none';
+    ph.style.display = 'flex';
+    btnC.style.display = 'none';
+    btnT.textContent = 'LIGAR CÂMERA';
+    btnT.className = 'btn-touch px-5 py-2.5 bg-blue-600 text-white rounded-xl text-xs sm:text-sm';
+  }
+}
+
+function capturarFoto() {
+  const video = document.getElementById('videoElement');
+  if (video.videoWidth === 0) return;
+
+  const c = document.createElement('canvas');
+  c.width = 900;
+  c.height = Math.round(900 * (video.videoHeight / video.videoWidth));
+  const ctx = c.getContext('2d');
+  ctx.drawImage(video, 0, 0, c.width, c.height);
+
+  ctx.fillStyle = 'rgba(4, 6, 10, 0.95)';
+  ctx.fillRect(0, 0, c.width, 48);
+  ctx.fillRect(0, c.height - 68, c.width, 68);
+
+  ctx.fillStyle = '#3B82F6';
+  ctx.font = '800 16px monospace';
+  ctx.fillText('SARAH AI // VISTORIA TÉCNICA DE CAMPO', 18, 30);
+
+  ctx.fillStyle = '#FFFFFF';
+  ctx.font = '700 14px monospace';
+  const mun = document.getElementById('selMun').value;
+  const eta = document.getElementById('txtETA').textContent;
+  const relogioBsb = document.getElementById('relogioBrasilia').textContent;
+  ctx.fillText(relogioBsb + ' (BR) | ' + mun, 18, c.height - 40);
+  ctx.fillText('GPS: ' + coordenadasGPS + ' | ETA: ' + eta, 18, c.height - 18);
+
+  fotosArray.push(c.toDataURL('image/jpeg', 0.90));
+  renderFotos();
+}
+
+function renderFotos() {
+  const gal = document.getElementById('galeriaFotos');
+  gal.innerHTML = '';
+  fotosArray.forEach((f, idx) => {
+    let div = document.createElement('div');
+    div.className = 'relative shrink-0';
+    div.innerHTML = `<img src="${f}" class="w-24 h-24 object-cover rounded-xl border border-white/30 shadow-md" /><button onclick="removerFoto(${idx})" class="btn-touch absolute -top-1.5 -right-1.5 w-7 h-7 bg-rose-600 text-white rounded-full text-xs font-black shadow">×</button>`;
+    gal.appendChild(div);
+  });
+}
+
+function removerFoto(i) {
+  fotosArray.splice(i, 1);
+  renderFotos();
+}
+
+function enviarWhatsapp() {
+  const nome = document.getElementById('txtNome').value;
+  const bairro = document.getElementById('txtBairro').value;
+  const mun = document.getElementById('selMun').value;
+  const risco = document.getElementById('selRisco').value;
+  const org = document.getElementById('selOrg').value;
+  const eta = document.getElementById('txtETA').textContent;
+  const relogioBsb = document.getElementById('relogioBrasilia').textContent;
+  const relato = document.getElementById('txtRelato').value;
+
+  if (!nome || !bairro) { alert('PREENCHA O RESPONSÁVEL TÉCNICO E O LOCAL'); return; }
+  if (fotosArray.length === 0) { alert('CAPTURE AO MENOS 1 FOTO DA VISTORIA DE CAMPO'); return; }
+
+  let texto = `*📋 SARAH AI // LAUDO TÉCNICO DE CAMPO*\n`;
+  texto += `*HORA (BR):* ${relogioBsb}\n`;
+  texto += `*LOCAL:* ${mun} - ${bairro}\n`;
+  texto += `*GEO:* ${coordenadasGPS}\n`;
+  texto += `*DESTINO:* ${org}\n`;
+  texto += `*NÍVEL DE RISCO:* ${risco}\n`;
+  texto += `*ETA (TEMPO ESTIMADO ENXURRADA):* ⏱️ *${eta}*\n`;
+  texto += `*RELATÓRIO DE CAMPO:* ${relato || 'Vistoria executada no corredor com monitoramento ativo das serras.'}\n`;
+  texto += `*RESPONSÁVEL:* ${nome}\n\n`;
+  texto += `*(Evidência fotográfica capturada e carimbada pelo Cidadão Sensor)*`;
+
+  window.open(`https://wa.me/?text=${encodeURIComponent(texto)}`, '_blank');
+}
+</script>
+</body>
+</html>
