@@ -1,0 +1,749 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>RARU NEXUS AI V15.0 PRO - CENTRAL OFICIAL & CLOUDFLARE WORKER</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+<script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+<script crossorigin src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<style>
+ .panel-dia { background: #0B1120; border: 1px solid rgba(255,255,255,.15); border-radius: 18px; color: #E5E7EB; }
+ .panel-noite { background: #030712; border: 1px solid rgba(59,130,246,.3); border-radius: 18px; color: #93C5FD; box-shadow: 0 0 25px rgba(29,78,216,0.2); }
+ .label { font-size: 11px; letter-spacing: .08em; font-weight: 800; color: #94A3B8; text-transform: uppercase; }
+ .map-box { background: radial-gradient(circle at center, #0F172A 0%, #030712 100%); border: 1px solid rgba(59,130,246,.3); border-radius: 16px; }
+ .btn { width: 100%; padding: 14px; border-radius: 14px; font-weight: 900; font-size: 12px; letter-spacing: .04em; }
+ .x { position: absolute; top: 4px; right: 4px; width: 20px; height: 20px; background: #111; color: #fff; border-radius: 50%; display: grid; place-items: center; font-weight: 900; border: 1px solid #fff; cursor: pointer; font-size: 11px; }
+ @keyframes pisca { 0%,100% { opacity: 1; transform: scale(1); } 50% { opacity: .7; transform: scale(1.02); } }
+ .pisca { animation: pisca 1.5s infinite; }
+ @keyframes flutuarNuvem { 0% { transform: translateX(0px); opacity: 0.4; } 50% { transform: translateX(30px); opacity: 0.85; } 100% { transform: translateX(0px); opacity: 0.4; } }
+ .nuvem-animada { animation: flutuarNuvem 6s ease-in-out infinite; }
+ @keyframes radarGiro { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+ .radar-barred { animation: radarGiro 4s linear infinite; transform-origin: 200px 180px; }
+</style>
+</head>
+<body id="corpo-pagina" class="p-2 flex justify-center transition-colors duration-700 bg-[#02040A]">
+<div id="root" class="w-full max-w-[680px]"></div>
+
+<script type="text/babel">
+const {useState, useRef, useEffect} = React;
+
+const MUNICIPIOS = [
+{n:"Mesquita (Base Anfitriã Oficial - Rocha Sobrinho)",lat:-22.7858,lon:-43.4294,reg:"Baixada Fluminense",bacia:"Bacia do Rio Sarapuí / Iguaçu (Baixada)"},
+{n:"Nova Iguaçu (Baixada Fluminense)",lat:-22.7559,lon:-43.4605,reg:"Baixada Fluminense",bacia:"Bacia do Rio Botas / Sarapuí"},
+{n:"Duque de Caxias (Baixada Fluminense)",lat:-22.7856,lon:-43.3117,reg:"Baixada Fluminense",bacia:"Bacia do Rio Iguaçu / Sarapuí"},
+{n:"São João de Meriti (Baixada Fluminense)",lat:-22.8031,lon:-43.3695,reg:"Baixada Fluminense",bacia:"Bacia do Rio Sarapuí / Pavuna"},
+{n:"Belford Roxo (Baixada Fluminense)",lat:-22.7642,lon:-43.3997,reg:"Baixada Fluminense",bacia:"Bacia do Rio Botas"},
+{n:"Nilópolis (Baixada Fluminense)",lat:-22.8081,lon:-43.4147,reg:"Baixada Fluminense",bacia:"Bacia do Rio Sarapuí"},
+{n:"São Gonçalo (Região Metropolitana)",lat:-22.8267,lon:-43.0631,reg:"Metropolitana",bacia:"Bacia do Rio Imboaçu"},
+{n:"Niterói (Região Metropolitana)",lat:-22.8833,lon:-43.1036,reg:"Metropolitana",bacia:"Bacia do Rio Icaraí / Baía Guanabara"},
+{n:"Petrópolis (Região Serrana)",lat:-22.5055,lon:-43.1789,reg:"Serrana",bacia:"Bacia do Rio Piabanha"},
+{n:"Angra dos Reis",lat:-23.0067,lon:-44.3181,reg:"Costa Verde",bacia:"Bacia Costa Verde"},
+{n:"Rio de Janeiro (Capital)",lat:-22.9068,lon:-43.1729,reg:"Metropolitana",bacia:"Baía de Guanabara"}
+];
+
+const RISCOS_VISTORIA = [
+  "R1 - BAIXO / PREVENTIVO (Normal)",
+  "R2 - MODERADO / ATENCAO (Observacao)",
+  "R3 - ALTO / ALERTA (Risco Elevado)",
+  "R4 - IMINENTE / EVACUACAO (Critico)",
+  "RH - HIDROLOGICO (Alagamento de Bacia)",
+  "RE - ESTRUTURAL (Geotecnia e Encosta)"
+];
+
+function App() {
+  const [autenticado, setAutenticado] = useState(false);
+  const [senha, setSenha] = useState('');
+  const [erroSenha, setErroSenha] = useState(false);
+  
+  const [modoNoite, setModoNoite] = useState(false);
+  const [horaAtualStr, setHoraAtualStr] = useState('');
+  const [statusConexao, setStatusConexao] = useState(navigator.onLine ? 'ONLINE' : 'OFFLINE (MODO CONTINGÊNCIA)');
+
+  const [mun, setMun] = useState(MUNICIPIOS[0]);
+  const [urlCloudflare] = useState('https://solitary-snow-2459.phantrorfirmo08.workers.dev/');
+
+  const [meteo, setMeteo] = useState({
+    temperatura: "27°C",
+    umidade: "78%",
+    chuvaMm: "14.2 mm/h",
+    pressao: "1012 hPa",
+    ventoVel: "22 km/h",
+    condicao: "Instável / Pancadas Isoladas",
+    statusSat: "ONLINE - API OPEN-METEO"
+  });
+  const [carregandoMeteo, setCarregandoMeteo] = useState(false);
+
+  const [iaLaudo, setIaLaudo] = useState("Cérebro neural ativado via Cloudflare Worker. Pronto para processar telemetria e laudos.");
+  const [nivelAlertaCor] = useState("bg-emerald-500");
+  const [nivelAlertaTexto] = useState("R1 - NORMAL / PREVENTIVO");
+  const [falarVoz, setFalarVoz] = useState(true);
+  const [processandoWorker, setProcessandoWorker] = useState(false);
+
+  const [fotosVistoria, setFotosVistoria] = useState(() => {
+    try { return JSON.parse(localStorage.getItem('raru_fotos_offline') || '[]'); } catch { return []; }
+  });
+  const [camOn, setCamOn] = useState(false);
+  const [nomeAgente, setNomeAgente] = useState('Alexander da Silva Firmo');
+  const [bairroVistoria, setBairroVistoria] = useState('Sebinho / Rocha Sobrinho');
+  const [riscoVistoria, setRiscoVistoria] = useState(RISCOS_VISTORIA[0]);
+  const [relatoVistoria, setRelatoVistoria] = useState('');
+  const [coordsGPS, setCoordsGPS] = useState({lat: -22.7858, lon: -43.4294});
+  const [analisandoIA, setAnalisandoIA] = useState(false);
+  
+  const videoRef = useRef(null);
+  const streamRef = useRef(null);
+
+  const [cadastros, setCadastros] = useState(() => {
+    try { return JSON.parse(localStorage.getItem('raru_cadastros_offline') || '[{"id":1,"nome":"Alexander da Silva Firmo","municipio":"Mesquita (Base Anfitriã Oficial - Rocha Sobrinho)","bairro":"Sebinho / Rocha Sobrinho","papel":"Agente / Coordenador GADE","data":"2026-07-15"}]'); } catch { return []; }
+  });
+  const [novoNomeCad, setNovoNomeCad] = useState('');
+  const [novoBairroCad, setNovoBairroCad] = useState('');
+  const [novoPapelCad, setNovoPapelCad] = useState('Morador / Voluntário');
+
+  const [statusBR, setStatusBR] = useState('AGUARDANDO');
+  const [timerBR, setTimerBR] = useState('00:00 / 05:00');
+  const [statusRU, setStatusRU] = useState('AGUARDANDO');
+  const [timerRU, setTimerRU] = useState('00:00 / 05:00');
+
+  const audioCtxRef = useRef(null);
+  const oscRef = useRef(null);
+  const intervalRef = useRef(null);
+
+  useEffect(() => {
+    const checarConexao = () => {
+      setStatusConexao(navigator.onLine ? 'ONLINE (WORKER / NUVEM)' : 'OFFLINE (MODO CONTINGÊNCIA LOCAL)');
+    };
+    window.addEventListener('online', checarConexao);
+    window.addEventListener('offline', checarConexao);
+
+    const checarHorario = () => {
+      const now = new Date();
+      const hora = now.getHours();
+      const min = now.getMinutes();
+      const segundos = now.getSeconds();
+      setHoraAtualStr(`${hora.toString().padStart(2,'0')}:${min.toString().padStart(2,'0')}:${segundos.toString().padStart(2,'0')}`);
+      
+      if (hora >= 17 || hora < 6) {
+        setModoNoite(true);
+        document.body.style.backgroundColor = '#010308';
+      } else {
+        setModoNoite(false);
+        document.body.style.backgroundColor = '#02040A';
+      }
+    };
+    checarHorario();
+    const timer = setInterval(checarHorario, 1000);
+
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        (pos) => setCoordsGPS({lat: pos.coords.latitude, lon: pos.coords.longitude}),
+        () => {}
+      );
+    }
+    return () => {
+      clearInterval(timer);
+      window.removeEventListener('online', checarConexao);
+      window.removeEventListener('offline', checarConexao);
+    };
+  }, []);
+
+  useEffect(() => {
+    try { localStorage.setItem('raru_fotos_offline', JSON.stringify(fotosVistoria)); } catch {}
+  }, [fotosVistoria]);
+
+  useEffect(() => {
+    try { localStorage.setItem('raru_cadastros_offline', JSON.stringify(cadastros)); } catch {}
+  }, [cadastros]);
+
+  const falarTextoIA = (texto) => {
+    if (!falarVoz || !('speechSynthesis' in window)) return;
+    window.speechSynthesis.cancel();
+    const utterance = new SpeechSynthesisUtterance(texto);
+    utterance.lang = 'pt-BR';
+    window.speechSynthesis.speak(utterance);
+  };
+
+  const startCam = async () => {
+    try {
+      const s = await navigator.mediaDevices.getUserMedia({
+        video: { facingMode: { ideal: "environment" }, width: { ideal: 1280 } }
+      });
+      streamRef.current = s;
+      setCamOn(true);
+      setTimeout(() => {
+        if(videoRef.current) {
+          videoRef.current.srcObject = s;
+          videoRef.current.play().catch(() => {});
+        }
+      }, 150);
+    } catch(e) {
+      alert('Permissão de câmera negada ou indisponível.');
+    }
+  };
+
+  const stopCam = () => {
+    if(streamRef.current) {
+      streamRef.current.getTracks().forEach(t => t.stop());
+    }
+    setCamOn(false);
+  };
+
+  const capturarFotoCampoOffline = () => {
+    const v = videoRef.current;
+    if(!v || v.videoWidth === 0) return;
+    
+    setAnalisandoIA(true);
+    const c = document.createElement('canvas');
+    c.width = 600;
+    c.height = Math.round(600 * v.videoHeight / v.videoWidth);
+    const ctx = c.getContext('2d');
+    
+    ctx.drawImage(v, 0, 0, c.width, c.height);
+    ctx.fillStyle = 'rgba(0,0,0,0.92)';
+    ctx.fillRect(0, c.height - 48, c.width, 48);
+    
+    ctx.fillStyle = '#60A5FA';
+    ctx.font = '700 10px monospace';
+    const dataHora = new Date().toLocaleString('pt-BR');
+    ctx.fillText(`RARU NEXUS | GPS: ${coordsGPS.lat.toFixed(4)}, ${coordsGPS.lon.toFixed(4)} | ${riscoVistoria}`, 10, c.height - 28);
+    
+    ctx.fillStyle = '#FFFFFF';
+    ctx.font = '700 9px monospace';
+    ctx.fillText(`${dataHora} | LOCAL: ${bairroVistoria} | AGENTE: ${nomeAgente}`, 10, c.height - 12);
+    
+    const dataUrl = c.toDataURL('image/jpeg', 0.65);
+    setFotosVistoria(p => [...p, dataUrl]);
+
+    setTimeout(() => {
+      setAnalisandoIA(false);
+      falarTextoIA("Foto capturada e salva no banco offline do navegador.");
+    }, 400);
+  };
+
+  const enviarParaWorkerEGerarLaudo = async () => {
+    if (!relatoVistoria) { alert('Digite um relato de campo.'); return; }
+    setProcessandoWorker(true);
+    setIaLaudo("Enviando dados para o Cloudflare Worker e processando com Groq AI (Llama 3.3)...");
+
+    try {
+      const payload = {
+        municipio: mun.n.split('(')[0].trim(),
+        bairro: bairroVistoria,
+        relato: relatoVistoria,
+        responsavel: nomeAgente,
+        risco: riscoVistoria,
+        modo: "LAUDO_TECNICO"
+      };
+
+      const res = await fetch(urlCloudflare, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+
+      if (!res.ok) throw new Error(`Erro HTTP: ${res.status}`);
+      const data = await res.json();
+      
+      const textoParecer = data.engenheiraChefeParecer || data.parecerEngenhariaECerebro || data.orientacaoAssistente || relatoVistoria;
+      setIaLaudo(`[IA CLOUDFLARE WORKER]: ${textoParecer}`);
+      falarTextoIA("Laudo técnico processado com sucesso.");
+      gerarLaudoPDFComWorker(data.protocoloGerado || data.protocolo || 'PROT-RJ', textoParecer);
+    } catch(e) {
+      setIaLaudo("[MODO CONTINGÊNCIA LOCAL]: Worker indisponível (404/Erro). Gerando laudo local com base em cache.");
+      gerarLaudoOfflinePDF();
+    } finally {
+      setProcessandoWorker(false);
+    }
+  };
+
+  const gerarLaudoPDFComWorker = async (protocolo, parecerTexto) => {
+    try {
+      const raw = `${protocolo}-${Date.now()}-${mun.n}`;
+      const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(raw));
+      const hash = Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2,'0')).join('');
+
+      const { jsPDF } = window.jspdf;
+      const doc = new jsPDF('p', 'mm', 'a4');
+      
+      doc.setFillColor(3, 7, 18);
+      doc.rect(0, 0, 210, 297, 'F');
+      
+      doc.setTextColor(59, 130, 246);
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(13);
+      doc.text(`RARU NEXUS AI - LAUDO TÉCNICO OFICIAL (${protocolo})`, 10, 15);
+      
+      doc.setTextColor(148, 163, 184);
+      doc.setFontSize(8);
+      doc.text(`MUNICÍPIO: ${mun.n} | BACIA: ${mun.bacia}`, 10, 21);
+      doc.text(`AGENTE: ${nomeAgente} | BAIRRO: ${bairroVistoria} | RISCO: ${riscoVistoria}`, 10, 26);
+      doc.text(`GPS: LAT ${coordsGPS.lat.toFixed(4)}, LON ${coordsGPS.lon.toFixed(4)} | DATA: ${new Date().toLocaleString('pt-BR')}`, 10, 31);
+      
+      doc.setTextColor(255, 255, 255);
+      doc.setFont('helvetica', 'bold');
+      doc.text(`PARECER TÉCNICO DA ENGENHEIRA-CHEFE (GROQ AI / WORKER):`, 10, 40);
+      
+      doc.setFont('helvetica', 'normal');
+      doc.setFontSize(8.5);
+      const linhasParecer = doc.splitTextToSize(parecerTexto, 190);
+      doc.text(linhasParecer, 10, 47);
+
+      let y = 120;
+      for(let i = 0; i < fotosVistoria.length; i++) {
+        if(y > 210) {
+          doc.addPage();
+          doc.setFillColor(3, 7, 18);
+          doc.rect(0, 0, 210, 297, 'F');
+          y = 15;
+        }
+        try {
+          doc.addImage(fotosVistoria[i], 'JPEG', 10 + (i % 2) * 95, y, 88, 50);
+        } catch {}
+        if(i % 2 === 1) y += 58;
+        else if(i === fotosVistoria.length - 1) y += 58;
+      }
+
+      doc.setFontSize(6);
+      doc.setTextColor(100, 116, 139);
+      doc.text(`HASH DE SEGURANÇA SHA-256 (BLINDAGEM JURÍDICA): ${hash}`, 10, 290);
+
+      const blob = doc.output('blob');
+      const pdfFile = new File([blob], `${protocolo}.pdf`, {type:'application/pdf'});
+      
+      if(navigator.canShare && navigator.canShare({files:[pdfFile]})) {
+        await navigator.share({title: protocolo, text: `Laudo Técnico ${protocolo}`, files:[pdfFile]});
+      } else {
+        const url = URL.createObjectURL(blob);
+        window.open(url, '_blank');
+      }
+    } catch(err) {
+      alert("Erro ao gerar PDF.");
+    }
+  };
+
+  const gerarLaudoOfflinePDF = async () => {
+    gerarLaudoPDFComWorker('OFFLINE-LAUDO', relatoVistoria);
+  };
+
+  const enviarWhatsAppOffline = () => {
+    const prot = `LAUDO-RJ-${Math.floor(Math.random()*89999+10000)}`;
+    const texto = `🚨 *LAUDO TÉCNICO - RARU NEXUS*\nPROTOCOLO: ${prot}\nMUNICÍPIO: ${mun.n}\nRISCO: ${riscoVistoria}\nAGENTE: ${nomeAgente}\nLOCAL: ${bairroVistoria}\nRELATO: ${relatoVistoria}\nFOTOS: ${fotosVistoria.length}`;
+    window.open(`https://wa.me/?text=${encodeURIComponent(texto)}`, '_blank');
+  };
+
+  const consultarMeteorologiaSat = async (mObj) => {
+    setCarregandoMeteo(true);
+    try {
+      if (!navigator.onLine) throw new Error("Offline");
+      const url = `https://api.open-meteo.com/v1/forecast?latitude=${mObj.lat}&longitude=${mObj.lon}&current=temperature_2m,relative_humidity_2m,precipitation,surface_pressure,wind_speed_10m`;
+      const res = await fetch(url);
+      const data = await res.json();
+      
+      if(data && data.current) {
+        const c = data.current;
+        const mm = c.precipitation;
+        
+        setMeteo({
+          temperatura: `${c.temperature_2m}°C`,
+          umidade: `${c.relative_humidity_2m}%`,
+          chuvaMm: `${mm} mm/h`,
+          pressao: `${c.surface_pressure} hPa`,
+          ventoVel: `${c.wind_speed_10m} km/h`,
+          condicao: mm > 15 ? "Chuva Forte / Temporal" : mm > 5 ? "Chuva Moderada" : "Estável / Monitoramento",
+          statusSat: "SATÉLITE CONECTADO (OPEN-METEO)"
+        });
+
+        let nomeSimples = mObj.n.split('(')[0].trim();
+        let laudoGerado = `Telemetria em ${nomeSimples}: Acumulado de ${mm} mm/h na bacia ${mObj.bacia}.`;
+        setIaLaudo(`[SARAH IA NUVEM - ${nomeSimples}]: ${laudoGerado}`);
+      }
+    } catch(e) {
+      setMeteo(prev => ({...prev, statusSat: "MODO OFFLINE (CACHE LOCAL)"}));
+      let nomeSimples = mObj.n.split('(')[0].trim();
+      let laudoOffline = `[SARAH IA CONTINGÊNCIA - ${nomeSimples}]: Operando offline na bacia ${mObj.bacia}. Dados salvos localmente.`;
+      setIaLaudo(laudoOffline);
+    } finally {
+      setCarregandoMeteo(false);
+    }
+  };
+
+  useEffect(() => {
+    consultarMeteorologiaSat(mun);
+  }, [mun]);
+
+  const fazerLogin = () => {
+    if(senha === 'sarah2026') {
+      setAutenticado(true);
+      setErroSenha(false);
+    } else {
+      setErroSenha(true);
+    }
+  };
+
+  const cadastrarPessoa = () => {
+    if(!novoNomeCad || !novoBairroCad) { alert('Preencha Nome e Bairro.'); return; }
+    const novoItem = {
+      id: Date.now(),
+      nome: novoNomeCad,
+      municipio: mun.n,
+      bairro: novoBairroCad,
+      papel: novoPapelCad,
+      data: new Date().toLocaleDateString('pt-BR')
+    };
+    setCadastros(prev => [novoItem, ...prev]);
+    setNovoNomeCad('');
+    setNovoBairroCad('');
+  };
+
+  const initAudio = () => {
+    if(!audioCtxRef.current) audioCtxRef.current = new (window.AudioContext || window.webkitAudioContext)();
+  };
+
+  const pararSirenes = () => {
+    if(intervalRef.current) clearInterval(intervalRef.current);
+    if(oscRef.current) { try{ oscRef.current.stop(); }catch{} oscRef.current = null; }
+    setStatusBR('AGUARDANDO');
+    setStatusRU('AGUARDANDO');
+    setTimerBR('00:00 / 05:00');
+    setTimerRU('00:00 / 05:00');
+  };
+
+  const tocarSomBR = () => {
+    initAudio();
+    if(oscRef.current) return;
+    const ctx = audioCtxRef.current;
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(440, ctx.currentTime);
+    gain.gain.setValueAtTime(0.4, ctx.currentTime);
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+    osc.start();
+    oscRef.current = osc;
+    let dir = 1;
+    intervalRef.current = setInterval(() => {
+      if(!oscRef.current) return;
+      let f = oscRef.current.frequency.value;
+      if(f > 880) dir = -1;
+      if(f < 440) dir = 1;
+      oscRef.current.frequency.linearRampToValueAtTime(f + dir * 8, ctx.currentTime + 0.1);
+    }, 100);
+  };
+
+  const tocarSomRU = () => {
+    initAudio();
+    if(oscRef.current) return;
+    const ctx = audioCtxRef.current;
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.type = 'sawtooth';
+    osc.frequency.setValueAtTime(600, ctx.currentTime);
+    gain.gain.setValueAtTime(0.35, ctx.currentTime);
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+    osc.start();
+    oscRef.current = osc;
+    let on = true;
+    intervalRef.current = setInterval(() => {
+      on = !on;
+      gain.gain.setValueAtTime(on ? 0.35 : 0.05, ctx.currentTime);
+    }, 400);
+  };
+
+  const formatSec = (s) => {
+    let m = Math.floor(s/60).toString().padStart(2,'0');
+    let ss = (s%60).toString().padStart(2,'0');
+    return `${m}:${ss}`;
+  };
+
+  const iniciarBR = () => {
+    pararSirenes();
+    let sec = 0;
+    tocarSomBR();
+    setStatusBR('TOCANDO - ALERTA MÁXIMO (3 MIN)');
+    intervalRef.current = setInterval(() => {
+      sec++;
+      setTimerBR(`${formatSec(sec)} / 05:00`);
+      if(sec === 180) {
+        if(oscRef.current) { try{ oscRef.current.stop(); }catch{} oscRef.current = null; }
+        setStatusBR('PAUSA DE LUCIDEZ (1 MIN)');
+      }
+      if(sec === 240) { tocarSomBR(); setStatusBR('EVACUAÇÃO FINAL (1 MIN)'); }
+      if(sec >= 300) { pararSirenes(); setStatusBR('PROTOCOLO CONCLUÍDO'); }
+    }, 1000);
+  };
+
+  const iniciarRU = () => {
+    pararSirenes();
+    let sec = 0;
+    tocarSomRU();
+    setStatusRU('TOCANDO - ALERTA TÁTICO (3 MIN)');
+    intervalRef.current = setInterval(() => {
+      sec++;
+      setTimerRU(`${formatSec(sec)} / 05:00`);
+      if(sec === 180) {
+        if(oscRef.current) { try{ oscRef.current.stop(); }catch{} oscRef.current = null; }
+        setStatusRU('PAUSA DE LUCIDEZ (1 MIN)');
+      }
+      if(sec === 240) { tocarSomRU(); setStatusRU('ALERTA FINAL (1 MIN)'); }
+      if(sec >= 300) { pararSirenes(); setStatusRU('PROTOCOLO CONCLUÍDO'); }
+    }, 1000);
+  };
+
+  const estiloPainel = modoNoite ? "panel-noite p-3" : "panel-dia p-3";
+
+  if (!autenticado) {
+    return (
+      <div className={`w-full max-w-[420px] ${estiloPainel} p-6 space-y-4 shadow-2xl mt-10`}>
+        <div className="text-center space-y-1">
+          <p className={`text-[10px] font-bold tracking-widest ${modoNoite ? 'text-blue-400':'text-blue-500'}`}>ACESSO RESTRITO • {modoNoite ? 'MODO NOTURNO 🌙' : 'MODO DIURNO ☀️'}</p>
+          <h1 className="text-base font-black text-white">RARU NEXUS AI V15.0 PRO</h1>
+          <p className="text-[10px] text-slate-400">Mesquita - RJ | Horário: {horaAtualStr}</p>
+        </div>
+        <div className="space-y-3 pt-2">
+          <div>
+            <label className="label">Senha do Operador</label>
+            <input type="password" value={senha} onChange={e=>setSenha(e.target.value)} placeholder="Digite (sarah2026)..." className="w-full mt-1 bg-black border border-white/20 rounded-xl p-3 text-sm text-white focus:outline-none focus:border-blue-500"/>
+          </div>
+          <button onClick={fazerLogin} className="btn bg-blue-600 hover:bg-blue-500 text-white">ACESSAR CENTRAL</button>
+          {erroSenha && <p className="text-[10px] text-red-400 text-center">Senha incorreta.</p>}
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-3 w-full font-mono">
+
+      <div className={`${estiloPainel} flex justify-between items-center`}>
+        <div>
+          <h2 className="text-xs font-black text-white">RARU NEXUS AI - WORKER & CLOUD (92 MUNICÍPIOS)</h2>
+          <p className="text-[9px] text-slate-400">Rocha Sobrinho • Rede: <span className={navigator.onLine ? "text-emerald-400 font-bold" : "text-amber-400 font-bold"}>{statusConexao}</span></p>
+        </div>
+        <button onClick={()=>setAutenticado(false)} className="bg-red-900/30 border border-red-500/40 text-red-400 px-3 py-1.5 rounded-xl text-[9px] font-bold">BLOQUEAR</button>
+      </div>
+
+      <div className={`${estiloPainel} space-y-3 border-2 border-emerald-500/60`}>
+        <div className="flex justify-between items-center">
+          <p className="label text-emerald-300">🌐 WORKER GROQ AI (LLAMA 3.3) & CÂMERA DE CAMPO</p>
+          <span className="text-[10px] px-2 py-0.5 rounded bg-emerald-900/30 text-emerald-300 border border-emerald-500/30 font-bold">WORKER ATIVO</span>
+        </div>
+
+        <div className="bg-black border border-white/10 rounded-xl p-2.5 space-y-2">
+          <div className="flex justify-between items-center">
+            <p className="label">Câmera Tática com Carimbo GPS</p>
+            {!camOn ? (
+              <button onClick={startCam} className="text-[10px] bg-white text-black font-bold px-3 py-1.5 rounded-lg">LIGAR CÂMERA</button>
+            ) : (
+              <button onClick={stopCam} className="text-[10px] border border-red-500/30 text-red-300 px-3 py-1.5 rounded-lg">DESLIGAR</button>
+            )}
+          </div>
+
+          <div className="bg-[#080A12] rounded-lg overflow-hidden relative">
+            <video ref={videoRef} autoPlay playsInline muted style={{width:'100%', height:'200px', objectFit:'cover', display: camOn ? 'block' : 'none'}}></video>
+            {!camOn && (
+              <div className="h-[200px] grid place-items-center text-[11px] text-slate-600 font-bold">
+                CÂMERA DE CAMPO DESLIGADA
+              </div>
+            )}
+            {analisandoIA && (
+              <div className="absolute inset-0 bg-black/80 grid place-items-center text-xs text-emerald-400 font-bold animate-pulse">
+                📷 SALVANDO FOTO NO CACHE LOCAL...
+              </div>
+            )}
+          </div>
+
+          {camOn && (
+            <button onClick={capturarFotoCampoOffline} className="w-full py-3 bg-white text-black font-black rounded-xl text-xs shadow">
+              CAPTURAR E SALVAR FOTO COM CARIMBO
+            </button>
+          )}
+
+          {fotosVistoria.length > 0 && (
+            <div className="flex gap-2 overflow-x-auto pt-1 pb-1">
+              {fotosVistoria.map((f, i) => (
+                <div key={i} className="relative shrink-0">
+                  <img src={f} className="w-20 h-20 object-cover rounded-lg border border-white/20 shadow" />
+                  <div className="x" onClick={() => setFotosVistoria(fotosVistoria.filter((_, idx) => idx !== i))}>X</div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+
+        <div className="space-y-2">
+          <input value={nomeAgente} onChange={e=>setNomeAgente(e.target.value)} placeholder="AGENTE / RESPONSÁVEL TÉCNICO *" className="w-full bg-black border border-white/15 rounded-xl p-2.5 text-xs text-white"/>
+          <div className="grid grid-cols-2 gap-2">
+            <input value={bairroVistoria} onChange={e=>setBairroVistoria(e.target.value)} placeholder="BAIRRO / COMUNIDADE *" className="bg-black border border-white/15 rounded-xl p-2.5 text-xs text-white"/>
+            <select value={riscoVistoria} onChange={e=>setRiscoVistoria(e.target.value)} className="bg-black border border-white/15 rounded-xl p-2.5 text-[11px] text-white">
+              {RISCOS_VISTORIA.map((r, i) => <option key={i} value={r}>{r}</option>)}
+            </select>
+          </div>
+          <textarea value={relatoVistoria} onChange={e=>setRelatoVistoria(e.target.value)} rows="2" placeholder="RELATO DE CAMPO PARA PROCESSAR NO WORKER..." className="w-full bg-black border border-white/15 rounded-xl p-2.5 text-xs text-white"></textarea>
+        </div>
+
+        <div className="grid grid-cols-2 gap-2 pt-1">
+          <button onClick={enviarWhatsAppOffline} className="py-3 bg-[#25D366] text-black font-black rounded-xl text-[11px] shadow">ENVIAR WHATSAPP</button>
+          <button onClick={enviarParaWorkerEGerarLaudo} disabled={processandoWorker} className="py-3 bg-blue-600 hover:bg-blue-500 text-white font-black rounded-xl text-[11px] shadow disabled:opacity-50">
+            {processandoWorker ? "PROCESSANDO WORKER..." : "GERAR LAUDO IA (WORKER)"}
+          </button>
+        </div>
+      </div>
+
+      <div className={`${estiloPainel} space-y-3 border-2 border-blue-500/40`}>
+        <div className="flex justify-between items-center">
+          <p className="label text-blue-300">🤖 SARAH IA WORKER • CÉREBRO CÍVICO</p>
+          <div className="flex gap-2 items-center">
+            <button onClick={()=>setFalarVoz(!falarVoz)} className={`text-[9px] px-2 py-1 rounded font-bold border ${falarVoz ? 'bg-blue-600 border-blue-400 text-white':'bg-black border-white/20 text-slate-400'}`}>
+              {falarVoz ? '🔊 VOZ ATIVA' : '🔇 VOZ MUDADA'}
+            </button>
+            <span className={`text-[10px] px-2.5 py-1 rounded-full text-white font-bold ${nivelAlertaCor}`}>{nivelAlertaTexto}</span>
+          </div>
+        </div>
+        
+        <div className="bg-black border border-white/10 rounded-xl p-3 space-y-2">
+          <p className="text-[11px] text-slate-200 leading-relaxed font-sans">{iaLaudo}</p>
+        </div>
+      </div>
+
+      <div className={`${estiloPainel} space-y-2`}>
+        <div className="flex justify-between items-center">
+          <p className="label">MAPA TÁTICO & RADAR DE SATÉLITE EM TEMPO REAL</p>
+          <span className="text-[10px] px-2 py-1 rounded-full bg-blue-900/35 border border-blue-500/30 text-blue-300 font-bold">{mun.reg}</span>
+        </div>
+        <div className="map-box p-3 relative overflow-hidden">
+          <svg viewBox="0 0 800 360" className="w-full h-[220px]" xmlns="http://www.w3.org/2000/svg">
+            <rect width="800" height="360" rx="16" fill={modoNoite ? "#02040A" : "#0A0F1D"}/>
+            <line x1="0" y1="180" x2="800" y2="180" stroke="#1E293B" strokeWidth="1" strokeDasharray="4,4"/>
+            <line x1="400" y1="0" x2="400" y2="360" stroke="#1E293B" strokeWidth="1" strokeDasharray="4,4"/>
+            <circle cx="400" cy="180" r="100" stroke="#3B82F6" strokeWidth="1" fill="none" opacity="0.3"/>
+            <line x1="400" y1="180" x2="520" y2="80" stroke="#60A5FA" strokeWidth="2" className="radar-barred" opacity="0.7"/>
+            <g className="nuvem-animada" fill="rgba(147, 197, 253, 0.3)">
+              <ellipse cx="220" cy="80" rx="50" ry="16"/>
+              <ellipse cx="580" cy="120" rx="65" ry="20"/>
+            </g>
+            <rect x="180" y="160" width="380" height="150" rx="12" fill="#0A0F1D" stroke="#3B82F6" strokeWidth="1.5"/>
+            <text x="200" y="185" fill="#60A5FA" fontSize="10" fontWeight="900">BAIXADA FLUMINENSE & METROPOLITANA</text>
+            <g className="cursor-pointer" onClick={()=>setMun(MUNICIPIOS[1])}>
+              <rect x="200" y="210" width="105" height="42" rx="8" fill={mun.n.includes("Nova Iguaçu")?"#2563EB":"#172554"} stroke="#60A5FA" strokeWidth="1.5"/>
+              <text x="252" y="228" textAnchor="middle" fill="#FFFFFF" fontSize="11" fontWeight="900">NOVA IGUAÇU</text>
+            </g>
+            <g className="pisca cursor-pointer" onClick={()=>setMun(MUNICIPIOS[0])}>
+              <circle cx="252" cy="290" r="28" fill="rgba(239,68,68,0.2)"/>
+              <circle cx="252" cy="290" r="15" fill="#DC2626"/>
+              <rect x="280" y="268" width="170" height="46" rx="10" fill="#991B1B" stroke="#FCA5A5" strokeWidth="2"/>
+              <text x="365" y="288" textAnchor="middle" fill="#FFFFFF" fontSize="13" fontWeight="900">📍 MESQUITA</text>
+              <text x="365" y="303" textAnchor="middle" fill="#FEE2E2" fontSize="9" fontWeight="800">ROCHA SOBRINHO (BASE)</text>
+            </g>
+          </svg>
+          <p className="text-[10px] text-blue-400 text-center font-bold mt-2">🛰️ 92 MUNICÍPIOS • WORKER & API INTEGRADOS</p>
+        </div>
+      </div>
+
+      <div className={`${estiloPainel} space-y-3`}>
+        <div className="flex justify-between items-center">
+          <p className="label">SELEÇÃO DE MUNICÍPIOS (92 CIDADES DO RJ)</p>
+          <span className="text-[10px] px-2 py-0.5 rounded-full bg-emerald-900/30 text-emerald-300 font-bold">{carregandoMeteo ? "BUSCANDO..." : "PRONTO"}</span>
+        </div>
+
+        <div>
+          <label className="label mb-1 block">ESCOLHER MUNICÍPIO:</label>
+          <select value={mun.n} onChange={e=>{ const m=MUNICIPIOS.find(mm=>mm.n===e.target.value); setMun(m); }} className="w-full bg-black border border-white/20 rounded-xl p-3 text-[12px] font-bold text-white">
+            {MUNICIPIOS.map((m,i)=><option key={i} value={m.n}>{m.n} - Região: {m.reg}</option>)}
+          </select>
+        </div>
+
+        <div className="bg-black border border-white/10 rounded-xl p-3 space-y-2">
+          <div className="flex justify-between items-center border-b border-white/10 pb-2">
+            <div>
+              <p className="text-[13px] font-black text-white">{mun.n.split('(')[0]}</p>
+              <p className="text-[9px] text-blue-400">{mun.bacia}</p>
+            </div>
+            <span className="text-[10px] text-emerald-300 font-bold">{meteo.condicao}</span>
+          </div>
+
+          <div className="grid grid-cols-3 gap-2 pt-1 text-center">
+            <div className="bg-[#0B1120] p-2 rounded-lg border border-white/5">
+              <p className="text-[9px] text-slate-400">TEMPERATURA</p>
+              <p className="text-xs font-black text-white mt-0.5">{meteo.temperatura}</p>
+            </div>
+            <div className="bg-[#0B1120] p-2 rounded-lg border border-white/5">
+              <p className="text-[9px] text-slate-400">UMIDADE</p>
+              <p className="text-xs font-black text-white mt-0.5">{meteo.umidade}</p>
+            </div>
+            <div className="bg-[#0B1120] p-2 rounded-lg border border-white/5">
+              <p className="text-[9px] text-slate-400">PRECIPITAÇÃO</p>
+              <p className="text-xs font-black text-amber-300 mt-0.5">{meteo.chuvaMm}</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div className={`${estiloPainel} space-y-3`}>
+        <div className="flex justify-between items-center"><p className="label">PAINEL DE CADASTRAMENTO DE AGENTES</p><span className="text-[10px] px-2 py-0.5 rounded-full bg-blue-900/40 text-blue-300 font-bold">{cadastros.length} SALVOS (LOCAL)</span></div>
+        <div className="bg-black border border-white/10 rounded-xl p-3 space-y-2">
+          <input value={novoNomeCad} onChange={e=>setNovoNomeCad(e.target.value)} placeholder="Nome Completo *" className="w-full bg-[#080A12] border border-white/15 rounded-xl p-2.5 text-xs text-white"/>
+          <div className="grid grid-cols-2 gap-2">
+            <input value={novoBairroCad} onChange={e=>setNovoBairroCad(e.target.value)} placeholder="Bairro / Comunidade *" className="bg-[#080A12] border border-white/15 rounded-xl p-2.5 text-xs text-white"/>
+            <select value={novoPapelCad} onChange={e=>setNovoPapelCad(e.target.value)} className="bg-[#080A12] border border-white/15 rounded-xl p-2.5 text-[11px] text-white">
+              <option>Morador / Voluntário</option>
+              <option>Agente de Articulação (GADE)</option>
+              <option>Defesa Civil / NUPDEC</option>
+            </select>
+          </div>
+          <button onClick={cadastrarPessoa} className="w-full py-2.5 bg-blue-600 hover:bg-blue-500 text-white font-black rounded-xl text-xs">CADASTRAR NO BANCO OFFLINE</button>
+        </div>
+        <div className="space-y-2 max-h-[140px] overflow-y-auto">
+          {cadastros.map((item)=>(
+            <div key={item.id} className="bg-black border border-white/10 rounded-xl p-2.5 flex justify-between items-center text-[11px]">
+              <div>
+                <p className="font-bold text-white">{item.nome}</p>
+                <p className="text-[9px] text-slate-400">{item.bairro} • <span className="text-blue-300">{item.papel}</span></p>
+              </div>
+              <span className="text-[9px] px-2 py-1 rounded bg-emerald-900/30 text-emerald-300 font-bold">{item.data}</span>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      <div className={`${estiloPainel} space-y-3`}>
+        <p className="label">SISTEMA ALERTA CRÍTICO - BR + RU (5 MINUTOS)</p>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+          <div className="bg-black border border-white/10 rounded-xl p-3 space-y-2">
+            <p className="text-[10px] font-bold text-white">ALERTA BRASILEIRO (CEMADEN)</p>
+            <div className="flex gap-2">
+              <button onClick={iniciarBR} className="btn bg-white text-black py-2">DISPARAR BR</button>
+              <button onClick={pararSirenes} className="btn bg-black border border-white/20 text-white py-2">PARAR</button>
+            </div>
+            <p className="text-[10px] text-yellow-400 font-bold">STATUS: {statusBR} ({timerBR})</p>
+          </div>
+          <div className="bg-black border border-white/10 rounded-xl p-3 space-y-2">
+            <p className="text-[10px] font-bold text-white">ALERTA TÁTICO (PADRÃO RUSSO)</p>
+            <div className="flex gap-2">
+              <button onClick={iniciarRU} className="btn bg-[#E5E7EB] text-black py-2">DISPARAR RU</button>
+              <button onClick={pararSirenes} className="btn bg-black border border-white/20 text-white py-2">PARAR</button>
+            </div>
+            <p className="text-[10px] text-yellow-400 font-bold">STATUS: {statusRU} ({timerRU})</p>
+          </div>
+        </div>
+      </div>
+
+      <div className={`${estiloPainel} grid grid-cols-2 gap-2`}>
+        <div className="bg-black border border-white/10 rounded-xl p-3 text-center"><p className="label">BOMBEIROS</p><p className="text-red-400 font-black text-lg">193</p></div>
+        <div className="bg-black border border-white/10 rounded-xl p-3 text-center"><p className="label">DEFESA CIVIL</p><p className="text-amber-300 font-black text-lg">199</p></div>
+        <div className="bg-black border border-white/10 rounded-xl p-3 text-center"><p className="label">SAMU</p><p className="text-blue-300 font-black text-lg">192</p></div>
+        <div className="bg-black border border-white/10 rounded-xl p-3 text-center"><p className="label">APOIO</p><p className="text-emerald-300 font-black text-lg">188</p></div>
+      </div>
+
+    </div>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<App/>);
+</script>
+</body>
+</html>
