@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>ORION NEXUS V24.1 - COMPLETO - MAPA OFICIAL CLARO + VIDEO + PDF + FOTO</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+<script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+<script crossorigin src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+<style>
+  body{background:#010205;color:#E2E8F0;font-family:'JetBrains Mono',monospace}
+  .hud-panel{background:#02040A;border:1px solid rgba(0,243,255,0.45);border-radius:16px;box-shadow:0 0 30px rgba(0,243,255,0.12)}
+  .label-hud{font-size:10px;letter-spacing:.12em;font-weight:900;color:#00f3ff;text-transform:uppercase}
+  .x-btn{position:absolute;top:6px;right:6px;width:22px;height:22px;background:#000;color:#00f3ff;border-radius:50%;display:grid;place-items:center;font-weight:900;border:1px solid #00f3ff;cursor:pointer;font-size:11px}
+  .leaflet-container{background:#e5e7eb !important; border-radius:12px}
+  @keyframes pulse{0%{transform:scale(1)}50%{transform:scale(1.25);box-shadow:0 0 20px currentColor}100%{transform:scale(1)}}
+</style>
+</head>
+<body class="p-2 flex justify-center min-h-screen">
+<div id="root" class="w-full max-w-[700px]"></div>
+<script type="text/babel">
+const { useState, useRef, useEffect } = React;
+const MUNICIPIOS=[
+  {n:"Mesquita (Base Oficial - Rocha Sobrinho)", lat:-22.7858, lon:-43.4294, reg:"Baixada", bacia:"Sarapui / Iguacu"},
+  {n:"Nova Iguacu (Baixada Fluminense)", lat:-22.7559, lon:-43.4605, reg:"Baixada", bacia:"Rio Botas"},
+  {n:"Duque de Caxias", lat:-22.7856, lon:-43.3117, reg:"Baixada", bacia:"Rio Iguacu"},
+  {n:"Sao Joao de Meriti", lat:-22.8031, lon:-43.3695, reg:"Baixada", bacia:"Sarapui"},
+  {n:"Rio de Janeiro (Centro de Comando)", lat:-22.9068, lon:-43.1729, reg:"Metropolitana", bacia:"Baia Guanabara"}
+];
+const RISCOS=["R1 - BAIXO / PREVENTIVO","R2 - MODERADO / ATENCAO","R3 - ALTO / ALERTA","R4 - IMINENTE / EVACUACAO","RH - HIDROLOGICO","RE - ESTRUTURAL"];
+const ORGAOS=[
+  {nome:"Defesa Civil", cor:"#FF8C00", dLat:0.002, dLon:0.002},
+  {nome:"GACE", cor:"#00F2FE", dLat:-0.002, dLon:-0.002},
+  {nome:"Cidadao Sensor", cor:"#10B981", dLat:0.0015, dLon:-0.0015}
+];
+function App(){
+  const [auth,setAuth]=useState(false); const [senha,setSenha]=useState('');
+  const [mun,setMun]=useState(MUNICIPIOS[0]); const [agente,setAgente]=useState('Alexander da Silva Firmo');
+  const [bairro,setBairro]=useState('Sebinho / Rocha Sobrinho'); const [cpf,setCpf]=useState('');
+  const [risco,setRisco]=useState(RISCOS[0]); const [orgao,setOrgao]=useState("Defesa Civil");
+  const [relato,setRelato]=useState(''); const [gps,setGps]=useState({lat:-22.7858,lon:-43.4294});
+  const [fotos,setFotos]=useState(()=>{try{return JSON.parse(localStorage.getItem('orion_v24_1_fotos')||'[]')}catch{return[]}});
+  const [videos,setVideos]=useState([]);
+  const [camOn,setCamOn]=useState(false); const [gravando,setGravando]=useState(false);
+  const [iaParecer,setIaParecer]=useState("Cerebro Neural conectado. Pronto para laudo de ponta com mapa oficial visivel.");
+  const [processing,setProcessing]=useState(false); const [vozAtiva,setVozAtiva]=useState(true); const [toast,setToast]=useState(null);
+  const videoRef=useRef(null); const streamRef=useRef(null); const mapInst=useRef(null); const recRef=useRef(null);
+  const URL_WORKER="https://solitary-snow-2459.phantrorfirmo08.workers.dev/";
+  useEffect(()=>{try{localStorage.setItem('orion_v24_1_fotos',JSON.stringify(fotos))}catch{}},[fotos]);
+  const showToast=(m)=>{setToast(m); setTimeout(()=>setToast(null),3500)};
+  const falar=(t)=>{if(!vozAtiva||!('speechSynthesis' in window))return; try{window.speechSynthesis.cancel(); const u=new SpeechSynthesisUtterance(t); u.lang='pt-BR'; window.speechSynthesis.speak(u);}catch{}};
+  useEffect(()=>{
+    if(auth&&mapRef.current&&!mapInst.current){
+      const map=L.map(mapRef.current,{zoomControl:true}).setView([mun.lat,mun.lon],14);
+      const sat=L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',{maxZoom:19}).addTo(map);
+      const ruas=L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19, opacity:0.5});
+      const labels=L.tileLayer('https://{s}.basemaps.cartocdn.com/light_only_labels/{z}/{x}/{y}{r}.png',{maxZoom:19}).addTo(map);
+      L.control.layers({"SATELITE OFICIAL":sat,"MAPA RUAS":ruas},{"NOMES":labels}).addTo(map);
+      ORGAOS.forEach(o=>{
+        const icon=L.divIcon({
+          className:'', html:`<div style="background:${o.cor};width:18px;height:18px;border-radius:50%;border:3px solid white;box-shadow:0 0 15px ${o.cor};animation:pulse 2s infinite"></div><div style="background:${o.cor};color:black;font-size:8px;font-weight:900;padding:2px 4px;border-radius:4px;margin-top:4px;white-space:nowrap">${o.nome}</div>`,
+          iconSize:[18,18]
+        });
+        L.marker([mun.lat+o.dLat, mun.lon+o.dLon],{icon}).addTo(map).bindPopup(`<b>${o.nome}</b><br>Ativo em ${mun.n}`);
+      });
+      const gpsIcon=L.divIcon({className:'', html:`<div style="background:#00f3ff;width:22px;height:22px;border-radius:50%;border:4px solid white;box-shadow:0 0 20px #00f3ff"></div>`, iconSize:[22,22]});
+      const gpsMarker=L.marker([mun.lat,mun.lon],{icon:gpsIcon,draggable:true}).addTo(map);
+      gpsMarker.bindPopup(`<b>PONTO VISTORIA</b><br>Arraste para ajustar`).openPopup();
+      gpsMarker.on('dragend',e=>{const p=e.target.getLatLng(); setGps({lat:p.lat,lon:p.lng}); showToast(`GPS: ${p.lat.toFixed(5)}, ${p.lng.toFixed(5)}`)});
+      mapInst.current={map,gpsMarker};
+    }
+    if(mapInst.current){mapInst.current.map.setView([mun.lat,mun.lon],14); setTimeout(()=>mapInst.current.map.invalidateSize(),300);}
+  },[auth,mun]);
+  const capturarGps=()=>{navigator.geolocation.getCurrentPosition(p=>{setGps({lat:p.coords.latitude,lon:p.coords.longitude}); showToast("GPS alta precisao!"); falar("GPS validado")},()=>showToast("Erro GPS"),{enableHighAccuracy:true})};
+  const startCam=async()=>{try{const s=await navigator.mediaDevices.getUserMedia({video:{facingMode:{ideal:"environment"},width:{ideal:1280}},audio:true}); streamRef.current=s; setCamOn(true); setTimeout(()=>{if(videoRef.current){videoRef.current.srcObject=s; videoRef.current.play().catch(()=>{})}},200);}catch{showToast("Camera negada")}};
+  const stopCam=()=>{if(streamRef.current)streamRef.current.getTracks().forEach(t=>t.stop()); setCamOn(false); setGravando(false)};
+  const capturarFoto=()=>{
+    const v=videoRef.current; if(!v||v.videoWidth===0)return;
+    const c=document.createElement('canvas'); c.width=900; c.height=Math.round(900*v.videoHeight/v.videoWidth);
+    const ctx=c.getContext('2d'); ctx.drawImage(v,0,0,c.width,c.height);
+    ctx.fillStyle='rgba(2,4,10,0.96)'; ctx.fillRect(0,c.height-82,c.width,82);
+    ctx.fillStyle='#00f3ff'; ctx.font='700 11px monospace'; const agora=new Date().toLocaleString('pt-BR');
+    ctx.fillText(`SUPREMA CORTE | GPS: ${gps.lat.toFixed(6)}, ${gps.lon.toFixed(6)} | ${risco}`,12,c.height-54);
+    ctx.fillStyle='#fff'; ctx.font='700 10px monospace'; ctx.fillText(`SETOR: ${bairro} - ${mun.n.split('(')[0].trim()} | RESP: ${agente} | CPF: ${cpf||'N/A'}`,12,c.height-32);
+    ctx.fillStyle='#94A3B8'; ctx.font='8px monospace'; ctx.fillText(`CHANCELA UNIVERSITARIA | ${agora}`,12,c.height-12);
+    const dataUrl=c.toDataURL('image/jpeg',0.85); setFotos(p=>[...p,dataUrl]); showToast("Foto 900PX carimbada!"); falar("Foto salva");
+  };
+  const toggleVideo=()=>{
+    if(!streamRef.current)return showToast("Ligue a camera");
+    if(gravando){recRef.current.stop(); return;}
+    const rec=new MediaRecorder(streamRef.current,{mimeType:'video/webm;codecs=vp8,opus'}); const chunks=[];
+    rec.ondataavailable=e=>{if(e.data.size>0)chunks.push(e.data)};
+    rec.onstop=()=>{
+      const blob=new Blob(chunks,{type:'video/webm'}); const url=URL.createObjectURL(blob);
+      const file=new File([blob],`video_vistoria_${Date.now()}.webm`,{type:'video/webm'});
+      setVideos(v=>[...v,{url,blob,file,data:new Date().toLocaleString('pt-BR')}]);
+      showToast("Video 15s salvo!"); setGravando(false);
+    };
+    rec.start(200); recRef.current=rec; setGravando(true); showToast("Gravando video 15s..."); setTimeout(()=>{if(rec.state==='recording')rec.stop()},15000);
+  };
+  const gerarPDF=async(protocolo,parecer)=>{
+    try{
+      const {jsPDF}=window.jspdf; const doc=new jsPDF('p','mm','a4');
+      const raw=`${protocolo}-${Date.now()}-${mun.n}`; const buf=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(raw));
+      const hash=Array.from(new Uint8Array(buf)).map(b=>b.toString(16).padStart(2,'0')).join('');
+      doc.setFillColor(2,4,10); doc.rect(0,0,210,297,'F');
+      doc.setTextColor(0,243,255); doc.setFont('helvetica','bold'); doc.setFontSize(11); doc.text(`LAUDO SUPREMA CORTE - ${protocolo}`,10,12);
+      doc.setFontSize(8); doc.setTextColor(255,255,255); doc.text(`PROTOCOLO: ${protocolo}`,10,17);
+      doc.setTextColor(148,163,184); doc.setFontSize(7.5);
+      doc.text(`MUNICIPIO: ${mun.n} | BACIA: ${mun.bacia}`,10,23);
+      doc.text(`AGENTE: ${agente} | CPF: ${cpf||'N/A'} | ORGAO: ${orgao}`,10,28);
+      doc.text(`RISCO: ${risco} | GPS: ${gps.lat.toFixed(6)}, ${gps.lon.toFixed(6)} | ${new Date().toLocaleString('pt-BR')}`,10,33);
+      doc.setTextColor(0,243,255); doc.setFont('helvetica','bold'); doc.setFontSize(9); doc.text(`PARECER TECNICO:`,10,41);
+      doc.setFont('helvetica','normal'); doc.setFontSize(8); doc.setTextColor(241,245,249);
+      const linhas=doc.splitTextToSize(parecer||relato,190); doc.text(linhas,10,47);
+      let y=55+linhas.length*4.2;
+      if(fotos.length>0){
+        if(y>180){doc.addPage(); doc.setFillColor(2,4,10); doc.rect(0,0,210,297,'F'); y=15;}
+        doc.setFont('helvetica','bold'); doc.setTextColor(0,243,255); doc.text(`EVIDENCIAS FOTOGRAFICAS (${fotos.length}):`,10,y); y+=6;
+        for(let i=0;i<fotos.length;i++){
+          if(y>210){doc.addPage(); doc.setFillColor(2,4,10); doc.rect(0,0,210,297,'F'); y=15;}
+          try{doc.addImage(fotos[i],'JPEG',10+(i%2)*95,y,88,48);}catch{doc.setFontSize(6); doc.setTextColor(239,68,68); doc.text(`[Foto ${i+1} erro]`,10+(i%2)*95,y+10);}
+          if(i%2===1)y+=56; else if(i===fotos.length-1)y+=56;
+        }
+      }
+      if(videos.length>0){
+        if(y>250){doc.addPage(); doc.setFillColor(2,4,10); doc.rect(0,0,210,297,'F'); y=15;}
+        doc.setFont('helvetica','bold'); doc.setTextColor(16,185,129); doc.text(`VIDEOS ANEXADOS (${videos.length}) - ENVIAR VIA WHATSAPP`,10,y); y+=5;
+      }
+      doc.setFontSize(5.5); doc.setTextColor(100,116,139); doc.text(`HASH SHA-256: ${hash}`,10,290);
+      const blob=doc.output('blob'); const file=new File([blob],`${protocolo}.pdf`,{type:'application/pdf'});
+      if(navigator.canShare&&navigator.canShare({files:[file]})){await navigator.share({title:protocolo,text:`Laudo ${protocolo}`,files:[file]});}
+      else{const url=URL.createObjectURL(blob); window.open(url,'_blank');}
+    }catch(e){showToast("Erro PDF: "+e.message); const {jsPDF}=window.jspdf; const doc=new jsPDF(); doc.text(relato,10,10); doc.save(`fallback_${Date.now()}.pdf`);}
+  };
+  const enviarWppFoto=async()=>{
+    if(fotos.length===0)return showToast("Capture foto!");
+    if(!relato)return showToast("Digite relato");
+    try{
+      const res=await fetch(fotos[fotos.length-1]); const blob=await res.blob();
+      const fotoFile=new File([blob],`Laudo_${mun.n.split('(')[0].trim()}_${Date.now()}.jpg`,{type:'image/jpeg'});
+      const texto=`LAUDO SUPREMA CORTE - MAPA OFICIAL\n\n${mun.n} - ${bairro}\n${agente}\nCPF: ${cpf||'N/A'}\n${risco}\n${orgao}\nGPS: ${gps.lat.toFixed(6)}, ${gps.lon.toFixed(6)}\n${new Date().toLocaleString('pt-BR')}\n\n${relato}\n\n${videos.length} videos anexados`;
+      if(navigator.canShare&&navigator.canShare({files:[fotoFile]})){await navigator.share({title:`Laudo ${mun.n}`,text:texto,files:[fotoFile]}); showToast("Foto + relatorio no WhatsApp!");}
+      else window.open(`https://wa.me/?text=${encodeURIComponent(texto)}`,'_blank');
+    }catch{showToast("Erro compartilhar foto")}
+  };
+  const enviarWppVideo=async()=>{
+    if(videos.length===0)return showToast("Grave um video primeiro!");
+    try{
+      const v=videos[videos.length-1];
+      await navigator.share({title:"Video Vistoria", text:`Video vistoria ${mun.n} - ${bairro} - ${relato}`, files:[v.file]});
+      showToast("Video enviado!");
+    }catch{showToast("Compartilhe o video manualmente")}
+  };
+  const enviarWorker=async()=>{
+    if(!relato)return showToast("Digite relato");
+    setProcessing(true); setIaParecer("Transmitindo para Groq AI + validacao universitaria...");
+    const protocolo=`CORTE-${mun.n.substring(0,3).toUpperCase()}-2026-${Math.floor(1000+Math.random()*9000)}`;
+    try{
+      const r=await fetch(URL_WORKER,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({municipio:mun.n.split('(')[0].trim(),bairro,relato,responsavel:agente,risco,orgaos:[orgao],modo:"LAUDO_TECNICO"})});
+      const data=await r.json(); const parecer=data.engenheiraChefeParecer||data.parecerEngenhariaECerebro||data.orientacaoAssistente||relato;
+      setIaParecer(parecer); falar("Parecer validado"); await gerarPDF(protocolo,parecer);
+    }catch{setIaParecer("[MODO SUPREMO LOCAL] Worker offline. Laudo autonomo rigoroso gerado."); await gerarPDF(protocolo,relato);}
+    finally{setProcessing(false)}
+  };
+  if(!auth){return(<div className="w-full max-w-[420px] hud-panel p-6 space-y-4 mt-12 mx-auto"><div className="text-center"><p className="label-hud">AUTENTICACAO SUPREMA - MAPA OFICIAL</p><h1 className="text-base font-black">ORION NEXUS V24.1</h1><p className="text-[10px] text-slate-400">Base Rocha Sobrinho - Mapa Claro + Video + PDF</p></div><input type="password" value={senha} onChange={e=>setSenha(e.target.value)} placeholder="sarah2026" className="w-full bg-black border border-cyan-500/40 rounded-xl p-3 text-sm text-white"/><button onClick={()=>{if(senha==='sarah2026')setAuth(true); else showToast('Chave incorreta')}} className="w-full py-3 bg-cyan-400 text-black font-black rounded-xl text-xs">ENTRAR - MAPA OFICIAL VISIVEL</button>{toast&&<div className="text-xs text-cyan-300 text-center">{toast}</div>}</div>)}
+  return(
+    <div className="space-y-3 w-full">
+      {toast&&<div className="fixed top-4 left-1/2 -translate-x-1/2 z-[9999] bg-cyan-400 text-black px-5 py-2 rounded-xl font-black text-xs shadow-2xl">{toast}</div>}
+      <div className="hud-panel p-3 flex justify-between items-center">
+        <div><h2 className="text-xs font-black text-cyan-300">ORION V24.1 - CONSOLIDADO FINAL</h2><p className="text-[9px] text-slate-400">Mapa Oficial Claro + Foto 900PX + Video 15s + PDF + WPP</p></div>
+        <div className="flex gap-2"><button onClick={()=>setVozAtiva(!vozAtiva)} className={`text-[9px] px-2 py-1 rounded font-bold border ${vozAtiva?'bg-cyan-400 text-black':'bg-black text-slate-400'}`}>{vozAtiva?'VOZ':'MUDO'}</button><button onClick={()=>setAuth(false)} className="bg-red-950/40 border border-red-500/40 text-red-400 px-3 py-1 rounded-lg text-[9px] font-bold">SAIR</button></div>
+      </div>
+      <div className="hud-panel p-2.5 space-y-2 border-2 border-cyan-500/50">
+        <div className="flex justify-between items-center"><p className="label-hud">MAPA OFICIAL VISIVEL - SATELITE + RUAS + ORGANISMOS</p><span className="text-[9px] px-2 py-0.5 rounded bg-emerald-950 text-emerald-300 border border-emerald-500/30">CLARO</span></div>
+        <div ref={mapRef} style={{width:'100%',height:'300px',borderRadius:'12px',border:'2px solid rgba(0,243,255,0.5)'}}></div>
+        <div className="flex gap-2 items-center bg-black/50 p-2 rounded-xl border border-cyan-500/30"><div className="flex-1 text-[10px] text-slate-300">GPS: {gps.lat.toFixed(6)}, {gps.lon.toFixed(6)} | Arraste pino azul</div><button onClick={capturarGps} className="px-4 py-1.5 bg-cyan-500/20 border border-cyan-500 text-cyan-400 rounded-xl text-xs font-bold">FIXAR GPS</button></div>
+      </div>
+      <div className="hud-panel p-4 space-y-3 border-2 border-cyan-500/50">
+        <div className="flex justify-between"><p className="label-hud">VISTORIA - FOTO 900PX + VIDEO 15S + PDF BLINDADO</p><span className="text-[10px] px-2 py-0.5 rounded bg-emerald-950 text-emerald-300 border border-emerald-500/30">V24.1 LEVE</span></div>
+        <div className="grid grid-cols-2 gap-2">
+          <select value={mun.n} onChange={e=>setMun(MUNICIPIOS.find(mm=>mm.n===e.target.value))} className="bg-black border border-white/15 rounded-xl p-2.5 text-xs text-white">{MUNICIPIOS.map((m,i)=><option key={i} value={m.n}>{m.n}</option>)}</select>
+          <input value={bairro} onChange={e=>setBairro(e.target.value)} className="bg-black border border-white/15 rounded-xl p-2.5 text-xs text-white" placeholder="Bairro"/>
+          <input value={agente} onChange={e=>setAgente(e.target.value)} className="bg-black border border-white/15 rounded-xl p-2.5 text-xs text-white" placeholder="Agente"/>
+          <input value={cpf} onChange={e=>setCpf(e.target.value)} className="bg-black border border-white/15 rounded-xl p-2.5 text-xs text-white" placeholder="CPF"/>
+          <select value={risco} onChange={e=>setRisco(e.target.value)} className="bg-black border border-white/15 rounded-xl p-2.5 text-[11px] text-white">{RISCOS.map((r,i)=><option key={i}>{r}</option>)}</select>
+          <select value={orgao} onChange={e=>setOrgao(e.target.value)} className="bg-black border border-white/15 rounded-xl p-2.5 text-[11px] text-white">{["Defesa Civil","GACE","Bom Dia Comunidade","Cidadao Sensor","Consorcio Geofisico"].map(o=><option key={o}>{o}</option>)}</select>
+        </div>
+        <div className="bg-black border border-white/10 rounded-xl p-3 space-y-2">
+          <div className="flex justify-between items-center"><p className="label-hud">CAMERA TATICA 900PX + VIDEO</p>{!camOn?<button onClick={startCam} className="text-[10px] bg-cyan-400 text-black font-black px-3 py-1.5 rounded-lg">LIGAR CAMERA</button>:<button onClick={stopCam} className="text-[10px] border border-red-500/30 text-red-300 px-3 py-1.5 rounded-lg">DESLIGAR</button>}</div>
+          <div className="bg-[#111827] rounded-lg overflow-hidden"><video ref={videoRef} autoPlay playsInline muted style={{width:'100%',height:'220px',objectFit:'cover',display:camOn?'block':'none'}}></video>{!camOn&&<div className="h-[220px] grid place-items-center text-[11px] text-slate-500 font-bold">CAMERA 1280P DESLIGADA - LEVE</div>}</div>
+          {camOn&&<div className="grid grid-cols-2 gap-2"><button onClick={capturarFoto} className="py-3 bg-cyan-400 text-black font-black rounded-xl text-xs">FOTO 900PX</button><button onClick={toggleVideo} className={`py-3 font-black rounded-xl text-xs ${gravando?'bg-red-600 text-white animate-pulse':'bg-white text-black'}`}>{gravando?'PARAR VIDEO 15S':'GRAVAR VIDEO'}</button></div>}
+          {fotos.length>0&&<div className="flex gap-2 overflow-x-auto pt-1">{fotos.map((f,i)=><div key={i} className="relative shrink-0"><img src={f} className="w-16 h-16 object-cover rounded-lg border border-cyan-500/40"/><div className="x-btn" onClick={()=>setFotos(fotos.filter((_,idx)=>idx!==i))}>X</div></div>)}<span className="text-[10px] text-slate-400 self-center">{fotos.length} fotos offline</span></div>}
+          {videos.length>0&&<div className="flex gap-2 overflow-x-auto">{videos.map((v,i)=><div key={i} className="relative"><video src={v.url} className="w-20 h-16 rounded-lg border border-emerald-500/40"/><span className="absolute bottom-0 left-0 bg-emerald-600 text-[8px] px-1 rounded">VIDEO {i+1}</span></div>)}<span className="text-[10px] text-emerald-400 self-center">{videos.length} videos</span></div>}
+        </div>
+        <textarea value={relato} onChange={e=>setRelato(e.target.value)} rows="3" placeholder="Relato tecnico de ponta com detalhes geofisicos..." className="w-full bg-black border border-white/15 rounded-xl p-2.5 text-xs text-white"></textarea>
+        <div className="grid grid-cols-3 gap-2">
+          <button onClick={enviarWppFoto} className="py-3 bg-[#25D366] text-black font-black rounded-xl text-[11px]">WPP FOTO</button>
+          <button onClick={enviarWppVideo} className="py-3 bg-[#128C7E] text-white font-black rounded-xl text-[11px]">WPP VIDEO</button>
+          <button onClick={enviarWorker} disabled={processing} className="py-3 bg-cyan-400 text-black font-black rounded-xl text-[11px] disabled:opacity-50">{processing?'VALIDANDO...':'PDF OFICIAL'}</button>
+        </div>
+      </div>
+      <div className="hud-panel p-4 space-y-2"><p className="label-hud">PARECER SUPREMA CORTE - GROQ AI</p><div className="bg-black border border-white/10 rounded-xl p-3"><p className="text-[11px] text-slate-200 leading-relaxed">{iaParecer}</p></div></div>
+    </div>
+  );
+}
+ReactDOM.createRoot(document.getElementById('root')).render(<App/>);
+</script>
+</body>
+</html>
