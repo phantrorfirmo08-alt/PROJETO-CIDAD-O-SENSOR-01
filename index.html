@@ -1,0 +1,378 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>RARU NEXUS AI V23.1 PRO - MAPA OFICIAL & CLOUDFLARE WORKER</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+<script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+<script crossorigin src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+<!-- Leaflet CSS & JS para Mapa Oficial Georreferenciado -->
+<link rel="stylesheet" href="https://unpkg.com/leaflet@19.4.0/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
+<script src="https://unpkg.com/leaflet@19.4.0/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+<style>
+ .panel-dia { background: #0B1120; border: 1px solid rgba(255,255,255,.15); border-radius: 18px; color: #E5E7EB; }
+ .panel-noite { background: #030712; border: 1px solid rgba(0,243,255,.3); border-radius: 18px; color: #93C5FD; box-shadow: 0 0 25px rgba(0,243,255,0.15); }
+ .label { font-size: 11px; letter-spacing: .08em; font-weight: 800; color: #00f3ff; text-transform: uppercase; text-shadow: 0 0 6px rgba(0,243,255,0.3); }
+ .map-box { background: #030712; border: 1px solid rgba(0,243,255,0.3); border-radius: 16px; overflow: hidden; }
+ .btn { width: 100%; padding: 14px; border-radius: 14px; font-weight: 900; font-size: 12px; letter-spacing: .04em; }
+ .x { position: absolute; top: 4px; right: 4px; width: 20px; height: 20px; background: #111; color: #fff; border-radius: 50%; display: grid; place-items: center; font-weight: 900; border: 1px solid #fff; cursor: pointer; font-size: 11px; }
+ @keyframes pisca { 0%,100% { opacity: 1; transform: scale(1); } 50% { opacity: .7; transform: scale(1.02); } }
+ .pisca { animation: pisca 1.5s infinite; }
+</style>
+</head>
+<body id="corpo-pagina" class="p-2 flex justify-center transition-colors duration-700 bg-[#02040A]">
+<div id="root" class="w-full max-w-[680px]"></div>
+
+<script type="text/babel">
+const {useState, useRef, useEffect} = React;
+
+const MUNICIPIOS = [
+{n:"Mesquita (Base Anfitriã Oficial - Rocha Sobrinho)",lat:-22.7858,lon:-43.4294,reg:"Baixada Fluminense",bacia:"Bacia do Rio Sarapuí / Iguaçu (Baixada)"},
+{n:"Nova Iguaçu (Baixada Fluminense)",lat:-22.7559,lon:-43.4605,reg:"Baixada Fluminense",bacia:"Bacia do Rio Botas / Sarapuí"},
+{n:"Duque de Caxias (Baixada Fluminense)",lat:-22.7856,lon:-43.3117,reg:"Baixada Fluminense",bacia:"Bacia do Rio Iguaçu / Sarapuí"},
+{n:"São João de Meriti (Baixada Fluminense)",lat:-22.8031,lon:-43.3695,reg:"Baixada Fluminense",bacia:"Bacia do Rio Sarapuí / Pavuna"},
+{n:"Belford Roxo (Baixada Fluminense)",lat:-22.7642,lon:-43.3997,reg:"Baixada Fluminense",bacia:"Bacia do Rio Botas"},
+{n:"Nilópolis (Baixada Fluminense)",lat:-22.8081,lon:-43.4147,reg:"Baixada Fluminense",bacia:"Bacia do Rio Sarapuí"},
+{n:"São Gonçalo (Região Metropolitana)",lat:-22.8267,lon:-43.0631,reg:"Metropolitana",bacia:"Bacia do Rio Imboaçu"},
+{n:"Niterói (Região Metropolitana)",lat:-22.8833,lon:-43.1036,reg:"Metropolitana",bacia:"Bacia do Rio Icaraí / Baía Guanabara"},
+{n:"Petrópolis (Região Serrana)",lat:-22.5055,lon:-43.1789,reg:"Serrana",bacia:"Bacia do Rio Piabanha"},
+{n:"Angra dos Reis",lat:-23.0067,lon:-44.3181,reg:"Costa Verde",bacia:"Bacia Costa Verde"},
+{n:"Rio de Janeiro (Capital)",lat:-22.9068,lon:-43.1729,reg:"Metropolitana",bacia:"Baía de Guanabara"}
+];
+
+const RISCOS_VISTORIA = [
+  "🟢 R1 - BAIXO / PREVENTIVO (Normal)",
+  "🟡 R2 - MODERADO / ATENÇÃO (Observação)",
+  "🟠 R3 - ALTO / ALERTA (Risco Elevado)",
+  "🔴 R4 - IMINENTE / EVACUAÇÃO (Crítico)",
+  "💧 RH - HIDROLÓGICO (Alagamento de Bacia)",
+  "🏗️ RE - ESTRUTURAL (Geotecnia e Encosta)"
+];
+
+const ORGAOS = [
+  "🛡️ Defesa Civil",
+  "🏛️ GACE / Coletivo A Chave da Esperança",
+  "📢 Projeto Bom Dia Comunidade",
+  "🔔 Cidadão Sensor",
+  "🌊 INEA"
+];
+
+function ModuloCadastroAgentes({ mun }) {
+  const [cadastros, setCadastros] = React.useState(() => {
+    try { 
+      return JSON.parse(localStorage.getItem('raru_cadastros_offline') || '[{"id":1,"nome":"Alexander da Silva Firmo","municipio":"Mesquita (Base Anfitriã Oficial - Rocha Sobrinho)","bairro":"Sebinho / Rocha Sobrinho","papel":"Agente / Coordenador GADE","data":"2026-07-15"}]'); 
+    } catch { 
+      return []; 
+    }
+  });
+  
+  const [novoNomeCad, setNovoNomeCad] = React.useState('');
+  const [novoBairroCad, setNovoBairroCad] = React.useState('');
+  const [novoPapelCad, setNovoPapelCad] = React.useState('Morador / Voluntário');
+
+  React.useEffect(() => {
+    try { localStorage.setItem('raru_cadastros_offline', JSON.stringify(cadastros)); } catch {}
+  }, [cadastros]);
+
+  const cadastrarPessoa = () => {
+    if(!novoNomeCad || !novoBairroCad) { alert('Preencha Nome e Bairro/Comunidade.'); return; }
+    const novoItem = {
+      id: Date.now(),
+      nome: novoNomeCad,
+      municipio: mun.n,
+      bairro: novoBairroCad,
+      papel: novoPapelCad,
+      data: new Date().toLocaleDateString('pt-BR')
+    };
+    setCadastros(prev => [novoItem, ...prev]);
+    setNovoNomeCad('');
+    setNovoBairroCad('');
+  };
+
+  const excluirCadastro = (id) => {
+    setCadastros(prev => prev.filter(item => item.id !== id));
+  };
+
+  return (
+    <div className="space-y-3 p-4 bg-[#0B1120] border border-cyan-500/40 rounded-2xl text-slate-200 font-mono shadow-xl">
+      <div className="flex justify-between items-center">
+        <p className="text-xs font-black text-cyan-300 uppercase">👥 CADASTRO DE AGENTES & NUPDECs</p>
+        <span className="text-[10px] px-2 py-0.5 rounded bg-cyan-950 text-cyan-300 border border-cyan-500/30 font-bold">
+          {cadastros.length} SALVOS (LOCAL)
+        </span>
+      </div>
+      <div className="bg-black border border-white/10 rounded-xl p-3 space-y-2">
+        <input value={novoNomeCad} onChange={e => setNovoNomeCad(e.target.value)} placeholder="Nome Completo *" className="w-full bg-[#080A12] border border-white/15 rounded-xl p-2.5 text-xs text-white focus:outline-none focus:border-cyan-400"/>
+        <div className="grid grid-cols-2 gap-2">
+          <input value={novoBairroCad} onChange={e => setNovoBairroCad(e.target.value)} placeholder="Bairro / Sebinho *" className="bg-[#080A12] border border-white/15 rounded-xl p-2.5 text-xs text-white focus:outline-none focus:border-cyan-400"/>
+          <select value={novoPapelCad} onChange={e => setNovoPapelCad(e.target.value)} className="bg-[#080A12] border border-white/15 rounded-xl p-2.5 text-[11px] text-white">
+            <option>Morador / Voluntário</option>
+            <option>Agente de Articulação (GADE)</option>
+            <option>Defesa Civil / NUPDEC</option>
+            <option>Projeto Cidadão Sensor</option>
+          </select>
+        </div>
+        <button onClick={cadastrarPessoa} className="w-full py-2.5 bg-cyan-500 hover:bg-cyan-400 text-black font-black rounded-xl text-xs shadow">CADASTRAR NO BANCO OFFLINE</button>
+      </div>
+      <div className="space-y-2 max-h-[160px] overflow-y-auto pr-1">
+        {cadastros.map((item) => (
+          <div key={item.id} className="bg-black border border-white/10 rounded-xl p-2.5 flex justify-between items-center text-[11px]">
+            <div>
+              <p className="font-bold text-white">{item.nome}</p>
+              <p className="text-[9px] text-slate-400">{item.bairro} • <span className="text-cyan-300">{item.papel}</span></p>
+            </div>
+            <div className="flex items-center gap-2">
+              <span className="text-[9px] px-2 py-1 rounded bg-emerald-950 text-emerald-300 font-bold">{item.data}</span>
+              <button onClick={() => excluirCadastro(item.id)} className="text-red-400 text-xs font-bold px-1.5 py-0.5 rounded bg-red-950/40 border border-red-500/30">X</button>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function App() {
+  const [autenticado, setAutenticado] = useState(false);
+  const [senha, setSenha] = useState('');
+  const [erroSenha, setErroSenha] = useState(false);
+  const [modoNoite, setModoNoite] = useState(false);
+  const [horaAtualStr, setHoraAtualStr] = useState('');
+  const [statusConexao, setStatusConexao] = useState(navigator.onLine ? 'ONLINE' : 'OFFLINE');
+
+  const [mun, setMun] = useState(MUNICIPIOS[0]);
+  const [urlCloudflare, setUrlCloudflare] = useState('https://solitary-snow-2459.phantrorfirmo08.workers.dev/');
+
+  const [meteo, setMeteo] = useState({
+    temperatura: "27°C", umidade: "78%", chuvaMm: "14.2 mm/h", pressao: "1012 hPa", ventoVel: "22 km/h", condicao: "Instável / Pancadas Isoladas", statusSat: "ONLINE - API OPEN-METEO"
+  });
+  const [carregandoMeteo, setCarregandoMeteo] = useState(false);
+  const [iaLaudo, setIaLaudo] = useState("Cérebro neural ativado via Cloudflare Worker. Pronto para processar telemetria e laudos.");
+  const [processandoWorker, setProcessandoWorker] = useState(false);
+
+  const [fotosVistoria, setFotosVistoria] = useState(() => {
+    try { return JSON.parse(localStorage.getItem('raru_fotos_offline') || '[]'); } catch { return []; }
+  });
+  const [camOn, setCamOn] = useState(false);
+  const [nomeAgente, setNomeAgente] = useState('Alexander da Silva Firmo');
+  const [bairroVistoria, setBairroVistoria] = useState('Sebinho / Rocha Sobrinho');
+  const [cpfVistoria, setCpfVistoria] = useState('');
+  const [riscoVistoria, setRiscoVistoria] = useState(RISCOS_VISTORIA[0]);
+  const [orgaoVistoria, setOrgaoVistoria] = useState(ORGAOS[0]);
+  const [relatoVistoria, setRelatoVistoria] = useState('');
+  const [coordsGPS, setCoordsGPS] = useState({lat: -22.7858, lon: -43.4294});
+  const [toast, setToast] = useState(null);
+
+  const videoRef = useRef(null);
+  const streamRef = useRef(null);
+  const mapRef = useRef(null);
+  const mapInstanceRef = useRef(null);
+
+  useEffect(() => {
+    const checarHorario = () => {
+      const now = new Date();
+      setHoraAtualStr(`${now.getHours().toString().padStart(2,'0')}:${now.getMinutes().toString().padStart(2,'0')}:${now.getSeconds().toString().padStart(2,'0')}`);
+      if (now.getHours() >= 17 || now.getHours() < 6) { setModoNoite(true); } else { setModoNoite(false); }
+    };
+    checarHorario();
+    const timer = setInterval(checarHorario, 1000);
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition((pos) => setCoordsGPS({lat: pos.coords.latitude, lon: pos.coords.longitude}), () => {});
+    }
+    return () => clearInterval(timer);
+  }, []);
+
+  // Inicialização do Mapa Oficial Georreferenciado Leaflet.js
+  useEffect(() => {
+    if (autenticado && !mapInstanceRef.current && mapRef.current) {
+      const map = L.map(mapRef.current, {
+        zoomControl: false
+      }).setView([mun.lat, mun.lon], 11);
+
+      L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+        attribution: '&copy; OpenStreetMap contributors & CARTO',
+        maxZoom: 19
+      }).addTo(map);
+
+      // Adicionar marcador do município selecionado
+      MUNICIPIOS.forEach(m => {
+        const marker = L.circleMarker([m.lat, m.lon], {
+          radius: m.n === mun.n ? 10 : 6,
+          fillColor: m.n === mun.n ? "#00f3ff" : "#3b82f6",
+          color: "#fff",
+          weight: 1,
+          fillOpacity: 0.8
+        }).addTo(map);
+        marker.bindPopup(`<b>${m.n}</b><br>${m.bacia}`);
+        marker.on('click', () => setMun(m));
+      });
+
+      mapInstanceRef.current = map;
+    } else if (mapInstanceRef.current) {
+      mapInstanceRef.current.setView([mun.lat, mun.lon], 12);
+    }
+  }, [autenticado, mun]);
+
+  useEffect(() => {
+    try { localStorage.setItem('raru_fotos_offline', JSON.stringify(fotosVistoria)); } catch {}
+  }, [fotosVistoria]);
+
+  const showToast = (m) => { setToast(m); setTimeout(() => setToast(null), 3000); };
+
+  const consultarMeteorologiaSat = async (mObj) => {
+    setCarregandoMeteo(true);
+    try {
+      if (!navigator.onLine) throw new Error("Offline");
+      const url = `https://api.open-meteo.com/v1/forecast?latitude=${mObj.lat}&longitude=${mObj.lon}&current=temperature_2m,relative_humidity_2m,precipitation,surface_pressure,wind_speed_10m`;
+      const res = await fetch(url);
+      const data = await res.json();
+      if(data && data.current) {
+        const c = data.current;
+        setMeteo({
+          temperatura: `${c.temperature_2m}°C`,
+          umidade: `${c.relative_humidity_2m}%`,
+          chuvaMm: `${c.precipitation} mm/h`,
+          pressao: `${c.surface_pressure} hPa`,
+          ventoVel: `${c.wind_speed_10m} km/h`,
+          condicao: c.precipitation > 15 ? "Chuva Forte / Temporal" : c.precipitation > 5 ? "Chuva Moderada" : "Estável / Monitoramento",
+          statusSat: "SATÉLITE CONECTADO (OPEN-METEO)"
+        });
+      }
+    } catch(e) {
+      setMeteo(prev => ({...prev, statusSat: "MODO OFFLINE (CACHE LOCAL)"}));
+    } finally {
+      setCarregandoMeteo(false);
+    }
+  };
+
+  useEffect(() => { consultarMeteorologiaSat(mun); }, [mun]);
+
+  const startCam = async () => {
+    try {
+      const s = await navigator.mediaDevices.getUserMedia({ video: { facingMode: { ideal: "environment" }, width: { ideal: 1280 } }, audio: true });
+      streamRef.current = s; setCamOn(true);
+      setTimeout(() => { if(videoRef.current) { videoRef.current.srcObject = s; videoRef.current.play().catch(() => {}); } }, 150);
+    } catch(e) { showToast('Permissão de câmera negada.'); }
+  };
+
+  const stopCam = () => { if(streamRef.current) { streamRef.current.getTracks().forEach(t => t.stop()); } setCamOn(false); };
+
+  const capturarFotoCampoOffline = () => {
+    const v = videoRef.current;
+    if(!v || v.videoWidth === 0) return;
+    const c = document.createElement('canvas');
+    c.width = 600; c.height = Math.round(600 * v.videoHeight / v.videoWidth);
+    const ctx = c.getContext('2d');
+    ctx.drawImage(v, 0, 0, c.width, c.height);
+    ctx.fillStyle = 'rgba(0,0,0,0.92)'; ctx.fillRect(0, c.height - 58, c.width, 58);
+    ctx.fillStyle = '#00f3ff'; ctx.font = '700 10px monospace';
+    ctx.fillText(`RARU NEXUS | GPS: ${coordsGPS.lat.toFixed(4)}, ${coordsGPS.lon.toFixed(4)} | ${riscoVistoria}`, 10, c.height - 36);
+    ctx.fillStyle = '#FFFFFF'; ctx.font = '700 9px monospace';
+    ctx.fillText(`${bairroVistoria} | ${mun.n.split('(')[0].trim()} | AGENTE: ${nomeAgente} | CPF: ${cpfVistoria||'N/A'}`, 10, c.height - 16);
+    const dataUrl = c.toDataURL('image/jpeg', 0.72);
+    setFotosVistoria(p => [...p, dataUrl]);
+    showToast("📸 Foto 600px carimbada salva offline!");
+  };
+
+  const enviarParaWorkerEGerarLaudo = async () => {
+    if (!relatoVistoria) { showToast('Digite um relato de campo.'); return; }
+    setProcessandoWorker(true);
+    setIaLaudo("Enviando dados para o Cloudflare Worker e processando com Groq AI (Llama 3.3)...");
+    try {
+      const payload = { municipio: mun.n.split('(')[0].trim(), bairro: bairroVistoria, relato: relatoVistoria, responsavel: nomeAgente, risco: riscoVistoria, orgaos: [orgaoVistoria], modo: "LAUDO_TECNICO" };
+      const res = await fetch(urlCloudflare, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+      const data = await res.json();
+      const textoParecer = data.engenheiraChefeParecer || data.parecerEngenhariaECerebro || data.orientacaoAssistente;
+      setIaLaudo(`[IA CLOUDFLARE WORKER]: ${textoParecer}`);
+    } catch(e) {
+      setIaLaudo("[MODO CONTINGÊNCIA LOCAL]: Worker indisponível. Operando via cache.");
+    } finally {
+      setProcessandoWorker(false);
+    }
+  };
+
+  if (!autenticado) {
+    return (
+      <div className="w-full max-w-[420px] panel-dia p-6 space-y-4 shadow-2xl mt-10">
+        <div className="text-center space-y-1">
+          <p className="label text-cyan-400">ACESSO RESTRITO • MAPA OFICIAL TÁTICO</p>
+          <h1 className="text-base font-black text-white">RARU NEXUS AI V23.1 PRO</h1>
+          <p className="text-[10px] text-slate-400">Mesquita - RJ | Horário: {horaAtualStr}</p>
+        </div>
+        <div className="space-y-3 pt-2">
+          <input type="password" value={senha} onChange={e=>setSenha(e.target.value)} placeholder="Senha (sarah2026)..." className="w-full mt-1 bg-black border border-cyan-500/30 rounded-xl p-3 text-sm text-white focus:outline-none focus:border-cyan-400"/>
+          <button onClick={()=>{if(senha==='sarah2026')setAutenticado(true);else setErroSenha(true);}} className="btn bg-cyan-500 text-black font-black">ACESSAR CENTRAL</button>
+          {erroSenha && <p className="text-[10px] text-red-400 text-center">Senha incorreta.</p>}
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-3 w-full font-mono">
+      {toast && <div className="fixed top-4 left-1/2 -translate-x-1/2 z-50 bg-cyan-400 text-black px-5 py-2 rounded-xl font-black text-xs shadow-2xl">{toast}</div>}
+
+      <div className="panel-dia flex justify-between items-center p-3">
+        <div>
+          <h2 className="text-xs font-black text-white">MAPA TÁTICO OFICIAL - RIO DE JANEIRO</h2>
+          <p className="text-[9px] text-slate-400">Rocha Sobrinho • Status: <span className="text-emerald-400 font-bold">{statusConexao}</span></p>
+        </div>
+        <button onClick={()=>setAutenticado(false)} className="bg-red-900/30 border border-red-500/40 text-red-400 px-3 py-1.5 rounded-xl text-[9px] font-bold">BLOQUEAR</button>
+      </div>
+
+      {/* MAPA TÁTICO GEORREFERENCIADO OFICIAL (LEAFLET) */}
+      <div className="panel-dia space-y-2 p-3 border-2 border-cyan-500/40">
+        <div className="flex justify-between items-center">
+          <p className="label text-cyan-300">🗺️ MAPA OPERACIONAL OFICIAL & ESTAÇÕES</p>
+          <span className="text-[10px] px-2 py-0.5 rounded bg-cyan-950 text-cyan-300 border border-cyan-500/30 font-bold">{mun.reg}</span>
+        </div>
+        <div className="map-box h-[280px] relative w-full" ref={mapRef}></div>
+      </div>
+
+      {/* METEOROLOGIA & MUNICÍPIOS */}
+      <div className="panel-dia space-y-3 p-3">
+        <div className="flex justify-between items-center">
+          <p className="label">SELEÇÃO DE MUNICÍPIOS & TELEMETRIA</p>
+          <select value={mun.n} onChange={e=>{ const m=MUNICIPIOS.find(mm=>mm.n===e.target.value); setMun(m); }} className="bg-black border border-white/15 rounded-xl p-2 text-xs text-white max-w-[200px]">
+            {MUNICIPIOS.map((m,i)=><option key={i} value={m.n}>{m.n}</option>)}
+          </select>
+        </div>
+
+        <div className="bg-black border border-white/10 rounded-xl p-3 space-y-2">
+          <div className="flex justify-between items-center border-b border-white/10 pb-2">
+            <div>
+              <p className="text-[13px] font-black text-white">{mun.n.split('(')[0]}</p>
+              <p className="text-[9px] text-cyan-400">{mun.bacia}</p>
+            </div>
+            <span className="text-[10px] text-emerald-300 font-bold">{meteo.condicao}</span>
+          </div>
+
+          <div className="grid grid-cols-3 gap-2 pt-1 text-center">
+            <div className="bg-[#0B1120] p-2 rounded-lg border border-white/5">
+              <p className="text-[9px] text-slate-400">TEMPERATURA</p>
+              <p className="text-xs font-black text-white mt-0.5">{meteo.temperatura}</p>
+            </div>
+            <div className="bg-[#0B1120] p-2 rounded-lg border border-white/5">
+              <p className="text-[9px] text-slate-400">UMIDADE</p>
+              <p className="text-xs font-black text-white mt-0.5">{meteo.umidade}</p>
+            </div>
+            <div className="bg-[#0B1120] p-2 rounded-lg border border-white/5">
+              <p className="text-[9px] text-slate-400">PRECIPITAÇÃO</p>
+              <p className="text-xs font-black text-amber-300 mt-0.5">{meteo.chuvaMm}</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <ModuloCadastroAgentes mun={mun} />
+    </div>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<App/>);
+</script>
+</body>
+</html>
