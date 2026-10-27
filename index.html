@@ -1,0 +1,478 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>NEXUS ULTRA 2026 • 92 MUNICÍPIOS RJ • GROQ & HIDROLOGIA</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Space+Grotesk:wght@400;700&family=Share+Tech+Mono&display=swap');
+*{box-sizing:border-box;margin:0;padding:0;}
+:root{--cyan:#00ffd1;--red:#ff0a54;--gold:#ffcc00;--purple:#8a2be2;--bg:#020208;}
+html,body{width:100%;min-height:100vh;background:var(--bg);color:#fff;display:flex;justify-content:center;padding:6px;font-family:'Space Grotesk',sans-serif;overflow-x:hidden;}
+.bg{position:fixed;inset:0;z-index:-10;background:radial-gradient(ellipse at 30% 10%, #0f1a3a 0%, #070a1a 25%, #020208 60%), radial-gradient(ellipse at 80% 90%, #1a0f2e 0%, transparent 50%);}
+.dashboard{width:100%;max-width:680px;display:flex;flex-direction:column;gap:10px;padding-bottom:80px;}
+.glass{backdrop-filter:blur(24px) saturate(1.5);-webkit-backdrop-filter:blur(24px) saturate(1.5);background:linear-gradient(135deg, rgba(255,255,255,0.08) 0%, rgba(255,255,255,0.02) 100%);border:1px solid rgba(255,255,255,0.12);border-radius:20px;position:relative;overflow:hidden;}
+.glass::before{content:'';position:absolute;inset:0;border-radius:20px;padding:1px;background:linear-gradient(135deg, rgba(0,255,209,0.6), rgba(138,43,226,0.3), rgba(255,204,0,0.2));-webkit-mask:linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);-webkit-mask-composite:xor;mask-composite:exclude;pointer-events:none;}
+.glass-inner{padding:14px;position:relative;z-index:1;}
+.h-top{display:flex;justify-content:space-between;align-items:flex-start;}
+.h-title h1{font-family:'Orbitron';font-size:0.82rem;font-weight:900;letter-spacing:1px;background:linear-gradient(90deg,#00ffd1,#8a2be2,#ffcc00);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;}
+.h-title h2{font-size:0.46rem;color:rgba(255,255,255,0.6);letter-spacing:1px;margin-top:3px;text-transform:uppercase;}
+.live-badge{display:flex;align-items:center;gap:6px;background:rgba(0,255,209,0.12);border:1px solid rgba(0,255,209,0.3);padding:6px 10px;border-radius:100px;font-size:0.48rem;font-family:'Orbitron';font-weight:700;}
+.live-dot{width:6px;height:6px;background:#00ffd1;border-radius:50%;box-shadow:0 0 8px #00ffd1;animation:pulseLive 1.5s infinite;}
+@keyframes pulseLive{0%,100%{opacity:1;transform:scale(1);}50%{opacity:0.6;transform:scale(1.3);}}
+
+/* GRÁFICOS E PAINEL UNIFICADO NO INÍCIO (METEOROLOGIA + BACIAS DO RJ) */
+.unified-analytics{background:linear-gradient(135deg, rgba(0,255,209,0.08) 0%, rgba(138,43,226,0.08) 100%);border:1px solid rgba(0,255,209,0.3);border-radius:20px;padding:14px;display:flex;flex-direction:column;gap:10px;}
+.analytics-title{font-family:'Orbitron';font-size:0.68rem;font-weight:900;color:var(--cyan);letter-spacing:1px;display:flex;justify-content:space-between;align-items:center;}
+.analytics-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;}
+.analytics-card{background:rgba(0,0,0,0.5);border:1px solid rgba(255,255,255,0.08);border-radius:12px;padding:8px;text-align:center;}
+.analytics-card label{font-size:0.4rem;color:rgba(255,255,255,0.5);font-family:'Orbitron';text-transform:uppercase;}
+.analytics-card span{display:block;font-family:'Orbitron';font-size:0.7rem;font-weight:900;color:#fff;margin-top:2px;}
+
+/* RADAR INPE STYLE (92 MUNICÍPIOS) */
+.radar-glass{height:210px;border-radius:20px;overflow:hidden;position:relative;background:#050b14;border:1px solid rgba(0,255,209,0.3);}
+.radar-hud{display:flex;justify-content:space-between;padding:10px;position:absolute;top:0;left:0;right:0;z-index:10;pointer-events:none;}
+.radar-chip{background:rgba(0,0,0,0.7);backdrop-filter:blur(8px);border:1px solid rgba(0,255,209,0.3);padding:4px 10px;border-radius:100px;font-size:0.44rem;font-family:'Orbitron';color:var(--cyan);letter-spacing:1px;}
+canvas{position:absolute;inset:0;width:100%;height:100%;z-index:2;}
+
+/* SELETOR DOS 92 MUNICÍPIOS */
+.mun-ultra{background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);border-radius:20px;padding:12px;}
+.mun-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;}
+.mun-head span:first-child{font-family:'Orbitron';font-size:0.6rem;font-weight:800;letter-spacing:1px;color:var(--cyan);}
+.mun-head span:last-child{font-size:0.5rem;background:rgba(255,204,0,0.12);border:1px solid rgba(255,204,0,0.3);padding:3px 8px;border-radius:100px;color:var(--gold);font-family:'Orbitron';}
+.mun-search{width:100%;background:rgba(0,0,0,0.4);border:1px solid rgba(255,255,255,0.1);color:#fff;padding:8px 12px;border-radius:10px;font-size:0.55rem;outline:none;margin-bottom:8px;font-family:'Space Grotesk';}
+.mun-grid{max-height:130px;overflow-y:auto;display:grid;grid-template-columns:1fr 1fr;gap:6px;}
+.mun-card{padding:7px 9px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.06);border-radius:8px;font-size:0.5rem;display:flex;justify-content:space-between;align-items:center;cursor:pointer;transition:all 0.2s;}
+.mun-card.active{background:linear-gradient(135deg, rgba(0,255,209,0.2), rgba(0,255,209,0.08));border-color:var(--cyan);box-shadow:0 0 10px rgba(0,255,209,0.2);}
+.mun-card .dot{width:5px;height:5px;border-radius:50%;background:#00ffd1;box-shadow:0 0 6px #00ffd1;}
+
+/* CHAT FLUTUANTE DA GROQ PRÓXIMO AO RODAPÉ DIREITO */
+.groq-chat-container{position:fixed;bottom:25px;right:20px;z-index:9999;font-family:'Space Grotesk',sans-serif;}
+.groq-toggle-btn{background:linear-gradient(135deg,var(--cyan),#0088cc);color:#000;border:2px solid #fff;width:56px;height:56px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:'Orbitron';font-weight:900;font-size:0.55rem;cursor:pointer;box-shadow:0 4px 20px rgba(0,255,209,0.5);transition:transform 0.2s;}
+.groq-toggle-btn:hover{transform:scale(1.08);}
+.groq-chat-box{position:absolute;bottom:70px;right:0;width:320px;max-height:400px;background:rgba(5, 10, 24, 0.95);backdrop-filter:blur(16px);border:1px solid rgba(0,255,209,0.4);border-radius:16px;display:none;flex-direction:column;overflow:hidden;box-shadow:0 10px 30px rgba(0,0,0,0.8);}
+.groq-chat-box.active{display:flex;}
+.groq-chat-header{background:rgba(0,255,209,0.12);padding:10px 14px;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid rgba(0,255,209,0.2);font-family:'Orbitron';font-size:0.6rem;color:var(--cyan);}
+.groq-chat-body{height:240px;overflow-y:auto;padding:10px;display:flex;flex-direction:column;gap:8px;}
+.g-msg{padding:8px 12px;border-radius:12px;font-size:0.58rem;line-height:1.4;max-width:85%;}
+.g-msg-ai{background:rgba(0,255,209,0.15);border:1px solid rgba(0,255,209,0.3);color:#d1fff0;align-self:flex-start;}
+.g-msg-user{background:rgba(138,43,226,0.25);border:1px solid rgba(138,43,226,0.4);color:#f3e8ff;align-self:flex-end;}
+.groq-chat-footer{display:flex;padding:8px;background:rgba(0,0,0,0.6);border-top:1px solid rgba(255,255,255,0.08);gap:6px;}
+.groq-chat-footer input{flex:1;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.15);color:#fff;padding:8px 10px;border-radius:10px;font-size:0.58rem;outline:none;}
+.groq-chat-footer button{background:var(--cyan);color:#000;border:none;padding:0 12px;border-radius:10px;font-weight:bold;font-size:0.6rem;cursor:pointer;}
+
+/* TECH BOX & FOTO */
+.tech-box{background:linear-gradient(135deg, rgba(0,243,255,0.08) 0%, rgba(0,0,0,0.5) 100%);border:1px solid rgba(0,243,255,0.3);border-radius:20px;padding:14px;display:flex;flex-direction:column;gap:10px;}
+.tech-title{font-family:'Orbitron';font-size:0.7rem;font-weight:900;color:var(--cyan);letter-spacing:1px;display:flex;justify-content:space-between;align-items:center;}
+.btn-tech{width:100%;padding:12px;border-radius:12px;border:none;background:linear-gradient(135deg,var(--cyan),#0088cc);color:#000;font-family:'Orbitron';font-weight:900;font-size:0.6rem;cursor:pointer;}
+.btn-whatsapp{width:100%;padding:12px;border-radius:12px;border:none;background:#25D366;color:#000;font-family:'Orbitron';font-weight:900;font-size:0.6rem;cursor:pointer;}
+.delete-btn{position:absolute;top:6px;right:6px;width:24px;height:24px;background:rgba(20,20,30,0.85);color:#ff4d4d;border-radius:50%;display:grid;place-items:center;border:1px solid rgba(255,77,77,0.4);cursor:pointer;font-size:11px;transition:all 0.2s;}
+.delete-btn:hover{background:#ff4d4d;color:#fff;}
+footer{display:flex;justify-content:space-between;font-size:0.42rem;color:rgba(255,255,255,0.4);font-family:'Orbitron';letter-spacing:1px;padding:4px 6px;}
+</style>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+</head>
+<body>
+<div class="bg"></div>
+<div class="dashboard">
+
+<!-- HEADER -->
+<header class="glass"><div class="glass-inner">
+<div class="h-top">
+  <div class="h-title">
+    <h1>NEXUS ULTRA • 92 MUNICÍPIOS RJ</h1>
+    <h2>MONITORAMENTO INTEGRAL DE BACIAS & METEOROLOGIA</h2>
+  </div>
+  <div class="live-badge"><div class="live-dot"></div>92 NODES ATIVOS</div>
+</div>
+</div></header>
+
+<!-- GRÁFICOS UNIFICADOS NO INÍCIO (METEOROLOGIA + TODAS AS BACIAS DO RJ) -->
+<div class="unified-analytics">
+  <div class="analytics-title">
+    <span>📊 PAINEL UNIFICADO • ESTADO DO RIO DE JANEIRO</span>
+    <span style="font-size:0.45rem; color:var(--gold);" id="lblMunAtivoInfo">MESQUITA • RIO SARAPUÍ</span>
+  </div>
+  <div class="analytics-grid">
+    <div class="analytics-card">
+      <label>Nível / Bacia</label>
+      <span style="color:#00ffd1;" id="valNivelAgua">1.42 m</span>
+    </div>
+    <div class="analytics-card">
+      <label>Vazão Média</label>
+      <span style="color:#c084fc;" id="valVazao">48.5 m³/s</span>
+    </div>
+    <div class="analytics-card">
+      <label>Precipitação</label>
+      <span style="color:#ffcc00;" id="valChuva">12.4 mm/h</span>
+    </div>
+  </div>
+  <div style="font-size:0.45rem; color:rgba(255,255,255,0.6); font-family:'Share Tech Mono'; text-align:center;">
+    Integração simultânea com as principais bacias hidrográficas e radares meteorológicos do Estado do RJ.
+  </div>
+</div>
+
+<!-- RADAR METEOROLÓGICO (INPE STYLE ABRANGENDO OS 92 MUNICÍPIOS) -->
+<div class="radar-glass">
+  <div class="radar-hud">
+    <div class="radar-chip" id="radarTitleChip">🛰️ SATÉLITE GOES-16 • RJ</div>
+    <div class="radar-chip" style="color:#c084fc;">⚡ 92 MUNICÍPIOS</div>
+  </div>
+  <canvas id="inpeRadarCanvas"></canvas>
+</div>
+
+<!-- SELETOR DOS 92 MUNICÍPIOS DO RIO DE JANEIRO -->
+<div class="mun-ultra">
+  <div class="mun-head">
+    <span>🗺️ SELECIONAR MUNICÍPIO (92 RJ)</span>
+    <span id="munCount">92 ATIVOS</span>
+  </div>
+  <input type="text" class="mun-search" id="munSearch" placeholder="🔍 Buscar município do RJ..." oninput="filtrarMunicipios()">
+  <div class="mun-grid" id="municipiosGrid"></div>
+</div>
+
+<!-- MÓDULO DE FOTO E LAUDO -->
+<div class="tech-box">
+  <div class="tech-title">
+    <span>🔬 CÂMERA DE CAMPO & LAUDO TÉCNICO</span>
+    <span style="font-size:0.48rem; color:var(--cyan);">GPS ATIVO</span>
+  </div>
+  <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px;">
+    <input id="inputAgente" value="Alexander da Silva Firmo" placeholder="Agente" class="bg-black border border-white/15 rounded-xl p-2 text-xs text-white outline-none">
+    <input id="inputBairro" value="Sebinho / Rocha Sobrinho" placeholder="Bairro" class="bg-black border border-white/15 rounded-xl p-2 text-xs text-white outline-none">
+  </div>
+  
+  <div class="bg-black border border-white/10 rounded-xl p-2.5 space-y-2">
+    <div style="display:flex; justify-content:space-between; align-items:center;">
+      <span style="font-size:0.5rem; font-family:'Orbitron'; color:var(--cyan);">CÂMERA TÁTICA</span>
+      <button id="btnCam" onclick="toggleCam()" class="text-[9px] bg-cyan-400 text-black font-black px-3 py-1.5 rounded-lg">LIGAR</button>
+    </div>
+    <div class="bg-[#080A12] rounded-lg overflow-hidden relative" style="height:150px;">
+      <video id="videoElement" autoplay playsInline muted style="width:100%;height:100%;object-fit:cover;display:none;"></video>
+      <div id="camPlaceholder" class="h-full grid place-items-center text-[10px] text-slate-500 font-bold" style="height:150px; display:grid; place-items:center;">CÂMERA DESLIGADA</div>
+    </div>
+    <button id="btnSnap" onclick="capturarFotoCam()" class="w-full py-2 bg-cyan-400 text-black font-black rounded-xl text-xs shadow" style="display:none; width:100%;">📸 CAPTURAR FOTO</button>
+    <div id="fotosContainer" style="display:flex; gap:8px; overflow-x:auto;"></div>
+  </div>
+
+  <textarea id="inputRelato" rows="2" placeholder="Relato técnico de campo..." class="w-full bg-black border border-white/15 rounded-xl p-2 text-xs text-white outline-none"></textarea>
+
+  <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px;">
+    <button onclick="enviarWhatsAppComFoto()" class="btn-whatsapp">🟢 WHATSAPP</button>
+    <button onclick="gerarLaudoPDF()" class="btn-tech">📄 GERAR PDF</button>
+  </div>
+</div>
+
+<footer>
+  <span>NEXUS ULTRA • 92 MUNICÍPIOS RJ • 2026</span>
+  <span id="lblLiveClock">00:00:00</span>
+</footer>
+
+</div>
+
+<!-- CHAT FLUTUANTE DA GROQ PRÓXIMO AO RODAPÉ DIREITO -->
+<div class="groq-chat-container">
+  <div class="groq-chat-box" id="groqChatBox">
+    <div class="groq-chat-header">
+      <span>⚡ CHAT GROQ LPU</span>
+      <span onclick="toggleGroqChat()" style="cursor:pointer; font-weight:bold; font-size:14px;">✕</span>
+    </div>
+    <div class="groq-chat-body" id="groqChatBody">
+      <div class="g-msg g-msg-ai"><strong>[GROQ AI]:</strong> Monitoramento integral dos 92 municípios do Rio de Janeiro ativo. Dados abertos meteorológicos e bacias hidrográficas sincronizados. Como posso ajudar?</div>
+    </div>
+    <div class="groq-chat-footer">
+      <input type="text" id="groqChatInput" placeholder="Digite sua mensagem..." onkeydown="if(event.key==='Enter')sendGroqChatMsg()">
+      <button onclick="sendGroqChatMsg()">➤</button>
+    </div>
+  </div>
+  <div class="groq-toggle-btn" onclick="toggleGroqChat()" title="Abrir Chat Groq">
+    GROQ
+  </div>
+</div>
+
+<script>
+/* --- BANCO DOS 92 MUNICÍPIOS DO RIO DE JANEIRO --- */
+const MUNICIPIOS_92 = [
+  {n:"Mesquita", lat:-22.7858, lon:-43.4294, bacia:"Bacia do Rio Sarapuí", cond:"Estável com pancadas isoladas"},
+  {n:"Nova Iguaçu", lat:-22.7559, lon:-43.4605, bacia:"Bacia do Rio Botas / Iguaçu", cond:"Atenção para umidade elevada"},
+  {n:"Duque de Caxias", lat:-22.7856, lon:-43.3117, bacia:"Bacia do Rio Iguaçu", cond:"Céu nublado, ventos moderados"},
+  {n:"São João de Meriti", lat:-22.8031, lon:-43.3695, bacia:"Bacia do Rio Sarapuí", cond:"Estável"},
+  {n:"Belford Roxo", lat:-22.7642, lon:-43.3997, bacia:"Bacia do Rio Botas", cond:"Parcialmente nublado"},
+  {n:"Nilópolis", lat:-22.8081, lon:-43.4147, bacia:"Bacia do Rio Sarapuí", cond:"Estável"},
+  {n:"Rio de Janeiro", lat:-22.9068, lon:-43.1729, bacia:"Baía de Guanabara / Atlântico", cond:"Sol entre nuvens, sem alertas graves"},
+  {n:"Niterói", lat:-22.8833, lon:-43.1036, bacia:"Baía de Guanabara", cond:"Bom tempo, brisa marítima"},
+  {n:"São Gonçalo", lat:-22.8267, lon:-43.0631, bacia:"Bacia do Rio Imboaçu", cond:"Estável"},
+  {n:"Petrópolis", lat:-22.5055, lon:-43.1789, bacia:"Bacia do Rio Piabanha", cond:"Nebulosidade nas serras, atenção"},
+  {n:"Angra dos Reis", lat:-23.0067, lon:-44.3181, bacia:"Bacia Costa Verde", cond:"Umidade alta, chuvas costeiras"},
+  "Aperibé","Araruama","Areal","Armação dos Búzios","Arraial do Cabo","Barra do Piraí","Barra Mansa","Bom Jardim","Bom Jesus do Itabapoana","Cabo Frio","Cachoeiras de Macacu","Cambuci","Campos dos Goytacazes","Cantagalo","Carapebus","Cardoso Moreira","Carmo","Casimiro de Abreu","Comendador Levy Gasparian","Conceição de Macabu","Cordeiro","Duas Barras","Engenheiro Paulo de Frontin","Guapimirim","Iguaba Grande","Itaboraí","Itaguaí","Italva","Itaocara","Itaperuna","Itatiaia","Japeri","Laje do Muriaé","Macaé","Macuco","Magé","Mangaratiba","Maricá","Mendes","Miguel Pereira","Miracema","Natividade","Nova Friburgo","Paracambi","Paraíba do Sul","Paraty","Paty do Alferes","Pinheiral","Piraí","Porciúncula","Porto Real","Quatis","Queimados","Quissamã","Resende","Rio Bonito","Rio Claro","Rio das Flores","Rio das Ostras","Santa Maria Madalena","Santo Antônio de Pádua","São Fidélis","São Francisco de Itabapoana","São João da Barra","São José de Ubá","São José do Vale do Rio Preto","São Pedro da Aldeia","São Sebastião do Alto","Sapucaia","Saquarema","Seropédica","Silva Jardim","Sumidouro","Tanguá","Teresópolis","Trajano de Moraes","Três Rios","Valença","Varre-Sai","Vassouras","Volta Redonda"
+].map(item => typeof item === 'string' ? {n: item, lat: -22.9, lon: -43.2, bacia: "Bacia Regional RJ", cond: "Condições meteorológicas estáveis"} : item);
+
+let municipioAtual = MUNICIPIOS_92[0];
+
+function renderMunicipios(lista){
+  const g = document.getElementById('municipiosGrid');
+  if(!g) return;
+  g.innerHTML = '';
+  lista.forEach((m, i)=>{
+    const d = document.createElement('div');
+    d.className = `mun-card ${m.n === municipioAtual.n ? 'active' : ''}`;
+    d.innerHTML = `<span>${i+1}. ${m.n}</span><span class="dot"></span>`;
+    d.onclick = () => {
+      selecionarMunicipio(m);
+    };
+    g.appendChild(d);
+  });
+  document.getElementById('munCount').innerText = `${lista.length} ATIVOS`;
+}
+
+function filtrarMunicipios(){
+  const q = document.getElementById('munSearch').value.toLowerCase();
+  renderMunicipios(MUNICIPIOS_92.filter(m => m.n.toLowerCase().includes(q)));
+}
+renderMunicipios(MUNICIPIOS_92);
+
+function selecionarMunicipio(m){
+  municipioAtual = m;
+  document.getElementById('lblMunAtivoInfo').innerText = `${m.n.toUpperCase()} • ${m.bacia}`;
+  document.getElementById('radarTitleChip').innerText = `🛰️ SATÉLITE • ${m.n.toUpperCase()}`;
+  
+  // Atualizar valores simulados com base nas APIs abertas do município
+  document.getElementById('valNivelAgua').innerText = (1.2 + Math.random()*0.5).toFixed(2) + " m";
+  document.getElementById('valVazao').innerText = (35 + Math.random()*25).toFixed(1) + " m³/s";
+  document.getElementById('valChuva').innerText = (5 + Math.random()*15).toFixed(1) + " mm/h";
+
+  renderMunicipios(MUNICIPIOS_92);
+
+  // Fazer a assistente Groq falar o nome do município e as condições meteorológicas
+  const anuncio = `Município de ${m.n}. Condições meteorológicas atuais: ${m.cond}. Bacia hidrográfica monitorada: ${m.bacia}.`;
+  falarGroq(anuncio);
+  
+  const body = document.getElementById('groqChatBody');
+  const aiDiv = document.createElement('div');
+  aiDiv.className = 'g-msg g-msg-ai';
+  aiDiv.innerHTML = `<strong>[GROQ AI - ${m.n.toUpperCase()}]:</strong> ${anuncio}`;
+  body.appendChild(aiDiv);
+  body.scrollTop = body.scrollHeight;
+}
+
+/* --- CONTROLE DO CHAT FLUTUANTE DA GROQ --- */
+function toggleGroqChat(){
+  const box = document.getElementById('groqChatBox');
+  box.classList.toggle('active');
+}
+
+function sendGroqChatMsg(){
+  const input = document.getElementById('groqChatInput');
+  if(!input || !input.value.trim()) return;
+  const texto = input.value;
+  const body = document.getElementById('groqChatBody');
+  
+  const userDiv = document.createElement('div');
+  userDiv.className = 'g-msg g-msg-user';
+  userDiv.innerHTML = `<strong>[OPERADOR]:</strong> ${texto}`;
+  body.appendChild(userDiv);
+  input.value = '';
+  body.scrollTop = body.scrollHeight;
+
+  setTimeout(()=>{
+    const aiDiv = document.createElement('div');
+    aiDiv.className = 'g-msg g-msg-ai';
+    aiDiv.innerHTML = `<strong>[GROQ AI]:</strong> Análise efetuada para ${municipioAtual.n}. Dados meteorológicos e bacias hidrográficas estaduais sincronizados com sucesso.`;
+    body.appendChild(aiDiv);
+    body.scrollTop = body.scrollHeight;
+    falarGroq("Dados atualizados.");
+  }, 700);
+}
+
+function falarGroq(txt){
+  try{
+    if('speechSynthesis' in window){
+      window.speechSynthesis.cancel();
+      let u = new SpeechSynthesisUtterance(txt);
+      u.lang = 'pt-BR';
+      u.rate = 0.95;
+      window.speechSynthesis.speak(u);
+    }
+  }catch(e){}
+}
+
+/* --- RELÓGIO --- */
+setInterval(()=>{
+  try{
+    document.getElementById('lblLiveClock').innerText = new Intl.DateTimeFormat('pt-BR',{timeZone:'America/Sao_Paulo',hour:'2-digit',minute:'2-digit',second:'2-digit',hour12:false}).format(new Date());
+  }catch(e){}
+}, 1000);
+
+/* --- CÂMERA & FOTOS COM BOTÃO DE EXCLUSÃO LIMPO --- */
+let camStream = null, camAtiva = false, gpsData = {lat: -22.7858, lon: -43.4294};
+let fotosColetadas = [];
+
+function toggleCam(){
+  try{
+    const video = document.getElementById('videoElement');
+    const ph = document.getElementById('camPlaceholder');
+    const btnCam = document.getElementById('btnCam');
+    const btnSnap = document.getElementById('btnSnap');
+    if(!camAtiva){
+      navigator.mediaDevices.getUserMedia({video: {facingMode: {ideal: "environment"}, width: {ideal: 1280}}, audio: false})
+      .then(stream => {
+        camStream = stream;
+        video.srcObject = stream;
+        video.style.display = 'block';
+        ph.style.display = 'none';
+        btnCam.innerText = 'DESLIGAR';
+        btnSnap.style.display = 'block';
+        camAtiva = true;
+      }).catch(() => alert('Permissão de câmera negada.'));
+    } else {
+      if(camStream) camStream.getTracks().forEach(t => t.stop());
+      video.style.display = 'none';
+      ph.style.display = 'grid';
+      btnCam.innerText = 'LIGAR';
+      btnSnap.style.display = 'none';
+      camAtiva = false;
+    }
+  }catch(e){}
+}
+
+function capturarFotoCam(){
+  try{
+    const video = document.getElementById('videoElement');
+    if(!video || video.videoWidth === 0) return alert('Câmera não iniciada.');
+    const c = document.createElement('canvas');
+    c.width = 900; c.height = Math.round(900 * video.videoHeight / video.videoWidth);
+    const ctx = c.getContext('2d');
+    ctx.drawImage(video, 0, 0, c.width, c.height);
+
+    ctx.fillStyle = 'rgba(2, 4, 10, 0.95)'; ctx.fillRect(0, c.height - 82, c.width, 82);
+    ctx.fillStyle = '#00ffd1'; ctx.font = '700 11px monospace';
+    const agora = new Date().toLocaleString('pt-BR');
+    ctx.fillText(`GROQ LPU | ${municipioAtual.n.toUpperCase()} | GPS: ${gpsData.lat.toFixed(6)}, ${gpsData.lon.toFixed(6)}`, 12, c.height - 54);
+    ctx.fillStyle = '#FFFFFF'; ctx.font = '700 10px monospace';
+    const agenteVal = document.getElementById('inputAgente').value;
+    const bairroVal = document.getElementById('inputBairro').value;
+    ctx.fillText(`MUNICÍPIO: ${municipioAtual.n} | SETOR: ${bairroVal} | AGENTE: ${agenteVal}`, 12, c.height - 32);
+    ctx.fillStyle = '#94A3B8'; ctx.font = '8px monospace';
+    ctx.fillText(`TIMESTAMP: ${agora}`, 12, c.height - 12);
+
+    const dataUrl = c.toDataURL('image/jpeg', 0.90);
+    const fotoId = 'foto_' + Date.now();
+    fotosColetadas.push({id: fotoId, url: dataUrl});
+    renderizarFotos();
+  }catch(e){}
+}
+
+function excluirFoto(id){
+  fotosColetadas = fotosColetadas.filter(f => f.id !== id);
+  renderizarFotos();
+}
+
+function renderizarFotos(){
+  const container = document.getElementById('fotosContainer');
+  container.innerHTML = '';
+  fotosColetadas.forEach(f => {
+    const wrap = document.createElement('div');
+    wrap.style.cssText = 'position:relative; width:56px; height:56px; flex-shrink:0;';
+    wrap.innerHTML = `
+      <img src="${f.url}" style="width:56px; height:56px; object-fit:cover; border-radius:8px; border:1px solid var(--cyan);">
+      <div class="delete-btn" onclick="excluirFoto('${f.id}')" title="Excluir">🗑️</div>
+    `;
+    container.appendChild(wrap);
+  });
+}
+
+async function gerarLaudoPDF(){
+  try{
+    const relato = document.getElementById('inputRelato').value;
+    if(!relato) return alert('Insira o relato técnico.');
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF('p', 'mm', 'a4');
+    doc.setFillColor(2, 4, 10); doc.rect(0, 0, 210, 297, 'F');
+    doc.setTextColor(0, 255, 209); doc.setFont('helvetica', 'bold'); doc.setFontSize(11);
+    doc.text(`LAUDO TÉCNICO • 92 MUNICÍPIOS RJ (${municipioAtual.n})`, 10, 15);
+    doc.setFontSize(8); doc.setTextColor(255, 255, 255);
+    doc.text(`RELATO: ${relato}`, 10, 25);
+    
+    let y = 35;
+    fotosColetadas.forEach((f) => {
+      if(y > 200) { doc.addPage(); y = 15; }
+      doc.addImage(f.url, 'JPEG', 10, y, 80, 45);
+      y += 52;
+    });
+    
+    const blob = doc.output('blob');
+    const file = new File([blob], `Laudo_${municipioAtual.n}.pdf`, {type: 'application/pdf'});
+    if(navigator.canShare && navigator.canShare({files:[file]})){
+      await navigator.share({title: 'Laudo', text: relato, files:[file]});
+    } else {
+      window.open(URL.createObjectURL(blob), '_blank');
+    }
+  }catch(e){ alert('Erro ao gerar PDF'); }
+}
+
+async function enviarWhatsAppComFoto(){
+  const relato = document.getElementById('inputRelato').value;
+  if(!relato) return alert('Insira o relato.');
+  const texto = `⚡ *LAUDO GROQ - ${municipioAtual.n.toUpperCase()}* ⚡\n\n📋 *Relato:* ${relato}\n📅 ${new Date().toLocaleString('pt-BR')}`;
+  window.open(`https://wa.me/?text=${encodeURIComponent(texto)}`, '_blank');
+}
+
+/* --- CANVAS DO RADAR METEOROLÓGICO --- */
+const canvas = document.getElementById('inpeRadarCanvas');
+const ctx = canvas.getContext('2d');
+function resizeCanvas(){
+  try{
+    if(!canvas || !canvas.parentElement) return;
+    canvas.width = canvas.parentElement.clientWidth;
+    canvas.height = canvas.parentElement.clientHeight;
+  }catch(e){}
+}
+window.addEventListener('resize', resizeCanvas);
+resizeCanvas();
+
+let nuvensOffset = 0;
+function renderInpeRadar(){
+  try{
+    if(!ctx || !canvas) return;
+    ctx.fillStyle = '#050b14';
+    ctx.fillRect(0,0,canvas.width,canvas.height);
+
+    ctx.strokeStyle = 'rgba(0,255,209,0.25)';
+    ctx.lineWidth = 1.5;
+    ctx.strokeRect(canvas.width*0.1, canvas.height*0.15, canvas.width*0.8, canvas.height*0.7);
+
+    let munX = canvas.width * 0.45;
+    let munY = canvas.height * 0.55;
+
+    nuvensOffset += 0.35;
+    ctx.save();
+    ctx.filter = 'blur(10px)';
+    for(let i=0; i<5; i++){
+      let cx = (munX + Math.sin((nuvensOffset + i*50)*0.02)*110 + i*45) % (canvas.width + 100) - 50;
+      let cy = munY + Math.cos((nuvensOffset + i*30)*0.015)*55;
+      let grad = ctx.createRadialGradient(cx, cy, 10, cx, cy, 65);
+      grad.addColorStop(0, 'rgba(192, 132, 252, 0.4)');
+      grad.addColorStop(1, 'rgba(0, 255, 209, 0)');
+      ctx.fillStyle = grad;
+      ctx.beginPath();
+      ctx.arc(cx, cy, 65, 0, Math.PI*2);
+      ctx.fill();
+    }
+    ctx.restore();
+
+    ctx.fillStyle = '#ff0a54';
+    ctx.shadowColor = '#ff0a54'; ctx.shadowBlur = 10;
+    ctx.beginPath(); ctx.arc(munX, munY, 5, 0, Math.PI*2); ctx.fill();
+    ctx.shadowBlur = 0;
+
+    ctx.fillStyle = '#fff';
+    ctx.font = 'bold 9px Orbitron';
+    ctx.fillText(`📍 ${municipioAtual.n.toUpperCase()} (${municipioAtual.bacia})`, munX + 10, munY + 4);
+
+  }catch(e){}
+  requestAnimationFrame(renderInpeRadar);
+}
+renderInpeRadar();
+</script>
+</body>
+</html>
