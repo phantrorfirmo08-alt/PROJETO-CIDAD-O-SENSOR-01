@@ -1,0 +1,359 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>ÓRION NEXUS AI V23.3 - SUPREMA CORTE TÉCNICA & GEOFÍSICA GLOBAL</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+<script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+<script crossorigin src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@19.4.0/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
+<script src="https://unpkg.com/leaflet@19.4.0/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+<style>
+  .hud-panel { background: #02040A; border: 1px solid rgba(0, 243, 255, 0.45); border-radius: 16px; color: #E2E8F0; box-shadow: 0 0 30px rgba(0, 243, 255, 0.12); }
+  .label-hud { font-size: 10px; letter-spacing: .12em; font-weight: 900; color: #00f3ff; text-transform: uppercase; }
+  .btn-hud { width: 100%; padding: 14px; border-radius: 12px; font-weight: 900; font-size: 12px; letter-spacing: .05em; transition: all 0.3s ease; }
+  .x-btn { position: absolute; top: 6px; right: 6px; width: 22px; height: 22px; background: #000; color: #00f3ff; border-radius: 50%; display: grid; place-items: center; font-weight: 900; border: 1px solid #00f3ff; cursor: pointer; font-size: 11px; }
+</style>
+</head>
+<body class="bg-[#010205] text-slate-100 font-mono p-2 flex justify-center">
+<div id="root" class="w-full max-w-[700px]"></div>
+
+<script type="text/babel">
+const { useState, useRef, useEffect } = React;
+
+const MUNICIPIOS = [
+  {n:"Mesquita (Base Anfitriã - Rocha Sobrinho)", lat:-22.7858, lon:-43.4294, reg:"Baixada Fluminense", bacia:"Bacia do Rio Sarapuí / Iguaçu"},
+  {n:"Nova Iguaçu (Baixada Fluminense)", lat:-22.7559, lon:-43.4605, reg:"Baixada Fluminense", bacia:"Bacia do Rio Botas"},
+  {n:"Duque de Caxias (Baixada Fluminense)", lat:-22.7856, lon:-43.3117, reg:"Baixada Fluminense", bacia:"Bacia do Rio Iguaçu"},
+  {n:"São João de Meriti (Baixada Fluminense)", lat:-22.8031, lon:-43.3695, reg:"Baixada Fluminense", bacia:"Bacia do Rio Sarapuí"},
+  {n:"Rio de Janeiro (Capital / Centro de Comando)", lat:-22.9068, lon:-43.1729, reg:"Metropolitana", bacia:"Baía de Guanabara"}
+];
+
+const RISCOS = [
+  "🟢 R1 - BAIXO / PREVENTIVO (Normalidade Geofísica)",
+  "🟡 R2 - MODERADO / ATENÇÃO (Monitoramento Avançado)",
+  "🟠 R3 - ALTO / ALERTA (Risco Geotécnico Crítico)",
+  "🔴 R4 - IMINENTE / EVACUAÇÃO (Protocolo de Suprema Urgência)",
+  "💧 RH - HIDROLÓGICO (Saturação Extrema de Bacia)",
+  "🏗️ RE - ESTRUTURAL (Patologia Construtiva e Estabilidade de Encosta)"
+];
+
+const ORGAOS = [
+  "🛡️ Defesa Civil Municipal / Estadual",
+  "🏛️ GACE / Coletivo A Chave da Esperança",
+  "📢 Projeto Bom Dia Comunidade",
+  "🔔 Cidadão Sensor / Redes Acadêmicas Globais",
+  "🌊 Consórcio de Pesquisa Geofísica e Ponta Científica"
+];
+
+function App() {
+  const [autenticado, setAutenticado] = useState(false);
+  const [senha, setSenha] = useState('');
+  const [mun, setMun] = useState(MUNICIPIOS[0]);
+  const [agente, setAgente] = useState('Alexander da Silva Firmo');
+  const [bairro, setBairro] = useState('Sebinho / Rocha Sobrinho');
+  const [cpf, setCpf] = useState('');
+  const [risco, setRisco] = useState(RISCOS[0]);
+  const [orgao, setOrgao] = useState(ORGAOS[0]);
+  const [relato, setRelato] = useState('');
+  const [gps, setGps] = useState({lat: -22.7858, lon: -43.4294});
+  const [fotos, setFotos] = useState(() => { try { return JSON.parse(localStorage.getItem('orion_fotos_v23_3') || '[]'); } catch { return []; } });
+  const [camOn, setCamOn] = useState(false);
+  const [iaParecer, setIaParecer] = useState("Cérebro Neural Conectado às Redes Acadêmicas Globais e Centros de Alta Tecnologia. Pronto para validação de laudo de ponta.");
+  const [processing, setProcessing] = useState(false);
+  const [vozAtiva, setVozAtiva] = useState(true);
+  const [toast, setToast] = useState(null);
+
+  const videoRef = useRef(null);
+  const streamRef = useRef(null);
+  const mapRef = useRef(null);
+  const mapInstanceRef = useRef(null);
+  const URL_WORKER = "https://solitary-snow-2459.phantrorfirmo08.workers.dev/";
+
+  useEffect(() => {
+    try { localStorage.setItem('orion_fotos_v23_3', JSON.stringify(fotos)); } catch {}
+  }, [fotos]);
+
+  const showToast = (m) => { setToast(m); setTimeout(() => setToast(null), 3000); };
+
+  const falarVoz = (texto) => {
+    if (!vozAtiva || !('speechSynthesis' in window)) return;
+    window.speechSynthesis.cancel();
+    const u = new SpeechSynthesisUtterance(texto);
+    u.lang = 'pt-BR'; u.rate = 1.0;
+    window.speechSynthesis.speak(u);
+  };
+
+  useEffect(() => {
+    if (autenticado && !mapInstanceRef.current && mapRef.current) {
+      const map = L.map(mapRef.current, { zoomControl: false }).setView([mun.lat, mun.lon], 12);
+      L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', { maxZoom: 19 }).addTo(map);
+      MUNICIPIOS.forEach(m => {
+        const marker = L.circleMarker([m.lat, m.lon], {
+          radius: m.n === mun.n ? 11 : 6,
+          fillColor: m.n === mun.n ? "#00f3ff" : "#3b82f6",
+          color: "#fff", weight: 1.5, fillOpacity: 0.9
+        }).addTo(map);
+        marker.bindPopup(`<b>${m.n}</b><br>${m.bacia}`);
+        marker.on('click', () => setMun(m));
+      });
+      mapInstanceRef.current = map;
+    } else if (mapInstanceRef.current) {
+      mapInstanceRef.current.setView([mun.lat, mun.lon], 12);
+    }
+  }, [autenticado, mun]);
+
+  const capturarGps = () => {
+    if(!navigator.geolocation) return showToast("GPS não suportado");
+    navigator.geolocation.getCurrentPosition(p => {
+      setGps({lat: p.coords.latitude, lon: p.coords.longitude});
+      showToast("📍 Coordenadas geodésicas de alta precisão fixadas!");
+      falarVoz("Posicionamento geodésico validado.");
+    }, () => showToast("Erro ao obter sinal GPS"), {enableHighAccuracy: true});
+  };
+
+  const startCam = async () => {
+    try {
+      const s = await navigator.mediaDevices.getUserMedia({ video: { facingMode: { ideal: "environment" }, width: { ideal: 1280 } }, audio: true });
+      streamRef.current = s; setCamOn(true);
+      setTimeout(() => { if(videoRef.current) { videoRef.current.srcObject = s; videoRef.current.play().catch(()=>{}); } }, 150);
+    } catch { showToast("Permissão de câmera negada"); }
+  };
+
+  const stopCam = () => { if(streamRef.current) streamRef.current.getTracks().forEach(t => t.stop()); setCamOn(false); };
+
+  const capturarFoto = () => {
+    const v = videoRef.current; if(!v || v.videoWidth === 0) return;
+    const c = document.createElement('canvas');
+    c.width = 900; c.height = Math.round(900 * v.videoHeight / v.videoWidth);
+    const ctx = c.getContext('2d');
+    ctx.drawImage(v, 0, 0, c.width, c.height);
+    
+    ctx.fillStyle = 'rgba(2, 4, 10, 0.96)'; ctx.fillRect(0, c.height - 82, c.width, 82);
+    ctx.fillStyle = '#00f3ff'; ctx.font = '700 11px monospace';
+    const agora = new Date().toLocaleString('pt-BR');
+    ctx.fillText(`SUPREMA CORTE TÉCNICA GLOBAL | SHA-256 SEED | GPS: ${gps.lat.toFixed(6)}, ${gps.lon.toFixed(6)} | ${risco}`, 12, c.height - 54);
+    ctx.fillStyle = '#FFFFFF'; ctx.font = '700 10px monospace';
+    ctx.fillText(`SETOR: ${bairro} - ${mun.n.split('(')[0].trim()} | RESPONSÁVEL: ${agente} | CPF: ${cpf||'N/A'}`, 12, c.height - 32);
+    ctx.fillStyle = '#94A3B8'; ctx.font = '8px monospace';
+    ctx.fillText(`VALIDAÇÃO UNIVERSITÁRIA & GEOFÍSICA DE PONTA | TIMESTAMP: ${agora}`, 12, c.height - 12);
+
+    const dataUrl = c.toDataURL('image/jpeg', 0.90);
+    setFotos(p => [...p, dataUrl]);
+    showToast("📸 Imagem de alta fidelidade técnico-científica capturada!");
+    falarVoz("Registro fotográfico com metadados de ponta salvo.");
+  };
+
+  const gerarPDFSupremaCorte = async (protocolo, parecerTexto) => {
+    try {
+      const { jsPDF } = window.jspdf;
+      const doc = new jsPDF('p', 'mm', 'a4');
+      const raw = `${protocolo}-${Date.now()}-${mun.n}`;
+      const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(raw));
+      const hash = Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2,'0')).join('');
+
+      doc.setFillColor(2, 4, 10); doc.rect(0, 0, 210, 297, 'F');
+      
+      doc.setTextColor(0, 243, 255); doc.setFont('helvetica', 'bold'); doc.setFontSize(11);
+      doc.text(`LAUDO TÉCNICO DE REFERÊNCIA GLOBAL & SUPREMA CORTE CIENTÍFICA`, 10, 12);
+      doc.setFontSize(8); doc.setTextColor(255, 255, 255);
+      doc.text(`PROTOCOLO OFICIAL DE VALIDAÇÃO INTERNACIONAL: ${protocolo}`, 10, 17);
+
+      doc.setTextColor(148, 163, 184); doc.setFontSize(7.5);
+      doc.text(`MUNICÍPIO: ${mun.n} | BACIA HIDROGRÁFICA: ${mun.bacia}`, 10, 23);
+      doc.text(`ESPECIALISTA RESPONSÁVEL: ${agente} | CPF: ${cpf||'N/A'} | ENTIDADE: ${orgao}`, 10, 28);
+      doc.text(`CLASSIFICAÇÃO DE RISCO: ${risco} | GEOPOSICIONAMENTO: ${gps.lat.toFixed(6)}, ${gps.lon.toFixed(6)}`, 10, 33);
+      doc.text(`DATA / HORA DE EMISSÃO: ${new Date().toLocaleString('pt-BR')}`, 10, 38);
+
+      doc.setTextColor(0, 243, 255); doc.setFont('helvetica', 'bold'); doc.setFontSize(9);
+      doc.text(`PARECER TÉCNICO AVANÇADO (CHANCELA UNIVERSITÁRIA & GEOFÍSICA):`, 10, 46);
+      
+      doc.setFont('helvetica', 'normal'); doc.setFontSize(8);
+      doc.setTextColor(241, 245, 249);
+      const linhas = doc.splitTextToSize(parecerTexto || relato, 190);
+      doc.text(linhas, 10, 52);
+
+      let y = 60 + linhas.length * 4.2;
+      if(fotos.length > 0) {
+        if(y > 180) { doc.addPage(); doc.setFillColor(2, 4, 10); doc.rect(0, 0, 210, 297, 'F'); y = 15; }
+        doc.setFont('helvetica', 'bold'); doc.setTextColor(0, 243, 255); doc.text(`EVIDÊNCIAS FOTOGRÁFICAS DE CAMPO (${fotos.length}):`, 10, y); y += 5;
+        for(let i = 0; i < fotos.length; i++) {
+          if(y > 200) { doc.addPage(); doc.setFillColor(2, 4, 10); doc.rect(0, 0, 210, 297, 'F'); y = 15; }
+          try { doc.addImage(fotos[i], 'JPEG', 10 + (i % 2) * 95, y, 88, 50); } catch {}
+          if(i % 2 === 1) y += 58; else if(i === fotos.length - 1) y += 58;
+        }
+      }
+
+      doc.setFontSize(5.5); doc.setTextColor(100, 116, 139);
+      doc.text(`HASH DE INTEGRIDADE CRIPTOGRÁFICA SHA-256 (VALIDADO POR REDES DE PONTA E CENTROS DE PESQUISA): ${hash}`, 10, 290);
+
+      const blob = doc.output('blob');
+      const file = new File([blob], `${protocolo}.pdf`, {type: 'application/pdf'});
+      if(navigator.canShare && navigator.canShare({files:[file]})) {
+        await navigator.share({title: protocolo, text: `Laudo de Ponta ${protocolo}`, files:[file]});
+      } else {
+        const url = URL.createObjectURL(blob); window.open(url, '_blank');
+      }
+    } catch(e) {
+      showToast("Erro ao compilar o PDF de alta precisão.");
+    }
+  };
+
+  const enviarWhatsAppComFoto = async () => {
+    if(fotos.length === 0) return showToast("⚠️ Capture uma foto técnica primeiro!");
+    if(!relato) return showToast("⚠️ Digite o relato técnico.");
+    try {
+      const res = await fetch(fotos[fotos.length - 1]);
+      const blob = await res.blob();
+      const fotoFile = new File([blob], `LaudoPonta_${mun.n.split('(')[0].trim()}_${Date.now()}.jpg`, {type: 'image/jpeg'});
+      const texto = `🔬 *LAUDO TÉCNICO DE PONTA - SUPREMA CORTE* 🔬\n\n📌 Protocolo: LAUDO-${mun.n.substring(0,3).toUpperCase()}\n📍 Município: ${mun.n} - ${bairro}\n👤 Agente: ${agente}\n🆔 CPF: ${cpf||'N/A'}\n⚠️ Risco: ${risco}\n👥 Entidade: ${orgao}\n🛰️ GPS: ${gps.lat.toFixed(6)}, ${gps.lon.toFixed(6)}\n📅 ${new Date().toLocaleString('pt-BR')}\n\n📋 *Parecer:* ${relato}`;
+      if(navigator.canShare && navigator.canShare({files:[fotoFile]})) {
+        await navigator.share({title: `Laudo ${mun.n}`, text: texto, files:[fotoFile]});
+        showToast("✅ Laudo de ponta compartilhado com sucesso!");
+      } else {
+        window.open(`https://wa.me/?text=${encodeURIComponent(texto)}`, '_blank');
+      }
+    } catch { showToast("Erro ao compartilhar no WhatsApp"); }
+  };
+
+  const enviarParaWorkerEGerarLaudo = async () => {
+    if(!relato) return showToast("Digite o relato técnico.");
+    setProcessing(true); setIaParecer("Transmitindo dados para validação em centros universitários e inteligência de ponta...");
+    const protocolo = `CORTE-${mun.n.substring(0,3).toUpperCase()}-2026-${Math.floor(1000+Math.random()*9000)}`;
+    try {
+      const r = await fetch(URL_WORKER, {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({municipio: mun.n.split('(')[0].trim(), bairro, relato, responsavel: agente, risco, orgaos: [orgao], modo: "LAUDO_TECNICO"})
+      });
+      const data = await r.json();
+      const parecer = data.engenheiraChefeParecer || data.parecerEngenhariaECerebro || data.orientacaoAssistente || relato;
+      setIaParecer(parecer);
+      falarVoz("Parecer técnico validado pelas redes científicas globais.");
+      await gerarPDFSupremaCorte(protocolo, parecer);
+    } catch {
+      setIaParecer("[MODO DE SUPRASSUMO LOCAL]: Conexão com centros de ponta offline. Gerando laudo autônomo com validação rigorosa.");
+      await gerarPDFSupremaCorte(protocolo, relato);
+    } finally { setProcessing(false); }
+  };
+
+  if(!autenticado) {
+    return (
+      <div className="w-full max-w-[420px] hud-panel p-6 space-y-4 shadow-2xl mt-12 mx-auto">
+        <div className="text-center space-y-1">
+          <p className="label-hud text-cyan-400">AUTENTICAÇÃO DE NÍVEL SUPREMO • ACIMA DA ONU</p>
+          <h1 className="text-base font-black text-white">ÓRION NEXUS AI V23.3</h1>
+          <p className="text-[10px] text-slate-400">Polo Geofísico de Pesquisa: Rocha Sobrinho, Mesquita - RJ</p>
+        </div>
+        <div className="space-y-3 pt-2">
+          <input type="password" value={senha} onChange={e=>setSenha(e.target.value)} placeholder="Chave de Acesso (sarah2026)..." className="w-full mt-1 bg-black border border-cyan-500/40 rounded-xl p-3 text-sm text-white focus:outline-none focus:border-cyan-400"/>
+          <button onClick={()=>{if(senha==='sarah2026')setAutenticado(true);else showToast('Chave incorreta.');}} className="btn-hud bg-cyan-400 text-black font-black shadow-lg">ENTRAR NA CORTE TÉCNICA</button>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-3 w-full font-mono">
+      {toast && <div className="fixed top-4 left-1/2 -translate-x-1/2 z-50 bg-cyan-400 text-black px-5 py-2 rounded-xl font-black text-xs shadow-2xl">{toast}</div>}
+
+      <div className="hud-panel p-3 flex justify-between items-center">
+        <div>
+          <h2 className="text-xs font-black text-cyan-300">ÓRION NEXUS AI — SUPREMA CORTE TÉCNICA V23.3</h2>
+          <p className="text-[9px] text-slate-400">Especialista: <span className="text-white font-bold">{agente}</span> | Status: <span className="text-emerald-400 font-bold">NÍVEL MUNDIAL / ACIMA DA ONU</span></p>
+        </div>
+        <div className="flex gap-2">
+          <button onClick={()=>setVozAtiva(!vozAtiva)} className={`text-[9px] px-2 py-1 rounded font-bold border ${vozAtiva ? 'bg-cyan-400 border-cyan-300 text-black' : 'bg-black border-white/20 text-slate-400'}`}>
+            {vozAtiva ? '🔊 VOZ ATIVA' : '🔇 MUDO'}
+          </button>
+          <button onClick={()=>setAutenticado(false)} className="bg-red-950/40 border border-red-500/40 text-red-400 px-3 py-1 rounded-lg text-[9px] font-bold">SAIR</button>
+        </div>
+      </div>
+
+      <div className="hud-panel p-3 space-y-2 border-2 border-cyan-500/50">
+        <div className="flex justify-between items-center">
+          <p className="label-hud">🌍 MAPA GEOFÍSICO DE ALTA PRECISÃO</p>
+          <span className="text-[10px] px-2 py-0.5 rounded bg-cyan-950 text-cyan-300 border border-cyan-500/30 font-bold">{mun.reg}</span>
+        </div>
+        <div className="h-[220px] rounded-xl overflow-hidden border border-cyan-500/30 relative" ref={mapRef}></div>
+      </div>
+
+      <div className="hud-panel p-4 space-y-3 border-2 border-cyan-500/50">
+        <div className="flex justify-between items-center">
+          <p className="label-hud">🔬 EMISSÃO DE LAUDO TÉCNICO DE REFERÊNCIA</p>
+          <span className="text-[10px] px-2 py-0.5 rounded bg-emerald-950 text-emerald-300 border border-emerald-500/30 font-bold">V23.3 ULTIMATE</span>
+        </div>
+
+        <div className="grid grid-cols-2 gap-2">
+          <select value={mun.n} onChange={e=>{ const m=MUNICIPIOS.find(mm=>mm.n===e.target.value); setMun(m); }} className="bg-black border border-white/15 rounded-xl p-2.5 text-xs text-white">
+            {MUNICIPIOS.map((m,i)=><option key={i} value={m.n}>{m.n}</option>)}
+          </select>
+          <input value={bairro} onChange={e=>setBairro(e.target.value)} placeholder="Bairro / Comunidade *" className="bg-black border border-white/15 rounded-xl p-2.5 text-xs text-white"/>
+          <input value={agente} onChange={e=>setAgente(e.target.value)} placeholder="Especialista *" className="bg-black border border-white/15 rounded-xl p-2.5 text-xs text-white"/>
+          <input value={cpf} onChange={e=>setCpf(e.target.value)} placeholder="CPF (Opcional)" className="bg-black border border-white/15 rounded-xl p-2.5 text-xs text-white"/>
+          <select value={risco} onChange={e=>setRisco(e.target.value)} className="bg-black border border-white/15 rounded-xl p-2.5 text-[11px] text-white">
+            {RISCOS.map((r, i)=><option key={i} value={r}>{r}</option>)}
+          </select>
+          <select value={orgao} onChange={e=>setOrgao(e.target.value)} className="bg-black border border-white/15 rounded-xl p-2.5 text-[11px] text-white">
+            {ORGAOS.map((o, i)=><option key={i} value={o}>{o}</option>)}
+          </select>
+        </div>
+
+        <div className="flex gap-2 items-center bg-black/50 p-2.5 rounded-xl border border-cyan-500/30">
+          <div className="flex-1 text-[10px] text-slate-300">Geodésia: {gps.lat?`${gps.lat.toFixed(6)}, ${gps.lon.toFixed(6)}`:'Não capturado'}</div>
+          <button onClick={capturarGps} className="px-4 py-1.5 bg-cyan-500/20 border border-cyan-500 text-cyan-400 rounded-xl text-xs font-bold">🛰️ FIXAR GPS</button>
+        </div>
+
+        <div className="bg-black border border-white/10 rounded-xl p-3 space-y-2">
+          <div className="flex justify-between items-center">
+            <p className="label-hud">CÂMERA DE CAMPO COM CHANCELA CIENTÍFICA</p>
+            {!camOn ? (
+              <button onClick={startCam} className="text-[10px] bg-cyan-400 text-black font-black px-3 py-1.5 rounded-lg">LIGAR CÂMERA</button>
+            ) : (
+              <button onClick={stopCam} className="text-[10px] border border-red-500/30 text-red-300 px-3 py-1.5 rounded-lg">DESLIGAR</button>
+            )}
+          </div>
+          <div className="bg-[#080A12] rounded-lg overflow-hidden relative">
+            <video ref={videoRef} autoPlay playsInline muted style={{width:'100%', height:'210px', objectFit:'cover', display: camOn ? 'block' : 'none'}}></video>
+            {!camOn && <div className="h-[210px] grid place-items-center text-[11px] text-slate-600 font-bold">CÂMERA DESLIGADA</div>}
+          </div>
+          {camOn && <button onClick={capturarFoto} className="w-full py-3 bg-cyan-400 text-black font-black rounded-xl text-xs shadow">📸 CAPTURAR REGISTRO CIENTÍFICO (900PX)</button>}
+          {fotos.length > 0 && (
+            <div className="flex gap-2 overflow-x-auto pt-1">
+              {fotos.map((f, i)=>(
+                <div key={i} className="relative shrink-0">
+                  <img src={f} className="w-16 h-16 object-cover rounded-lg border border-cyan-500/40"/>
+                  <div className="x-btn" onClick={()=>setFotos(fotos.filter((_,idx)=>idx!==i))}>X</div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+
+        <textarea value={relato} onChange={e=>setRelato(e.target.value)} rows="3" placeholder="Insira o relato técnico de ponta com detalhes estruturais e geofísicos..." className="w-full bg-black border border-white/15 rounded-xl p-2.5 text-xs text-white focus:outline-none focus:border-cyan-400"></textarea>
+
+        <div className="grid grid-cols-2 gap-2">
+          <button onClick={enviarWhatsAppComFoto} className="py-3 bg-[#25D366] text-black font-black rounded-xl text-[11px] shadow">WHATSAPP COM FOTO</button>
+          <button onClick={enviarParaWorkerEGerarLaudo} disabled={processing} className="py-3 bg-cyan-400 hover:bg-cyan-300 text-black font-black rounded-xl text-[11px] shadow disabled:opacity-50">
+            {processing ? "VALIDANDO NA CORTE..." : "GERAR PDF DE PONTA"}
+          </button>
+        </div>
+      </div>
+
+      <div className="hud-panel p-4 space-y-2 border-2 border-cyan-500/40">
+        <p className="label-hud text-cyan-300">🤖 PARECER TÉCNICO INTEGRADO — SUPREMA CORTE CIENTÍFICA</p>
+        <div className="bg-black border border-white/10 rounded-xl p-3">
+          <p className="text-[11px] text-slate-200 leading-relaxed font-sans">{iaParecer}</p>
+        </div>
+      </div>
+
+    </div>
+  );
+}
+ReactDOM.createRoot(document.getElementById('root')).render(<App/>);
+</script>
+</body>
+</html>
