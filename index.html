@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>ORION NEXUS V28 • COLORIDO PARADO - BASE OFICIAL</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+<script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+<script crossorigin src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700;800&family=Orbitron:wght@700;900&display=swap');
+body{background:#010205;color:#E2E8F0;font-family:'JetBrains Mono',monospace;overflow-x:hidden}
+.hud-panel{background:linear-gradient(180deg,rgba(255,255,255,0.06),rgba(255,255,255,0.02));backdrop-filter:blur(14px);border:1px solid rgba(0,243,255,0.35);border-radius:18px;box-shadow:0 0 0 1px rgba(255,255,255,0.04) inset,0 10px 40px rgba(0,0,0,0.5)}
+.label-hud{font-family:'Orbitron';font-size:10px;letter-spacing:.18em;font-weight:900;color:#00f3ff;text-transform:uppercase}
+.title-nexus{font-family:'Orbitron';font-weight:900;letter-spacing:.08em;background:linear-gradient(90deg,#00f3ff,#a5f3fc,#10b981);-webkit-background-clip:text;color:transparent}
+.x-btn{position:absolute;top:6px;right:6px;width:22px;height:22px;background:#000;color:#00f3ff;border-radius:50%;display:grid;place-items:center;font-weight:900;border:1px solid #00f3ff;cursor:pointer;font-size:11px;z-index:10}
+.btn-primary{background:linear-gradient(90deg,#00f3ff,#22d3ee);color:#001014;font-weight:900;box-shadow:0 0 20px rgba(0,243,255,0.4)}
+.input-futuristic{background:rgba(0,0,0,0.7);border:1px solid rgba(255,255,255,0.12);border-radius:14px;padding:12px;color:#fff;font-size:12px;outline:none}
+/* MAPA COLORIDO PARADO - SEM ANIMAÇÃO - SEM API */
+.mapa-parado{position:relative;width:100%;height:610px;background:radial-gradient(ellipse at center,#102040 0%,#02060e 75%);border-radius:18px;border:1px solid rgba(0,243,255,0.25);overflow:hidden}
+.mun-parado{position:absolute;padding:9px 7px;border-radius:9px;font-size:0.62rem;font-weight:900;text-align:center;color:#fff;text-shadow:0 1px 3px #000,0 0 6px #000;box-shadow:0 0 12px rgba(0,0,0,0.8);border:1.6px solid #fff;line-height:1.05;cursor:pointer}
+.groq-chat-container{position:fixed;bottom:25px;right:20px;z-index:9999}
+.groq-toggle-btn{background:linear-gradient(135deg,#00f3ff,#0088cc);color:#000;border:2px solid #fff;width:56px;height:56px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:'Orbitron';font-weight:900;font-size:0.55rem;cursor:pointer}
+.groq-chat-box{position:absolute;bottom:70px;right:0;width:320px;max-height:400px;background:rgba(5,10,24,0.95);border:1px solid rgba(0,243,255,0.4);border-radius:16px;display:none;flex-direction:column;overflow:hidden}
+.groq-chat-box.active{display:flex}
+.groq-chat-header{background:rgba(0,243,255,0.12);padding:10px 14px;display:flex;justify-content:space-between;border-bottom:1px solid rgba(0,243,255,0.2);font-family:'Orbitron';font-size:0.6rem;color:#00f3ff}
+.groq-chat-body{height:240px;overflow-y:auto;padding:10px;display:flex;flex-direction:column;gap:8px}
+.g-msg{padding:8px 12px;border-radius:12px;font-size:0.58rem;max-width:85%}
+.g-msg-ai{background:rgba(0,243,255,0.15);border:1px solid rgba(0,243,255,0.3);color:#d1fff0;align-self:flex-start}
+.groq-chat-footer{display:flex;padding:8px;background:rgba(0,0,0,0.6);border-top:1px solid rgba(255,255,255,0.08);gap:6px}
+.groq-chat-footer input{flex:1;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.15);color:#fff;padding:8px 10px;border-radius:10px;font-size:0.58rem;outline:none}
+.groq-chat-footer button{background:#00f3ff;color:#000;border:none;padding:0 12px;border-radius:10px;font-weight:bold;font-size:0.6rem}
+</style>
+</head>
+<body class="p-2 flex justify-center min-h-screen">
+<div id="root" class="w-full max-w-[760px] pb-24"></div>
+<div class="groq-chat-container"><div class="groq-chat-box" id="groqChatBox"><div class="groq-chat-header"><span>⚡ CHAT GROQ LPU</span><span onclick="toggleGroqChat()" style="cursor:pointer">✕</span></div><div class="groq-chat-body" id="groqChatBody"><div class="g-msg g-msg-ai"><strong>[GROQ AI]:</strong> V28 Parado - Base oficial pronta para novas funcionalidades.</div></div><div class="groq-chat-footer"><input type="text" id="groqChatInput" placeholder="Digite..."><button onclick="sendGroqChatMsg()">➤</button></div></div><div class="groq-toggle-btn" onclick="toggleGroqChat()">GROQ</div></div>
+<script>function toggleGroqChat(){document.getElementById('groqChatBox').classList.toggle('active')}function sendGroqChatMsg(){const i=document.getElementById('groqChatInput');if(!i.value.trim())return;const b=document.getElementById('groqChatBody');const d=document.createElement('div');d.className='g-msg g-msg-ai';d.style.alignSelf='flex-end';d.style.background='rgba(138,43,226,0.25)';d.innerHTML=`<strong>[OPERADOR]:</strong> ${i.value}`;b.appendChild(d);i.value='';b.scrollTop=b.scrollHeight}</script>
+<script type="text/babel">
+const { useState, useRef } = React;
+const RMRJ_22 = [
+  {n:"Rio de Janeiro", cor:"#ff1a1a", bacia:"Baía de Guanabara"},
+  {n:"Mesquita", cor:"#7fffd4", bacia:"Rio Sarapuí"},
+  {n:"Nilópolis", cor:"#00e5ff", bacia:"Rio Sarapuí"},
+  {n:"Nova Iguaçu", cor:"#f1ff2a", bacia:"Rio Botas"},
+  {n:"São João de Meriti", cor:"#ff8c69", bacia:"Rio Sarapuí"},
+  {n:"Belford Roxo", cor:"#b19cd9", bacia:"Rio Botas"},
+  {n:"Duque de Caxias", cor:"#2ecc71", bacia:"Rio Iguaçu"},
+  {n:"Queimados", cor:"#5d9cec", bacia:"Rio Queimados"},
+  {n:"Japeri", cor:"#c27ba0", bacia:"Rio Guandu"},
+  {n:"Seropédica", cor:"#8a9a3e", bacia:"Rio Guandu"},
+  {n:"Itaguaí", cor:"#2c3e9e", bacia:"Baía de Sepetiba"},
+  {n:"Paracambi", cor:"#6a3d9a", bacia:"Rio dos Macacos"},
+  {n:"Niterói", cor:"#1e3cbe", bacia:"Oceânica"},
+  {n:"São Gonçalo", cor:"#2e86de", bacia:"Baía de Guanabara"},
+  {n:"Petrópolis", cor:"#4caf50", bacia:"Piabanha"},
+  {n:"Magé", cor:"#f8a4c8", bacia:"Rio Suruí"},
+  {n:"Itaboraí", cor:"#7a9a3a", bacia:"Rio Aldeia"},
+  {n:"Maricá", cor:"#39ff14", bacia:"Oceânica"},
+  {n:"Guapimirim", cor:"#ff1493", bacia:"Rio Guapi"},
+  {n:"Tanguá", cor:"#ffd700", bacia:"Rio Tanguá"},
+  {n:"Cachoeiras de Macacu", cor:"#9b59ff", bacia:"Rio Macacu"},
+  {n:"Rio Bonito", cor:"#ff8c00", bacia:"Rio Bacaxá"},
+];
+const POS = [
+  {l:'48%',t:'54%'},{l:'39%',t:'40%'},{l:'41%',t:'50%'},{l:'31%',t:'37%'},{l:'45%',t:'44%'},{l:'37%',t:'47%'},{l:'51%',t:'40%'},{l:'25%',t:'32%'},{l:'19%',t:'28%'},{l:'15%',t:'40%'},{l:'9%',t:'50%'},{l:'19%',t:'14%'},{l:'63%',t:'57%'},{l:'61%',t:'48%'},{l:'59%',t:'10%'},{l:'59%',t:'32%'},{l:'69%',t:'40%'},{l:'71%',t:'60%'},{l:'67%',t:'20%'},{l:'75%',t:'32%'},{l:'73%',t:'12%'},{l:'79%',t:'44%'}
+];
+const CORREDOR = [
+  {nome:'Serra do Mendanha (Origem)', tipo:'origem', desc:'Cabeceira hidrográfica oeste'},
+  {nome:'Maria Cristina', tipo:'ponto', desc:'Transição urbana'},
+  {nome:'Comunidade do Sebinho', tipo:'alerta', desc:'Ponto crítico - Mesquita'},
+  {nome:'Ponte Subim', tipo:'ponto', desc:'Seção de vazão'},
+  {nome:'Rua Amazonas', tipo:'alerta', desc:'Acúmulo pluvial'},
+  {nome:'Confluência Sarapuí + Dona Eugênia', tipo:'hidro', desc:'Estrangulamento hídrico'}
+];
+const RISCOS=["R1 - BAIXO / PREVENTIVO","R2 - MODERADO / ATENCAO","R3 - ALTO / ALERTA","R4 - IMINENTE / EVACUACAO"];
+
+function App(){
+const [auth,setAuth]=useState(false);const [senha,setSenha]=useState('');const [munSel,setMunSel]=useState(RMRJ_22[1]);
+const [agente,setAgente]=useState('Alexander da Silva Firmo');const [bairro,setBairro]=useState('Sebinho / Rocha Sobrinho');
+const [risco,setRisco]=useState(RISCOS[0]);const [relato,setRelato]=useState('');const [fotos,setFotos]=useState([]);
+const [camOn,setCamOn]=useState(false);const [iaParecer,setIaParecer]=useState("BASE PARADA V28 - MAPA COLORIDO OFICIAL - PRONTO PARA NOVAS FUNCIONALIDADES");
+const [processing,setProcessing]=useState(false);const [vozAtiva,setVozAtiva]=useState(true);const [toast,setToast]=useState(null);
+const videoRef=useRef(null);const streamRef=useRef(null);
+const showToast=(m)=>{setToast(m);setTimeout(()=>setToast(null),3500)};
+const falar=(t)=>{if(!vozAtiva||!('speechSynthesis' in window))return;try{window.speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(t);u.lang='pt-BR';window.speechSynthesis.speak(u);}catch{}};
+const startCam=async()=>{try{const s=await navigator.mediaDevices.getUserMedia({video:{facingMode:{ideal:"environment"},width:{ideal:1280}},audio:false});streamRef.current=s;setCamOn(true);setTimeout(()=>{if(videoRef.current){videoRef.current.srcObject=s;videoRef.current.play().catch(()=>{})}},200);}catch{showToast("Câmera negada")}};
+const stopCam=()=>{if(streamRef.current)streamRef.current.getTracks().forEach(t=>t.stop());setCamOn(false)};
+const capturarFoto=()=>{const v=videoRef.current; if(!v||v.videoWidth===0)return;const c=document.createElement('canvas');c.width=800;c.height=Math.round(800*v.videoHeight/v.videoWidth);const ctx=c.getContext('2d');ctx.drawImage(v,0,0,c.width,c.height);ctx.fillStyle='rgba(2,4,10,0.95)';ctx.fillRect(0,c.height-70,c.width,70);ctx.fillStyle='#00f3ff';ctx.font='700 10px JetBrains Mono';ctx.fillText(`ORION V28 PARADO | ${munSel.n} | ${risco}`,12,c.height-45);ctx.fillStyle='#fff';ctx.font='9px JetBrains Mono';ctx.fillText(`${bairro} | ${agente} | ${new Date().toLocaleString('pt-BR')}`,12,c.height-22);setFotos(p=>[...p,{img:c.toDataURL('image/jpeg',0.85)}]);showToast("Captura OK!")};
+const simularIA=()=>{if(!relato)return showToast("Digite relato!");setProcessing(true);setTimeout(()=>{setIaParecer(`[PARECER V28 PARADO] Município: ${munSel.n} - Bacia: ${munSel.bacia}\nRisco: ${risco}\nBairro: ${bairro}\nRelato: ${relato}\n\nMapa colorido parado oficial - 22 municípios - Base pronta para ativação de novas funcionalidades.`);setProcessing(false);},800)};
+
+if(!auth){return(<div className="w-full max-w-[420px] hud-panel p-7 space-y-5 mt-14 mx-auto"><div className="text-center space-y-2"><p className="label-hud">ACESSO V28 - BASE PARADA</p><h1 className="title-nexus text-xl">ORION V28</h1><p className="text-[10px] text-slate-400 tracking-widest">COLORIDO PARADO • SEM API • BASE OFICIAL</p></div><input type="password" value={senha} onChange={e=>setSenha(e.target.value)} placeholder="sarah2026" className="input-futuristic w-full"/><button onClick={()=>{if(senha==='sarah2026')setAuth(true);else showToast('Chave incorreta')}} className="w-full py-3.5 btn-primary rounded-[14px] text-xs tracking-widest">ENTRAR NO PAINEL</button>{toast&&<div className="text-xs text-cyan-300 text-center">{toast}</div>}</div>);}
+
+return(
+<div className="space-y-4 w-full">
+{toast&&<div className="fixed top-4 left-1/2 -translate-x-1/2 z-[9999] bg-cyan-400 text-black px-6 py-2.5 rounded-xl font-black text-xs">{toast}</div>}
+<div className="hud-panel p-4 flex justify-between items-center"><div><h2 className="title-nexus text-[12px]">ORION V28 • BASE PARADA COLORIDA OFICIAL • 22 MUNICÍPIOS</h2><p className="text-[9px] text-slate-400 tracking-widest mt-1">SEM API • SEM CHAVE • SEM MOVIMENTO • PRONTO PARA NOVA FASE</p></div><div className="flex gap-2"><button onClick={()=>setVozAtiva(!vozAtiva)} className={`text-[9px] px-2.5 py-1.5 rounded-full font-bold border ${vozAtiva?'bg-cyan-400 text-black':'bg-black text-slate-400 border-white/10'}`}>{vozAtiva?'VOZ ON':'MUDO'}</button><button onClick={()=>setAuth(false)} className="bg-red-950/40 border border-red-500/40 text-red-300 px-3 py-1 rounded-full text-[9px] font-bold">SAIR</button></div></div>
+
+<div className="hud-panel p-4 space-y-3">
+<div className="flex justify-between items-center"><p className="label-hud">🗺️ MAPA COLORIDO PARADO - 22 MUNICÍPIOS - COR + NOME</p><span className="text-[9px] px-3 py-1 rounded-full bg-cyan-950 text-cyan-300 border border-cyan-500/40">{munSel.n}</span></div>
+<div className="mapa-parado">
+{RMRJ_22.map((m,i)=>{
+  const isBlack = ['#7fffd4','#00e5ff','#f1ff2a','#ff8c69','#b19cd9','#5d9cec','#f8a4c8','#39ff14','#ffd700'].includes(m.cor);
+  return <div key={i} onClick={()=>setMunSel(m)} className="mun-parado" style={{left:POS[i].l,top:POS[i].t,background:m.cor,color:isBlack?'#000':'#fff',textShadow:isBlack?'none':'0 1px 3px #000'}}>{m.n.toUpperCase()}</div>
+})}
+</div>
+<div className="grid grid-cols-3 md:grid-cols-6 gap-2">{RMRJ_22.map((m,i)=><div key={i} onClick={()=>setMunSel(m)} className={`p-2 rounded-xl border text-[8px] cursor-pointer text-center font-bold ${munSel.n===m.n?'border-cyan-400 bg-cyan-500/20 text-cyan-200':'border-white/10 bg-black/50 text-slate-300'}`} style={{borderLeft:`4px solid ${m.cor}`}}>{m.n}</div>)}</div>
+<p className="text-[8px] text-center text-cyan-300 tracking-widest">✓ PARADO • ✓ SEM API • ✓ SEM CHAVE • ✓ 22 CORES • ✓ MESQUITA POSIÇÃO IBGE CORRETA</p>
+</div>
+
+<div className="hud-panel p-4 space-y-3 border border-purple-500/40"><p className="label-hud" style={{color:'#c084fc'}}>⚡ CORREDOR HIDROLÓGICO - MESQUITA/SEBINHO</p><div className="grid grid-cols-1 md:grid-cols-2 gap-2">{CORREDOR.map((it,idx)=><div key={idx} className="bg-black/60 border border-white/10 rounded-xl p-2.5 text-[10px]"><div className="flex justify-between"><span className="font-bold text-cyan-300">{it.nome}</span><span className="text-[8px] px-2 py-0.5 rounded bg-purple-950 text-purple-300 border border-purple-500/30">{it.tipo.toUpperCase()}</span></div><div className="text-[9px] text-slate-400">{it.desc}</div></div>)}</div></div>
+
+<div className="hud-panel p-5 space-y-4 border border-cyan-400/30">
+<div className="flex justify-between items-center"><p className="label-hud">PAINEL VISTORIA - {munSel.n}</p><span className="text-[9px] px-3 py-1 rounded-full bg-cyan-950 text-cyan-300 border border-cyan-500/40">{munSel.bacia}</span></div>
+<div className="grid grid-cols-2 gap-3"><input value={bairro} onChange={e=>setBairro(e.target.value)} className="input-futuristic" placeholder="Bairro"/><input value={agente} onChange={e=>setAgente(e.target.value)} className="input-futuristic" placeholder="Responsável"/><select value={risco} onChange={e=>setRisco(e.target.value)} className="input-futuristic">{RISCOS.map((r,i)=><option key={i}>{r}</option>)}</select><div className="flex items-center px-3 bg-black/50 border border-white/10 rounded-xl text-[10px] text-cyan-300">{munSel.bacia}</div></div>
+<div className="bg-black/70 border border-white/10 rounded-[16px] p-3.5 space-y-3"><div className="flex justify-between items-center"><p className="label-hud">📸 CÂMERA</p>{!camOn?<button onClick={startCam} className="text-[10px] btn-primary px-4 py-2 rounded-full">LIGAR CÂMERA</button>:<button onClick={stopCam} className="text-[10px] bg-slate-800 text-slate-300 px-4 py-2 rounded-full">DESLIGAR</button>}</div><div className="bg-[#0a0f1a] rounded-[12px] overflow-hidden border border-white/5 relative" style={{height:'220px'}}><video ref={videoRef} autoPlay playsInline muted style={{width:'100%',height:'100%',objectFit:'cover',display:camOn?'block':'none'}}></video>{!camOn&&<div className="h-full grid place-items-center text-[11px] text-slate-500 font-bold">CÂMERA DESLIGADA</div>}</div>{camOn&&<button onClick={capturarFoto} className="w-full py-3.5 btn-primary rounded-[14px] text-xs tracking-[0.2em]">📸 CAPTURAR</button>}{fotos.length>0&&<div className="flex gap-2 overflow-x-auto">{fotos.map((f,i)=><div key={i} className="relative shrink-0"><img src={f.img} className="w-20 h-20 object-cover rounded-xl border border-cyan-500/40"/><div className="x-btn" onClick={()=>setFotos(fotos.filter((_,idx)=>idx!==i))}>✕</div></div>)}</div>}</div>
+<div className="space-y-2"><p className="label-hud">RELATO</p><textarea value={relato} onChange={e=>setRelato(e.target.value)} rows="3" placeholder="Digite situação..." className="input-futuristic w-full resize-none"></textarea></div>
+<button onClick={simularIA} disabled={processing} className="w-full py-3.5 btn-primary rounded-[14px] text-xs tracking-widest disabled:opacity-50">{processing?'PROCESSANDO...':'⚡ GERAR PARECER V28 PARADO'}</button>
+</div>
+<div className="hud-panel p-4 space-y-2.5"><p className="label-hud">🧠 PARECER</p><div className="bg-black/70 border border-white/10 rounded-xl p-3.5"><p className="text-[11px] text-slate-200 leading-relaxed whitespace-pre-wrap">{iaParecer}</p></div></div>
+</div>
+);
+}
+ReactDOM.createRoot(document.getElementById('root')).render(<App/>);
+</script>
+</body>
+</html>
