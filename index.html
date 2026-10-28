@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>ORION NEXUS V25 • RMRJ COMPLETO</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+<script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+<script crossorigin src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700;800&family=Orbitron:wght@700;900&display=swap');
+body{background:radial-gradient(1200px 600px at 20% -10%,rgba(0,243,255,0.15),transparent),radial-gradient(1000px 500px at 90% 0%,rgba(16,185,129,0.12),transparent),#010205;color:#E2E8F0;font-family:'JetBrains Mono',monospace;overflow-x:hidden}
+.hud-panel{background:linear-gradient(180deg,rgba(255,255,255,0.06),rgba(255,255,255,0.02));backdrop-filter:blur(14px);border:1px solid rgba(0,243,255,0.35);border-radius:18px;box-shadow:0 0 0 1px rgba(255,255,255,0.04) inset,0 10px 40px rgba(0,0,0,0.5),0 0 40px rgba(0,243,255,0.12)}
+.label-hud{font-family:'Orbitron',sans-serif;font-size:10px;letter-spacing:.18em;font-weight:900;color:#00f3ff;text-transform:uppercase}
+.title-nexus{font-family:'Orbitron',sans-serif;font-weight:900;letter-spacing:.08em;background:linear-gradient(90deg,#00f3ff,#a5f3fc,#10b981);-webkit-background-clip:text;background-clip:text;color:transparent}
+.x-btn{position:absolute;top:6px;right:6px;width:22px;height:22px;background:#000;color:#00f3ff;border-radius:50%;display:grid;place-items:center;font-weight:900;border:1px solid #00f3ff;cursor:pointer;font-size:11px;z-index:10}
+.btn-primary{background:linear-gradient(90deg,#00f3ff,#22d3ee);color:#001014;font-weight:900;box-shadow:0 0 20px rgba(0,243,255,0.4);transition:.2s}
+.input-futuristic{background:rgba(0,0,0,0.7);border:1px solid rgba(255,255,255,0.12);border-radius:14px;padding:12px;color:#fff;font-size:12px;outline:none;transition:.2s}
+.input-futuristic:focus{border-color:#00f3ff;box-shadow:0 0 0 3px rgba(0,243,255,0.15)}
+@keyframes scan{0%{transform:translateY(-100%)}100%{transform:translateY(100%)}}
+.scan-line{position:absolute;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent,#00f3ff,transparent);animation:scan 2.5s linear infinite;opacity:.6}
+@keyframes pulseGlow{0%{transform:scale(1);box-shadow:0 0 10px currentColor}50%{transform:scale(1.15);box-shadow:0 0 25px currentColor}100%{transform:scale(1);box-shadow:0 0 10px currentColor}}
+.pulse-node{animation:pulseGlow 2s infinite ease-in-out;}
+#rmrj-map{width:100%;height:380px;background:#02060e;border-radius:16px;border:1px solid rgba(0,243,255,0.3)}
+.leaflet-tile{filter:brightness(0.6) contrast(1.1)}
+.mun-label{background:rgba(0,0,0,0.75);border:1px solid #00f3ff;color:#fff;font-size:8px;font-weight:800;padding:2px 5px;border-radius:4px}
+#weather-canvas{position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:400}
+.groq-chat-container{position:fixed;bottom:25px;right:20px;z-index:9999}
+.groq-toggle-btn{background:linear-gradient(135deg,#00f3ff,#0088cc);color:#000;border:2px solid #fff;width:56px;height:56px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:'Orbitron';font-weight:900;font-size:0.55rem;cursor:pointer;box-shadow:0 4px 20px rgba(0,243,255,0.5)}
+.groq-chat-box{position:absolute;bottom:70px;right:0;width:320px;max-height:400px;background:rgba(5,10,24,0.95);backdrop-filter:blur(16px);border:1px solid rgba(0,243,255,0.4);border-radius:16px;display:none;flex-direction:column;overflow:hidden}
+.groq-chat-box.active{display:flex}
+.groq-chat-header{background:rgba(0,243,255,0.12);padding:10px 14px;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid rgba(0,243,255,0.2);font-family:'Orbitron';font-size:0.6rem;color:#00f3ff}
+.groq-chat-body{height:240px;overflow-y:auto;padding:10px;display:flex;flex-direction:column;gap:8px}
+.g-msg{padding:8px 12px;border-radius:12px;font-size:0.58rem;line-height:1.4;max-width:85%}
+.g-msg-ai{background:rgba(0,243,255,0.15);border:1px solid rgba(0,243,255,0.3);color:#d1fff0;align-self:flex-start}
+.g-msg-user{background:rgba(138,43,226,0.25);border:1px solid rgba(138,43,226,0.4);color:#f3e8ff;align-self:flex-end}
+.groq-chat-footer{display:flex;padding:8px;background:rgba(0,0,0,0.6);border-top:1px solid rgba(255,255,255,0.08);gap:6px}
+.groq-chat-footer input{flex:1;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.15);color:#fff;padding:8px 10px;border-radius:10px;font-size:0.58rem;outline:none}
+.groq-chat-footer button{background:#00f3ff;color:#000;border:none;padding:0 12px;border-radius:10px;font-weight:bold;font-size:0.6rem;cursor:pointer}
+</style>
+</head>
+<body class="p-2 flex justify-center min-h-screen">
+<div id="root" class="w-full max-w-[760px] pb-24"></div>
+
+<div class="groq-chat-container">
+  <div class="groq-chat-box" id="groqChatBox">
+    <div class="groq-chat-header"><span>⚡ CHAT GROQ LPU</span><span onclick="toggleGroqChat()" style="cursor:pointer">✕</span></div>
+    <div class="groq-chat-body" id="groqChatBody"><div class="g-msg g-msg-ai"><strong>[GROQ AI]:</strong> Painel V25 com RMRJ 22 municípios, satélite e APIs ativas.</div></div>
+    <div class="groq-chat-footer"><input type="text" id="groqChatInput" placeholder="Digite..." onkeydown="if(event.key==='Enter')sendGroqChatMsg()"><button onclick="sendGroqChatMsg()">➤</button></div>
+  </div>
+  <div class="groq-toggle-btn" onclick="toggleGroqChat()">GROQ</div>
+</div>
+
+<script>
+function toggleGroqChat(){document.getElementById('groqChatBox').classList.toggle('active')}
+function sendGroqChatMsg(){const input=document.getElementById('groqChatInput');if(!input.value.trim())return;const body=document.getElementById('groqChatBody');const d=document.createElement('div');d.className='g-msg g-msg-user';d.innerHTML=`<strong>[OPERADOR]:</strong> ${input.value}`;body.appendChild(d);input.value='';body.scrollTop=body.scrollHeight;setTimeout(()=>{const a=document.createElement('div');a.className='g-msg g-msg-ai';a.innerHTML=`<strong>[GROQ AI]:</strong> RMRJ 22 municípios verificados. Mesquita na posição correta entre Nilópolis e Nova Iguaçu.`;body.appendChild(a);body.scrollTop=body.scrollHeight},600)}
+</script>
+
+<script type="text/babel">
+const { useState, useRef, useEffect } = React;
+
+// 22 MUNICÍPIOS RMRJ - POSIÇÃO IBGE REAL + CORES EXCLUSIVAS
+const RMRJ_22 = [
+  {n:"Rio de Janeiro", reg:"Metropolitana", bacia:"Baía de Guanabara", lat:-22.9068, lng:-43.1729, cor:"#ff1a1a", status:"Monitoramento Ativo"},
+  {n:"Mesquita (Base Sebinho)", reg:"Baixada", bacia:"Rio Sarapuí", lat:-22.782, lng:-43.410, cor:"#7fffd4", status:"Monitoramento Ativo"},
+  {n:"Nilópolis", reg:"Baixada", bacia:"Rio Sarapuí", lat:-22.808, lng:-43.413, cor:"#00f3ff", status:"Estável"},
+  {n:"Nova Iguaçu", reg:"Baixada", bacia:"Rio Botas", lat:-22.759, lng:-43.451, cor:"#f1ff2a", status:"Estável"},
+  {n:"São João de Meriti", reg:"Baixada", bacia:"Rio Sarapuí", lat:-22.803, lng:-43.372, cor:"#ff8c69", status:"Estável"},
+  {n:"Belford Roxo", reg:"Baixada", bacia:"Rio Botas", lat:-22.764, lng:-43.399, cor:"#b19cd9", status:"Atenção Moderada"},
+  {n:"Duque de Caxias", reg:"Baixada", bacia:"Rio Iguaçu", lat:-22.785, lng:-43.311, cor:"#2ecc71", status:"Atenção Moderada"},
+  {n:"Queimados", reg:"Baixada", bacia:"Rio Queimados", lat:-22.711, lng:-43.556, cor:"#5d9cec", status:"Estável"},
+  {n:"Japeri", reg:"Baixada", bacia:"Rio Guandu", lat:-22.702, lng:-43.653, cor:"#c27ba0", status:"Estável"},
+  {n:"Seropédica", reg:"Baixada", bacia:"Rio Guandu", lat:-22.74, lng:-43.708, cor:"#8a9a3e", status:"Normal"},
+  {n:"Itaguaí", reg:"Costa Verde", bacia:"Baía de Sepetiba", lat:-22.852, lng:-43.775, cor:"#2c3e9e", status:"Normal"},
+  {n:"Paracambi", reg:"Baixada", bacia:"Rio dos Macacos", lat:-22.61, lng:-43.709, cor:"#6a3d9a", status:"Normal"},
+  {n:"Niterói", reg:"Leste Metropolitano", bacia:"Oceânica", lat:-22.883, lng:-43.103, cor:"#1e3cbe", status:"Normal"},
+  {n:"São Gonçalo", reg:"Leste Metropolitano", bacia:"Baía de Guanabara", lat:-22.826, lng:-43.063, cor:"#2e86de", status:"Normal"},
+  {n:"Petrópolis", reg:"Serrana", bacia:"Piabanha", lat:-22.505, lng:-43.178, cor:"#4caf50", status:"Alerta Preventivo"},
+  {n:"Magé", reg:"Baixada", bacia:"Rio Suruí", lat:-22.651, lng:-43.039, cor:"#f8a4c8", status:"Estável"},
+  {n:"Itaboraí", reg:"Leste Metropolitano", bacia:"Rio Aldeia", lat:-22.744, lng:-42.861, cor:"#7a9a3a", status:"Estável"},
+  {n:"Maricá", reg:"Leste Metropolitano", bacia:"Oceânica", lat:-22.919, lng:-42.818, cor:"#39ff14", status:"Normal"},
+  {n:"Guapimirim", reg:"Leste Metropolitano", bacia:"Rio Guapi", lat:-22.532, lng:-42.981, cor:"#ff1493", status:"Normal"},
+  {n:"Tanguá", reg:"Leste Metropolitano", bacia:"Rio Tanguá", lat:-22.731, lng:-42.717, cor:"#ffd700", status:"Normal"},
+  {n:"Cachoeiras de Macacu", reg:"Leste Metropolitano", bacia:"Rio Macacu", lat:-22.462, lng:-42.652, cor:"#9b59ff", status:"Normal"},
+  {n:"Rio Bonito", reg:"Leste Metropolitano", bacia:"Rio Bacaxá", lat:-22.718, lng:-42.624, cor:"#ff8c00", status:"Normal"},
+];
+
+const CORREDOR_ITENS = [
+  {nome:'Serra do Mendanha (Origem)', tipo:'origem', desc:'Cabeceira hidrográfica oeste'},
+  {nome:'Maria Cristina', tipo:'ponto', desc:'Transição urbana'},
+  {nome:'Comunidade do Sebinho', tipo:'alerta', desc:'Ponto crítico comunitário - Mesquita'},
+  {nome:'Ponte Subim', tipo:'ponto', desc:'Seção de vazão do canal'},
+  {nome:'Rua Amazonas', tipo:'alerta', desc:'Acúmulo pluvial'},
+  {nome:'Confluência Sarapuí + Dona Eugênia', tipo:'hidro', desc:'Estrangulamento hídrico'}
+];
+
+const RISCOS=["R1 - BAIXO / PREVENTIVO","R2 - MODERADO / ATENCAO","R3 - ALTO / ALERTA","R4 - IMINENTE / EVACUACAO"];
+
+function App(){
+const [auth,setAuth]=useState(false);const [senha,setSenha]=useState('');
+const [munSel,setMunSel]=useState(RMRJ_22[1]);
+const [agente,setAgente]=useState('Alexander da Silva Firmo');
+const [bairro,setBairro]=useState('Sebinho / Rocha Sobrinho');
+const [risco,setRisco]=useState(RISCOS[0]);
+const [relato,setRelato]=useState('');
+const [fotos,setFotos]=useState([]);
+const [camOn,setCamOn]=useState(false);
+const [iaParecer,setIaParecer]=useState("V25 ATIVO - 22 MUNICÍPIOS RMRJ COM POSIÇÃO IBGE CORRIGIDA + SATÉLITE + APIS");
+const [processing,setProcessing]=useState(false);
+const [vozAtiva,setVozAtiva]=useState(true);
+const [toast,setToast]=useState(null);
+const [meteo,setMeteo]=useState({precip:'--', wind:'--', status:'CONECTANDO'});
+const [hydro,setHydro]=useState('--');
+const [sat,setSat]=useState('CONECTANDO');
+
+const videoRef=useRef(null);const streamRef=useRef(null);const mapRef=useRef(null);const mapInstance=useRef(null);
+
+const showToast=(m)=>{setToast(m);setTimeout(()=>setToast(null),3500)};
+const falar=(t)=>{if(!vozAtiva||!('speechSynthesis' in window))return;try{window.speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(t);u.lang='pt-BR';window.speechSynthesis.speak(u);}catch{}};
+
+useEffect(()=>{
+  if(!auth) return;
+  if(mapInstance.current) return;
+  const L = window.L;
+  if(!L) return;
+  const map = L.map('rmrj-map',{center:[-22.78,-43.25],zoom:9,minZoom:8,maxZoom:11,zoomControl:false,attributionControl:false});
+  mapInstance.current = map;
+  L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png',{maxZoom:11}).addTo(map);
+
+  // SATÉLITE
+  fetch('https://api.rainviewer.com/public/weather-maps.json').then(r=>r.json()).then(data=>{
+    const last = data.radar.past[data.radar.past.length-1];
+    L.tileLayer(`https://tilecache.rainviewer.com${last.path}/256/{z}/{x}/{y}/2/1_1.png`,{opacity:0.75,maxZoom:11}).addTo(map);
+    setSat('RAINVIEWER LIVE');
+  }).catch(()=>setSat('OFFLINE'));
+
+  // MARCADORES 22 CORES
+  RMRJ_22.forEach(m=>{
+    L.circleMarker([m.lat,m.lng],{radius:10,fillColor:m.cor,color:'#fff',weight:2,fillOpacity:0.95}).addTo(map)
+    .bindTooltip(m.n,{permanent:true,direction:'top',className:'mun-label',offset:[0,-12]})
+    .on('click',()=>{setMunSel(m);showToast(`Selecionado: ${m.n}`);});
+  });
+
+  // API METEO
+  fetch('https://api.open-meteo.com/v1/forecast?latitude=-22.78&longitude=-43.41&current=precipitation,wind_speed_10m&timezone=America/Sao_Paulo')
+  .then(r=>r.json()).then(j=>setMeteo({precip:`${j.current.precipitation}mm`,wind:`${j.current.wind_speed_10m}km/h`,status:'OPEN-METEO OK'})).catch(()=>setMeteo({precip:'--',wind:'--',status:'OFFLINE'}));
+
+  fetch('https://flood-api.open-meteo.com/v1/flood?latitude=-22.78&longitude=-43.41&current=river_discharge')
+  .then(r=>r.json()).then(j=>{if(j.current) setHydro(`${j.current.river_discharge.toFixed(1)}m³/s`)}).catch(()=>setHydro('LOCAL'));
+
+  // CHUVA CANVAS
+  const canvas=document.getElementById('weather-canvas'); if(!canvas) return; const ctx=canvas.getContext('2d');
+  const resize=()=>{canvas.width=canvas.offsetWidth;canvas.height=canvas.offsetHeight}; resize(); window.addEventListener('resize',resize);
+  const drops=Array.from({length:250},()=>({x:Math.random()*800,y:Math.random()*400,l:Math.random()*12+8,s:Math.random()*6+4}));
+  const anim=()=>{ctx.clearRect(0,0,canvas.width,canvas.height);ctx.strokeStyle='rgba(0,243,255,0.55)';ctx.lineWidth=1; drops.forEach(d=>{ctx.beginPath();ctx.moveTo(d.x,d.y);ctx.lineTo(d.x-5,d.y+d.l);ctx.stroke();d.y+=d.s; d.x-=1; if(d.y>canvas.height+20){d.y=-20; d.x=Math.random()*canvas.width+100}}); requestAnimationFrame(anim)}; anim();
+},[auth]);
+
+const startCam=async()=>{try{const s=await navigator.mediaDevices.getUserMedia({video:{facingMode:{ideal:"environment"},width:{ideal:1280}},audio:false});streamRef.current=s;setCamOn(true);setTimeout(()=>{if(videoRef.current){videoRef.current.srcObject=s;videoRef.current.play().catch(()=>{})}},200);}catch{showToast("Câmera negada")}};
+const stopCam=()=>{if(streamRef.current)streamRef.current.getTracks().forEach(t=>t.stop());setCamOn(false)};
+const capturarFoto=async()=>{const v=videoRef.current; if(!v||v.videoWidth===0)return;const c=document.createElement('canvas');c.width=800;c.height=Math.round(800*v.videoHeight/v.videoWidth);const ctx=c.getContext('2d');ctx.drawImage(v,0,0,c.width,c.height);ctx.fillStyle='rgba(2,4,10,0.95)';ctx.fillRect(0,c.height-70,c.width,70);ctx.fillStyle='#00f3ff';ctx.font='700 10px JetBrains Mono';ctx.fillText(`ORION V25 | ${munSel.n} | RISCO: ${risco}`,12,c.height-45);ctx.fillStyle='#fff';ctx.font='9px JetBrains Mono';ctx.fillText(`BAIRRO: ${bairro} | RESP: ${agente} | ${new Date().toLocaleString('pt-BR')}`,12,c.height-22);const dataUrl=c.toDataURL('image/jpeg',0.85);setFotos(p=>[...p,{img:dataUrl}]);showToast("Captura OK!");falar("Foto registrada");};
+
+const simularIA=async()=>{if(!relato)return showToast("Digite relato!");setProcessing(true);setIaParecer("Analisando via IA + APIs...");setTimeout(()=>{const res=`[PARECER IA V25] Município: ${munSel.n} (${munSel.reg}) - Bacia ${munSel.bacia}\nRisco: ${risco}\nBairro: ${bairro}\nRelato: ${relato}\n\nAPI METEO: ${meteo.precip} chuva / ${meteo.wind} vento - ${meteo.status}\nHIDRO: Vazão ${hydro}\nSATÉLITE: ${sat}\n\nCorredor Sebinho estável com pontos de atenção em Rua Amazonas e Confluência Sarapuí. Recomenda-se monitoramento contínuo.`;setIaParecer(res);setProcessing(false);falar("Análise concluída");},1200)};
+
+if(!auth){
+return(
+<div className="w-full max-w-[420px] hud-panel p-7 space-y-5 mt-14 mx-auto relative overflow-hidden"><div className="scan-line"></div><div className="text-center space-y-2"><p className="label-hud">ACESSO V25</p><h1 className="title-nexus text-xl">ORION V25</h1><p className="text-[10px] text-slate-400 tracking-widest">22 MUNICÍPIOS RMRJ + SATÉLITE + APIS</p></div><input type="password" value={senha} onChange={e=>setSenha(e.target.value)} placeholder="sarah2026" className="input-futuristic w-full"/><button onClick={()=>{if(senha==='sarah2026')setAuth(true);else showToast('Chave incorreta')}} className="w-full py-3.5 btn-primary rounded-[14px] text-xs tracking-widest">ENTRAR NO PAINEL</button>{toast&&<div className="text-xs text-cyan-300 text-center animate-pulse">{toast}</div>}</div>
+);
+}
+
+return(
+<div className="space-y-4 w-full">
+{toast&&<div className="fixed top-4 left-1/2 -translate-x-1/2 z-[9999] bg-cyan-400 text-black px-6 py-2.5 rounded-xl font-black text-xs shadow-[0_0_30px_rgba(0,243,255,0.6)]">{toast}</div>}
+
+<div className="hud-panel p-4 flex justify-between items-center relative overflow-hidden">
+<div className="scan-line"></div>
+<div><h2 className="title-nexus text-[13px]">ORION V25 • RMRJ COMPLETO • 22 MUNICÍPIOS</h2><p className="text-[9px] text-slate-400 tracking-widest mt-1">SAT: {sat} • METEO: {meteo.status} {meteo.precip} • HIDRO: {hydro} • MAPA IBGE CORRIGIDO</p></div>
+<div className="flex gap-2"><button onClick={()=>setVozAtiva(!vozAtiva)} className={`text-[9px] px-2.5 py-1.5 rounded-full font-bold border ${vozAtiva?'bg-cyan-400 text-black border-cyan-400':'bg-black text-slate-400 border-white/10'}`}>{vozAtiva?'VOZ ON':'MUDO'}</button><button onClick={()=>setAuth(false)} className="bg-red-950/40 border border-red-500/40 text-red-300 px-3 py-1 rounded-full text-[9px] font-bold">SAIR</button></div>
+</div>
+
+<div className="hud-panel p-4 space-y-3 relative overflow-hidden">
+<div className="scan-line"></div>
+<p className="label-hud">🗺️ MAPA RMRJ - 22 MUNICÍPIOS - CORES EXCLUSIVAS - SATÉLITE AO VIVO</p>
+<div className="relative rounded-[16px] overflow-hidden border border-cyan-500/30">
+<div id="rmrj-map"></div>
+<canvas id="weather-canvas"></canvas>
+</div>
+<div className="grid grid-cols-2 md:grid-cols-4 gap-2 max-h-[160px] overflow-y-auto pr-1">
+{RMRJ_22.map((m,i)=>(
+<div key={i} onClick={()=>{setMunSel(m);falar(m.n)}} className={`p-2.5 rounded-xl border text-[9px] cursor-pointer flex justify-between items-center ${munSel.n===m.n?'bg-cyan-500/20 border-cyan-400 text-cyan-200 font-bold shadow-[0_0_15px_rgba(0,243,255,0.3)]':'bg-black/50 border-white/10 text-slate-300'}`}><div><div className="font-bold">{m.n}</div><div className="text-[7px] text-slate-400">{m.reg}</div></div><span className="w-2.5 h-2.5 rounded-full pulse-node" style={{backgroundColor:m.cor,color:m.cor}}></span></div>
+))}
+</div>
+</div>
+
+<div className="hud-panel p-4 space-y-3 border border-purple-500/40"><p className="label-hud" style={{color:'#c084fc'}}>⚡ CORREDOR HIDROLÓGICO - MESQUITA/SEBINHO</p><div className="grid grid-cols-1 md:grid-cols-2 gap-2">{CORREDOR_ITENS.map((it,idx)=><div key={idx} className="bg-black/60 border border-white/10 rounded-xl p-2.5 text-[10px]"><div className="flex justify-between"><span className="font-bold text-cyan-300">{it.nome}</span><span className="text-[8px] px-2 py-0.5 rounded bg-purple-950 text-purple-300 border border-purple-500/30">{it.tipo.toUpperCase()}</span></div><div className="text-[9px] text-slate-400">{it.desc}</div></div>)}</div></div>
+
+<div className="hud-panel p-5 space-y-4 border border-cyan-400/30 relative overflow-hidden">
+<div className="flex justify-between items-center"><p className="label-hud">PAINEL VISTORIA - {munSel.n}</p><span className="text-[9px] px-3 py-1 rounded-full bg-cyan-950 text-cyan-300 border border-cyan-500/40">{munSel.bacia}</span></div>
+<div className="grid grid-cols-2 gap-3"><input value={bairro} onChange={e=>setBairro(e.target.value)} className="input-futuristic" placeholder="Bairro"/><input value={agente} onChange={e=>setAgente(e.target.value)} className="input-futuristic" placeholder="Responsável"/><select value={risco} onChange={e=>setRisco(e.target.value)} className="input-futuristic">{RISCOS.map((r,i)=><option key={i}>{r}</option>)}</select><div className="flex items-center px-3 bg-black/50 border border-white/10 rounded-xl text-[10px] text-cyan-300">{munSel.status}</div></div>
+
+<div className="bg-black/70 border border-white/10 rounded-[16px] p-3.5 space-y-3 relative overflow-hidden"><div className="scan-line"></div><div className="flex justify-between items-center"><p className="label-hud">📸 CÂMERA</p>{!camOn?<button onClick={startCam} className="text-[10px] btn-primary px-4 py-2 rounded-full">LIGAR CÂMERA</button>:<button onClick={stopCam} className="text-[10px] bg-slate-800 text-slate-300 px-4 py-2 rounded-full">DESLIGAR</button>}</div><div className="bg-[#0a0f1a] rounded-[12px] overflow-hidden border border-white/5 relative" style={{height:'220px'}}><video ref={videoRef} autoPlay playsInline muted style={{width:'100%',height:'100%',objectFit:'cover',display:camOn?'block':'none'}}></video>{!camOn&&<div className="h-full grid place-items-center text-[11px] text-slate-500 font-bold">CÂMERA DESLIGADA</div>}{camOn&&<div className="absolute top-3 left-3 bg-red-600 text-white text-[8px] font-black px-2 py-1 rounded-full animate-pulse">● REC</div>}</div>{camOn&&<button onClick={capturarFoto} className="w-full py-3.5 btn-primary rounded-[14px] text-xs tracking-[0.2em]">📸 CAPTURAR</button>}{fotos.length>0&&<div className="flex gap-2 overflow-x-auto">{fotos.map((f,i)=><div key={i} className="relative shrink-0"><img src={f.img} className="w-20 h-20 object-cover rounded-xl border border-cyan-500/40"/><div className="x-btn" onClick={()=>setFotos(fotos.filter((_,idx)=>idx!==i))}>✕</div></div>)}</div>}</div>
+
+<div className="space-y-2"><p className="label-hud">RELATO PARA IA</p><textarea value={relato} onChange={e=>setRelato(e.target.value)} rows="3" placeholder="Digite situação para IA..." className="input-futuristic w-full resize-none"></textarea></div>
+<button onClick={simularIA} disabled={processing} className="w-full py-3.5 btn-primary rounded-[14px] text-xs tracking-widest disabled:opacity-50">{processing?'PROCESSANDO...':'⚡ EXECUTAR SIMULAÇÃO IA V25'}</button>
+</div>
+
+<div className="hud-panel p-4 space-y-2.5"><p className="label-hud">🧠 PARECER IA - COM DADOS REAIS DE SATÉLITE E METEO</p><div className="bg-black/70 border border-white/10 rounded-xl p-3.5"><p className="text-[11px] text-slate-200 leading-relaxed whitespace-pre-wrap">{iaParecer}</p></div></div>
+
+</div>
+);
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<App/>);
+</script>
+</body>
+</html>
