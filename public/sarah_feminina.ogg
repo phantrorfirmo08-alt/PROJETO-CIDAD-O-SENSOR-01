@@ -1,0 +1,36 @@
+// RARU NEXUS V11 PLUS - SARA - public/sarah_feminina.ogg - ANTI-BLOQUEIO
+let ctxSarah = null;
+let bufferSarah = null;
+let oggOk = false;
+
+async function initSarah() {
+  try {
+    ctxSarah = new (window.AudioContext || window.webkitAudioContext)();
+    if (ctxSarah.state === 'suspended') await ctxSarah.resume();
+    const r = await fetch('/sarah_feminina.ogg');
+    const ab = await r.arrayBuffer();
+    bufferSarah = await ctxSarah.decodeAudioData(ab);
+    const s = ctxSarah.createBufferSource();
+    s.buffer = ctxSarah.createBuffer(1,1,22050);
+    s.connect(ctxSarah.destination);
+    s.start(0);
+    oggOk = true;
+  } catch(e){ oggOk = false; }
+}
+
+function falarSarahOGG(){
+  if(!oggOk) return;
+  if(ctxSarah.state==='suspended') ctxSarah.resume();
+  const src = ctxSarah.createBufferSource();
+  src.buffer = bufferSarah;
+  src.connect(ctxSarah.destination);
+  src.start(0);
+}
+
+// DESBLOQUEIO RUSSO
+document.addEventListener('click', initSarah, {once:true});
+document.addEventListener('touchstart', initSarah, {once:true});
+
+// USO: falarSarahOGG() - onde você quiser disparar
+window.falarSarahOGG = falarSarahOGG;
+window.initSarah = initSarah;
