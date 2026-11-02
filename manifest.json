@@ -1,0 +1,23 @@
+{
+  "name": "RARU NEXUS AI V11 Plus",
+  "short_name": "RARU Plus",
+  "description": "Rede Automatizada de Resiliência Urbana - Mesquita RJ",
+  "start_url": "./",
+  "display": "standalone",
+  "background_color": "#010814",
+  "theme_color": "#010814",
+  "icons": [
+    {
+      "src": "https://cdn.phototourl.com/member/2026-11-02-e6f47125-80b5-493f-9383-ff5668fcd8a4.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "https://cdn.phototourl.com/member/2026-11-02-e6f47125-80b5-493f-9383-ff5668fcd8a4.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}
