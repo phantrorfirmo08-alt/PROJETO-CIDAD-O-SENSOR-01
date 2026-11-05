@@ -1,0 +1,1880 @@
+<!DOCTYPE html>
+<html lang="pt-br" class="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<title>RARU NEXUS AI V11 Plus • RCC REDE DE CONTROLE COMUNITÁRIO</title>
+
+<meta name="theme-color" content="#010306">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Orbitron:wght@600;800;900&family=JetBrains+Mono:wght@400;600;800&display=swap" rel="stylesheet">
+
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+<script>
+    tailwind.config = {
+        darkMode: "class",
+        theme: {
+            extend: {
+                fontFamily: {
+                    sans: ['Plus Jakarta Sans', 'system-ui', 'sans-serif'],
+                    display: ['Orbitron', 'sans-serif'],
+                    mono: ['JetBrains Mono', 'Courier New', 'monospace'],
+                },
+                colors: {
+                    void: "#010306",
+                    deepSpace: "#04101E",
+                    commandPanel: "#0A1B38",
+                    cyberCyan: "#00FFCC",
+                    cyberBlue: "#1E90FF",
+                    cyberGreen: "#00FF9D",
+                    cyberAmber: "#FFD700",
+                    cyberRose: "#FF3366",
+                }
+            }
+        }
+    };
+</script>
+<script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
+<script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
+<script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+<style>
+    :root {
+        --primary: #00FFCC;
+        --secondary: #1E90FF;
+        --glow: rgba(0, 255, 204, 0.4);
+        --glow-cyan: rgba(0, 255, 204, 0.35);
+        --wave-speed: 2.2s;
+    }
+
+    @keyframes avatarIdle {
+        0%, 100% { transform: scale(1); filter: drop-shadow(0 0 15px rgba(0,255,204,0.4)); }
+        50% { transform: scale(1.02); filter: drop-shadow(0 0 25px rgba(0,255,157,0.55)); }
+    }
+
+    @keyframes avatarSpeaking {
+        0%, 100% { transform: scale(1) rotate(0deg); filter: drop-shadow(0 0 30px rgba(0,255,204,0.75)); }
+        50% { transform: scale(1.06) rotate(2deg); filter: drop-shadow(0 0 45px rgba(0,255,157,0.85)); }
+    }
+
+    @keyframes moleculeRotate {
+        from { transform: rotate(0deg); }
+        to { transform: rotate(360deg); }
+    }
+
+    @keyframes moleculePulse {
+        0%, 100% { transform: scale(1); opacity: 0.9; }
+        50% { transform: scale(1.15); opacity: 1; filter: drop-shadow(0 0 12px #00FFCC); }
+    }
+
+    @keyframes auroraShift {
+        0% { background-position: 0% 50%; }
+        100% { background-position: 100% 50%; }
+    }
+
+    @keyframes tickerScroll {
+      0% { transform: translateX(0); }
+      100% { transform: translateX(-50%); }
+    }
+
+    @keyframes cyberGridMove {
+      0% { background-position: 0 0; }
+      100% { background-position: 40px 40px; }
+    }
+
+    @keyframes mesquitaPulse {
+      0% { box-shadow: 0 0 0 0 rgba(255, 51, 102, 0.7); }
+      70% { box-shadow: 0 0 0 18px rgba(255, 51, 102, 0); }
+      100% { box-shadow: 0 0 0 0 rgba(255, 51, 102, 0); }
+    }
+
+    .mesquita-pulse { animation: mesquitaPulse 1.5s ease-in-out infinite; }
+
+    * { 
+        box-sizing: border-box; 
+        margin: 0; 
+        padding: 0;
+        -webkit-tap-highlight-color: transparent;
+    }
+
+    html, body {
+        width: 100%;
+        height: 100%;
+        min-height: 100dvh;
+        margin: 0;
+        padding: 0;
+        overflow-x: hidden;
+        touch-action: manipulation;
+        -webkit-text-size-adjust: 100%;
+        overscroll-behavior-y: contain;
+        background-color: #010306;
+        color: #00ffcc;
+        -webkit-user-select: none;
+        user-select: none;
+        font-family: 'Courier New', monospace;
+    }
+
+    #root {
+        width: 100%;
+        min-height: 100dvh;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+    }
+
+    .seu-container-raru {
+        width: 100%;
+        max-width: 650px;
+        margin: 0 auto;
+        min-height: 100dvh;
+        padding: 10px 12px 140px 12px;
+        display: flex;
+        flex-direction: column;
+    }
+
+    body {
+        background-image: 
+            linear-gradient(rgba(1, 3, 6, 0.85), rgba(1, 3, 6, 0.92)),
+            url('https://images.unsplash.com/photo-1558494949-ef010cbdcc31?q=80&w=1920&auto=format&fit=crop');
+        background-size: cover;
+        background-position: center;
+        background-attachment: fixed;
+        transition: background-color 0.4s ease, color 0.4s ease;
+    }
+
+    body.critical-alert {
+        background-color: #1a0205 !important;
+        background-image: linear-gradient(rgba(26, 2, 5, 0.88), rgba(26, 2, 5, 0.92)), url('https://images.unsplash.com/photo-1558494949-ef010cbdcc31?q=80&w=1920&auto=format&fit=crop') !important;
+    }
+
+    body.hud-grid {
+        background-image: linear-gradient(rgba(0, 255, 204, 0.03) 1px, transparent 1px),
+                          linear-gradient(90deg, rgba(0, 255, 204, 0.03) 1px, transparent 1px);
+        background-size: 28px 28px;
+        animation: cyberGridMove 30s linear infinite;
+    }
+
+    .cyber-card {
+        background: rgba(4, 10, 18, 0.94);
+        backdrop-filter: blur(16px);
+        -webkit-backdrop-filter: blur(16px);
+        border: 2px solid rgba(0, 255, 204, 0.5);
+        border-radius: 14px;
+        padding: 14px;
+        margin-bottom: 12px;
+        box-shadow: 0 0 30px rgba(0,255,204,0.25);
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    body.critical-alert .cyber-card {
+        border-color: #ff3366;
+        box-shadow: 0 0 45px rgba(255, 51, 102, 0.6);
+        background: rgba(26, 2, 5, 0.94);
+    }
+
+    .cyber-button {
+        background: rgba(0,255,204,0.25);
+        transition: all 0.2s ease;
+        color: #00ffcc !important;
+        font-weight: 800;
+        cursor: pointer;
+        border-radius: 8px;
+        padding: 10px 14px;
+        min-height: 46px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        touch-action: manipulation;
+        border: 1px solid #00ffcc;
+        box-shadow: 0 0 12px rgba(0, 255, 204, 0.25);
+    }
+    .cyber-button:active {
+        transform: scale(0.97);
+        box-shadow: 0 0 20px rgba(0, 255, 204, 0.6);
+        background: rgba(0,255,204,0.5);
+        color: #fff !important;
+    }
+
+    body.chameleon-active {
+        background-color: #01140A !important;
+        background-image: 
+            radial-gradient(circle at 50% 0%, rgba(0, 255, 157, 0.18) 0%, transparent 60%),
+            radial-gradient(circle at 90% 90%, rgba(0, 255, 204, 0.1) 0%, transparent 50%) !important;
+    }
+
+    html.warm body {
+        background-color: #F4F3EF !important;
+        color: #111827 !important;
+        background-image: none !important;
+    }
+    html.warm .cyber-card {
+        background: rgba(255, 255, 255, 0.96) !important;
+        color: #111827 !important;
+        border: 1px solid #D1D5DB !important;
+        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.05) !important;
+    }
+
+    .sarah-avatar-stage {
+        position: relative;
+        width: 100%;
+        max-width: 90px;
+        aspect-ratio: 1/1;
+        margin: 0 auto;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        cursor: pointer;
+        animation: avatarIdle 5s ease-in-out infinite;
+    }
+    .sarah-avatar-stage.speaking {
+        animation: avatarSpeaking 1.5s ease-in-out infinite alternate;
+    }
+
+    .wave-ring {
+        position: absolute;
+        border-radius: 50%;
+        border: 1.5px solid var(--primary);
+        box-shadow: 0 0 10px var(--glow), inset 0 0 6px var(--glow);
+        animation: pulseWave var(--wave-speed) infinite cubic-bezier(0.215, 0.61, 0.355, 1);
+        pointer-events: none;
+    }
+    .wave-ring:nth-child(1) { animation-delay: 0s; }
+    .wave-ring:nth-child(2) { animation-delay: calc(var(--wave-speed) * 0.33); }
+    .wave-ring:nth-child(3) { animation-delay: calc(var(--wave-speed) * 0.66); }
+
+    .cyan-outer-boundary {
+        position: absolute;
+        inset: -5px;
+        border-radius: 50%;
+        border: 1px dashed var(--secondary);
+        opacity: 0.7;
+        animation: spinSlow 30s linear infinite;
+        box-shadow: 0 0 14px var(--glow-cyan);
+    }
+    .avatar-aura {
+        position: absolute;
+        inset: -8%;
+        border-radius: 50%;
+        background: radial-gradient(circle, var(--glow) 0%, var(--glow-cyan) 45%, transparent 70%);
+        background-size: 200% 200%;
+        filter: blur(10px);
+        animation: auraPulse 3.5s infinite ease-in-out, auroraShift 8s ease infinite;
+        opacity: 0.85;
+    }
+    .avatar-core-wrapper {
+        position: relative;
+        width: 85%;
+        height: 85%;
+        border-radius: 50%;
+        z-index: 10;
+        box-shadow: 0 0 16px var(--glow), 0 0 25px rgba(0,0,0,0.8);
+        background: radial-gradient(circle, #091328 0%, #040914 60%, #02040a 100%);
+        border: 2px solid #00FFCC;
+        overflow: hidden;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .molecule-rotate-slow {
+        animation: moleculeRotate 20s linear infinite;
+        transform-origin: center;
+    }
+    .molecule-rotate-reverse {
+        animation: moleculeRotate 14s linear infinite reverse;
+        transform-origin: center;
+    }
+    .molecule-node-pulse {
+        animation: moleculePulse 3s ease-in-out infinite alternate;
+    }
+
+    @keyframes pulseWave {
+        0% { width: 60%; height: 60%; opacity: 0.95; transform: scale(0.85); box-shadow: 0 0 8px var(--glow); }
+        50% { opacity: 0.6; }
+        100% { width: 130%; height: 130%; opacity: 0; transform: scale(1.15); box-shadow: 0 0 20px transparent; }
+    }
+    @keyframes auraPulse {
+        0%, 100% { transform: scale(0.96); opacity: 0.7; }
+        50% { transform: scale(1.12); opacity: 0.95; }
+    }
+    @keyframes spinSlow {
+        from { transform: rotate(0deg); }
+        to { transform: rotate(360deg); }
+    }
+    .glass-overlay {
+        position: absolute;
+        inset: 0;
+        border-radius: 50%;
+        background: radial-gradient(circle at 35% 25%, rgba(255, 255, 255, 0.25) 0%, rgba(255, 255, 255, 0.05) 40%, transparent 70%);
+        pointer-events: none;
+        z-index: 15;
+    }
+
+    @keyframes raru-scan{0%{top:0}100%{top:100%}}
+    .animate-raru-scan{animation:raru-scan 2s linear infinite}
+
+    ::-webkit-scrollbar { width: 4px; height: 4px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: rgba(0,255,204,0.3); border-radius: 9999px; }
+</style>
+</head>
+<body class="selection:bg-cyberCyan selection:text-void hud-grid">
+    <div id="root"></div>
+    <script type="text/babel">
+        const R = React;
+        const { useState, useRef, useEffect } = React;
+
+        let globalVoiceProfile = localStorage.getItem("raru_sarah_voice_profile") || "oficial";
+
+        function falarSarah(texto, customProfile = null) {
+            if (!("speechSynthesis" in window)) return;
+            try {
+                window.speechSynthesis.cancel();
+                const cleanText = String(texto).replace(/([\u2700-\u27BF]|[\uE000-\uF8FF]|\uD83C[\uDC00-\uDFFF]|\uD83D[\uDC00-\uDFFF]|[\u2011-\u26FF]|\uD83E[\uDD00-\uDDFF])/g, '').replace(/https?:\/\/\S+/g, "").trim();
+                if (!cleanText) return;
+                
+                const utterance = new SpeechSynthesisUtterance(cleanText);
+                utterance.lang = "pt-BR";
+                
+                const prof = customProfile || globalVoiceProfile;
+                if (prof === 'humana') {
+                    utterance.rate = 1.0;
+                    utterance.pitch = 1.25;
+                } else {
+                    utterance.rate = 1.02;
+                    utterance.pitch = 1.05;
+                }
+
+                const voices = window.speechSynthesis.getVoices();
+                const selectedVoice = voices.find(v => v.lang.toLowerCase().includes('pt-br') && v.name.toLowerCase().includes('female')) || voices.find(v => v.lang.toLowerCase().includes('pt')) || voices[0];
+                if (selectedVoice) utterance.voice = selectedVoice;
+                window.speechSynthesis.speak(utterance);
+            } catch(e) {}
+        }
+
+        const CLOUDFLARE_WORKER_URL = "https://sarah-envelope.phantrorfirmo08.workers.dev/";
+        const APP_SHARE_URL = "https://phantrorfirmo08-alt.github.io/PROJETO-CIDAD-O-SENSOR-01/";
+        const shareMessageText = `🛡️ RARU NEXUS AI V11 Plus • RCC Mesquita\n📍 Rede Automatizada de Resiliência Urbana, Mesquita - RJ\n\n📲 Instale o app oficial PWA:\n${APP_SHARE_URL}`;
+
+        async function gerarArquivoIconeEscudo() {
+            return new Promise((resolve) => {
+                const canvas = document.createElement('canvas');
+                canvas.width = 192;
+                canvas.height = 192;
+                const ctx = canvas.getContext('2d');
+
+                ctx.fillStyle = '#010306';
+                ctx.fillRect(0, 0, 192, 192);
+
+                ctx.beginPath();
+                ctx.moveTo(96, 20);
+                ctx.lineTo(165, 50);
+                ctx.lineTo(165, 115);
+                ctx.quadraticCurveTo(165, 170, 96, 182);
+                ctx.quadraticCurveTo(27, 170, 27, 115);
+                ctx.lineTo(27, 50);
+                ctx.closePath();
+                ctx.fillStyle = '#04101E';
+                ctx.fill();
+                ctx.lineWidth = 6;
+                ctx.strokeStyle = '#00FFCC';
+                ctx.stroke();
+
+                ctx.beginPath();
+                ctx.arc(96, 96, 45, 0, Math.PI * 2);
+                ctx.strokeStyle = '#1E90FF';
+                ctx.lineWidth = 3;
+                ctx.stroke();
+
+                ctx.beginPath();
+                ctx.arc(96, 96, 18, 0, Math.PI * 2);
+                ctx.fillStyle = '#00FF9D';
+                ctx.fill();
+
+                ctx.font = '800 16px Orbitron, sans-serif';
+                ctx.fillStyle = '#FFFFFF';
+                ctx.textAlign = 'center';
+                ctx.fillText('V11', 96, 102);
+
+                canvas.toBlob((blob) => {
+                    if (blob) {
+                        const file = new File([blob], 'RARU_SHIELD.png', { type: 'image/png' });
+                        resolve(file);
+                    } else {
+                        resolve(null);
+                    }
+                }, 'image/png');
+            });
+        }
+
+        function SarahVectorAvatar() {
+            return (
+                <svg viewBox="0 0 100 100" className="w-full h-full" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <circle cx="50" cy="50" r="46" fill="#040D1A" stroke="#00FFCC" strokeWidth="1.5"/>
+                    <circle cx="50" cy="50" r="40" stroke="#1E90FF" strokeWidth="0.8" strokeDasharray="2 4" opacity="0.6"/>
+
+                    <g stroke="url(#gradConn)" strokeWidth="2" opacity="0.85">
+                        <line x1="50" y1="50" x2="50" y2="24"/>
+                        <line x1="50" y1="50" x2="73" y2="37"/>
+                        <line x1="50" y1="50" x2="73" y2="63"/>
+                        <line x1="50" y1="50" x2="50" y2="76"/>
+                        <line x1="50" y1="50" x2="27" y2="63"/>
+                        <line x1="50" y1="50" x2="27" y2="37"/>
+                        <polygon points="50,24 73,37 73,63 50,76 27,63 27,37" fill="none" stroke="#00FFCC" strokeWidth="1" strokeDasharray="3 3"/>
+                    </g>
+
+                    <g className="molecule-rotate-slow">
+                        <ellipse cx="50" cy="50" rx="38" ry="14" stroke="#00FF9D" strokeWidth="1" opacity="0.7" transform="rotate(30 50 50)"/>
+                        <circle cx="83" cy="38" r="2.5" fill="#00FF9D"/>
+                    </g>
+                    <g className="molecule-rotate-reverse">
+                        <ellipse cx="50" cy="50" rx="38" ry="14" stroke="#FFD700" strokeWidth="1" opacity="0.7" transform="rotate(-30 50 50)"/>
+                        <circle cx="17" cy="62" r="2.5" fill="#FFD700"/>
+                    </g>
+
+                    <g>
+                        <circle cx="50" cy="24" r="5" fill="url(#gradAtomCyan)" className="molecule-node-pulse" stroke="#FFFFFF" strokeWidth="0.8"/>
+                        <circle cx="73" cy="37" r="4.5" fill="url(#gradAtomOrange)" stroke="#FFFFFF" strokeWidth="0.8"/>
+                        <circle cx="73" cy="63" r="5" fill="url(#gradAtomCyan)" className="molecule-node-pulse" stroke="#FFFFFF" strokeWidth="0.8"/>
+                        <circle cx="50" cy="76" r="4.5" fill="url(#gradAtomOrange)" stroke="#FFFFFF" strokeWidth="0.8"/>
+                        <circle cx="27" cy="63" r="5" fill="url(#gradAtomCyan)" className="molecule-node-pulse" stroke="#FFFFFF" strokeWidth="0.8"/>
+                        <circle cx="27" cy="37" r="4.5" fill="url(#gradAtomOrange)" stroke="#FFFFFF" strokeWidth="0.8"/>
+
+                        <circle cx="50" cy="50" r="10" fill="url(#gradAtomCore)" stroke="#00FFCC" strokeWidth="1.5" className="molecule-node-pulse"/>
+                        <circle cx="50" cy="50" r="4" fill="#FFFFFF"/>
+                    </g>
+
+                    <defs>
+                        <linearGradient id="gradConn" x1="0" y1="0" x2="100" y2="100" gradientUnits="userSpaceOnUse">
+                            <stop offset="0%" stopColor="#00FFCC"/>
+                            <stop offset="50%" stopColor="#00FF9D"/>
+                            <stop offset="100%" stopColor="#FFD700"/>
+                        </linearGradient>
+                        <radialGradient id="gradAtomCore" cx="50%" cy="50%" r="50%">
+                            <stop offset="0%" stopColor="#FFFFFF"/>
+                            <stop offset="40%" stopColor="#00FFCC"/>
+                            <stop offset="100%" stopColor="#04101E"/>
+                        </radialGradient>
+                        <radialGradient id="gradAtomCyan" cx="35%" cy="35%" r="65%">
+                            <stop offset="0%" stopColor="#E0FFFF"/>
+                            <stop offset="60%" stopColor="#00FFCC"/>
+                            <stop offset="100%" stopColor="#005B66"/>
+                        </radialGradient>
+                        <radialGradient id="gradAtomOrange" cx="35%" cy="35%" r="65%">
+                            <stop offset="0%" stopColor="#FFF3E0"/>
+                            <stop offset="60%" stopColor="#FFD700"/>
+                            <stop offset="100%" stopColor="#7A6500"/>
+                        </radialGradient>
+                    </defs>
+                </svg>
+            );
+        }
+
+        function SarahAnimatedAvatar({ isSpeaking, sizeClass = "w-full max-w-[85px]" }) {
+            return (
+                <div className={`sarah-avatar-stage ${isSpeaking ? 'speaking' : ''} ${sizeClass}`}>
+                    <div className="cyan-outer-boundary"></div>
+                    <div className="wave-ring"></div>
+                    <div className="wave-ring"></div>
+                    <div className="wave-ring"></div>
+                    <div className="avatar-aura"></div>
+                    <div className="avatar-core-wrapper">
+                        <div className="glass-overlay"></div>
+                        <SarahVectorAvatar />
+                    </div>
+                </div>
+            );
+        }
+
+        const BACIAS_HIDROGRAFICAS_RJ = [
+            { id: "guandu", nome: "Região Hidrográfica do Guandu", regiao: "Baixada Fluminense / Metropolitana", status: "Estável", risco: "Baixo" },
+            { id: "paraiba", nome: "Região Hidrográfica do Paraíba do Sul", regiao: "Norte / Noroeste / Paraíba", status: "Monitoramento", risco: "Moderado" },
+            { id: "lagunas", nome: "Região Hidrográfica de Jacarepaguá e Lagos", regiao: "Região dos Lagos / Litorânea", status: "Estável", risco: "Baixo" },
+            { id: "sao_joao", nome: "Região Hidrográfica de São João", regiao: "Litorânea", status: "Estável", risco: "Baixo" },
+            { id: "macae", nome: "Região Hidrográfica do Macaé e das Ostras", regiao: "Norte Fluminense", status: "Estável", risco: "Baixo" },
+            { id: "piratininga", nome: "Região Hidrográfica de Guanabara / Piratininga", regiao: "Metropolitana", status: "Alerta", risco: "Atenção" }
+        ];
+
+        const MUNICIPIOS_92 = [
+            {n:"Mesquita",lat:-22.7845,lon:-43.4190,ip:"10.10.21.15",baciaId:"guandu"},
+            {n:"Angra dos Reis",lat:-23.00,lon:-44.31,ip:"10.10.60.01",baciaId:"lagunas"}, {n:"Aperibé",lat:-21.62,lon:-42.10,ip:"10.10.60.02",baciaId:"paraiba"}, {n:"Araruama",lat:-22.87,lon:-42.33,ip:"10.10.60.03",baciaId:"lagunas"}, {n:"Areal",lat:-22.23,lon:-43.11,ip:"10.10.60.04",baciaId:"paraiba"}, {n:"Armação dos Búzios",lat:-22.75,lon:-41.88,ip:"10.10.60.05",baciaId:"sao_joao"}, {n:"Arraial do Cabo",lat:-22.96,lon:-42.02,ip:"10.10.60.06",baciaId:"lagunas"}, 
+            {n:"Barra do Piraí",lat:-22.47,lon:-43.81,ip:"10.10.60.07",baciaId:"guandu"}, {n:"Barra Mansa",lat:-22.54,lon:-44.17,ip:"10.10.60.08",baciaId:"guandu"}, {n:"Belford Roxo",lat:-22.76,lon:-43.39,ip:"10.10.60.09",baciaId:"guandu"}, {n:"Bom Jardim",lat:-22.15,lon:-42.41,ip:"10.10.60.10",baciaId:"paraiba"}, {n:"Bom Jesus do Itabapoana",lat:-21.14,lon:-41.67,ip:"10.10.60.11",baciaId:"paraiba"}, 
+            {n:"Cabo Frio",lat:-22.88,lon:-42.01,ip:"10.10.41.20",baciaId:"lagunas"}, {n:"Cachoeiras de Macacu",lat:-22.46,lon:-42.65,ip:"10.10.60.12",baciaId:"piratininga"}, {n:"Cambuci",lat:-21.56,lon:-41.90,ip:"10.10.60.13",baciaId:"paraiba"}, {n:"Campos dos Goytacazes",lat:-21.75,lon:-41.32,ip:"10.10.51.92",baciaId:"paraiba"}, {n:"Cantagalo",lat:-21.97,lon:-42.36,ip:"10.10.60.14",baciaId:"paraiba"}, 
+            {n:"Carapebus",lat:-22.21,lon:-41.65,ip:"10.10.60.15",baciaId:"macae"}, {n:"Comendador Levy Gasparian",lat:-22.03,lon:-43.20,ip:"10.10.60.16",baciaId:"paraiba"}, {n:"Carmo",lat:-21.92,lon:-42.61,ip:"10.10.60.17",baciaId:"paraiba"}, {n:"Casimiro de Abreu",lat:-22.48,lon:-42.20,ip:"10.10.60.18",baciaId:"sao_joao"}, {n:"Duque de Caxias",lat:-22.78,lon:-43.31,ip:"10.10.23.14",baciaId:"piratininga"}, 
+            {n:"Engenheiro Paulo de Frontin",lat:-22.54,lon:-43.68,ip:"10.10.60.19",baciaId:"guandu"}, {n:"Guapimirim",lat:-22.53,lon:-42.98,ip:"10.10.60.20",baciaId:"piratininga"}, {n:"Iguaba Grande",lat:-22.84,lon:-42.22,ip:"10.10.60.21",baciaId:"lagunas"}, {n:"Itaboraí",lat:-22.74,lon:-42.85,ip:"10.10.60.22",baciaId:"piratininga"}, {n:"Itaguaí",lat:-22.85,lon:-43.77,ip:"10.10.60.23",baciaId:"guandu"}, 
+            {n:"Italva",lat:-21.42,lon:-41.74,ip:"10.10.60.24",baciaId:"paraiba"}, {n:"Itaocara",lat:-21.47,lon:-42.07,ip:"10.10.60.25",baciaId:"paraiba"}, {n:"Itaperuna",lat:-21.20,lon:-41.88,ip:"10.10.60.26",baciaId:"paraiba"}, {n:"Itatiaia",lat:-22.49,lon:-44.56,ip:"10.10.60.27",baciaId:"guandu"}, {n:"Japeri",lat:-22.64,lon:-43.65,ip:"10.10.60.28",baciaId:"guandu"}, 
+            {n:"Laje do Muriaé",lat:-21.20,lon:-42.12,ip:"10.10.60.29",baciaId:"paraiba"}, {n:"Macaé",lat:-22.37,lon:-41.78,ip:"10.10.60.30",baciaId:"macae"}, {n:"Macuco",lat:-21.98,lon:-42.49,ip:"10.10.60.31",baciaId:"paraiba"}, {n:"Magé",lat:-22.65,lon:-43.04,ip:"10.10.60.32",baciaId:"piratininga"}, {n:"Mangaratiba",lat:-22.95,lon:-44.04,ip:"10.10.60.33",baciaId:"guandu"}, 
+            {n:"Maricá",lat:-22.91,lon:-42.81,ip:"10.10.60.34",baciaId:"piratininga"}, {n:"Mendes",lat:-22.52,lon:-43.73,ip:"10.10.60.35",baciaId:"guandu"}, {n:"Miguel Pereira",lat:-22.45,lon:-43.46,ip:"10.10.60.36",baciaId:"guandu"}, {n:"Miracema",lat:-21.41,lon:-42.19,ip:"10.10.60.37",baciaId:"paraiba"}, 
+            {n:"Natividade",lat:-21.04,lon:-41.97,ip:"10.10.60.38",baciaId:"paraiba"}, {n:"Nilópolis",lat:-22.81,lon:-43.41,ip:"10.10.60.39",baciaId:"guandu"}, {n:"Niterói",lat:-22.88,lon:-43.11,ip:"10.10.12.08",baciaId:"piratininga"}, {n:"Nova Friburgo",lat:-22.28,lon:-42.53,ip:"10.10.60.40",baciaId:"paraiba"}, {n:"Nova Iguaçu",lat:-22.75,lon:-43.45,ip:"10.10.22.12",baciaId:"guandu"}, 
+            {n:"Paracambi",lat:-22.61,lon:-43.71,ip:"10.10.60.41",baciaId:"guandu"}, {n:"Paraíba do Sul",lat:-22.16,lon:-43.29,ip:"10.10.60.42",baciaId:"paraiba"}, {n:"Paraty",lat:-23.22,lon:-44.71,ip:"10.10.60.43",baciaId:"lagunas"}, {n:"Paty do Alferes",lat:-22.42,lon:-43.43,ip:"10.10.60.44",baciaId:"guandu"}, {n:"Petrópolis",lat:-22.50,lon:-43.17,ip:"10.10.31.05",baciaId:"paraiba"}, 
+            {n:"Pinheiral",lat:-22.51,lon:-44.00,ip:"10.10.60.45",baciaId:"guandu"}, {n:"Piraí",lat:-22.62,lon:-43.89,ip:"10.10.60.46",baciaId:"guandu"}, {n:"Porciúncula",lat:-20.97,lon:-42.04,ip:"10.10.60.47",baciaId:"paraiba"}, {n:"Porto Real",lat:-22.41,lon:-44.28,ip:"10.10.60.48",baciaId:"guandu"}, {n:"Quatis",lat:-22.41,lon:-44.25,ip:"10.10.60.49",baciaId:"guandu"}, 
+            {n:"Queimados",lat:-22.71,lon:-43.55,ip:"10.10.60.50",baciaId:"guandu"}, {n:"Quissamã",lat:-22.10,lon:-41.47,ip:"10.10.60.51",baciaId:"macae"}, {n:"Resende",lat:-22.47,lon:-44.44,ip:"10.10.60.52",baciaId:"guandu"}, {n:"Rio Bonito",lat:-22.70,lon:-42.62,ip:"10.10.60.53",baciaId:"piratininga"}, {n:"Rio Claro",lat:-22.73,lon:-44.13,ip:"10.10.60.54",baciaId:"guandu"}, 
+            {n:"Rio das Ostras",lat:-22.52,lon:-41.94,ip:"10.10.60.55",baciaId:"macae"}, {n:"Rio de Janeiro",lat:-22.90,lon:-43.17,ip:"10.10.11.10",baciaId:"piratininga"}, {n:"Santa Maria Madalena",lat:-21.95,lon:-42.00,ip:"10.10.60.56",baciaId:"paraiba"}, {n:"Santo Antônio de Pádua",lat:-21.53,lon:-42.18,ip:"10.10.60.57",baciaId:"paraiba"}, {n:"São Fidélis",lat:-21.64,lon:-41.74,ip:"10.10.60.58",baciaId:"paraiba"}, 
+            {n:"São Francisco de Itabapoana",lat:-21.46,lon:-41.11,ip:"10.10.60.59",baciaId:"paraiba"}, {n:"São Gonçalo",lat:-22.82,lon:-43.05,ip:"10.10.60.60",baciaId:"piratininga"}, {n:"São João da Barra",lat:-21.64,lon:-41.05,ip:"10.10.60.61",baciaId:"paraiba"}, {n:"São João de Meriti",lat:-22.80,lon:-43.37,ip:"10.10.60.62",baciaId:"guandu"}, {n:"São José de Ubá",lat:-21.35,lon:-41.94,ip:"10.10.60.63",baciaId:"paraiba"}, 
+            {n:"São José do Vale do Rio Preto",lat:-22.15,lon:-43.15,ip:"10.10.60.64",baciaId:"paraiba"}, {n:"São Pedro da Aldeia",lat:-22.84,lon:-42.10,ip:"10.10.60.65",baciaId:"lagunas"}, {n:"São Sebastião do Alto",lat:-21.95,lon:-42.13,ip:"10.10.60.66",baciaId:"paraiba"}, {n:"Sapucaia",lat:-21.99,lon:-43.13,ip:"10.10.60.67",baciaId:"paraiba"}, {n:"Saquarema",lat:-22.91,lon:-42.50,ip:"10.10.60.68",baciaId:"lagunas"}, 
+            {n:"Seropédica",lat:-22.74,lon:-43.70,ip:"10.10.60.69",baciaId:"guandu"}, {n:"Silva Jardim",lat:-22.65,lon:-42.38,ip:"10.10.60.70",baciaId:"sao_joao"}, {n:"Sumidouro",lat:-22.04,lon:-42.67,ip:"10.10.60.71",baciaId:"paraiba"}, {n:"Tanguá",lat:-22.72,lon:-42.70,ip:"10.10.60.72",baciaId:"piratininga"}, {n:"Teresópolis",lat:-22.41,lon:-42.96,ip:"10.10.60.73",baciaId:"paraiba"}, 
+            {n:"Trajano de Moraes",lat:-22.06,lon:-42.06,ip:"10.10.60.74",baciaId:"paraiba"}, {n:"Três Rios",lat:-22.11,lon:-43.21,ip:"10.10.60.75",baciaId:"paraiba"}, {n:"Valença",lat:-22.25,lon:-43.70,ip:"10.10.60.76",baciaId:"paraiba"}, {n:"Varre-Sai",lat:-20.93,lon:-41.86,ip:"10.10.60.77",baciaId:"paraiba"}, {n:"Vassouras",lat:-22.40,lon:-43.66,ip:"10.10.60.78",baciaId:"guandu"}, {n:"Volta Redonda",lat:-22.52,lon:-44.10,ip:"10.10.60.79",baciaId:"guandu"}
+        ];
+
+        function playChameleonSound() {
+            try {
+                const AudioCtx = window.AudioContext || window.webkitAudioContext;
+                if (!AudioCtx) return;
+                const ctx = new AudioCtx();
+                if (ctx.state === 'suspended') ctx.resume();
+                const bufferSize = ctx.sampleRate * 1.2;
+                const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
+                const data = buffer.getChannelData(0);
+                for (let i = 0; i < bufferSize; i++) { data[i] = (Math.random() * 2 - 1) * Math.sin(i / 800); }
+                const noiseSource = ctx.createBufferSource();
+                noiseSource.buffer = buffer;
+                const filter = ctx.createBiquadFilter();
+                filter.type = 'lowpass';
+                filter.frequency.setValueAtTime(350, ctx.currentTime);
+                filter.frequency.exponentialRampToValueAtTime(120, ctx.currentTime + 1.2);
+                const gainNode = ctx.createGain();
+                gainNode.gain.setValueAtTime(0.8, ctx.currentTime);
+                gainNode.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 1.2);
+                noiseSource.connect(filter); filter.connect(gainNode); gainNode.connect(ctx.destination);
+                noiseSource.start();
+            } catch (e) {}
+        }
+
+        function IconDashboard({ className = "w-4 h-4" }) {
+            return (
+                <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/>
+                </svg>
+            );
+        }
+
+        function IconVistoria({ className = "w-4 h-4" }) {
+            return (
+                <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/>
+                </svg>
+            );
+        }
+
+        function IconEstacao({ className = "w-4 h-4" }) {
+            return (
+                <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M14 14.76V3.5a2.5 2.5 0 0 0-5 0v11.26a4.5 4.5 0 1 0 5 0z"/>
+                </svg>
+            );
+        }
+
+        function IconAlquino({ className = "w-4 h-4" }) {
+            return (
+                <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06-.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+                </svg>
+            );
+        }
+
+        function IconInstalar({ className = "w-4 h-4" }) {
+            return (
+                <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/>
+                </svg>
+            );
+        }
+
+        function IconVideos({ className = "w-4 h-4" }) {
+            return (
+                <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2" ry="2"/>
+                </svg>
+            );
+        }
+
+        function IconAdmin({ className = "w-4 h-4" }) {
+            return (
+                <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+                </svg>
+            );
+        }
+
+        function IconQuemSomos({ className = "w-4 h-4" }) {
+            return (
+                <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/>
+                </svg>
+            );
+        }
+
+        // ESTAÇÃO PLUS COMPLETA: RADAR BIOCIBERNÉTICO, MAPA TÁTICO DOS 92 MUNICÍPIOS (SEM CHAVES) E TELEMETRIA
+        function EstacaoPlusComplexModule({ showToast }) {
+            const canvasRef = useRef(null);
+            const mapContainerRef = useRef(null);
+            const mapInstanceRef = useRef(null);
+
+            const [goes19Ativo, setGoes19Ativo] = useState(false);
+            const [rainAtivo, setRainAtivo] = useState(false);
+            const [goes19Src, setGoes19Src] = useState('');
+            const [rainSrc, setRainSrc] = useState('');
+            const [radarHudText, setRadarHudText] = useState('RADAR + GOES-19');
+            const [precipText, setPrecipText] = useState('CHUVA: --');
+            const [coordsText, setCoordsText] = useState('SEBINHO: DADOS REAIS ATIVOS');
+            const [heartRate, setHeartRate] = useState(75);
+            const [homeostasis, setHomeostasis] = useState('ESTÁVEL');
+            const [isStressed, setIsStressed] = useState(false);
+
+            const [municipioSelecionado, setMunicipioSelecionado] = React.useState(MUNICIPIOS_92.find(m => m.n === 'Mesquita') || MUNICIPIOS_92[0]);
+            const [soundEnabled, setSoundEnabled] = React.useState(true);
+            const [climaInfo, setClimaInfo] = React.useState(null);
+            const [sarahState, setSarahState] = React.useState({
+                isSpeaking: false,
+                speechText: "Estação Plus RCC ativa. Nó-Mãe Mesquita IP 10.10.21.15. Monitoramento meteorológico dos 92 municípios do RJ seguro."
+            });
+
+            // Canvas Biocibernético Animado (Garantido sem tela preta)
+            useEffect(() => {
+                const canvas = canvasRef.current;
+                if (!canvas) return;
+                const ctx = canvas.getContext('2d');
+                let animationFrameId;
+
+                const resizeCanvas = () => {
+                    const dpr = window.devicePixelRatio || 1;
+                    const rect = canvas.parentElement.getBoundingClientRect();
+                    canvas.width = rect.width * dpr;
+                    canvas.height = rect.height * dpr;
+                    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+                    canvas.style.width = rect.width + 'px';
+                    canvas.style.height = rect.height + 'px';
+                };
+                resizeCanvas();
+                window.addEventListener('resize', resizeCanvas);
+
+                let pulsePhase = 0;
+                let radarAngle = 0;
+                const mendanha = {x: 0.25, y: 0.70}, sebinho = {x: 0.42, y: 0.55}, tingua = {x: 0.65, y: 0.25}, domBosco = {x: 0.75, y: 0.45};
+                let bloodCells = [];
+                for(let i=0; i<20; i++) bloodCells.push({x: Math.random()*400, y: Math.random()*300, vx: (Math.random()-0.5)*0.8, vy: (Math.random()-0.5)*0.8, radius: Math.random()*2+1});
+
+                const render = () => {
+                    const w = canvas.parentElement.clientWidth, h = canvas.parentElement.clientHeight;
+                    ctx.fillStyle = isStressed ? 'rgba(30, 2, 8, 0.45)' : 'rgba(1, 4, 8, 0.5)';
+                    ctx.fillRect(0, 0, w, h);
+
+                    radarAngle += 0.03 + (heartRate / 2500);
+                    let centerX = w / 2, centerY = h / 2;
+
+                    ctx.strokeStyle = isStressed ? 'rgba(255, 51, 102, 0.3)' : 'rgba(0, 255, 204, 0.2)';
+                    ctx.lineWidth = 1;
+                    [20, 40, 60, 80].forEach(r => {
+                        ctx.beginPath(); ctx.arc(centerX, centerY, r, 0, Math.PI * 2); ctx.stroke();
+                    });
+
+                    let sweepX = centerX + Math.cos(radarAngle) * 90;
+                    let sweepY = centerY + Math.sin(radarAngle) * 90;
+                    ctx.strokeStyle = isStressed ? 'rgba(255, 51, 102, 0.9)' : 'rgba(0, 255, 204, 0.8)';
+                    ctx.lineWidth = 2;
+                    ctx.beginPath(); ctx.moveTo(centerX, centerY); ctx.lineTo(sweepX, sweepY); ctx.stroke();
+
+                    pulsePhase += heartRate / 600;
+                    let pulse = Math.sin(pulsePhase) * (isStressed ? 6 : 4);
+
+                    ctx.fillStyle = 'rgba(0,255,204,0.5)';
+                    bloodCells.forEach(bc => {
+                        bc.x += bc.vx; bc.y += bc.vy;
+                        if(bc.x < 0) bc.x = w; if(bc.x > w) bc.x = 0;
+                        if(bc.y < 0) bc.y = h; if(bc.y > h) bc.y = 0;
+                        ctx.beginPath(); ctx.arc(bc.x, bc.y, bc.radius, 0, Math.PI * 2); ctx.fill();
+                    });
+
+                    let mx = w*mendanha.x, my = h*mendanha.y, sx1 = w*sebinho.x, sy1 = h*sebinho.y, tx = w*tingua.x, ty = h*tingua.y, sx2 = w*domBosco.x, sy2 = h*domBosco.y;
+
+                    ctx.strokeStyle = '#FFD700'; ctx.lineWidth = 1.8; ctx.setLineDash([4,4]);
+                    ctx.beginPath(); ctx.moveTo(mx,my); ctx.lineTo(sx1,sy1); ctx.stroke();
+
+                    ctx.strokeStyle = '#1E90FF'; ctx.lineWidth = 1.8; ctx.setLineDash([4,4]);
+                    ctx.beginPath(); ctx.moveTo(tx,ty); ctx.lineTo(sx2,sy2); ctx.stroke();
+                    ctx.setLineDash([]);
+
+                    [{x:sx1, y:sy1, c:isStressed?'#ff3366':'#00ffcc'}, {x:sx2, y:sy2, c:isStressed?'#ff3366':'#FFD700'}].forEach(s => {
+                        ctx.fillStyle = s.c; ctx.beginPath(); ctx.arc(s.x, s.y, 5 + pulse*0.5, 0, Math.PI*2); ctx.fill();
+                    });
+                    [{x:mx, y:my}, {x:tx, y:ty}].forEach(c => {
+                        ctx.fillStyle = '#ff3366'; ctx.beginPath(); ctx.arc(c.x, c.y, 4, 0, Math.PI*2); ctx.fill();
+                    });
+
+                    animationFrameId = requestAnimationFrame(render);
+                };
+                render();
+
+                return () => {
+                    cancelAnimationFrame(animationFrameId);
+                    window.removeEventListener('resize', resizeCanvas);
+                };
+            }, [isStressed, heartRate]);
+
+            // Mapa Tático Leaflet focado em Mesquita e Restrito ao RJ (Sem Chaves / Sem Exposição de Solo)
+            useEffect(() => {
+                if (mapContainerRef.current && !mapInstanceRef.current) {
+                    const map = L.map(mapContainerRef.current, {
+                        center: [-22.7845, -43.4190], // Mesquita - RJ
+                        zoom: 11,
+                        minZoom: 9,
+                        maxZoom: 15,
+                        maxBounds: [
+                            [-23.50, -44.80], 
+                            [-21.20, -40.90]  
+                        ],
+                        maxBoundsViscosity: 1.0
+                    });
+
+                    // Camada Cartográfica Tática Gratuita (CartoDB Dark Matter) - Sem chaves, sem expor telhados/solo
+                    L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+                        attribution: '&copy; OpenStreetMap | RCC RARU V11 Plus',
+                        maxZoom: 19
+                    }).addTo(map);
+
+                    MUNICIPIOS_92.forEach(m => {
+                        const isMes = m.n === 'Mesquita';
+                        const circleColor = isMes ? '#FF3366' : '#00FFCC';
+                        const marker = L.circleMarker([m.lat, m.lon], {
+                            radius: isMes ? 14 : 7,
+                            fillColor: circleColor,
+                            color: '#FFFFFF',
+                            weight: isMes ? 3 : 1,
+                            opacity: 1,
+                            fillOpacity: 0.95
+                        }).addTo(map);
+
+                        const popupContent = `<div style="font-family:monospace; font-size:11px; background:#010306; color:#00ffcc; padding:6px; border-radius:6px;">
+                            <b style="color:${isMes ? '#FF3366' : '#00FFCC'}">${isMes ? '🔴 NÓ-MÃE RCC • ' : ''}Subestação ${m.n}</b><br>
+                            IP: <b>${m.ip}</b><br>
+                            Status: <b style="color:#00FF9D">ONLINE (TÁTICO)</b>
+                        </div>`;
+
+                        marker.bindPopup(popupContent);
+                        if (isMes) marker.openPopup();
+                    });
+
+                    mapInstanceRef.current = map;
+                }
+            }, []);
+
+            const acionarSubestacaoVirtual = async (m) => {
+                if (!m) return;
+                setMunicipioSelecionado(m);
+                const bacia = BACIAS_HIDROGRAFICAS_RJ.find(b => b.id === m.baciaId) || BACIAS_HIDROGRAFICAS_RJ[0];
+                showToast(`[IP: ${m.ip}] Conectando ao nó de ${m.n}...`);
+
+                if (navigator.onLine) {
+                    try {
+                        const res = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${m.lat}&longitude=${m.lon}&current=temperature_2m,relative_humidity_2m,precipitation,wind_speed_10m&timezone=America/Sao_Paulo`);
+                        const data = await res.json();
+
+                        if (data?.current) {
+                            const { temperature_2m, relative_humidity_2m, precipitation, wind_speed_10m } = data.current;
+                            setClimaInfo(data.current);
+
+                            let statusChuva = "condições estáveis";
+                            if (precipitation > 5) statusChuva = "alerta de chuva forte";
+                            else if (precipitation > 0.5) statusChuva = "precipitação leve";
+
+                            const relatorio = `Subestação Virtual ${m.n}, IP ${m.ip}. Temperatura atual de ${temperature_2m} graus, umidade relativa em ${relative_humidity_2m} por cento, com ${statusChuva}, ventos de ${wind_speed_10m} quilômetros por hora. Monitoramento da ${bacia.nome} ativo.`;
+
+                            setSarahState(prev => ({
+                                ...prev,
+                                isSpeaking: true,
+                                speechText: `[IP: ${m.ip}] ${m.n.toUpperCase()} | Temp: ${temperature_2m}°C | Umi: ${relative_humidity_2m}% | Chuva: ${precipitation}mm | Vento: ${wind_speed_10m}km/h | Bacia: ${bacia.nome}`
+                            }));
+
+                            if (soundEnabled) falarSarah(relatorio);
+                            setTimeout(() => setSarahState(prev => ({ ...prev, isSpeaking: false })), 7000);
+                        }
+                    } catch (err) {
+                        const fallbackMsg = `Subestação ${m.n}, IP ${m.ip}. Telemetria local ativa em redundância.`;
+                        setSarahState(prev => ({ ...prev, isSpeaking: true, speechText: `[IP: ${m.ip}] ${m.n.toUpperCase()} - Sinal mantido.` }));
+                        if (soundEnabled) falarSarah(fallbackMsg);
+                        setTimeout(() => setSarahState(prev => ({ ...prev, isSpeaking: false })), 4000);
+                    }
+                }
+            };
+
+            useEffect(() => {
+                acionarSubestacaoVirtual(municipioSelecionado);
+            }, []);
+
+            const mudarMunicipio = (e) => {
+                const nome = e.target.value;
+                const m = MUNICIPIOS_92.find(x => x.n === nome);
+                if (m) acionarSubestacaoVirtual(m);
+            };
+
+            const toggleGoes19Widget = () => {
+                if (goes19Ativo) {
+                    setGoes19Ativo(false);
+                    setGoes19Src('');
+                    showToast("GOES-19 Desligado");
+                } else {
+                    setGoes19Ativo(true);
+                    setGoes19Src(`https://cdn.star.nesdis.noaa.gov/GOES19/ABI/CONUS/GEOCOLOR/GOES19-CONUS-GEOCOLOR-1000x1000.jpg?t=${Date.now()}`);
+                    showToast("GOES-19 Ativado (NOAA)");
+                }
+            };
+
+            const toggleRainWidget = async () => {
+                if (rainAtivo) {
+                    setRainAtivo(false);
+                    setRainSrc('');
+                    showToast("Radar Doppler Desligado");
+                } else {
+                    try {
+                        let res = await fetch('https://api.rainviewer.com/public/weather-maps.json');
+                        let data = await res.json();
+                        let pastFrames = data.radar.past;
+                        if(pastFrames && pastFrames.length > 0) {
+                            let f = pastFrames[pastFrames.length - 1];
+                            setRainSrc(`https://tilecache.rainviewer.com/v2/radar/${f.path}/256/8/99/152.png`);
+                            setRainAtivo(true);
+                            setRadarHudText(`RADAR ${new Date(f.time*1000).toLocaleTimeString('pt-BR')}`);
+                            showToast("Radar Doppler Ativo");
+                        }
+                    } catch(e) {
+                        showToast("Erro ao carregar Radar Doppler");
+                    }
+                }
+            };
+
+            const triggerFeverWidget = () => {
+                setIsStressed(true);
+                setHeartRate(145);
+                setHomeostasis("CRÍTICO");
+                document.body.classList.add('critical-alert');
+                showToast("ALERTA DE ESTRESSE HIDROMETEOROLÓGICO!");
+                falarSarah("Alerta crítico de estresse hidrometeorológico nas serras.");
+                setTimeout(() => {
+                    setIsStressed(false);
+                    setHeartRate(75);
+                    setHomeostasis("ESTÁVEL");
+                    document.body.classList.remove('critical-alert');
+                }, 8000);
+            };
+
+            const baciaAtual = BACIAS_HIDROGRAFICAS_RJ.find(b => b.id === municipioSelecionado.baciaId) || BACIAS_HIDROGRAFICAS_RJ[0];
+
+            return (
+                <div className="space-y-4 font-mono w-full">
+                    {/* Radar Biocibernético Animado */}
+                    <div className="cyber-card p-4 space-y-3 font-mono border border-cyberCyan/60 shadow-2xl">
+                        <div className="flex justify-between items-center border-b border-cyberCyan/30 pb-2">
+                            <span className="text-[10px] text-cyberCyan font-bold uppercase tracking-wider">⚡ RADAR BIOCIBERNÉTICO • ESTAÇÃO PLUS</span>
+                            <span className="text-[9px] text-cyberGreen font-bold">● BIO-PULSO ATIVO</span>
+                        </div>
+
+                        <div className="radar-container relative bg-[#020509] border border-cyberCyan h-[160px] rounded-xl overflow-hidden flex justify-between items-center">
+                            <img src="https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?q=80&w=300&auto=format&fit=crop" className="side-sat w-[28%] h-full object-cover opacity-50 filter contrast-125" alt="Sat L" />
+                            <div className="canvas-wrapper absolute top-0 left-[28%] w-[44%] h-[100%]">
+                                {goes19Ativo && <img src={goes19Src} className="absolute inset-0 w-full h-full object-cover opacity-70 z-10 pointer-events-none" alt="GOES19" />}
+                                {rainAtivo && <img src={rainSrc} className="absolute inset-0 w-full h-full object-cover opacity-70 z-10 pointer-events-none" alt="Rain" />}
+                                <div className="absolute top-1.5 left-1.5 text-[7px] bg-void/90 px-2 py-0.5 border-l-2 border-cyberCyan text-cyberCyan z-20 rounded-r">{radarHudText}</div>
+                                <div className="absolute top-1.5 right-1.5 text-[7px] bg-void/90 px-2 py-0.5 border-l-2 border-cyberAmber text-cyberAmber z-20 rounded-r">{precipText}</div>
+                                <canvas ref={canvasRef} className="absolute inset-0 w-full h-full z-50"></canvas>
+                            </div>
+                            <img src="https://images.unsplash.com/photo-1507499739999-097706ad8914?q=80&w=300&auto=format&fit=crop" className="side-sat w-[28%] h-full object-cover opacity-50 filter contrast-125" alt="Sat R" />
+                            <div className="coords-bar absolute bottom-0 w-full text-[7px] bg-void/95 p-1 border-t border-cyberCyan/30 text-center text-emerald-300 z-20 truncate px-2">{coordsText}</div>
+                        </div>
+
+                        <div className="grid grid-cols-2 gap-2">
+                            <button onClick={toggleGoes19Widget} className={`cyber-button text-[10px] uppercase font-bold ${goes19Ativo ? '!bg-cyberCyan !text-void' : ''}`}>
+                                {goes19Ativo ? '🛰️ GOES-19 ATIVO' : '🛰️ GOES-19'}
+                            </button>
+                            <button onClick={toggleRainWidget} className={`cyber-button text-[10px] uppercase font-bold ${rainAtivo ? '!bg-cyberCyan !text-void' : ''}`}>
+                                {rainAtivo ? '🌧️ RADAR ATIVO' : '🌧️ RADAR DOPPLER'}
+                            </button>
+                            <button onClick={triggerFeverWidget} className="cyber-button text-[10px] uppercase font-bold !bg-cyberRose/20 !border-cyberRose !text-cyberRose">
+                                ⚡ ESTRESSE CRÍTICO
+                            </button>
+                            <button onClick={() => { setHeartRate(prev => Math.min(120, prev + 10)); showToast("ATP Injetado!"); }} className="cyber-button text-[10px] uppercase font-bold !bg-cyberGreen/20 !border-cyberGreen !text-cyberGreen">
+                                🟢 INJETAR ATP
+                            </button>
+                        </div>
+                    </div>
+
+                    {/* Mapa Tático RJ / Mesquita (Sem chaves, sem solo) */}
+                    <div className="cyber-card p-4 space-y-3.5 border border-cyberCyan/60 shadow-2xl">
+                        <div className="flex justify-between items-center border-b border-cyberCyan/30 pb-2">
+                            <b className="text-cyberCyan text-[10px] uppercase tracking-wider">🗺️ MAPA TÁTICO • 92 MUNICÍPIOS DO RJ (MESQUITA)</b>
+                            <span className="text-cyberGreen text-[9px] font-bold">● CLIMA &amp; SEGURANÇA</span>
+                        </div>
+                        <div ref={mapContainerRef} className="w-full h-[320px] rounded-xl overflow-hidden border-2 border-cyberCyan/50 shadow-[0_0_20px_rgba(0,255,204,0.2)] z-10"></div>
+                        
+                        {/* Legenda de Cores de Severidade */}
+                        <div className="bg-void/90 border border-cyberCyan/30 rounded-xl p-3 space-y-2 text-[10px]">
+                            <span className="text-cyberCyan font-bold uppercase block">Escala de Severidade Meteorológica (Cores):</span>
+                            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                                <div className="flex items-center gap-1.5"><span className="w-3 h-3 rounded-full bg-[#00FF9D]"></span><span className="text-slate-200">Verde: Estável</span></div>
+                                <div className="flex items-center gap-1.5"><span className="w-3 h-3 rounded-full bg-[#FFD700]"></span><span className="text-slate-200">Amarelo: Atenção</span></div>
+                                <div className="flex items-center gap-1.5"><span className="w-3 h-3 rounded-full bg-[#FF8C00]"></span><span className="text-slate-200">Laranja: Alerta</span></div>
+                                <div className="flex items-center gap-1.5"><span className="w-3 h-3 rounded-full bg-[#FF3366]"></span><span className="text-slate-200">Vermelho: Máximo</span></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Telemetria e Bacias */}
+                    <div className="cyber-card p-4 space-y-3.5 border border-cyberCyan/60 shadow-2xl">
+                        <div className="flex justify-between items-center border-b border-cyberCyan/30 pb-2.5">
+                            <div className="flex items-center gap-2">
+                                <div className="w-8 h-8 shrink-0">
+                                    <SarahAnimatedAvatar isSpeaking={false} sizeClass="w-full h-full !max-w-none" />
+                                </div>
+                                <div>
+                                    <h2 className="font-display text-[11px] font-black text-white tracking-wider uppercase">TELEMETRIA &amp; BACIAS HIDROGRÁFICAS</h2>
+                                    <p className="text-[8px] text-cyberCyan font-bold">REDE DE CONTROLE COMUNITÁRIO (RCC)</p>
+                                </div>
+                            </div>
+                            <button onClick={() => setSoundEnabled(!soundEnabled)} className="px-2.5 py-1 bg-void/90 border border-cyberCyan/40 text-cyberCyan rounded-xl text-[9px] font-bold cursor-pointer">
+                                {soundEnabled ? '🔊 Som Ativo' : '🔇 Mudo'}
+                            </button>
+                        </div>
+
+                        <div className="space-y-2">
+                            <label className="text-[9px] text-cyberCyan font-bold uppercase block">Selecione o Município (92 RJ)</label>
+                            <select 
+                                value={municipioSelecionado.n} 
+                                onChange={mudarMunicipio} 
+                                className="w-full bg-void border border-cyberCyan/50 rounded-xl p-2.5 text-xs text-white font-bold cursor-pointer hover:border-cyberCyan transition"
+                            >
+                                {MUNICIPIOS_92.map((m, idx) => <option key={idx} value={m.n}>{m.n} (IP: {m.ip})</option>)}
+                            </select>
+                        </div>
+
+                        <div className="bg-void/90 border border-cyberCyan/40 rounded-xl p-3.5 space-y-2.5 shadow-inner">
+                            <div className="flex justify-between items-center text-[9px] text-slate-300 font-mono border-b border-cyberCyan/20 pb-1.5">
+                                <span>NÓ IP: <strong className="text-white">{municipioSelecionado.ip}</strong></span>
+                                <span className="text-cyberGreen font-bold">● CONECTADO</span>
+                            </div>
+
+                            <p className="text-xs text-slate-100 leading-relaxed font-mono">
+                                "{sarahState.speechText}"
+                            </p>
+
+                            {climaInfo && (
+                                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 pt-1 text-center font-mono">
+                                    <div className="bg-deepSpace border border-cyberCyan/30 rounded-lg p-2">
+                                        <span className="text-[7px] text-slate-400 block uppercase">TEMPERATURA</span>
+                                        <span className="text-[11px] font-bold text-cyberCyan">{climaInfo.temperature_2m}°C</span>
+                                    </div>
+                                    <div className="bg-deepSpace border border-cyberCyan/30 rounded-lg p-2">
+                                        <span className="text-[7px] text-slate-400 block uppercase">UMIDADE</span>
+                                        <span className="text-[11px] font-bold text-cyberBlue">{climaInfo.relative_humidity_2m}%</span>
+                                    </div>
+                                    <div className="bg-deepSpace border border-cyberCyan/30 rounded-lg p-2">
+                                        <span className="text-[7px] text-slate-400 block uppercase">PRECIPITAÇÃO</span>
+                                        <span className="text-[11px] font-bold text-cyberGreen">{climaInfo.precipitation} mm</span>
+                                    </div>
+                                    <div className="bg-deepSpace border border-cyberCyan/30 rounded-lg p-2">
+                                        <span className="text-[7px] text-slate-400 block uppercase">VENTO</span>
+                                        <span className="text-[11px] font-bold text-cyberAmber">{climaInfo.wind_speed_10m} km/h</span>
+                                    </div>
+                                </div>
+                            )}
+
+                            <div className="bg-deepSpace/90 border border-cyberCyan/30 rounded-lg p-2.5 space-y-1 text-xs">
+                                <span className="text-[8px] text-cyberCyan font-bold uppercase block">BACIA HIDROGRÁFICA VINCULADA:</span>
+                                <div className="flex justify-between text-[10px] text-white">
+                                    <span>{baciaAtual.nome}</span>
+                                    <span className="text-cyberGreen font-bold">{baciaAtual.status} ({baciaAtual.risco})</span>
+                                </div>
+                                <span className="text-[8px] text-slate-400 block">{baciaAtual.regiao}</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            );
+        }
+
+        function QuemSomosModal({ isOpen, onClose }) {
+            if (!isOpen) return null;
+            return (
+                <div className="fixed inset-0 z-[120] flex items-center justify-center bg-void/90 backdrop-blur-2xl p-4 overflow-y-auto" onClick={onClose}>
+                    <div className="cyber-card w-full max-w-md rounded-2xl shadow-2xl overflow-hidden animate-fade-in max-h-[85vh] flex flex-col border border-cyberCyan/60 font-mono text-slate-200" onClick={e => e.stopPropagation()}>
+                        <div className="flex items-center justify-between px-4 py-3 border-b border-cyberCyan/30 bg-deepSpace/95">
+                            <div className="flex items-center gap-2">
+                                <h3 className="font-display text-xs font-black text-white tracking-widest uppercase">MANIFESTO INSTITUCIONAL • RCC</h3>
+                            </div>
+                            <button onClick={onClose} className="w-7 h-7 rounded-lg bg-cyberRose/20 border border-cyberRose/40 text-cyberRose font-black cursor-pointer flex items-center justify-center text-xs">✕</button>
+                        </div>
+                        <div className="flex-1 overflow-y-auto p-4 space-y-3 text-xs leading-relaxed">
+                            <div className="space-y-1">
+                                <h4 className="text-cyberCyan font-black uppercase text-[10px]">1. QUEM SOMOS</h4>
+                                <p>A <strong>RARU NEXUS AI V11 Plus • RCC (Rede de Controle Comunitário)</strong> é uma iniciativa independente de monitoramento meteorológico e resiliência urbana mantida por moradores de Mesquita, RJ (Rocha Sobrinho / Sebinho), com suporte de inteligência artificial.</p>
+                                <p className="text-cyberCyan font-bold pt-1">Prevenção inteligente para todos. Todos unidos, todos protegidos, Baixada.</p>
+                            </div>
+                        </div>
+                        <div className="p-3 bg-deepSpace/95 border-t border-cyberCyan/30 text-center">
+                            <button onClick={onClose} className="px-5 py-2 cyber-button rounded-xl font-black text-xs uppercase tracking-wider cursor-pointer">Fechar</button>
+                        </div>
+                    </div>
+                </div>
+            );
+        }
+
+        function VistoriaRARU_NEXUS({ onBackToDashboard, showToast }) {
+            const [mun, setMun] = useState(MUNICIPIOS_92.find(m => m.n === 'Mesquita') || MUNICIPIOS_92[0]);
+            const [fotos, setFotos] = useState([]);
+            const [camOn, setCamOn] = useState(false);
+            const [nome, setNome] = useState(''); 
+            const [bairro, setBairro] = useState('');
+            const [tipoIdentificacao, setTipoIdentificacao] = useState('cpf');
+            const [docId, setDocId] = useState(''); 
+            const [instituicao, setInstituicao] = useState('');
+            const [cnpjInstituicao, setCnpjInstituicao] = useState('');
+            const [registroProfissional, setRegistroProfissional] = useState('');
+            const [rel, setRel] = useState('');
+            const [gps, setGps] = useState({lat:0,lon:0,acc:''});
+            const [isAiAnalyzing, setIsAiAnalyzing] = useState(false);
+            const [clima, setClima] = useState(null);
+
+            const RISCOS_RARU = ["R1 - BAIXO / PREVENTIVO","R2 - MODERADO / ALERTA","R3 - ALTO / ENXURRADA","R4 - EVACUACAO PREVENTIVA","RH - CONVERGENCIA SERRAS","RE - ESTRUTURAL / TALUDE"];
+            const [risco, setRisco] = useState(RISCOS_RARU[1]);
+            const ORGAOS_RARU_NEXUS = ["Universidades e Pesquisadores","CEMADEN / INPE","CRAS / CREAS - Baixada","SUS / Vigilancia Saude","Defesa Civil Municipal / RCC","NUPDECs - 92 Municipios","Cidadao Sensor","A Chave da Esperanca","Cidadao Direto"];
+            const [org, setOrg] = useState(ORGAOS_RARU_NEXUS[4]);
+            const [protAtual, setProtAtual] = useState(null);
+            
+            const videoRef = useRef(null); 
+            const streamRef = useRef(null);
+
+            useEffect(() => {
+                if (!mun?.lat) return;
+                fetch(`https://api.open-meteo.com/v1/forecast?latitude=${mun.lat}&longitude=${mun.lon}&current=temperature_2m,relative_humidity_2m,precipitation,wind_speed_10m&timezone=auto`)
+                    .then(r => r.json())
+                    .then(d => setClima(d.current))
+                    .catch(() => {});
+            }, [mun]);
+
+            useEffect(() => {
+                return () => {
+                    if (streamRef.current) streamRef.current.getTracks().forEach(t => t.stop());
+                };
+            }, []);
+
+            const atualizarGPS = () => {
+                if(!navigator.geolocation) return;
+                navigator.geolocation.getCurrentPosition(p=>{
+                  setGps({lat:p.coords.latitude,lon:p.coords.longitude,acc:Math.round(p.coords.accuracy)});
+                  setMun(m=>({...m,lat:p.coords.latitude,lon:p.coords.longitude}));
+                  showToast(`GPS ${Math.round(p.coords.accuracy)}m OK`);
+                },()=>{}, {enableHighAccuracy:true,timeout:5000});
+            };
+
+            const startCam = async () => {
+                try{
+                  const s = await navigator.mediaDevices.getUserMedia({video:{facingMode:{ideal:"environment"}}});
+                  streamRef.current=s; setCamOn(true);
+                  setTimeout(()=>{if(videoRef.current){videoRef.current.srcObject=s; videoRef.current.play().catch(()=>{})}},100);
+                  atualizarGPS();
+                }catch{showToast('Câmera bloqueada ou indisponível')}
+            };
+            const stopCam = () => { 
+                if(streamRef.current) streamRef.current.getTracks().forEach(t=>t.stop()); 
+                setCamOn(false); 
+            };
+
+            const capturar = () => {
+                const v=videoRef.current; if(!v)return;
+                const c=document.createElement('canvas'); 
+                c.width=400; 
+                c.height=Math.round(400*(v.videoHeight/v.videoWidth));
+                const ctx=c.getContext('2d'); 
+                ctx.drawImage(v,0,0,c.width,c.height);
+                
+                ctx.fillStyle='rgba(1,3,6,0.85)'; 
+                ctx.fillRect(0,c.height-45,c.width,45);
+                ctx.fillStyle='#00FFCC'; 
+                ctx.font='bold 8px monospace';
+                ctx.fillText(`${new Date().toLocaleString('pt-BR')} | ${(gps.lat||mun.lat).toFixed(5)},${(gps.lon||mun.lon).toFixed(5)}`,5,c.height-28);
+                ctx.fillText(`${(nome||'CIDADÃO').slice(0,20)} | ${mun.n}-${(bairro||'BAIRRO').slice(0,15)} | ${risco}`,5,c.height-10);
+                
+                const url=c.toDataURL('image/jpeg',0.40); 
+                setFotos(p=>p.length<4?[...p,url]:p);
+                showToast('Foto capturada e salva!');
+            };
+
+            const gerarLaudoComSarahAI = async () => {
+                if(!bairro) { showToast('Informe o bairro para a IA redigir o laudo.'); return; }
+                setIsAiAnalyzing(true);
+                showToast('Sarah AI analisando campo e redigindo laudo técnico...');
+
+                const chuva = clima?.precipitation || 0;
+                const promptAi = `Aja como analista sênior da RCC e Defesa Civil da RARU NEXUS V11 Plus. Redija um laudo técnico completo e minucioso para vistoria urbana em ${mun.n}, bairro ${bairro}, risco ${risco}. Precipitação: ${chuva}mm.`;
+
+                try {
+                    const response = await fetch(CLOUDFLARE_WORKER_URL, {
+                        method: "POST", headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({ model: "openai/gpt-oss-120b", messages: [{ role: "system", content: "You are Sarah, RCC Senior Analyst." }, { role: "user", content: promptAi }], temperature: 0.4, max_tokens: 1000 })
+                    });
+                    const data = await response.json();
+                    let aiText = data?.choices?.[0]?.message?.content || `Vistoria em ${mun.n}, bairro ${bairro}. Risco ${risco}.`;
+                    aiText = aiText.replace(/#{1,6}\s?/g, '').replace(/\*\*/g, '').trim();
+                    setRel(aiText);
+                    showToast('Laudo técnico gerado pela Sarah AI!');
+                } catch(e) {
+                    setRel(`Laudo de Vistoria - ${mun.n} (${bairro}). Risco: ${risco}. Monitorado via RCC.`);
+                    showToast('Laudo gerado em redundância local.');
+                } finally {
+                    setIsAiAnalyzing(false);
+                }
+            };
+
+            const sha256 = async (str) => {
+                const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(str));
+                return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2, '0')).join('');
+            };
+
+            const gerarDados = async () => {
+                if(!nome){ showToast('Informe o responsável'); return null; }
+                if(!bairro){ showToast('Informe o bairro'); return null; }
+                const seq = Math.floor(Math.random() * 8999 + 1000);
+                const sig = mun.n.slice(0, 3).toUpperCase();
+                const prot = `PROT-RCC-${sig}-2026-${seq}`;
+                const hash = await sha256(`${prot}-${Date.now()}`);
+                setProtAtual(prot);
+                return { protocolo: prot, hash };
+            };
+
+            const gerarPDF = async () => {
+                const dados = await gerarDados(); if(!dados) return;
+                const { jsPDF } = window.jspdf;
+                const doc = new jsPDF();
+                doc.setFillColor(1, 3, 6);
+                doc.rect(0, 0, 210, 297, 'F');
+                doc.setTextColor(0, 255, 204);
+                doc.text(`LAUDO RCC RARU - ${dados.protocolo}`, 14, 18);
+                doc.setTextColor(255, 255, 255);
+                doc.text(`Responsavel: ${nome}`, 14, 30);
+                doc.text(`Bairro: ${bairro}`, 14, 56);
+                doc.text(`Risco: ${risco}`, 14, 62);
+                doc.text(doc.splitTextToSize(rel || 'Sem relato adicional.', 182), 14, 80);
+                doc.save(`RARU_${dados.protocolo}.pdf`);
+                showToast('PDF gerado e baixado!');
+            };
+
+            const enviarWhats = async () => {
+                const dados = await gerarDados(); if(!dados) return;
+                const msg = `🛡️ LAUDO TÉCNICO RCC RARU NEXUS • MESQUITA\n📌 Protocolo: ${dados.protocolo}\n📍 Local: ${mun.n} - ${bairro}\n⚠️ Classificação: ${risco}\n\n📝 Relato:\n${rel}\n\n🔒 HASH: ${dados.hash}`;
+                navigator.clipboard.writeText(msg).catch(()=>{});
+                window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(msg)}`, '_blank');
+                showToast('WhatsApp aberto!');
+            };
+
+            return (
+                <div className="w-full space-y-3.5 font-mono">
+                    <div className="p-4 rounded-2xl border border-cyberCyan/50 space-y-3 bg-[#010306] shadow-2xl cyber-card">
+                        <div className="flex justify-between items-center border-b border-cyberCyan/30 pb-2.5">
+                            <h3 className="text-[11px] text-cyberCyan font-black uppercase tracking-wider">VISTORIA RCC + LAUDO TÉCNICO SARAH IA</h3>
+                            <button onClick={onBackToDashboard} className="px-2.5 py-1 bg-red-500/20 text-red-400 rounded-xl text-[10px] font-bold border border-red-500/30">✕ Fechar</button>
+                        </div>
+                        
+                        <div className="bg-black border border-cyberRose/40 rounded-xl p-2 text-[9px] text-cyberRose font-bold text-center">
+                            NÓ-MÃE MESQUITA IP 10.10.21.15 • RCC ATIVO
+                        </div>
+
+                        <select value={mun.n} onChange={e => { const m = MUNICIPIOS_92.find(x => x.n === e.target.value); setMun(m); showToast(`Conectando ao nó ${m.ip}...`); }} className="w-full bg-black text-cyberCyan border border-cyberCyan/40 rounded-xl p-2.5 text-xs font-bold">
+                            {MUNICIPIOS_92.map((m, i) => <option key={i} value={m.n}>{m.n} (IP: {m.ip})</option>)}
+                        </select>
+                        <div className="bg-black border border-cyberCyan/30 rounded-xl p-3 space-y-2.5">
+                            <div className="flex justify-between items-center">
+                                <span className="text-[10px] text-cyberCyan font-bold uppercase">CÂMERA-SCANNER COM LASER</span>
+                                {!camOn ?
+                                    <button onClick={startCam} className="px-3 py-1.5 bg-cyberCyan/20 border border-cyberCyan text-cyberCyan rounded-xl text-[10px] font-bold">Ligar Câmera</button> :
+                                    <button onClick={stopCam} className="px-3 py-1.5 bg-red-400/20 border border-red-400 text-red-400 rounded-xl text-[10px] font-bold">Desligar</button>
+                                }
+                            </div>
+                            <div className="bg-black rounded-xl overflow-hidden border border-cyberCyan/30 relative" style={{ minHeight: '180px' }}>
+                                <video ref={videoRef} autoPlay playsInline muted style={{ width: '100%', height: '180px', objectFit: 'cover', display: camOn ? 'block' : 'none' }} />
+                                {!camOn && <div className="h-[180px] grid place-items-center text-slate-500 text-xs font-bold">Toque em "Ligar Câmera" para ativar</div>}
+                            </div>
+                            {camOn && <button onClick={capturar} className="w-full py-2.5 bg-cyberCyan text-black font-black rounded-xl text-xs cursor-pointer shadow-md">ESCANEAR FOTO COM LASER</button>}
+                            
+                            {fotos.length > 0 && (
+                                <div className="flex gap-2 overflow-x-auto pt-1">
+                                    {fotos.map((f, i) => (
+                                        <div key={i} className="relative shrink-0">
+                                            <img src={f} className="w-14 h-14 rounded-xl border border-cyberCyan/40 object-cover" />
+                                            <div className="absolute -top-1 -right-1 bg-red-500 text-white rounded-full w-4 h-4 grid place-items-center text-[9px] font-bold cursor-pointer" onClick={() => setFotos(fotos.filter((_, idx) => idx !== i))}>✕</div>
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
+                        </div>
+                        <div className="space-y-3">
+                            <input value={nome} onChange={e => setNome(e.target.value)} placeholder="Responsável Técnico / Cidadão *" className="w-full bg-black border border-cyberCyan/30 rounded-xl p-2.5 text-xs text-white" />
+                            <select value={risco} onChange={e => setRisco(e.target.value)} className="w-full bg-black border border-cyberCyan/30 rounded-xl p-2.5 text-xs text-cyberCyan font-bold">
+                                {RISCOS_RARU.map((r, i) => <option key={i} value={r}>{r}</option>)}
+                            </select>
+                            <input value={bairro} onChange={e => setBairro(e.target.value)} placeholder="Bairro / Comunidade * (Rocha Sobrinho, etc)" className="w-full bg-black border border-cyberCyan/30 rounded-xl p-2.5 text-xs text-white" />
+                            
+                            <button onClick={gerarLaudoComSarahAI} disabled={isAiAnalyzing} className="w-full py-3 bg-gradient-to-r from-cyberCyan via-blue-400 to-sky-500 text-void font-black rounded-xl text-xs uppercase cursor-pointer shadow-lg">
+                                {isAiAnalyzing ? "SARAH IA REDIGINDO..." : "GERAR LAUDO RCC COM SARAH IA"}
+                            </button>
+
+                            <textarea value={rel} onChange={e => setRel(e.target.value)} rows="4" placeholder="Relato técnico..." className="w-full bg-black border border-cyberCyan/30 rounded-xl p-3 text-xs text-white resize-none leading-relaxed" />
+                            <div className="grid grid-cols-2 gap-2.5">
+                                <button onClick={gerarPDF} className="py-2.5 bg-white text-black font-black rounded-xl text-xs cursor-pointer shadow-md">GERAR PDF</button>
+                                <button onClick={enviarWhats} className="py-2.5 bg-[#25D366] text-black font-black rounded-xl text-xs cursor-pointer shadow-md">WHATSAPP</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            );
+        }
+
+        function PublicVideoGallery({ localVideos, onGoToDashboard }) {
+            return (
+                <div className="space-y-4 w-full">
+                    <div className="cyber-card p-4 shadow-xl space-y-3.5">
+                        <div className="flex items-center justify-between border-b border-cyberCyan/30 pb-2.5">
+                            <h2 className="font-display text-xs font-black text-white tracking-widest flex items-center gap-2"><IconVideos className="w-4 h-4 text-cyberCyan" /> RCC STREAM</h2>
+                            <button onClick={onGoToDashboard} className="px-3 py-1.5 cyber-button rounded-xl text-xs font-black cursor-pointer">Painel</button>
+                        </div>
+                        {localVideos.length === 0 ? (
+                            <p className="text-xs text-slate-400 text-center py-6">Nenhum stream ativo.</p>
+                        ) : (
+                            <div className="space-y-3">
+                                {localVideos.map(vid => (
+                                    <div key={vid.id} className="rounded-xl overflow-hidden cyber-card shadow-lg border border-cyberCyan/30 p-0">
+                                        <div className="px-3 py-2 bg-void/90 border-b border-cyberCyan/20 text-[11px] font-black text-cyberCyan">▶ {vid.title}</div>
+                                        <video src={vid.url} controls playsInline preload="auto" className="w-full h-44 object-contain bg-void" />
+                                    </div>
+                                ))}
+                            </div>
+                        )}
+                    </div>
+                </div>
+            );
+        }
+
+        function AdminVaultModule({ showToast, onClose, localVideos, setLocalVideos, customTickerText, setCustomTickerText }) {
+            const [pinInput, setPinInput] = React.useState("");
+            const [isUnlocked, setIsUnlocked] = React.useState(false);
+            const [currentVoiceProfile, setCurrentVoiceProfile] = React.useState(globalVoiceProfile);
+
+            const [tipoAlarme, setTipoAlarme] = React.useState('CEMADEN');
+            const [statusDual, setStatusDual] = React.useState('PRONTO');
+            const [timerDualText, setTimerDualText] = React.useState('00:00');
+            const dualAudioRef = React.useRef({ ctx: null, osc: null, gain: null, sireneInt: null, timerInt: null, seg: 0, etapa: 0 });
+
+            const [novoTituloVideo, setNovoTituloVideo] = React.useState('');
+            const [novaUrlVideo, setNovaUrlVideo] = React.useState('');
+            const [tickerInput, setTickerInput] = React.useState(customTickerText || '');
+
+            const handleUnlock = (e) => {
+                e.preventDefault();
+                if (pinInput === "303500") { setIsUnlocked(true); showToast("Acesso Autorizado!"); } else { showToast("PIN Incorreto."); }
+            };
+
+            const testVoiceProfile = (profile) => {
+                globalVoiceProfile = profile;
+                setCurrentVoiceProfile(profile);
+                try { localStorage.setItem("raru_sarah_voice_profile", profile); } catch(e) {}
+                falarSarah(`Perfil ${profile} ativado.`, profile);
+                showToast(`Voz ${profile} Selecionada!`);
+            };
+
+            const adicionarVideoGaleria = (e) => {
+                e.preventDefault();
+                if (!novoTituloVideo.trim() || !novaUrlVideo.trim()) return;
+                const atualizados = [...localVideos, { id: Date.now(), title: novoTituloVideo, url: novaUrlVideo }];
+                setLocalVideos(atualizados);
+                try { localStorage.setItem('raru_local_videos', JSON.stringify(atualizados)); } catch(e) {}
+                setNovoTituloVideo(''); setNovaUrlVideo('');
+                showToast("Vídeo adicionado!");
+            };
+
+            const salvarTickerMarketing = (e) => {
+                e.preventDefault();
+                setCustomTickerText(tickerInput);
+                try { localStorage.setItem('raru_custom_ticker', tickerInput); } catch(e) {}
+                showToast("Faixa atualizada!");
+            };
+
+            const initDualAudio = () => {
+                const d = dualAudioRef.current;
+                if(!d.ctx) d.ctx = new (window.AudioContext || window.webkitAudioContext)();
+                if(d.ctx.state === 'suspended') d.ctx.resume();
+            };
+
+            const pararDualAudio = () => {
+                const d = dualAudioRef.current;
+                if(d.sireneInt) clearInterval(d.sireneInt);
+                if(d.timerInt) clearInterval(d.timerInt);
+                if(d.osc) try { d.osc.stop(); } catch(e) {}
+                d.osc = null;
+                setStatusDual('PARADO');
+                setTimerDualText('00:00');
+            };
+
+            const ativarAlarmeDual = () => {
+                initDualAudio();
+                pararDualAudio();
+                const d = dualAudioRef.current;
+                d.etapa = 0; d.seg = 180;
+                setStatusDual('ALARME ATIVO - 3 MIN');
+                d.osc = d.ctx.createOscillator();
+                d.gain = d.ctx.createGain();
+                d.osc.type = 'sawtooth';
+                d.osc.frequency.value = 650;
+                d.gain.gain.value = 0.4;
+                d.osc.connect(d.gain);
+                d.gain.connect(d.ctx.destination);
+                d.osc.start();
+
+                d.timerInt = setInterval(() => {
+                    d.seg--;
+                    const m = String(Math.floor(d.seg / 60)).padStart(2, '0');
+                    const s = String(d.seg % 60).padStart(2, '0');
+                    setTimerDualText(`${m}:${s}`);
+                    if (d.seg <= 0) pararDualAudio();
+                }, 1000);
+            };
+
+            return (
+                <div className="space-y-4 w-full font-mono">
+                    <div className="cyber-card p-4 shadow-xl space-y-3.5 border border-cyberCyan/50">
+                        <div className="flex items-center justify-between border-b border-cyberCyan/30 pb-2.5">
+                            <h2 className="font-display text-xs font-black text-cyberCyan tracking-widest">RCC • ÁREA RESTRITA (ADMIN VAULT)</h2>
+                            <button onClick={onClose} className="px-2.5 py-1 bg-cyberRose/20 text-cyberRose border border-cyberRose/40 rounded-xl text-xs font-bold cursor-pointer">✕ Fechar</button>
+                        </div>
+                        {!isUnlocked ? (
+                            <form onSubmit={handleUnlock} className="flex gap-2">
+                                <input type="password" maxLength="6" value={pinInput} onChange={(e) => setPinInput(e.target.value)} placeholder="PIN 🔒" className="flex-1 bg-void border border-cyberCyan/40 rounded-xl px-3 py-2.5 text-center text-slate-100 font-mono tracking-widest text-xs shadow-inner" />
+                                <button type="submit" className="px-4 py-2.5 cyber-button font-black rounded-xl text-xs cursor-pointer">Acessar</button>
+                            </form>
+                        ) : (
+                            <div className="space-y-4">
+                                <div className="bg-void/90 border border-cyberCyan/50 rounded-xl p-3 space-y-3 shadow-inner">
+                                    <div className="text-white font-black text-xs font-display">GESTÃO DE VÍDEOS</div>
+                                    <form onSubmit={adicionarVideoGaleria} className="space-y-2">
+                                        <input type="text" value={novoTituloVideo} onChange={(e) => setNovoTituloVideo(e.target.value)} placeholder="Título *" className="w-full bg-deepSpace border border-cyberCyan/40 rounded-xl p-2.5 text-xs text-white" />
+                                        <input type="text" value={novaUrlVideo} onChange={(e) => setNovaUrlVideo(e.target.value)} placeholder="URL *" className="w-full bg-deepSpace border border-cyberCyan/40 rounded-xl p-2.5 text-xs text-white" />
+                                        <button type="submit" className="w-full py-2 cyber-button font-black rounded-xl text-xs uppercase cursor-pointer">Adicionar</button>
+                                    </form>
+                                </div>
+                                <div className="bg-void/90 border border-red-500/50 rounded-xl p-3 space-y-3 shadow-inner">
+                                    <div className="text-center font-display text-xs font-black text-white">ALARME DE DEFESA CIVIL</div>
+                                    <div className="flex gap-2">
+                                        <button onClick={ativarAlarmeDual} className="flex-1 py-2.5 cyber-button font-black rounded-xl text-xs uppercase cursor-pointer">ATIVAR</button>
+                                        <button onClick={pararDualAudio} className="px-3 py-2.5 bg-deepSpace border border-cyberCyan/40 text-white font-bold rounded-xl text-xs cursor-pointer">PARAR</button>
+                                    </div>
+                                    <div className="text-center text-cyberCyan text-base font-display font-black">{timerDualText}</div>
+                                </div>
+                            </div>
+                        )}
+                    </div>
+                </div>
+            );
+        }
+
+        function AutomatedObservatoryWidget({ customTickerText }) {
+            const [w, setW] = React.useState({temp:"--", humidity:"--", rain:"--", status:"RCC Online", color:"#00FFCC"});
+
+            React.useEffect(() => {
+                const fetchW = async () => {
+                    try {
+                        const res = await fetch('https://api.open-meteo.com/v1/forecast?latitude=-22.7831&longitude=-43.4294&current=temperature_2m,relative_humidity_2m,precipitation&timezone=America/Sao_Paulo');
+                        const d = await res.json();
+                        if(d?.current) {
+                            const {temperature_2m:tp, relative_humidity_2m:hm, precipitation:pr} = d.current;
+                            setW({temp:`${tp}°C`, humidity:`${hm}%`, rain:`${pr} mm`, status:pr>5?"ALERTA CHUVAS":pr>0.5?"CHUVA LEVE":"CÉU ESTÁVEL (RCC)", color:pr>5?"#FF3366":pr>0.5?"#00FFCC":"#00FF9D"});
+                        }
+                    } catch(e) {}
+                };
+                fetchW(); const tw = setInterval(fetchW, 600000);
+                return () => clearInterval(tw);
+            }, []);
+
+            const defaultTicker = "REDE DE CONTROLE COMUNITÁRIO RCC MESQUITA • RIO DE JANEIRO • 92 MUNICÍPIOS MONITORADOS • GOES-19 • RADAR DOPPLER • GRUPO A CHAVE DA ESPERANÇA • DEFESA CIVIL MUNICIPAL • SALVAGUARDA E RESILIÊNCIA CLIMÁTICA";
+            const tickerPhrases = [customTickerText && customTickerText.trim() ? customTickerText : defaultTicker];
+
+            const emergencias = [
+                { n: "199", label: "DEFESA CIVIL", c: "#FF3366" },
+                { n: "193", label: "BOMBEIROS", c: "#1E90FF" },
+                { n: "192", label: "SAMU", c: "#00FF9D" },
+                { n: "188", label: "APOIO", c: "#00FFCC" }
+            ];
+
+            return (
+                <div className="cyber-card rounded-2xl overflow-hidden shadow-xl border border-cyberCyan/50 space-y-2.5 w-full col-span-full">
+                    <div className="px-3 py-2.5 bg-gradient-to-r from-deepSpace via-commandPanel to-deepSpace border-b border-cyberCyan/40 text-center space-y-0.5">
+                        <div className="font-display font-black text-[11px] tracking-wider text-cyan-200 uppercase">
+                            RARU NEXUS AI V11 Plus • 9 FONTES OFICIAIS
+                        </div>
+                        <div className="font-display font-bold text-[9px] tracking-wider text-cyberCyan uppercase">
+                            Rede de Controle Comunitário • Mesquita em Foco
+                        </div>
+                    </div>
+                    <div style={{display:'grid', gridTemplateColumns:'repeat(auto-fit, minmax(80px, 1fr))', gap:'6px'}} className="px-3 pt-0.5">
+                        {[{l:'TEMP', v:w.temp, c:'#00FFCC'}, {l:'UMIDADE', v:w.humidity, c:'#1E90FF'}, {l:'CHUVA', v:w.rain, c:'#00FFCC'}, {l:'STATUS', v:w.status, c:w.color}].map((x,i)=>(
+                            <div key={i} className="bg-void/90 border border-cyberCyan/30 rounded-xl p-2 text-center shadow-inner">
+                                <div className="text-[7px] text-slate-400 font-black font-display">{x.l}</div>
+                                <div className="text-[10px] font-mono font-black mt-0.5 truncate" style={{color:x.c}}>{x.v}</div>
+                            </div>
+                        ))}
+                    </div>
+                    <div className="px-3 pb-1">
+                        <div className="flex gap-2 overflow-x-auto pb-1">
+                            {emergencias.map((e,i)=>(
+                                <a key={i} href={`tel:${e.n}`} className="shrink-0 flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-void/90 border transition cursor-pointer shadow-md" style={{borderColor:`${e.c}55`}}>
+                                    <span className="font-display font-black text-xs" style={{color:e.c}}>{e.n}</span>
+                                    <span className="text-[8px] font-black text-slate-300">{e.label}</span>
+                                </a>
+                            ))}
+                        </div>
+                    </div>
+                    <div className="relative h-8 bg-gradient-to-r from-[#010306] via-[#04101E] to-[#010306] border-t border-b border-cyberCyan/40 overflow-hidden flex items-center">
+                        <div className="absolute left-0 top-0 bottom-0 z-10 px-2.5 flex items-center bg-gradient-to-r from-cyberCyan to-blue-500 rounded-r shadow">
+                            <span className="font-display font-black text-[8px] text-void uppercase">RCC</span>
+                        </div>
+                        <div style={{display:'flex', width:'max-content', whiteSpace:'nowrap', animation:'tickerScroll 45s linear infinite'}} className="ml-14">
+                            {Array(2).fill(0).map((_, idx) => (
+                                <div key={idx} className="flex items-center space-x-6 pr-6 font-display font-bold text-[10px] text-cyan-300">
+                                    {tickerPhrases.map((phrase, pIdx) => (
+                                        <span key={pIdx} className="inline-flex items-center space-x-6">
+                                            <span>{phrase}</span>
+                                        </span>
+                                    ))}
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                </div>
+            );
+        }
+
+        function SarahFabButton({ onOpen, isSpeaking }) {
+            return (
+                <button className="fixed z-[60] w-12 h-12 rounded-full flex items-center justify-center cursor-pointer transition-transform active:scale-90 bg-deepSpace shadow-[0_0_15px_rgba(0,255,204,0.5)] p-0.5 overflow-hidden" style={{ right: '14px', bottom: '85px' }} onClick={onOpen} aria-label="Abrir Chat Sarah AI">
+                    <SarahAnimatedAvatar isSpeaking={isSpeaking} sizeClass="w-full h-full" />
+                </button>
+            );
+        }
+
+        function SarahChatOverlay({ isOpen, onClose, isSpeaking, isProcessing, messages, input, setInput, handleSendDirectCommand, toggleListening, isListening }) {
+            if (!isOpen) return null;
+            const chatScrollRef = React.useRef(null);
+
+            React.useEffect(() => {
+                if(chatScrollRef.current) {
+                    chatScrollRef.current.scrollTop = chatScrollRef.current.scrollHeight;
+                }
+            }, [messages]);
+
+            return (
+                <div className="fixed inset-0 z-[90] flex items-end justify-center bg-void/85 backdrop-blur-xl" onClick={onClose}>
+                    <div className="cyber-card w-full max-w-lg rounded-t-3xl shadow-2xl overflow-hidden animate-fade-in h-[85vh] flex flex-col border border-cyberCyan/60 p-0" onClick={(e) => e.stopPropagation()}>
+                        
+                        <div className="flex items-center justify-between px-4 py-3 border-b border-cyberCyan/30 bg-deepSpace/95">
+                            <div className="flex items-center gap-2">
+                                <div className="w-7 h-7 shrink-0 overflow-hidden">
+                                    <SarahAnimatedAvatar isSpeaking={isSpeaking} sizeClass="w-full h-full" />
+                                </div>
+                                <div>
+                                    <div className="font-display text-xs font-black text-white tracking-widest flex items-center gap-1">
+                                        Sarah RCC <span className="text-[9px] text-cyberCyan">V11 Plus • Chat</span>
+                                    </div>
+                                    <div className="text-[8px] font-mono text-cyberGreen font-bold flex items-center gap-1">
+                                        <span className="w-1.5 h-1.5 rounded-full bg-cyberGreen animate-ping"></span> Online
+                                    </div>
+                                </div>
+                            </div>
+                            <button onClick={onClose} className="w-7 h-7 rounded-xl bg-cyberRose/20 border border-cyberRose/40 text-cyberRose font-black cursor-pointer flex items-center justify-center text-xs">✕</button>
+                        </div>
+
+                        <div ref={chatScrollRef} className="flex-1 overflow-y-auto p-3 space-y-3 font-mono">
+                            {messages.map((msg, index) => (
+                                <div key={index} className={`flex ${msg.sender === 'user' ? 'justify-end' : 'justify-start'}`}>
+                                    <div className={`max-w-[85%] rounded-2xl p-3 text-xs leading-relaxed shadow-lg ${
+                                        msg.sender === 'user' 
+                                            ? 'bg-gradient-to-r from-cyberCyan to-blue-500 text-void font-bold rounded-br-none border border-white/30' 
+                                            : 'bg-deepSpace/95 text-slate-100 rounded-bl-none border border-cyberCyan/40 shadow-[0_0_15px_rgba(0,255,204,0.15)]'
+                                    }`}>
+                                        <div className="flex items-center justify-between gap-2 mb-1 opacity-70 text-[8px]">
+                                            <span>{msg.sender === 'user' ? '👤 Operador RCC' : '🤖 Sarah AI RCC'}</span>
+                                            <span>{msg.time}</span>
+                                        </div>
+                                        <div className="whitespace-pre-line">{msg.text}</div>
+                                    </div>
+                                </div>
+                            ))}
+                            {isProcessing && (
+                                <div className="flex justify-start">
+                                    <div className="bg-deepSpace/95 border border-cyberCyan/40 rounded-2xl rounded-bl-none p-3 text-xs text-cyberCyan animate-pulse">
+                                        Sarah está consultando as fontes da RCC...
+                                    </div>
+                                </div>
+                            )}
+                        </div>
+
+                        <div className="p-3 bg-deepSpace/95 border-t border-cyberCyan/30">
+                            <form onSubmit={(e) => { e.preventDefault(); handleSendDirectCommand(); }} className="flex items-center gap-2 bg-void border-2 border-cyberCyan/60 rounded-xl p-1.5 shadow-inner">
+                                <button 
+                                    type="button" 
+                                    onClick={toggleListening} 
+                                    className={`p-2 rounded-lg transition cursor-pointer flex items-center justify-center shrink-0 ${isListening ? 'bg-cyberRose text-white animate-pulse' : 'bg-commandPanel text-cyberCyan hover:bg-cyberCyan/25 border border-cyberCyan/40'}`} 
+                                    title="Microfone"
+                                >
+                                    🎙️
+                                </button>
+                                <input 
+                                    type="text" 
+                                    value={input} 
+                                    onChange={(e) => setInput(e.target.value)} 
+                                    placeholder="Comando para a Sarah RCC..." 
+                                    className="flex-1 bg-transparent border-none px-2 py-1 text-xs text-slate-100 font-mono focus:outline-none" 
+                                />
+                                <button 
+                                    type="submit" 
+                                    disabled={isProcessing || !input.trim()} 
+                                    className={`px-3 py-2 rounded-lg font-black text-xs uppercase tracking-wider transition cursor-pointer shadow-lg ${input.trim() && !isProcessing ? 'cyber-button' : 'bg-commandPanel text-slate-500 cursor-not-allowed'}`}
+                                >
+                                    Enviar ➔
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            );
+        }
+
+        function App() {
+            const [theme, setTheme] = React.useState(() => { try { return localStorage.getItem("raru-cyber-theme") || "dark"; } catch(e) { return "dark"; } });
+            const [soundEnabled, setSoundEnabled] = React.useState(true);
+            const [isSpeaking] = React.useState(false);
+            const [isListening, setIsListening] = React.useState(false);
+
+            const [activeTab, setActiveTab] = React.useState("dashboard");
+            const [chameleonActive, setChameleonActive] = React.useState(false);
+            const [quemSomosOpen, setQuemSomosOpen] = React.useState(false);
+
+            const [shareModalOpen, setShareModalOpen] = React.useState(false);
+            const [toastMsgRef, setToastMsgRef] = React.useState(null);
+
+            const [termsAccepted, setTermsAccepted] = React.useState(
+                () => { try { return localStorage.getItem("raru_cyber_terms") === "1"; } catch(e) { return false; } }
+            );
+            const [check1, setCheck1] = React.useState(false);
+            const [check2, setCheck2] = React.useState(false);
+
+            const [isChatOpen, setIsChatOpen] = React.useState(false);
+            const [input, setInput] = React.useState("");
+            const [isProcessing, setIsProcessing] = React.useState(false);
+            
+            const [messages, setMessages] = React.useState([
+                { sender: 'assistant', text: 'Rede de Controle Comunitário RCC Mesquita ativa. Sou a Analista Sênior da central. Como posso auxiliar o operador hoje?', time: new Date().toLocaleTimeString('pt-BR', {hour: '2-digit', minute:'2-digit'}) }
+            ]);
+
+            const [localVideos, setLocalVideos] = React.useState(() => {
+                try {
+                    const saved = localStorage.getItem('raru_local_videos');
+                    if (saved) return JSON.parse(saved);
+                } catch(e) {}
+                return [
+                    { id: 1, title: "RCC RARU NEXUS V11 Plus • Câmeras & Subestações IP", url: "https://www.w3schools.com/html/mov_bbb.mp4", date: "Sistema", isPinned: true }
+                ];
+            });
+
+            const [customTickerText, setCustomTickerText] = React.useState(() => {
+                try { return localStorage.getItem('raru_custom_ticker') || ""; } catch(e) { return ""; }
+            });
+
+            const showToast = (msg) => { setToastMsgRef(msg); setTimeout(() => setToastMsgRef(null), 3500); };
+
+            useEffect(() => {
+                const interval = setInterval(() => {
+                    const now = new Date();
+                    const formatter = new Intl.DateTimeFormat("pt-BR", { timeZone: "America/Sao_Paulo", hour: "numeric", minute: "numeric", hour12: false });
+                    const parts = formatter.formatToParts(now);
+                    let hours = 0, minutes = 0;
+                    for (let p of parts) {
+                        if (p.type === 'hour') hours = parseInt(p.value, 10);
+                        if (p.type === 'minute') minutes = parseInt(p.value, 10);
+                    }
+                    if (hours === 19 && minutes === 20) {
+                        const todayStr = now.toDateString();
+                        if (localStorage.getItem('chameleon_last') !== todayStr) {
+                            setChameleonActive(true);
+                            localStorage.setItem('chameleon_last', todayStr);
+                            if (soundEnabled) playChameleonSound();
+                            showToast("EFEITO CAMALEÃO ATIVADO!");
+                        }
+                    }
+                }, 10000);
+                return () => clearInterval(interval);
+            }, [soundEnabled]);
+
+            useEffect(() => {
+                if (chameleonActive) document.body.classList.add('chameleon-active');
+                else document.body.classList.remove('chameleon-active');
+            }, [chameleonActive]);
+
+            const openShareFromApp = async () => {
+                showToast("Gerando arquivo compacto de ícone...");
+                const iconeArquivo = await gerarArquivoIconeEscudo();
+
+                if (navigator.share) {
+                    try {
+                        const sharePayload = { title: "RCC RARU NEXUS V11 Plus", text: shareMessageText, url: APP_SHARE_URL };
+                        if (iconeArquivo && navigator.canShare && navigator.canShare({ files: [iconeArquivo] })) {
+                            sharePayload.files = [iconeArquivo];
+                        }
+                        await navigator.share(sharePayload);
+                        showToast("Compartilhado com sucesso!");
+                        return;
+                    } catch (err) {
+                        if (err.name === 'AbortError') return;
+                    }
+                }
+                setShareModalOpen(true);
+            };
+
+            const toggleTheme = () => {
+                setTheme(prev => {
+                    const next = prev === 'dark' ? 'warm' : 'dark';
+                    try { localStorage.setItem("raru-cyber-theme", next); } catch(e) {}
+                    
+                    if (next === 'warm') {
+                        document.documentElement.classList.remove('dark');
+                        document.documentElement.classList.add('warm');
+                        showToast('Tema Clean Diurno');
+                    } else {
+                        document.documentElement.classList.add('dark');
+                        document.documentElement.classList.remove('warm');
+                        showToast('Modo Cyber V11 RCC');
+                    }
+                    return next;
+                });
+            };
+
+            const toggleListening = () => {
+                const SpeechRec = window.SpeechRecognition || window.webkitSpeechRecognition;
+                if (!SpeechRec) { showToast("Microfone indisponível."); return; }
+                if (isListening) { setIsListening(false); return; }
+                try {
+                    const rec = new SpeechRec();
+                    rec.lang = "pt-BR";
+                    rec.onstart = () => { setIsListening(true); showToast("Ouvindo..."); };
+                    rec.onresult = (event) => {
+                        let final = event.results[0][0].transcript;
+                        if (final) { setInput(final); setIsListening(false); showToast("Capturado!"); }
+                    };
+                    rec.onerror = () => { setIsListening(false); showToast("Erro no microfone."); };
+                    rec.onend = () => setIsListening(false);
+                    rec.start();
+                } catch (e) { setIsListening(false); }
+            };
+
+            const handleSendDirectCommand = async (textCustom) => {
+                const textToSend = textCustom !== undefined ? textCustom : input;
+                if (!textToSend.trim() || isProcessing) return;
+                
+                const timeStr = new Date().toLocaleTimeString('pt-BR', {hour: '2-digit', minute:'2-digit'});
+                const newMessages = [...messages, { sender: 'user', text: textToSend, time: timeStr }];
+                setMessages(newMessages);
+                setInput(""); 
+                setIsProcessing(true);
+
+                try {
+                    const response = await fetch(CLOUDFLARE_WORKER_URL, {
+                        method: "POST", headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({ model: "openai/gpt-oss-120b", messages: [{ role: "system", content: "You are Sarah, RCC Senior Analyst of RARU NEXUS." }, { role: "user", content: textToSend }], temperature: 0.5, max_tokens: 1000 })
+                    });
+                    const data = await response.json();
+                    let reply = data?.choices?.[0]?.message?.content || "Análise concluída na RCC.";
+                    reply = reply.replace(/#{1,6}\s?/g, '').replace(/\*\*/g, '').trim();
+                    
+                    const replyTime = new Date().toLocaleTimeString('pt-BR', {hour: '2-digit', minute:'2-digit'});
+                    setMessages(prev => [...prev, { sender: 'assistant', text: reply, time: replyTime }]);
+                    if (soundEnabled) falarSarah(reply);
+                } catch (error) {
+                    const fallbackReply = "RCC Mesquita online. Redundância local ativa.";
+                    const replyTime = new Date().toLocaleTimeString('pt-BR', {hour: '2-digit', minute:'2-digit'});
+                    setMessages(prev => [...prev, { sender: 'assistant', text: fallbackReply, time: replyTime }]);
+                    if (soundEnabled) falarSarah(fallbackReply);
+                } finally { setIsProcessing(false); }
+            };
+
+            const openSarahChat = () => { 
+                setIsChatOpen(true); 
+                if (soundEnabled) falarSarah("Chat da RCC ativo."); 
+            };
+
+            const NAV_TABS = [
+                { id: 'dashboard', iconComponent: <IconDashboard className="w-4 h-4" />, label: 'Painel' },
+                { id: 'estacao', iconComponent: <IconEstacao className="w-4 h-4" />, label: 'Estação+' },
+                { id: 'relatorio', iconComponent: <IconVistoria className="w-4 h-4" />, label: 'Vistoria' },
+                { id: 'alquino', iconComponent: <IconAlquino className="w-4 h-4" />, label: 'Alquino' },
+                { id: 'compartilhar', iconComponent: <IconInstalar className="w-4 h-4" />, label: 'Instalar' },
+                { id: 'quem-somos', iconComponent: <IconQuemSomos className="w-4 h-4" />, label: 'Sobre' },
+                { id: 'galeria', iconComponent: <IconVideos className="w-4 h-4" />, label: 'Vídeos' },
+                { id: 'admin', iconComponent: <IconAdmin className="w-4 h-4" />, label: 'Admin' }
+            ];
+
+            const handleNavClick = (tabId) => {
+                if (tabId === 'compartilhar') openShareFromApp();
+                else if (tabId === 'quem-somos') setQuemSomosOpen(true);
+                else setActiveTab(tabId);
+            };
+
+            return (
+                <div className="seu-container-raru">
+                    {toastMsgRef && <div className="fixed top-12 left-1/2 -translate-x-1/2 z-50 cyber-card px-4 py-2 rounded-2xl font-display text-[10px] font-black text-cyberCyan tracking-wider shadow-2xl border border-cyberCyan/60 animate-bounce">{toastMsgRef}</div>}
+
+                    {shareModalOpen && (
+                        <div className="fixed inset-0 bg-void/90 backdrop-blur-xl z-50 flex items-center justify-center p-4">
+                            <div className="cyber-card max-w-sm w-full p-4 rounded-2xl space-y-3 text-center shadow-2xl border border-cyberCyan/50">
+                                <div className="flex items-center justify-center gap-2 text-cyberCyan">
+                                    <h3 className="font-display text-xs font-black tracking-widest uppercase">RCC V11 PLUS</h3>
+                                </div>
+                                <textarea readOnly value={shareMessageText} className="w-full h-16 bg-void border border-cyberCyan/30 rounded-xl p-2.5 text-[9px] text-slate-300 resize-none font-mono" />
+                                <div className="flex gap-2">
+                                    <button onClick={() => { navigator.clipboard.writeText(shareMessageText); showToast("Copiado!"); setShareModalOpen(false); }} className="flex-1 py-2.5 cyber-button font-black rounded-xl text-xs">Copiar</button>
+                                    <button onClick={() => setShareModalOpen(false)} className="px-4 py-2.5 bg-cyberRose/20 text-cyberRose border border-cyberRose/40 rounded-xl text-xs font-bold">Fechar</button>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
+                    {!termsAccepted && (
+                        <div className="fixed inset-0 bg-void/95 z-[200] flex items-center justify-center p-4 overflow-y-auto">
+                            <div className="cyber-card max-w-md w-full p-5 rounded-3xl shadow-2xl space-y-3.5 my-auto border border-cyberCyan/70 font-mono text-left">
+                                <div className="w-14 h-14 mx-auto overflow-hidden">
+                                    <SarahAnimatedAvatar isSpeaking={true} sizeClass="w-full h-full" />
+                                </div>
+                                <div className="text-center space-y-1">
+                                    <h2 className="font-display text-xs font-black text-white tracking-widest uppercase">RARU NEXUS AI V11 Plus • RCC</h2>
+                                    <p className="text-[9px] text-cyberCyan font-bold uppercase">TERMO DE RESPONSABILIDADE &amp; LGPD</p>
+                                </div>
+                                <div className="bg-commandPanel/90 border border-cyberCyan/30 rounded-xl p-3 text-[11px] text-slate-200 leading-relaxed space-y-2 shadow-inner max-h-[160px] overflow-y-auto">
+                                    <p>Em conformidade com a <strong>Lei Federal nº 13.709/2018 (LGPD)</strong>, este sistema da RCC opera com controle local e uso restrito de GPS para vistorias.</p>
+                                </div>
+                                <div className="space-y-2 pt-1">
+                                    <label className="flex items-start gap-2.5 cursor-pointer text-[11px] text-slate-200 bg-commandPanel/80 p-2.5 rounded-xl border border-cyberCyan/30">
+                                        <input type="checkbox" checked={check1} onChange={(e) => setCheck1(e.target.checked)} className="mt-0.5 rounded text-cyberCyan w-4 h-4 bg-void cursor-pointer shrink-0" />
+                                        <span>Aceito os termos da LGPD.</span>
+                                    </label>
+                                    <label className="flex items-start gap-2.5 cursor-pointer text-[11px] text-slate-200 bg-commandPanel/80 p-2.5 rounded-xl border border-cyberCyan/30">
+                                        <input type="checkbox" checked={check2} onChange={(e) => setCheck2(e.target.checked)} className="mt-0.5 rounded text-cyberCyan w-4 h-4 bg-void cursor-pointer shrink-0" />
+                                        <span>Autorizo o uso de GPS para vistorias.</span>
+                                    </label>
+                                </div>
+                                <button 
+                                    disabled={!check1 || !check2} 
+                                    onClick={() => { 
+                                        setTermsAccepted(true); 
+                                        try { localStorage.setItem("raru_cyber_terms", "1"); } catch(e) {} 
+                                        showToast("RCC Ativada com Sucesso!"); 
+                                    }} 
+                                    className={`w-full py-3 rounded-xl font-display font-black text-xs uppercase tracking-wider transition shadow-2xl ${check1 && check2 ? 'cyber-button cursor-pointer' : 'bg-commandPanel text-slate-500 cursor-not-allowed'}`}
+                                >
+                                    CONCORDAR E INICIAR CENTRAL
+                                </button>
+                            </div>
+                        </div>
+                    )}
+
+                    <header className="cyber-card sticky top-0 z-30 w-full px-3 py-2 border-b border-cyberCyan/50 flex items-center justify-between shadow-lg rounded-2xl mb-2">
+                        <div className="flex items-center gap-2 cursor-pointer" onClick={openSarahChat}>
+                            <div className="w-7 h-7 overflow-hidden rounded-full border border-cyberCyan shrink-0">
+                                <SarahAnimatedAvatar isSpeaking={isSpeaking} sizeClass="w-full h-full" />
+                            </div>
+                            <div>
+                                <h1 className="font-display text-[10px] font-black text-white leading-none">RARU NEXUS Plus</h1>
+                                <p className="text-[7px] text-cyberCyan font-mono mt-0.5">Mesquita - RJ</p>
+                            </div>
+                        </div>
+                        <div className="flex items-center gap-1.5">
+                            <span className="px-2 py-0.5 bg-cyberCyan/20 border border-cyberCyan text-cyberCyan text-[8px] font-bold rounded">HUD</span>
+                            <button onClick={() => setChameleonActive(!chameleonActive)} className="px-1.5 py-1 rounded-lg border border-cyberCyan text-cyberCyan text-[7px] font-bold">Camaleão</button>
+                            <button onClick={() => setSoundEnabled(!soundEnabled)} className="w-7 h-7 rounded-lg border border-cyberCyan/50 flex items-center justify-center text-cyberCyan text-xs">🔊</button>
+                            <button onClick={toggleTheme} className="w-7 h-7 rounded-lg border border-cyberCyan text-cyberCyan flex items-center justify-center">
+                                <span className="text-xs">{theme === 'dark' ? '🌙' : '☀️'}</span>
+                            </button>
+                        </div>
+                    </header>
+
+                    <main className="flex-1 w-full mx-auto py-2 space-y-4 pb-28 relative z-10">
+                        {activeTab === 'dashboard' && (
+                            <div className="space-y-3.5">
+                                <div className="cyber-card p-3.5 text-center bg-gradient-to-r from-commandPanel via-deepSpace to-commandPanel border border-cyberCyan/60 shadow-xl cursor-pointer" onClick={() => setActiveTab('estacao')}>
+                                    <div className="font-display text-xs font-black text-cyberCyan uppercase tracking-widest flex items-center justify-center gap-2">
+                                        <span>🖥️</span> SALA DE COMANDO (HUD 360°)
+                                    </div>
+                                    <p className="text-[9px] text-slate-300 font-mono mt-1">Toque para abrir o Radar Biocibernético e o Mapa Tático dos 92 Municípios</p>
+                                </div>
+
+                                <div className="grid grid-cols-2 gap-2.5">
+                                    <button onClick={openSarahChat} className="cyber-card p-3 text-left flex items-center gap-2.5 cursor-pointer hover:border-cyberCyan transition">
+                                        <span className="text-base">💬</span>
+                                        <div>
+                                            <div className="font-display text-[10px] font-black text-white uppercase">Chat Sarah AI</div>
+                                            <div className="text-[8px] text-cyberCyan font-mono">Assistente RCC</div>
+                                        </div>
+                                    </button>
+                                    <button onClick={() => setQuemSomosOpen(true)} className="cyber-card p-3 text-left flex items-center gap-2.5 cursor-pointer hover:border-cyberCyan transition">
+                                        <span className="text-base">ℹ️</span>
+                                        <div>
+                                            <div className="font-display text-[10px] font-black text-white uppercase">Quem Somos</div>
+                                            <div className="text-[8px] text-cyberCyan font-mono">Manifesto RCC</div>
+                                        </div>
+                                    </button>
+                                    <button onClick={() => setActiveTab('estacao')} className="cyber-card p-3 text-left flex items-center gap-2.5 cursor-pointer hover:border-cyberCyan transition">
+                                        <span className="text-base">🌡️</span>
+                                        <div>
+                                            <div className="font-display text-[10px] font-black text-white uppercase">Estação Plus</div>
+                                            <div className="text-[8px] text-cyberCyan font-mono">Telemetria &amp; Radar</div>
+                                        </div>
+                                    </button>
+                                    <button onClick={() => setActiveTab('relatorio')} className="cyber-card p-3 text-left flex items-center gap-2.5 cursor-pointer hover:border-cyberCyan transition">
+                                        <span className="text-base">📋</span>
+                                        <div>
+                                            <div className="font-display text-[10px] font-black text-white uppercase">Vistoria &amp; Laudo</div>
+                                            <div className="text-[8px] text-cyberCyan font-mono">Câmera Laser</div>
+                                        </div>
+                                    </button>
+                                </div>
+                            </div>
+                        )}
+                        {activeTab === 'estacao' && <EstacaoPlusComplexModule showToast={showToast} />}
+                        {activeTab === 'alquino' && <RedeAlquinoHardwareModule onGoToDashboard={() => setActiveTab('dashboard')} showToast={showToast} />}
+                        {activeTab === 'relatorio' && <VistoriaRARU_NEXUS onBackToDashboard={() => setActiveTab('dashboard')} showToast={showToast} />}
+                        {activeTab === 'galeria' && <PublicVideoGallery localVideos={localVideos} onGoToDashboard={() => setActiveTab('dashboard')} />}
+                        {activeTab === 'admin' && <AdminVaultModule showToast={showToast} onClose={() => setActiveTab('dashboard')} localVideos={localVideos} setLocalVideos={setLocalVideos} customTickerText={customTickerText} setCustomTickerText={setCustomTickerText} />}
+
+                        <AutomatedObservatoryWidget customTickerText={customTickerText} />
+                    </main>
+
+                    {termsAccepted && <SarahFabButton onOpen={openSarahChat} isSpeaking={isSpeaking} />}
+                    <SarahChatOverlay isOpen={isChatOpen} onClose={() => setIsChatOpen(false)} isSpeaking={isSpeaking} isProcessing={isProcessing} messages={messages} input={input} setInput={setInput} handleSendDirectCommand={handleSendDirectCommand} toggleListening={toggleListening} isListening={isListening} />
+                    <QuemSomosModal isOpen={quemSomosOpen} onClose={() => setQuemSomosOpen(false)} />
+
+                    <footer className="cyber-card fixed bottom-0 left-0 right-0 z-40 border-t border-cyberCyan/50 px-2 py-2.5 flex items-center justify-between gap-1 shadow-2xl backdrop-blur-xl max-w-[650px] mx-auto rounded-t-2xl pb-[env(safe-area-inset-bottom)]">
+                        {NAV_TABS.map(tab => (
+                            <button key={tab.id} onClick={() => handleNavClick(tab.id)} className={`flex flex-col items-center justify-center gap-0.5 cursor-pointer flex-1 py-1.5 transition rounded-xl ${activeTab === tab.id ? 'text-cyberCyan bg-cyberCyan/15 border border-cyberCyan/50 shadow-[0_0_8px_rgba(0,255,204,0.3)]' : 'text-slate-400 hover:text-white border border-transparent'}`}>
+                                {tab.iconComponent}
+                                <span className="text-[7px] font-black truncate w-full text-center tracking-tighter px-0.5">{tab.label}</span>
+                            </button>
+                        ))}
+                    </footer>
+                </div>
+            );
+        }
+
+        ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+    </script>
+</body>
+</html>
