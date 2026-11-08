@@ -1,0 +1,679 @@
+<!DOCTYPE html>
+<html lang="pt-br" class="dark">
+<head>
+<style>
+@font-face{font-family:"Optimistic";font-style:normal;font-weight:400 600;font-display:swap;src:url("/fonts/OptimisticAI_VF_Optimized.woff2") format("woff2")}
+@font-face{font-family:"Optimistic Mono";font-style:normal;font-weight:400;font-display:swap;src:url("/fonts/OptimisticMono_W_TextRegular.woff2") format("woff2")}
+:where(html){font-family:"Optimistic",system-ui,sans-serif}
+:where(code,pre,kbd,samp){font-family:"Optimistic Mono",ui-monospace,monospace}
+</style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<title>RARU NEXUS AI V11 Plus • MESQUITA EM FOCO</title>
+
+<meta name="theme-color" content="#030712">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta property="og:title" content="RARU NEXUS AI V11 Plus • Mesquita em Foco">
+<meta property="og:description" content="Prevenção inteligente para todos. Telemetria P2P, subestações IP, Sistema Dual de Alarme e Suporte de Inteligência Artificial.">
+<meta property="og:type" content="website">
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Orbitron:wght@600;800;900&family=JetBrains+Mono:wght@400;600;800&display=swap" rel="stylesheet">
+
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+<script>
+  (function() {
+    try {
+        const savedTheme = localStorage.getItem('raru-cyber-theme') || 'dark';
+        if (savedTheme === 'warm') {
+            document.documentElement.classList.remove('dark');
+            document.documentElement.classList.add('warm');
+        } else {
+            document.documentElement.classList.add('dark');
+            document.documentElement.classList.remove('warm');
+        }
+
+        const manifestData = {
+            "name": "RARU NEXUS AI V11 Plus",
+            "short_name": "RARU NEXUS",
+            "start_url": "./",
+            "display": "standalone",
+            "orientation": "portrait",
+            "background_color": "#030712",
+            "theme_color": "#030712",
+            "icons": [
+                {
+                    "src": "https://cdn.phototourl.com/member/2026-11-02-e6f47125-80b5-493f-9383-ff5668fcd8a4.png",
+                    "sizes": "192x192 512x512",
+                    "type": "image/png",
+                    "purpose": "any maskable"
+                }
+            ]
+        };
+        const stringManifest = JSON.stringify(manifestData);
+        const blob = new Blob([stringManifest], {type: 'application/json'});
+        const manifestURL = URL.createObjectURL(blob);
+        const link = document.createElement('link');
+        link.rel = 'manifest';
+        link.href = manifestURL;
+        document.head.appendChild(link);
+    } catch(e) {}
+  })();
+</script>
+
+<script>
+    tailwind.config = {
+        darkMode: "class",
+        theme: {
+            extend: {
+                fontFamily: {
+                    sans: ['Plus Jakarta Sans', 'system-ui', 'sans-serif'],
+                    display: ['Orbitron', 'sans-serif'],
+                    mono: ['JetBrains Mono', 'monospace'],
+                },
+                colors: {
+                    void: "#030712",
+                    deepSpace: "#041125",
+                    commandPanel: "#0A1B38",
+                    cyberCyan: "#00F2FE",
+                    cyberBlue: "#38BDF8",
+                    cyberGreen: "#00FF9D",
+                    cyberAmber: "#FFB703",
+                    cyberRose: "#FF0055",
+                }
+            }
+        }
+    };
+</script>
+<script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
+<script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
+<script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+<style>
+    :root {
+        --primary: #00F2FE;
+        --secondary: #38BDF8;
+        --glow: rgba(0, 242, 254, 0.4);
+        --glow-cyan: rgba(0, 242, 254, 0.35);
+        --wave-speed: 2.2s;
+    }
+
+    @keyframes avatarIdle {
+        0%, 100% { transform: scale(1); filter: drop-shadow(0 0 15px rgba(0,242,254,0.4)); }
+        50% { transform: scale(1.02); filter: drop-shadow(0 0 25px rgba(0,255,157,0.55)); }
+    }
+
+    @keyframes avatarSpeaking {
+        0%, 100% { transform: scale(1) rotate(0deg); filter: drop-shadow(0 0 30px rgba(0,242,254,0.75)); }
+        50% { transform: scale(1.06) rotate(2deg); filter: drop-shadow(0 0 45px rgba(0,255,157,0.85)); }
+    }
+
+    @keyframes moleculeRotate {
+        from { transform: rotate(0deg); }
+        to { transform: rotate(360deg); }
+    }
+
+    @keyframes moleculePulse {
+        0%, 100% { transform: scale(1); opacity: 0.9; }
+        50% { transform: scale(1.15); opacity: 1; filter: drop-shadow(0 0 12px #00F2FE); }
+    }
+
+    @keyframes auroraShift {
+        0% { background-position: 0% 50%; }
+        100% { background-position: 100% 50%; }
+    }
+
+    @keyframes tickerScroll {
+      0% { transform: translateX(0); }
+      100% { transform: translateX(-50%); }
+    }
+
+    @keyframes cyberGridMove {
+      0% { background-position: 0 0; }
+      100% { background-position: 40px 40px; }
+    }
+
+    @keyframes holographicPulse {
+      0% { box-shadow: 0 0 12px rgba(0,242,254,0.18), inset 0 0 10px rgba(0,242,254,0.05); border-color: rgba(0,242,254,0.35); }
+      50% { box-shadow: 0 0 24px rgba(0,242,254,0.35), inset 0 0 18px rgba(0,242,254,0.15); border-color: rgba(0,242,254,0.7); }
+      100% { box-shadow: 0 0 12px rgba(0,242,254,0.18), inset 0 0 10px rgba(0,242,254,0.05); border-color: rgba(0,242,254,0.35); }
+    }
+
+    @keyframes mesquitaPulse {
+      0% { box-shadow: 0 0 0 0 rgba(255, 0, 85, 0.7); }
+      70% { box-shadow: 0 0 0 18px rgba(255, 0, 85, 0); }
+      100% { box-shadow: 0 0 0 0 rgba(255, 0, 85, 0); }
+    }
+
+    .mesquita-pulse { animation: mesquitaPulse 1.5s ease-in-out infinite; }
+
+    * { 
+        box-sizing: border-box; 
+        margin: 0; 
+        padding: 0;
+        -webkit-tap-highlight-color: transparent;
+    }
+
+    html, body {
+        width: 100%;
+        height: 100%;
+        min-height: 100dvh;
+        margin: 0;
+        padding: 0;
+        overflow-x: hidden;
+        touch-action: manipulation;
+        -webkit-text-size-adjust: 100%;
+        overscroll-behavior-y: contain;
+        background-color: #030712;
+        color: #E2E8F0;
+        -webkit-user-select: none;
+        user-select: none;
+    }
+
+    #root {
+        width: 100%;
+        min-height: 100dvh;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+    }
+
+    .seu-container-raru {
+        width: 100%;
+        max-width: 640px;
+        margin: 0 auto;
+        min-height: 100dvh;
+        padding: 12px 14px 145px 14px;
+        display: flex;
+        flex-direction: column;
+    }
+
+    body {
+        background-image: 
+            radial-gradient(circle at 50% 0%, rgba(0, 242, 254, 0.08) 0%, transparent 60%),
+            radial-gradient(circle at 10% 90%, rgba(56, 189, 248, 0.05) 0%, transparent 50%);
+        transition: background-color 0.4s ease, color 0.4s ease;
+    }
+
+    body.hud-grid {
+        background-image: linear-gradient(rgba(0, 242, 254, 0.03) 1px, transparent 1px),
+                          linear-gradient(90deg, rgba(0, 242, 254, 0.03) 1px, transparent 1px);
+        background-size: 28px 28px;
+        animation: cyberGridMove 30s linear infinite;
+    }
+
+    .cyber-card {
+        background: linear-gradient(135deg, rgba(10, 27, 56, 0.94) 0%, rgba(4, 17, 37, 0.97) 100%);
+        backdrop-filter: blur(16px);
+        -webkit-backdrop-filter: blur(16px);
+        border: 1px solid rgba(0, 242, 254, 0.35);
+        border-radius: 20px;
+        padding: 18px;
+        margin-bottom: 14px;
+        animation: holographicPulse 5s ease-in-out infinite;
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    .cyber-button {
+        background: linear-gradient(135deg, #00F2FE 0%, #38BDF8 100%);
+        transition: all 0.2s ease;
+        color: #030712 !important;
+        font-weight: 800;
+        cursor: pointer;
+        border-radius: 14px;
+        padding: 12px 18px;
+        min-height: 48px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        touch-action: manipulation;
+        box-shadow: 0 4px 14px rgba(0, 242, 254, 0.25);
+    }
+    .cyber-button:active {
+        transform: scale(0.97);
+        box-shadow: 0 0 20px rgba(0, 242, 254, 0.6);
+    }
+
+    .sarah-avatar-stage {
+        position: relative;
+        width: 100%;
+        max-width: 90px;
+        aspect-ratio: 1/1;
+        margin: 0 auto;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        cursor: pointer;
+        animation: avatarIdle 5s ease-in-out infinite;
+    }
+    .sarah-avatar-stage.speaking {
+        animation: avatarSpeaking 1.5s ease-in-out infinite alternate;
+    }
+
+    .wave-ring {
+        position: absolute;
+        border-radius: 50%;
+        border: 1.5px solid var(--primary);
+        box-shadow: 0 0 10px var(--glow), inset 0 0 6px var(--glow);
+        animation: pulseWave var(--wave-speed) infinite cubic-bezier(0.215, 0.61, 0.355, 1);
+        pointer-events: none;
+    }
+    .wave-ring:nth-child(1) { animation-delay: 0s; }
+    .wave-ring:nth-child(2) { animation-delay: calc(var(--wave-speed) * 0.33); }
+    .wave-ring:nth-child(3) { animation-delay: calc(var(--wave-speed) * 0.66); }
+
+    .cyan-outer-boundary {
+        position: absolute;
+        inset: -5px;
+        border-radius: 50%;
+        border: 1px dashed var(--secondary);
+        opacity: 0.7;
+        animation: spinSlow 30s linear infinite;
+        box-shadow: 0 0 14px var(--glow-cyan);
+    }
+    .avatar-aura {
+        position: absolute;
+        inset: -8%;
+        border-radius: 50%;
+        background: radial-gradient(circle, var(--glow) 0%, var(--glow-cyan) 45%, transparent 70%);
+        background-size: 200% 200%;
+        filter: blur(10px);
+        animation: auraPulse 3.5s infinite ease-in-out, auroraShift 8s ease infinite;
+        opacity: 0.85;
+    }
+    .avatar-core-wrapper {
+        position: relative;
+        width: 85%;
+        height: 85%;
+        border-radius: 50%;
+        z-index: 10;
+        box-shadow: 0 0 16px var(--glow), 0 0 25px rgba(0,0,0,0.8);
+        background: radial-gradient(circle, #091328 0%, #040914 60%, #02040a 100%);
+        border: 2px solid #00F2FE;
+        overflow: hidden;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .molecule-rotate-slow { animation: moleculeRotate 20s linear infinite; transform-origin: center; }
+    .molecule-rotate-reverse { animation: moleculeRotate 14s linear infinite reverse; transform-origin: center; }
+    .molecule-node-pulse { animation: moleculePulse 3s ease-in-out infinite alternate; }
+
+    @keyframes pulseWave {
+        0% { width: 60%; height: 60%; opacity: 0.95; transform: scale(0.85); box-shadow: 0 0 8px var(--glow); }
+        50% { opacity: 0.6; }
+        100% { width: 130%; height: 130%; opacity: 0; transform: scale(1.15); box-shadow: 0 0 20px transparent; }
+    }
+    @keyframes auraPulse {
+        0%, 100% { transform: scale(0.96); opacity: 0.7; }
+        50% { transform: scale(1.12); opacity: 0.95; }
+    }
+    @keyframes spinSlow {
+        from { transform: rotate(0deg); }
+        to { transform: rotate(360deg); }
+    }
+    .glass-overlay {
+        position: absolute;
+        inset: 0;
+        border-radius: 50%;
+        background: radial-gradient(circle at 35% 25%, rgba(255, 255, 255, 0.25) 0%, rgba(255, 255, 255, 0.05) 40%, transparent 70%);
+        pointer-events: none;
+        z-index: 15;
+    }
+
+    @keyframes raru-scan{0%{top:0}100%{top:100%}}
+    .animate-raru-scan{animation:raru-scan 2s linear infinite}
+
+    ::-webkit-scrollbar { width: 4px; height: 4px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: rgba(0,242,254,0.3); border-radius: 9999px; }
+
+    .switch-v12 { position: relative; display: inline-block; width: 40px; height: 22px; }
+    .switch-v12 input { opacity: 0; width: 0; height: 0; }
+    .slider-v12 { position: absolute; cursor: pointer; inset: 0; background-color: #041125; border: 1px solid #00F2FE; transition: .3s; border-radius: 20px; }
+    .slider-v12:before { position: absolute; content: ""; height: 14px; width: 14px; left: 3px; bottom: 3px; background-color: #00F2FE; transition: .3s; border-radius: 50%; }
+    input:checked + .slider-v12 { background-color: rgba(0,242,254,0.3); }
+    input:checked + .slider-v12:before { transform: translateX(18px); background-color: #00FF9D; }
+</style>
+</head>
+<body class="selection:bg-cyberCyan selection:text-void hud-grid">
+    <div id="root"></div>
+    <script type="text/babel">
+        const R = React;
+        const { useState, useRef, useEffect } = React;
+
+        // ==========================================
+        // MÓDULO INTEGRADO: RARU FINAL (ESTIMATIVAS, FONTES E EMERGÊNCIA)
+        // ==========================================
+        const RARU_CONFIG_EMERGENCIA = {
+          orgao: "Coordenadoria Municipal de Proteção e Defesa Civil de Mesquita",
+          telefoneEmergencia: "199",
+          telefoneSecretaria: "2140421772",
+          smsAlertas: "40199",
+          avisoLegal: "ATENÇÃO: Dados de precipitação e refletividade gerados por modelos numéricos e sensoriamento remoto. Trata-se de ESTIMATIVA OPERACIONAL de apoio, sujeita a variações locais. Não substitui os boletins oficiais da Defesa Civil ou do CEMADEN.",
+          fontesOficiais: [
+            "Previsão e Precipitação: Open-Meteo (Modelagem Numérica Global)",
+            "Sensoriamento de Nuvens: NOAA / Satélite GOES-19 (Infravermelho e Geocolor)",
+            "Radar Meteorológico (Cobertura Indireta): RainViewer / Guaratiba",
+            "Órgão Oficial: Defesa Civil de Mesquita e CEMADEN"
+          ]
+        };
+
+        const RARU_MUNICIPIOS = [
+          {n:"Mesquita", lat:-22.779, lon:-43.420, ip:"10.10.21.15", baciaId:"BACIA SARAPUÍ"},
+          {n:"Duque de Caxias", lat:-22.785, lon:-43.311, ip:"10.10.21.16", baciaId:"BACIA SARAPUÍ"},
+          {n:"Nova Iguaçu", lat:-22.759, lon:-43.451, ip:"10.10.21.17", baciaId:"BACIA BOTAS"},
+          {n:"Belford Roxo", lat:-22.764, lon:-43.399, ip:"10.10.21.18", baciaId:"BACIA SARAPUÍ"},
+          {n:"São João de Meriti", lat:-22.805, lon:-43.372, ip:"10.10.21.19", baciaId:"BACIA SARAPUÍ"},
+          {n:"Nilópolis", lat:-22.808, lon:-43.419, ip:"10.10.21.20", baciaId:"BACIA SARAPUÍ"},
+          {n:"Queimados", lat:-22.713, lon:-43.555, ip:"10.10.21.21", baciaId:"BACIA BOTAS"},
+          {n:"Japeri", lat:-22.644, lon:-43.653, ip:"10.10.21.22", baciaId:"BACIA GUANDU"},
+          {n:"Rio de Janeiro", lat:-22.906, lon:-43.172, ip:"10.10.21.23", baciaId:"BACIA GUANABARA"}
+        ];
+
+        function raruChuvaParaDbzEstimado(chuvaMm) {
+          if (!chuvaMm || chuvaMm <= 0) return 5;
+          if (chuvaMm <= 1) return 15; 
+          if (chuvaMm <= 5) return 24; 
+          if (chuvaMm <= 10) return 30;
+          if (chuvaMm <= 20) return 38; 
+          if (chuvaMm <= 30) return 45; 
+          if (chuvaMm <= 50) return 55; 
+          return 60;
+        }
+
+        async function executarModuloRaru(indexMun1 = 0, indexMun2 = 1) {
+          const m1 = RARU_MUNICIPIOS[indexMun1];
+          const m2 = RARU_MUNICIPIOS[indexMun2];
+          const timestamp = Date.now();
+
+          try {
+            const res1 = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${m1.lat}&longitude=${m1.lon}&current=temperature_2m,precipitation,wind_speed_10m,wind_direction_10m,relative_humidity_2m`);
+            const dados1 = (await res1.json()).current;
+
+            const res2 = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${m2.lat}&longitude=${m2.lon}&current=temperature_2m,precipitation,wind_speed_10m,wind_direction_10m,relative_humidity_2m`);
+            const dados2 = (await res2.json()).current;
+
+            return {
+              horario: new Date().toLocaleTimeString('pt-BR'),
+              emergencia: RARU_CONFIG_EMERGENCIA,
+              municipio1: {
+                nome: m1.n, bacia: m1.baciaId, ip: m1.ip, temperatura: dados1.temperature_2m,
+                chuvaEstimadaMm: dados1.precipitation, dbzIndiretoEstimado: raruChuvaParaDbzEstimado(dados1.precipitation),
+                ventoVelocidade: dados1.wind_speed_10m, ventoDirecao: dados1.wind_direction_10m, umidade: dados1.relative_humidity_2m
+              },
+              municipio2: {
+                nome: m2.n, bacia: m2.baciaId, ip: m2.ip, temperatura: dados2.temperature_2m,
+                chuvaEstimadaMm: dados2.precipitation, dbzIndiretoEstimado: raruChuvaParaDbzEstimado(dados2.precipitation),
+                ventoVelocidade: dados2.wind_speed_10m, ventoDirecao: dados2.wind_direction_10m, umidade: dados2.relative_humidity_2m
+              },
+              linksUteis: {
+                radarRainViewer: `https://www.rainviewer.com/map.html?loc=${m1.lat},${m1.lon},9&oFa=0&oC=1&oU=0&oCS=1&oF=0&oAP=1&key=${timestamp}`,
+                goesColor: `https://cdn.star.nesdis.noaa.gov/GOES19/ABI/FD/GEOCOLOR/1800x1080.jpg?t=${timestamp}`,
+                goesIR: `https://cdn.star.nesdis.noaa.gov/GOES19/ABI/FD/13/1800x1080.jpg?t=${timestamp}`
+              }
+            };
+          } catch (erro) {
+            console.error("Erro ao buscar dados do módulo RARU:", erro);
+            return null;
+          }
+        }
+
+        let globalVoiceProfile = localStorage.getItem("raru_sarah_voice_profile") || "oficial";
+
+        function falarSarah(texto, customProfile = null) {
+            if (!("speechSynthesis" in window)) return;
+            try {
+                window.speechSynthesis.cancel();
+                const cleanText = String(texto).replace(/([\u2700-\u27BF]|[\uE000-\uF8FF]|\uD83C[\uDC00-\uDFFF]|\uD83D[\uDC00-\uDFFF]|[\u2011-\u26FF]|\uD83E[\uDD00-\uDDFF])/g, '').replace(/https?:\/\/\S+/g, "").trim();
+                if (!cleanText) return;
+                
+                const utterance = new SpeechSynthesisUtterance(cleanText);
+                utterance.lang = "pt-BR";
+                
+                const prof = customProfile || globalVoiceProfile;
+                if (prof === 'humana') {
+                    utterance.rate = 1.0;
+                    utterance.pitch = 1.25;
+                } else {
+                    utterance.rate = 1.02;
+                    utterance.pitch = 1.05;
+                }
+
+                const voices = window.speechSynthesis.getVoices();
+                const selectedVoice = voices.find(v => v.lang.toLowerCase().includes('pt-br') && v.name.toLowerCase().includes('female')) || voices.find(v => v.lang.toLowerCase().includes('pt')) || voices[0];
+                if (selectedVoice) utterance.voice = selectedVoice;
+                window.speechSynthesis.speak(utterance);
+            } catch(e) {}
+        }
+
+        const CLOUDFLARE_WORKER_URL = "https://sarah-envelope.phantrorfirmo08.workers.dev/";
+        const APP_SHARE_URL = "https://phantrorfirmo08-alt.github.io/PROJETO-CIDAD-O-SENSOR-01/";
+        const shareMessageText = `🛡️ RARU NEXUS AI V11 Plus\n📍 Rede Automatizada de Resiliência Urbana, Mesquita - RJ\n\n📲 Instale o app oficial PWA:\n${APP_SHARE_URL}`;
+
+        function SarahVectorAvatar() {
+            return (
+                <svg viewBox="0 0 100 100" className="w-full h-full" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <circle cx="50" cy="50" r="46" fill="#040D1A" stroke="#00F2FE" strokeWidth="1.5"/>
+                    <circle cx="50" cy="50" r="40" stroke="#38BDF8" strokeWidth="0.8" strokeDasharray="2 4" opacity="0.6"/>
+
+                    <g stroke="url(#gradConn)" strokeWidth="2" opacity="0.85">
+                        <line x1="50" y1="50" x2="50" y2="24"/>
+                        <line x1="50" y1="50" x2="73" y2="37"/>
+                        <line x1="50" y1="50" x2="73" y2="63"/>
+                        <line x1="50" y1="50" x2="50" y2="76"/>
+                        <line x1="50" y1="50" x2="27" y2="63"/>
+                        <line x1="50" y1="50" x2="27" y2="37"/>
+                        <polygon points="50,24 73,37 73,63 50,76 27,63 27,37" fill="none" stroke="#00F2FE" strokeWidth="1" strokeDasharray="3 3"/>
+                    </g>
+
+                    <g className="molecule-rotate-slow">
+                        <ellipse cx="50" cy="50" rx="38" ry="14" stroke="#00FF9D" strokeWidth="1" opacity="0.7" transform="rotate(30 50 50)"/>
+                        <circle cx="83" cy="38" r="2.5" fill="#00FF9D"/>
+                    </g>
+                    <g className="molecule-rotate-reverse">
+                        <ellipse cx="50" cy="50" rx="38" ry="14" stroke="#FF9100" strokeWidth="1" opacity="0.7" transform="rotate(-30 50 50)"/>
+                        <circle cx="17" cy="62" r="2.5" fill="#FF9100"/>
+                    </g>
+
+                    <g>
+                        <circle cx="50" cy="24" r="5" fill="url(#gradAtomCyan)" className="molecule-node-pulse" stroke="#FFFFFF" strokeWidth="0.8"/>
+                        <circle cx="73" cy="37" r="4.5" fill="url(#gradAtomOrange)" stroke="#FFFFFF" strokeWidth="0.8"/>
+                        <circle cx="73" cy="63" r="5" fill="url(#gradAtomCyan)" className="molecule-node-pulse" stroke="#FFFFFF" strokeWidth="0.8"/>
+                        <circle cx="50" cy="76" r="4.5" fill="url(#gradAtomOrange)" stroke="#FFFFFF" strokeWidth="0.8"/>
+                        <circle cx="27" cy="63" r="5" fill="url(#gradAtomCyan)" className="molecule-node-pulse" stroke="#FFFFFF" strokeWidth="0.8"/>
+                        <circle cx="27" cy="37" r="4.5" fill="url(#gradAtomOrange)" stroke="#FFFFFF" strokeWidth="0.8"/>
+
+                        <circle cx="50" cy="50" r="10" fill="url(#gradAtomCore)" stroke="#00F2FE" strokeWidth="1.5" className="molecule-node-pulse"/>
+                        <circle cx="50" cy="50" r="4" fill="#FFFFFF"/>
+                    </g>
+
+                    <defs>
+                        <linearGradient id="gradConn" x1="0" y1="0" x2="100" y2="100" gradientUnits="userSpaceOnUse">
+                            <stop offset="0%" stopColor="#00F2FE"/>
+                            <stop offset="50%" stopColor="#00FF9D"/>
+                            <stop offset="100%" stopColor="#FF9100"/>
+                        </linearGradient>
+                        <radialGradient id="gradAtomCore" cx="50%" cy="50%" r="50%">
+                            <stop offset="0%" stopColor="#FFFFFF"/>
+                            <stop offset="40%" stopColor="#00F2FE"/>
+                            <stop offset="100%" stopColor="#041125"/>
+                        </radialGradient>
+                        <radialGradient id="gradAtomCyan" cx="35%" cy="35%" r="65%">
+                            <stop offset="0%" stopColor="#E0FFFF"/>
+                            <stop offset="60%" stopColor="#00F2FE"/>
+                            <stop offset="100%" stopColor="#005B66"/>
+                        </radialGradient>
+                        <radialGradient id="gradAtomOrange" cx="35%" cy="35%" r="65%">
+                            <stop offset="0%" stopColor="#FFF3E0"/>
+                            <stop offset="60%" stopColor="#FF9100"/>
+                            <stop offset="100%" stopColor="#7A4500"/>
+                        </radialGradient>
+                    </defs>
+                </svg>
+            );
+        }
+
+        function SarahAnimatedAvatar({ isSpeaking, sizeClass = "w-full max-w-[85px]" }) {
+            return (
+                <div className={`sarah-avatar-stage ${isSpeaking ? 'speaking' : ''} ${sizeClass}`}>
+                    <div className="cyan-outer-boundary"></div>
+                    <div className="wave-ring"></div>
+                    <div className="wave-ring"></div>
+                    <div className="wave-ring"></div>
+                    <div className="avatar-aura"></div>
+                    <div className="avatar-core-wrapper">
+                        <div className="glass-overlay"></div>
+                        <SarahVectorAvatar />
+                    </div>
+                </div>
+            );
+        }
+
+        const MUNICIPIOS_92 = [
+            {n:"Mesquita",lat:-22.78,lon:-43.43,ip:"10.10.21.15"},
+            {n:"Duque de Caxias",lat:-22.78,lon:-43.31,ip:"10.10.23.14"},
+            {n:"Nova Iguaçu",lat:-22.75,lon:-43.45,ip:"10.10.22.12"},
+            {n:"Belford Roxo",lat:-22.76,lon:-43.39,ip:"10.10.60.09"},
+            {n:"São João de Meriti",lat:-22.80,lon:-43.37,ip:"10.10.60.62"},
+            {n:"Nilópolis",lat:-22.81,lon:-43.41,ip:"10.10.60.39"},
+            {n:"Queimados",lat:-22.71,lon:-43.55,ip:"10.10.60.50"},
+            {n:"Japeri",lat:-22.64,lon:-43.65,ip:"10.10.60.28"},
+            {n:"Rio de Janeiro",lat:-22.90,lon:-43.17,ip:"10.10.11.10"}
+        ];
+
+        function EstacaoSobrevivenciaModuleV12({ showToast }) {
+          const [estacaoSubTab, setEstacaoSubTab] = React.useState('telemetria');
+          const [relatorioComparativo, setRelatorioComparativo] = React.useState(null);
+          const [idxMun1, setIdxMun1] = React.useState(0); // Mesquita
+          const [idxMun2, setIdxMun2] = React.useState(4); // São João de Meriti
+          const [carregandoTelemetria, setCarregandoTelemetria] = React.useState(false);
+
+          const carregarTelemetriaAvancada = async () => {
+            setCarregandoTelemetria(true);
+            showToast("Conectando às fontes oficiais de telemetria...");
+            const res = await executarModuloRaru(idxMun1, idxMun2);
+            if(res) {
+              setRelatorioComparativo(res);
+              showToast("Relatório de Telemetria Gerado!");
+            } else {
+              showToast("Falha ao consultar APIs meteorológicas.");
+            }
+            setCarregandoTelemetria(false);
+          };
+
+          useEffect(() => {
+            if (estacaoSubTab === 'telemetria' && !relatorioComparativo) {
+              carregarTelemetriaAvancada();
+            }
+          }, [estacaoSubTab]);
+
+          return (
+            <div className="space-y-4 font-mono w-full">
+              <div className="cyber-card p-4 border border-cyberCyan/50 space-y-4 shadow-2xl">
+                <div className="flex justify-between items-center border-b border-cyberCyan/30 pb-3 overflow-x-auto gap-2">
+                  <div className="flex gap-2">
+                    <button onClick={() => setEstacaoSubTab('telemetria')} className={`px-3.5 py-2 rounded-xl text-xs font-black cursor-pointer transition ${estacaoSubTab === 'telemetria' ? 'bg-cyberCyan text-void shadow-md' : 'bg-void border border-cyberCyan/30 text-cyberCyan'}`}>📡 Telemetria &amp; fontes</button>
+                  </div>
+                </div>
+
+                {estacaoSubTab === 'telemetria' && (
+                  <div className="space-y-3">
+                    <div className="bg-void/90 p-3 rounded-xl border border-cyberCyan/40 space-y-3">
+                      <span className="text-[10px] text-cyberCyan font-bold uppercase block">COMPARAÇÃO HIDROLÓGICA OPERACIONAL</span>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs">
+                        <div>
+                          <label className="text-[9px] text-slate-400 block font-bold mb-1">MUNICÍPIO BASE 1</label>
+                          <select value={idxMun1} onChange={e=>setIdxMun1(Number(e.target.value))} className="w-full bg-deepSpace border border-cyberCyan/40 rounded-xl p-2 text-white font-bold">
+                            {RARU_MUNICIPIOS.map((m, i) => <option key={i} value={i}>{m.n} ({m.baciaId})</option>)}
+                          </select>
+                        </div>
+                        <div>
+                          <label className="text-[9px] text-slate-400 block font-bold mb-1">MUNICÍPIO COMPARATIVO 2</label>
+                          <select value={idxMun2} onChange={e=>setIdxMun2(Number(e.target.value))} className="w-full bg-deepSpace border border-cyberCyan/40 rounded-xl p-2 text-white font-bold">
+                            {RARU_MUNICIPIOS.map((m, i) => <option key={i} value={i}>{m.n} ({m.baciaId})</option>)}
+                          </select>
+                        </div>
+                      </div>
+                      <button onClick={carregarTelemetriaAvancada} disabled={carregandoTelemetria} className="w-full py-2.5 cyber-button font-black rounded-xl text-xs uppercase cursor-pointer shadow-md">
+                        {carregandoTelemetria ? "PROCESSANDO MODELO..." : "ATUALIZAR TELEMETRIA OPERACIONAL"}
+                      </button>
+                    </div>
+
+                    {relatorioComparativo && (
+                      <div className="space-y-3 text-xs">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                          <div className="bg-deepSpace/95 p-3 rounded-xl border border-cyberCyan/40 space-y-1 shadow-inner">
+                            <div className="flex justify-between items-center">
+                              <b className="text-cyberCyan">{relatorioComparativo.municipio1.nome}</b>
+                              <span className="text-[9px] bg-cyberCyan/20 text-cyberCyan px-2 py-0.5 rounded-full font-bold">{relatorioComparativo.municipio1.ip}</span>
+                            </div>
+                            <p className="text-[9px] text-slate-400">{relatorioComparativo.municipio1.bacia}</p>
+                            <div className="pt-1.5 space-y-0.5 text-slate-200">
+                              <p>🌡️ Temp: <b>{relatorioComparativo.municipio1.temperatura}°C</b></p>
+                              <p>🌧️ Chuva: <b>{relatorioComparativo.municipio1.chuvaEstimadaMm} mm</b></p>
+                              <p>📡 dBZ Estimado: <b className="text-cyberGreen">{relatorioComparativo.municipio1.dbzIndiretoEstimado} dBZ</b></p>
+                              <p>💨 Vento: {relatorioComparativo.municipio1.ventoVelocidade} km/h</p>
+                            </div>
+                          </div>
+
+                          <div className="bg-deepSpace/95 p-3 rounded-xl border border-cyberCyan/40 space-y-1 shadow-inner">
+                            <div className="flex justify-between items-center">
+                              <b className="text-cyberCyan">{relatorioComparativo.municipio2.nome}</b>
+                              <span className="text-[9px] bg-cyberCyan/20 text-cyberCyan px-2 py-0.5 rounded-full font-bold">{relatorioComparativo.municipio2.ip}</span>
+                            </div>
+                            <p className="text-[9px] text-slate-400">{relatorioComparativo.municipio2.bacia}</p>
+                            <div className="pt-1.5 space-y-0.5 text-slate-200">
+                              <p>🌡️ Temp: <b>{relatorioComparativo.municipio2.temperatura}°C</b></p>
+                              <p>🌧️ Chuva: <b>{relatorioComparativo.municipio2.chuvaEstimadaMm} mm</b></p>
+                              <p>📡 dBZ Estimado: <b className="text-cyberGreen">{relatorioComparativo.municipio2.dbzIndiretoEstimado} dBZ</b></p>
+                              <p>💨 Vento: {relatorioComparativo.municipio2.ventoVelocidade} km/h</p>
+                            </div>
+                          </div>
+                        </div>
+
+                        <div className="bg-void p-3 rounded-xl border border-cyberRose/40 space-y-1.5">
+                          <b className="text-cyberRose text-[10px] uppercase font-bold block">⚠️ SALVAGUARDA LEGAL & FONTES OPERACIONAIS</b>
+                          <p className="text-[9px] text-slate-300 leading-relaxed">{relatorioComparativo.emergencia.avisoLegal}</p>
+                          <div className="pt-1 border-t border-cyberRose/20 text-[8px] text-slate-400 space-y-0.5">
+                            {relatorioComparativo.emergencia.fontesOficiais.map((f, i) => <div key={i}>• {f}</div>)}
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+            </div>
+          );
+        }
+
+        function App() {
+            const [toastMsgRef, setToastMsgRef] = React.useState(null);
+            const showToast = (msg) => { setToastMsgRef(msg); setTimeout(() => setToastMsgRef(null), 3500); };
+
+            return (
+                <div className="seu-container-raru">
+                    {toastMsgRef && <div className="fixed top-6 left-1/2 -translate-x-1/2 z-50 cyber-card px-4 py-2 rounded-2xl font-display text-[10px] font-black text-cyberCyan tracking-wider shadow-2xl border border-cyberCyan/60 animate-bounce">{toastMsgRef}</div>}
+                    <header className="py-3 text-center">
+                      <h1 className="font-display text-sm font-black text-white uppercase tracking-widest">RARU NEXUS AI V11 Plus</h1>
+                      <p className="text-[9px] text-cyberCyan font-bold">MÓDULO DE TELEMETRIA E FONTES DE EMERGÊNCIA</p>
+                    </header>
+                    <main className="py-2">
+                        <EstacaoSobrevivenciaModuleV12 showToast={showToast} />
+                    </main>
+                </div>
+            );
+        }
+
+        ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+    </script>
+</body>
+</html>
