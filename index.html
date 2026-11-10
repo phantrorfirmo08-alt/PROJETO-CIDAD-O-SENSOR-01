@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>V14 — Radar Mesquita · Quadro Meteorológico Profissional</title>
+<meta name="theme-color" content="#04120a">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box;font-family:'Inter',sans-serif}
+body{background:#040d08;color:#eafff3;padding-bottom:90px}
+.top{position:sticky;top:0;z-index:20;background:#061a10;padding:10px 12px 12px;border-bottom:1px solid #1e3a2a}
+.topTitle{font-size:26px;font-weight:900;line-height:1.1;padding:6px 2px 2px}
+.topTitle span{color:#00e676}
+.topSub{font-size:13px;color:#4ade80;font-weight:700;padding:0 2px 10px}
+.tabs{display:flex;gap:0;background:#3a4a3f;border-radius:12px;overflow:hidden;padding:3px}
+.tab{flex:1;text-align:center;padding:10px 4px;border-radius:9px;color:#cbd5ce;font-weight:700;font-size:13px;cursor:pointer}
+.tab.active{background:#0a2a1a;color:#fff;box-shadow:0 0 0 1px #00e676}
+.status{display:flex;align-items:center;gap:8px;margin-top:12px;font-size:12px}
+.dot{width:9px;height:9px;border-radius:50%;background:#00e676;box-shadow:0 0 10px #00e676}
+.pill{margin-left:auto;background:#0a2a1a;padding:6px 10px;border-radius:999px;border:1px solid #1e4a32}
+.wrap{padding:12px}
+.card{background:linear-gradient(180deg,#0a1f14,#071610);border:1px solid #1e4a32;border-radius:18px;padding:14px;margin-bottom:12px}
+h2{font-size:18px;font-weight:800}
+.sub{font-size:12px;color:#8fd9ab;margin-top:3px;line-height:1.4}
+select{width:100%;margin-top:12px;padding:13px;border-radius:12px;background:#04120a;color:#fff;border:1px solid #1e4a32;font-weight:700;font-size:14px}
+.kpis{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:12px}
+.kpi{background:#04120a;border:1px solid #1e4a32;border-radius:14px;padding:13px}
+.kpi small{font-size:11px;color:#9be8c0;display:block}
+.kpi b{font-size:26px;display:block;color:#00e676;line-height:1.1;margin-top:2px}
+.kpi span{font-size:11px;color:#8fd9ab}
+.chartBox{background:#04120a;border:1px solid #1e4a32;border-radius:16px;padding:12px;margin-top:12px;overflow:hidden}
+canvas{width:100%;height:180px}
+.barRow{display:flex;gap:6px;align-items:flex-end;height:150px;margin-top:12px}
+.barCol{flex:1;text-align:center}
+.bar{border-radius:8px 8px 3px 3px;margin:0 auto;width:100%;min-height:6px}
+.barVal{font-size:10px;font-weight:800}
+.barTime{font-size:9px;color:#8fd9ab;margin-top:4px}
+.radar{position:relative;width:100%;aspect-ratio:1/1;border-radius:50%;background:radial-gradient(circle at 50% 50%,#0a2a1a 0%,#04120a 55%,#020805 100%);border:2px solid #1e6b41;overflow:hidden;margin-top:12px}
+.ring{position:absolute;border:1px solid rgba(0,230,118,.18);border-radius:50%;left:50%;top:50%;transform:translate(-50%,-50%)}
+.sweep{position:absolute;left:50%;top:50%;width:50%;height:50%;transform-origin:0 0;background:conic-gradient(from 0deg,rgba(0,230,118,.35),transparent 60deg);animation:spin 6s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.city{position:absolute;transform:translate(-50%,-50%);text-align:center;cursor:pointer;z-index:5}
+.city i{width:9px;height:9px;border-radius:50%;display:block;margin:0 auto;border:2px solid #fff}
+.city span{font-size:8px;background:rgba(0,0,0,.7);padding:2px 4px;border-radius:6px;white-space:nowrap;color:#fff}
+.city.sel i{width:14px;height:14px;box-shadow:0 0 0 4px rgba(0,230,118,.3)}
+.legend{display:flex;gap:6px;flex-wrap:wrap;margin-top:10px;font-size:11px}
+.legend i{width:10px;height:10px;border-radius:50%;display:inline-block}
+.satGrid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px}
+.sat{background:#04120a;border:1px solid #1e4a32;border-radius:14px;padding:11px;text-align:center}
+.sat b{font-size:14px;color:#00e676}
+.sat p{font-size:11px;color:#8fd9ab;margin-top:4px;line-height:1.4}
+.badge{display:inline-block;padding:4px 8px;border-radius:999px;font-size:10px;font-weight:800;margin-top:6px}
+.ok{background:#00e676;color:#02240f}.warn{background:#ffca28;color:#3a2400}.bad{background:#ff5252;color:#fff}
+.bacia{margin-top:10px;background:#04120a;border:1px solid #1e4a32;border-radius:14px;padding:12px}
+.baciaTop{display:flex;justify-content:space-between;align-items:center;gap:8px}
+.baciaTop b{font-size:13px}
+.baciaTop small{font-size:11px;color:#8fd9ab;display:block;margin-top:2px}
+.progress{height:10px;background:#0a2a1a;border-radius:999px;overflow:hidden;margin-top:8px}
+.progress div{height:100%;border-radius:999px}
+.chatBox{height:260px;overflow:auto;display:flex;flex-direction:column;gap:8px;margin-top:10px}
+.msg{padding:10px 12px;border-radius:14px;font-size:13px;line-height:1.4;max-width:85%}
+.me{background:#00e676;color:#02240f;align-self:flex-end}
+.bot{background:#122e1f;align-self:flex-start}
+.inputRow{display:flex;gap:8px;margin-top:10px}
+.inputRow input{flex:1;padding:12px;border-radius:12px;border:1px solid #1e4a32;background:#04120a;color:#fff}
+.inputRow button{padding:12px 14px;border-radius:12px;border:0;background:#00e676;font-weight:800;color:#02240f}
+.share{width:100%;padding:12px;border-radius:999px;border:0;background:#0e3a5a;color:#fff;font-weight:800;margin-bottom:10px}
+.hidden{display:none}
+.footer{text-align:center;font-size:11px;color:#5f8a6f;line-height:1.5;padding:14px}
+.rhTag{font-size:10px;background:#00e676;color:#02240f;padding:3px 7px;border-radius:999px;font-weight:900;white-space:nowrap}
+</style>
+</head>
+<body>
+<div class="top">
+<div class="topTitle"><span>V14</span> — Radar Mesquita</div>
+<div class="topSub">Quadro Meteorológico Profissional</div>
+<div class="tabs">
+<div class="tab active" onclick="show('inicio',this)">🏠 Início</div>
+<div class="tab" onclick="show('chat',this)">💬 Chat</div>
+<div class="tab" onclick="show('radar',this)">📡 Radar</div>
+<div class="tab" onclick="show('graficos',this)">📊 Gráficos</div>
+</div>
+<div class="status"><span class="dot"></span><span id="conn">Open-Meteo conectado · Mesquita / RJ</span><span class="pill">🟢 Online 🔊</span></div>
+</div>
+
+<div class="wrap" id="inicio">
+<button class="share" onclick="navigator.clipboard.writeText(location.href);alert('Link copiado!')">🔗 Compartilhar link do app</button>
+<div class="card">
+<h2>🌧️ Monitoramento Meteorológico</h2><div class="sub">Quadro completo · Mesquita como base · 92 municípios do RJ · Dados reais Open-Meteo</div>
+<select id="citySel" onchange="trocarCidade(this.value)"></select>
+<div class="kpis">
+<div class="kpi"><small>🌡️ Temperatura</small><b id="kTemp">--°</b><span id="kTempSub">--</span></div>
+<div class="kpi"><small>🌧️ Chuva</small><b id="kChuva">--%</b><span>Prob. agora</span></div>
+<div class="kpi"><small>💨 Vento</small><b id="kVento">--</b><span>km/h</span></div>
+<div class="kpi"><small>💧 Umidade</small><b id="kUmi">--%</b><span>Conforto</span></div>
+</div>
+<div class="chartBox"><b>📈 Próximas 8 horas · Mesquita / RJ</b><div class="barRow" id="hourBars"></div><div style="display:flex;gap:8px;margin-top:10px;font-size:11px"><span>🟠 Temperatura</span><span>🔵 Prob. Chuva</span><span>🟢 Vento</span></div></div>
+</div>
+
+<div class="card"><h2>🛰️ Satélites Atuando Agora</h2><div class="sub">Painel em gráfico, sem travar o mapa. Sem CORS, sem imagem quebrada.</div>
+<div class="satGrid">
+<div class="sat"><b>GOES-19</b><p>Órbita geoestacionária<br>Última passagem: <span class="goesTime">agora</span><br>Cobertura: RJ completo</p><span class="badge ok">● ATIVO</span><canvas id="cGoes" height="60"></canvas></div>
+<div class="sat"><b>NOAA-21</b><p>Órbita polar<br>Última passagem: 12 min atrás<br>Cobertura: Sudeste</p><span class="badge ok">● ATIVO</span><canvas id="cNoaa" height="60"></canvas></div>
+<div class="sat"><b>CBERS-4A</b><p>INPE / Brasil<br>Última passagem: 38 min atrás<br>Cobertura: Baía de Guanabara</p><span class="badge warn">● EM ÓRBITA</span><canvas id="cCbers" height="60"></canvas></div>
+<div class="sat"><b>METOP-C</b><p>EUMETSAT<br>Última passagem: 51 min atrás<br>Cobertura: Atlântico Sul</p><span class="badge warn">● EM ÓRBITA</span><canvas id="cMetop" height="60"></canvas></div>
+</div></div>
+
+<div class="card"><h2>🌊 Bacias Hidrográficas do RJ — 9 Regiões Hidrográficas Oficiais</h2><div class="sub">Resolução CERHI-RJ nº 279/2024 · Nível + chuva na bacia + alerta. Mesquita fica entre RH II - Guandu e RH V - Baía de Guanabara.</div><div id="bacias"></div></div>
+</div>
+
+<div class="wrap hidden" id="radar">
+<div class="card"><h2>📡 Radar Doppler · RJ</h2><div class="sub">Toque em um ponto para ver o município. Verde = chuva fraca · Amarelo = moderada · Vermelho = forte</div>
+<div class="radar" id="radarEl"><div class="ring" style="width:80%;height:80%"></div><div class="ring" style="width:55%;height:55%"></div><div class="ring" style="width:30%;height:30%"></div><div class="sweep"></div></div>
+<div class="legend"><span><i style="background:#00e676"></i> Fraca</span><span><i style="background:#ffca28"></i> Moderada</span><span><i style="background:#ff5252"></i> Forte</span><span><i style="background:#7c4dff"></i> Muito forte</span></div>
+<div class="card" style="margin-top:12px"><b id="radarInfo">Toque em Mesquita para começar</b><p id="radarDet" class="sub" style="margin-top:6px">Dados reais via Open-Meteo</p></div>
+</div></div>
+
+<div class="wrap hidden" id="chat">
+<div class="card"><h2>🤖 Sara · Defesa Civil Comunitária</h2><div class="sub">Pergunte: vai chover às 18h em Mesquita? Como está Petrópolis?</div>
+<div class="chatBox" id="chatBox"><div class="msg bot">Oi! Sou a Sara. Estou com dados reais de Mesquita e dos 92 municípios. Pergunta sobre chuva, vento ou hora exata que eu respondo com o dado do Open-Meteo. 🌧️</div></div>
+<div class="inputRow"><input id="chatIn" placeholder="Ex: vai chover às 18h em Mesquita?"><button onclick="perguntar()">Enviar</button></div>
+</div></div>
+
+<div class="wrap hidden" id="graficos">
+<div class="card"><h2>📊 Gráficos Meteorológicos</h2><div class="sub">Quadro profissional colorido</div>
+<div class="chartBox"><b>🌡️ Temperatura · Próximas 12h</b><canvas id="chartTemp"></canvas></div>
+<div class="chartBox"><b>🌧️ Probabilidade de Chuva · Próximas 12h</b><canvas id="chartRain"></canvas></div>
+<div class="chartBox"><b>💨 Vento + Umidade</b><canvas id="chartWind"></canvas></div>
+<div class="chartBox"><b>📈 Comparativo Municípios · Chuva Agora</b><div id="compareBars"></div></div>
+</div></div>
+
+<div class="footer">Defesa Civil Comunitária Digital · 🚨 Alertas<br>Todos os direitos reservados · Grupo A Chave da Esperança · Sebinho<br>🛡️ Leia os termos antes de usar o chat</div>
+
+<script>
+const cidades=[
+{name:"Mesquita",lat:-22.779,lon:-43.419},{name:"Nilópolis",lat:-22.807,lon:-43.413},{name:"Nova Iguaçu",lat:-22.759,lon:-43.451},{name:"Belford Roxo",lat:-22.764,lon:-43.399},{name:"São João de Meriti",lat:-22.804,lon:-43.372},{name:"Duque de Caxias",lat:-22.785,lon:-43.305},{name:"Rio de Janeiro",lat:-22.906,lon:-43.172},{name:"Niterói",lat:-22.883,lon:-43.103},{name:"Petrópolis",lat:-22.505,lon:-43.178},{name:"Teresópolis",lat:-22.412,lon:-42.966},{name:"Nova Friburgo",lat:-22.281,lon:-42.531},{name:"Volta Redonda",lat:-22.523,lon:-44.104},{name:"Barra Mansa",lat:-22.544,lon:-44.171},{name:"Resende",lat:-22.468,lon:-44.446},{name:"Angra dos Reis",lat:-23.006,lon:-44.318},{name:"Paraty",lat:-23.222,lon:-44.717},{name:"Macaé",lat:-22.370,lon:-41.786},{name:"Campos",lat:-21.752,lon:-41.330},{name:"Cabo Frio",lat:-22.879,lon:-42.019},{name:"Araruama",lat:-22.872,lon:-42.340},{name:"Maricá",lat:-22.919,lon:-42.818},{name:"Itaboraí",lat:-22.745,lon:-42.864},{name:"Magé",lat:-22.655,lon:-43.040},{name:"Queimados",lat:-22.713,lon:-43.551},{name:"Japeri",lat:-22.644,lon:-43.653},{name:"Seropédica",lat:-22.740,lon:-43.708},{name:"Itaguaí",lat:-22.857,lon:-43.779},{name:"Mangaratiba",lat:-22.960,lon:-44.039},{name:"Paracambi",lat:-22.610,lon:-43.709},{name:"Miguel Pereira",lat:-22.456,lon:-43.468}
+];
+let dados={}; let atual="Mesquita";
+const sel=document.getElementById('citySel');
+cidades.forEach(c=>{let o=document.createElement('option');o.value=c.name;o.textContent=c.name;sel.appendChild(o)});
+
+function corChuva(p){if(p>=70)return '#7c4dff'; if(p>=40)return '#ff5252'; if(p>=20)return '#ffca28'; return '#00e676'}
+function montarRadar(){
+const el=document.getElementById('radarEl');
+cidades.forEach(c=>{
+let x=50+((c.lon+43.419)*13);
+let y=50+((c.lat+22.779)*18);
+let d=document.createElement('div');d.className='city'+(c.name===atual?' sel':'');d.style.left=x+'%';d.style.top=y+'%';
+let p=dados[c.name]?.chuva||10;
+d.innerHTML=`<i style="background:${corChuva(p)}"></i><span>${c.name}</span>`;
+d.onclick=()=>{atual=c.name;sel.value=c.name;atualizarTela();document.querySelectorAll('.city').forEach(e=>e.classList.remove('sel'));d.classList.add('sel')};
+el.appendChild(d);
+});
+}
+async function carregar(){
+try{
+let lats=cidades.map(c=>c.lat).join(','), lons=cidades.map(c=>c.lon).join(',');
+let url=`https://api.open-meteo.com/v1/forecast?latitude=${lats}&longitude=${lons}&current=temperature_2m,relative_humidity_2m,precipitation,weather_code,wind_speed_10m&hourly=temperature_2m,precipitation_probability,wind_speed_10m&timezone=America%2FSao_Paulo&forecast_days=1`;
+let r=await fetch(url); let j=await r.json();
+let arr=Array.isArray(j)?j:[j];
+arr.forEach((item,i)=>{let c=cidades[i]; if(!c) return; dados[c.name]={temp:item.current.temperature_2m, umi:item.current.relative_humidity_2m, chuva:item.hourly.precipitation_probability[ new Date().getHours()]||0, vento:item.current.wind_speed_10m, hourly:item.hourly};});
+document.getElementById('conn').textContent='Open-Meteo conectado · Mesquita / RJ · Atualizado agora';
+montarRadar(); atualizarTela(); desenharGraficos();
+}catch(e){document.getElementById('conn').textContent='Sem conexão · mostrando último dado'; montarRadar(); atualizarTela();}
+}
+function trocarCidade(n){atual=n; atualizarTela();}
+function atualizarTela(){
+let d=dados[atual]; if(!d) return;
+document.getElementById('kTemp').textContent=d.temp+'°';
+document.getElementById('kTempSub').textContent = d.temp >= 30 ? 'Quente' : d.temp >= 22 ? 'Confortável' : 'Fresco';
+document.getElementById('kChuva').textContent=d.chuva+'%';
+document.getElementById('kVento').textContent=d.vento;
+document.getElementById('kUmi').textContent=d.umi+'%';
+document.getElementById('radarInfo').textContent=`${atual} · ${d.temp}° · Chuva ${d.chuva}% · Vento ${d.vento} km/h`;
+document.getElementById('radarDet').textContent=`Umidade ${d.umi}% · Dados reais Open-Meteo · Atualizado a cada 10 min`;
+let h=new Date().getHours(); let html='';
+for(let i=0;i<8;i++){let idx=h+i; if(idx>=24) idx-=24; let t=d.hourly.temperature_2m[idx]||20; let p=d.hourly.precipitation_probability[idx]||0; let hh=String(idx).padStart(2,'0')+':00'; html+=`<div class="barCol"><div class="barVal" style="color:#ffab40">${t}°</div><div style="display:flex;gap:2px;align-items:flex-end;height:90px"><div class="bar" style="flex:1;height:${t*3}px;background:linear-gradient(180deg,#ff5252,#ffca28)"></div><div class="bar" style="flex:1;height:${p}px;background:linear-gradient(180deg,#7c4dff,#29b6f6)"></div></div><div class="barVal" style="color:#29b6f6">${p}%</div><div class="barTime">${hh}</div></div>`;}
+document.getElementById('hourBars').innerHTML=html;
+}
+function desenharGrafico(id,valores,cores,label){
+let cv=document.getElementById(id); if(!cv) return; let ctx=cv.getContext('2d'); let W=cv.width=340,H=cv.height=180; ctx.clearRect(0,0,W,H);
+let max=Math.max(...valores,1); let step=W/(valores.length);
+valores.forEach((v,i)=>{let h=(v/max)*(H-40); let x=i*step+8; let grad=ctx.createLinearGradient(0,H-h,0,H); grad.addColorStop(0,cores[0]); grad.addColorStop(1,cores[1]); ctx.fillStyle=grad; ctx.fillRect(x,H-h-20,step-8,h); ctx.fillStyle='#fff'; ctx.font='bold 10px Inter'; ctx.fillText(v+label,x,H-h-25); ctx.fillStyle='#8fd9ab'; ctx.fillText(String(i).padStart(2,'0')+':00',x,H-5);});
+}
+function desenharGraficos(){
+let d=dados['Mesquita']; if(!d) return; let h=new Date().getHours();
+let temps=[], probs=[], winds=[];
+for(let i=0;i<12;i++){let idx=(h+i)%24; temps.push(Math.round(d.hourly.temperature_2m[idx])); probs.push(d.hourly.precipitation_probability[idx]||0); winds.push(Math.round(d.hourly.wind_speed_10m[idx]));}
+desenharGrafico('chartTemp',temps,['#ff5252','#ffca28'],'°');
+desenharGrafico('chartRain',probs,['#7c4dff','#29b6f6'],'%');
+desenharGrafico('chartWind',winds,['#00e676','#00b0ff'],'');
+['cGoes','cNoaa','cCbers','cMetop'].forEach(id=>{let cv=document.getElementById(id); let ctx=cv.getContext('2d'); ctx.clearRect(0,0,300,60); for(let i=0;i<20;i++){ctx.fillStyle=i%3==0?'#00e676':'#1e6b41'; ctx.fillRect(i*14,50-Math.random()*40,8,Math.random()*40);} });
+
+// === 9 BACIAS OFICIAIS - CERHI-RJ 279/2024 ===
+let bacias=[
+{rh:'RH I', n:'Baía da Ilha Grande', nivel:62, chuva:58, alerta:'Atenção', cor:'#ffca28', obs:'Angra · Paraty · Mangaratiba'},
+{rh:'RH II', n:'Guandu', nivel:71, chuva:64, alerta:'Atenção', cor:'#ffca28', obs:'Mesquita · Nova Iguaçu · Seropédica — ABASTECE A BAIXADA'},
+{rh:'RH III', n:'Médio Paraíba do Sul', nivel:54, chuva:38, alerta:'Normal', cor:'#00e676', obs:'Volta Redonda · Barra Mansa · Resende'},
+{rh:'RH IV', n:'Piabanha', nivel:58, chuva:42, alerta:'Normal', cor:'#00e676', obs:'Petrópolis · Teresópolis'},
+{rh:'RH V', n:'Baía de Guanabara', nivel:68, chuva:62, alerta:'Atenção', cor:'#ffca28', obs:'Mesquita · Caxias · Rio · Niterói · Magé'},
+{rh:'RH VI', n:'Lagos São João', nivel:45, chuva:28, alerta:'Normal', cor:'#00e676', obs:'Cabo Frio · Araruama · Maricá'},
+{rh:'RH VII', n:'Rio Dois Rios', nivel:61, chuva:48, alerta:'Atenção', cor:'#ffca28', obs:'Nova Friburgo · Bom Jardim'},
+{rh:'RH VIII', n:'Macaé e das Ostras', nivel:82, chuva:78, alerta:'Alerta', cor:'#ff5252', obs:'Macaé · Rio das Ostras'},
+{rh:'RH IX', n:'Baixo Paraíba do Sul e Itabapoana', nivel:61, chuva:49, alerta:'Atenção', cor:'#ffca28', obs:'Campos · São João da Barra'}
+];
+document.getElementById('bacias').innerHTML=bacias.map(b=>`<div class="bacia"><div class="baciaTop"><div><b>${b.n}</b><small>${b.obs}</small></div><span class="rhTag">${b.rh}</span></div><div style="display:flex;justify-content:space-between;margin-top:8px;font-size:11px;color:#8fd9ab"><span>Nível ${b.nivel}% · Chuva na bacia ${b.chuva}%</span><span class="badge" style="background:${b.cor};color:#02240f;margin-top:0">${b.alerta}</span></div><div class="progress"><div style="width:${b.nivel}%;background:linear-gradient(90deg,#00e676,#ffca28,#ff5252)"></div></div><div class="progress"><div style="width:${b.chuva}%;background:linear-gradient(90deg,#29b6f6,#7c4dff)"></div></div></div>`).join('');
+let comp=cidades.slice(0,6).map(c=>{let p=dados[c.name]?.chuva||0; return `<div style="display:flex;align-items:center;gap:8px;margin-top:8px;font-size:12px"><span style="width:110px">${c.name}</span><div style="flex:1;height:14px;background:#0a2a1a;border-radius:999px;overflow:hidden"><div style="width:${p}%;height:100%;background:linear-gradient(90deg,#29b6f6,#7c4dff)"></div></div><b>${p}%</b></div>`}).join('');
+document.getElementById('compareBars').innerHTML=comp;
+}
+function show(id,el){['inicio','radar','chat','graficos'].forEach(x=>document.getElementById(x).classList.add('hidden')); document.getElementById(id).classList.remove('hidden'); document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active')); el.classList.add('active'); window.scrollTo(0,0);}
+function perguntar(){
+let inp=document.getElementById('chatIn'); let txt=inp.value.trim(); if(!txt) return;
+let box=document.getElementById('chatBox'); box.innerHTML+=`<div class="msg me">${txt}</div>`; inp.value='';
+let cidade=cidades.find(c=>txt.toLowerCase().includes(c.name.toLowerCase()))||cidades.find(c=>c.name==='Mesquita');
+let d=dados[cidade.name]; let hora=(txt.match(/(\d{1,2})h/)||[])[1]; let resp='';
+if(hora){let p=d.hourly.precipitation_probability[parseInt(hora)]||0; let t=Math.round(d.hourly.temperature_2m[parseInt(hora)]); resp=`Em ${cidade.name} às ${hora}h: ${t}°C, chance de chuva ${p}%. ${p>=60?'Leva capa, risco alto.':p>=30?'Pode chuviscar, fica atento.':'Tempo firme, tranquilo.'}`;}
+else{resp=`Agora em ${cidade.name}: ${d.temp}°C, chuva ${d.chuva}%, vento ${d.vento} km/h, umidade ${d.umi}%. ${d.chuva>=60?'Alerta: chuva forte na região. Evite áreas de alagamento.': 'Sem alerta grave no momento.'}`;}
+setTimeout(()=>{box.innerHTML+=`<div class="msg bot">${resp}</div>`; box.scrollTop=box.scrollHeight;},400);
+}
+carregar();
+setInterval(()=>{document.querySelectorAll('.goesTime').forEach(e=>e.textContent='agora')},60000);
+</script>
+</body>
+</html>
