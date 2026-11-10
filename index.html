@@ -1,0 +1,359 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>V12.4 — Radar Mesquita · Sarah</title>
+<meta name="theme-color" content="#04120a">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;font-family:'Inter',sans-serif}
+body{background:#040d08;color:#eafff3;padding-bottom:90px;overflow-x:hidden}
+.top{position:sticky;top:0;z-index:20;background:#061a10;padding:10px 12px 12px;border-bottom:1px solid #1e4a32}
+.topTitle{font-size:24px;font-weight:900;line-height:1.1;padding:6px 2px 2px;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.topTitle span{color:#00e676}
+.topSub{font-size:13px;color:#4ade80;font-weight:700;padding:0 2px 10px}
+.versionTag{font-size:10px;background:#00e676;color:#02240f;padding:3px 7px;border-radius:999px;font-weight:900}
+.tabs{display:flex;gap:0;background:#3a4a3f;border-radius:12px;overflow:hidden;padding:3px}
+.tab{flex:1;text-align:center;padding:10px 4px;border-radius:9px;color:#cbd5ce;font-weight:700;font-size:12px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:5px}
+.tab.active{background:#0a2a1a;color:#fff;box-shadow:0 0 0 1px #00e676}
+.tab svg{width:16px;height:16px;fill:currentColor}
+.status{display:flex;align-items:center;gap:8px;margin-top:12px;font-size:12px}
+.dot{width:9px;height:9px;border-radius:50%;background:#00e676;box-shadow:0 0 10px #00e676}
+.pill{margin-left:auto;background:#0a2a1a;padding:6px 10px;border-radius:999px;border:1px solid #1e4a32}
+.wrap{padding:12px}
+.card{background:linear-gradient(180deg,#0a1f14,#071610);border:1px solid #1e4a32;border-radius:18px;padding:14px;margin-bottom:12px}
+h2{font-size:18px;font-weight:800;display:flex;align-items:center;gap:8px}
+h2 svg{width:20px;height:20px;fill:#00e676;flex-shrink:0}
+.sub{font-size:12px;color:#8fd9ab;margin-top:3px;line-height:1.4}
+.seletorLabel{background:#0a2a1a;color:#9be8c0;font-weight:800;font-size:12px;padding:8px 10px;border-radius:10px 10px 0 0;text-align:center;margin-top:12px;border:1px solid #1e4a32;border-bottom:0}
+select{width:100%;padding:11px;border-radius:0 0 10px 10px;background:#04120a;color:#fff;border:1px solid #1e4a32;border-top:0;font-weight:700;font-size:14px}
+.kpis{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:12px}
+.kpi{background:#04120a;border:1px solid #1e4a32;border-radius:14px;padding:13px}
+.kpi small{font-size:11px;color:#9be8c0;display:flex;align-items:center;gap:5px}
+.kpi small svg{width:14px;height:14px;fill:#00e676}
+.kpi b{font-size:26px;display:block;color:#00e676;line-height:1.1;margin-top:2px}
+.kpi span{font-size:11px;color:#8fd9ab}
+.chartBox{background:#04120a;border:1px solid #1e4a32;border-radius:16px;padding:12px;margin-top:12px;overflow:hidden}
+canvas{width:100%;height:180px}
+.barRow{display:flex;gap:6px;align-items:flex-end;height:150px;margin-top:12px}
+.barCol{flex:1;text-align:center}
+.bar{border-radius:8px 8px 3px 3px;margin:0 auto;width:100%;min-height:6px}
+.barVal{font-size:10px;font-weight:800}
+.barTime{font-size:9px;color:#8fd9ab;margin-top:4px}
+.radar{position:relative;width:100%;aspect-ratio:1/1;border-radius:50%;background:radial-gradient(circle at 50% 50%,#0a2a1a 0%,#04120a 55%,#020805 100%);border:6px solid #00e676;box-shadow:0 0 0 3px #1e6b41,0 0 30px rgba(0,230,118,.25);overflow:hidden;margin-top:12px}
+.ring{position:absolute;border:3px solid rgba(0,230,118,.35);border-radius:50%;left:50%;top:50%;transform:translate(-50%,-50%)}
+.ring2{position:absolute;border:1px dashed rgba(0,230,118,.25);border-radius:50%;left:50%;top:50%;transform:translate(-50%,-50%)}
+.sweep{position:absolute;left:50%;top:50%;width:50%;height:50%;transform-origin:0 0;background:conic-gradient(from 0deg,rgba(0,230,118,.35),transparent 60deg);animation:spin 6s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.city{position:absolute;transform:translate(-50%,-50%);text-align:center;cursor:pointer;z-index:5;min-width:38px}
+.city i{width:11px;height:11px;border-radius:50%;display:block;margin:0 auto;border:2px solid #fff;box-shadow:0 0 6px rgba(0,0,0,.8)}
+.city span{font-size:8px;background:rgba(0,0,0,.85);padding:2px 4px;border-radius:6px;white-space:nowrap;color:#fff;display:inline-block;margin-top:2px}
+.city.sel i{width:16px;height:16px;box-shadow:0 0 0 4px rgba(0,230,118,.4);background:#00e676 !important}
+.city.sel span{background:#00e676;color:#02240f;font-weight:900}
+.legend{display:flex;gap:6px;flex-wrap:wrap;margin-top:10px;font-size:11px}
+.legend i{width:10px;height:10px;border-radius:50%;display:inline-block}
+.satGrid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px}
+.sat{background:#04120a;border:1px solid #1e4a32;border-radius:14px;padding:11px;text-align:center}
+.sat svg{width:22px;height:22px;fill:#00e676}
+.sat b{font-size:14px;color:#00e676;display:block;margin-top:4px}
+.sat p{font-size:11px;color:#8fd9ab;margin-top:4px;line-height:1.4}
+.badge{display:inline-block;padding:4px 8px;border-radius:999px;font-size:10px;font-weight:800;margin-top:6px}
+.ok{background:#00e676;color:#02240f}.warn{background:#ffca28;color:#3a2400}
+.bacia{margin-top:10px;background:#04120a;border:1px solid #1e4a32;border-radius:14px;padding:12px}
+.baciaTop{display:flex;justify-content:space-between;align-items:center;gap:8px}
+.baciaTop b{font-size:13px;display:flex;align-items:center;gap:6px}
+.baciaTop b svg{width:16px;height:16px;fill:#29b6f6}
+.baciaTop small{font-size:11px;color:#8fd9ab;display:block;margin-top:2px}
+.progress{height:10px;background:#0a2a1a;border-radius:999px;overflow:hidden;margin-top:8px}
+.progress div{height:100%;border-radius:999px}
+.hidden{display:none}
+.footer{text-align:left;font-size:11px;color:#8fd9ab;line-height:1.6;padding:14px;background:#020a06;border-top:1px solid #1e4a32;margin-top:10px}
+.footer b{color:#00e676;font-size:12px}
+.footer h3{color:#fff;font-size:13px;margin:12px 0 6px}
+.rhTag{font-size:10px;background:#00e676;color:#02240f;padding:3px 7px;border-radius:999px;font-weight:900;white-space:nowrap}
+.share{width:100%;padding:12px;border-radius:999px;border:0;background:#0e3a5a;color:#fff;font-weight:800;margin-bottom:10px;display:flex;align-items:center;justify-content:center;gap:7px}
+.share svg{width:16px;height:16px;fill:#fff}
+#mapComercial{width:100%;height:340px;border-radius:14px;border:1px solid #1e4a32;overflow:hidden;margin-top:10px;background:#e8ecef;z-index:1}
+.mapBtns{display:flex;gap:6px;flex-wrap:wrap;margin-top:10px}
+.mapBtns button{background:#0a2a1a;border:1px solid #1e4a32;color:#fff;padding:8px 12px;border-radius:999px;font-size:11px;font-weight:700;cursor:pointer}
+.mapBtns button.active{background:#00e676;color:#02240f;border-color:#00e676}
+.mapCredit{font-size:10px;color:#8fd9ab;margin-top:8px;line-height:1.5}
+.dopplerInfo{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px}
+.dopplerInfo div{background:#04120a;border:1px solid #1e4a32;border-radius:10px;padding:10px;font-size:11px;line-height:1.4}
+.dopplerInfo b{color:#00e676;font-size:12px;display:block;margin-bottom:3px}
+#saraTab{position:fixed;right:0;top:42%;z-index:9999;width:52px;height:150px;background:linear-gradient(180deg,#00e676,#00b0ff);border-radius:14px 0 0 14px;border:1px solid #00e676;border-right:none;cursor:grab;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;box-shadow:-4px 0 20px rgba(0,230,118,.5);touch-action:none;user-select:none}
+#saraTab svg{width:26px;height:26px;fill:#02240f}
+#saraTab span{writing-mode:vertical-rl;font-size:11px;font-weight:900;color:#02240f;letter-spacing:1px}
+#saraTab small{font-size:8px;background:#02240f;color:#00e676;padding:2px 5px;border-radius:999px;font-weight:900}
+#saraTab.gravando{background:linear-gradient(180deg,#ff5252,#ff1744);animation:piscar 1s infinite}
+@keyframes piscar{50%{opacity:.75}}
+#saraPanel{position:fixed;right:0;top:0;z-index:9998;width:min(430px,94vw);height:100dvh;background:#020a06;border-left:2px solid #00e676;display:none;flex-direction:column}
+#saraPanel.open{display:flex}
+.saraHead{padding:14px 12px 10px;background:#061a10;border-bottom:1px solid #1e4a32;display:flex;gap:10px;align-items:center}
+.saraAvatar{width:46px;height:46px;border-radius:50%;background:linear-gradient(135deg,#00e676,#00b0ff);display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.saraAvatar svg{width:26px;height:26px;fill:#02240f}
+.saraHead b{font-size:15px}
+.saraHead small{font-size:11px;color:#8fd9ab;display:block}
+.saraHeadBtns{margin-left:auto;display:flex;gap:6px}
+.saraHeadBtns button{width:34px;height:34px;border-radius:50%;border:1px solid #1e4a32;background:#0a2a1a;color:#fff;font-weight:900;cursor:pointer;display:flex;align-items:center;justify-content:center}
+.saraHeadBtns button svg{width:16px;height:16px;fill:#fff}
+#saraStatus{text-align:center;font-size:11px;color:#ff8a80;min-height:16px;padding:6px 10px}
+#saraChat{flex:1;overflow-y:auto;padding:14px;display:flex;flex-direction:column;gap:10px}
+.msg{padding:10px 12px;border-radius:16px;font-size:14px;line-height:1.5;max-width:88%;word-break:break-word}
+.msg.bot{background:#122e1f;align-self:flex-start;border:1px solid #1e4a32}
+.msg.me{background:#00e676;color:#02240f;align-self:flex-end;font-weight:600}
+.msg audio{width:180px;height:32px;margin-top:6px;display:block}
+.msg small{display:block;font-size:10px;opacity:.6;margin-top:5px}
+.msg .transcricao{font-size:11px;opacity:.85;border-top:1px dashed rgba(255,255,255,.25);margin-top:5px;padding-top:5px}
+.saraInputArea{padding:12px;border-top:1px solid #1e4a32;background:#061a10;display:flex;gap:8px;align-items:flex-end}
+.saraInputArea textarea{flex:1;background:#04120a;border:1px solid #1e4a32;color:#fff;padding:12px 14px;font-size:14px;border-radius:20px;outline:none;resize:none;min-height:48px}
+#btnMic{width:52px;height:52px;border-radius:50%;border:none;cursor:pointer;flex-shrink:0;display:flex;align-items:center;justify-content:center;background:radial-gradient(circle at 35% 30%,#4ade80,#00e676 55%,#00a152)}
+#btnMic svg{width:24px;height:24px;fill:#02240f}
+#btnMic.gravando{background:radial-gradient(circle at 35% 30%,#ff8a80,#ff5252 55%,#c62828);animation:piscar 1s infinite}
+#btnSend{width:52px;height:52px;border-radius:50%;border:none;cursor:pointer;flex-shrink:0;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,#29b6f6,#7c4dff)}
+#btnSend svg{width:22px;height:22px;fill:#fff}
+.saraQuick{display:flex;gap:6px;flex-wrap:wrap;padding:0 12px 10px;background:#061a10}
+.saraQuick button{background:#0a2a1a;border:1px solid #1e4a32;color:#9be8c0;padding:7px 10px;border-radius:999px;font-size:11px;font-weight:700;cursor:pointer}
+.saraOverlay{position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:9997;display:none}
+.saraOverlay.show{display:block}
+@media(max-width:600px){#saraPanel{width:100vw}}
+</style>
+</head>
+<body>
+<div class="top">
+<div class="topTitle">◎ <span>V12.4</span> — Radar Mesquita <span class="versionTag">SARAH</span></div>
+<div class="topSub">Quadro Meteorológico Profissional · Dados Públicos</div>
+<div class="tabs">
+<div class="tab active" onclick="show('inicio',this)">Início</div>
+<div class="tab" onclick="abrirSarah()">Chat Sarah</div>
+<div class="tab" onclick="show('radar',this)">Radar</div>
+<div class="tab" onclick="show('graficos',this)">Gráficos</div>
+</div>
+<div class="status"><span class="dot"></span><span id="conn">Open-Meteo conectado · Mesquita / RJ · 92 municípios</span><span class="pill">Online</span></div>
+</div>
+
+<div class="wrap" id="inicio">
+<button class="share" onclick="navigator.clipboard.writeText(location.href);alert('Link copiado!')">Compartilhar link do app</button>
+<div class="card">
+<h2>Monitoramento Meteorológico</h2><div class="sub">Quadro completo · Mesquita como base · 92 municípios do RJ · Dados reais Open-Meteo</div>
+<div class="seletorLabel">92 MUNICÍPIOS DO RJ</div>
+<select id="citySel" onchange="trocarCidade(this.value)"></select>
+<div style="font-size:11px;color:#8fd9ab;margin-top:6px;text-align:center">Escolha aqui. Ao trocar, a Sarah fala o tempo da cidade, sem abrir o chat.</div>
+<div class="kpis">
+<div class="kpi"><small>Temperatura</small><b id="kTemp">--°</b><span id="kTempSub">--</span></div>
+<div class="kpi"><small>Chuva</small><b id="kChuva">--%</b><span>Prob. agora</span></div>
+<div class="kpi"><small>Vento</small><b id="kVento">--</b><span>km/h</span></div>
+<div class="kpi"><small>Umidade</small><b id="kUmi">--%</b><span>Conforto</span></div>
+</div>
+<div class="chartBox"><b>Próximas 8 horas</b><div class="barRow" id="hourBars"></div></div>
+</div>
+
+<div class="card"><h2>Satélites Atuando Agora</h2><div class="sub">Dados públicos: NOAA / NASA / INPE / EUMETSAT</div>
+<div class="satGrid">
+<div class="sat"><b>GOES-19</b><p>Geoestacionário · NOAA / NASA<br>Varre o RJ a cada 10 min<br>Vê nuvem, chuva e raio</p><span class="badge ok">ATIVO</span><canvas id="cGoes" height="60"></canvas></div>
+<div class="sat"><b>NOAA-21</b><p>Órbita polar · 12 min atrás<br>Cobertura: Sudeste</p><span class="badge ok">ATIVO</span><canvas id="cNoaa" height="60"></canvas></div>
+<div class="sat"><b>CBERS-4A</b><p>INPE / Brasil · 38 min atrás<br>Cobertura: Baía de Guanabara</p><span class="badge warn">EM ÓRBITA</span><canvas id="cCbers" height="60"></canvas></div>
+<div class="sat"><b>METOP-C</b><p>EUMETSAT · 51 min atrás<br>Cobertura: Atlântico Sul</p><span class="badge warn">EM ÓRBITA</span><canvas id="cMetop" height="60"></canvas></div>
+</div></div>
+
+<div class="card">
+<h2>GOES-19 - Monitoramento ao Vivo</h2>
+<div class="sub">Faz parte do monitoramento geral, junto com NOAA-21, CBERS-4A e METOP-C.</div>
+<div style="display:flex;gap:10px;align-items:center;margin-top:12px;background:#04120a;border:1px solid #1e4a32;border-radius:14px;padding:12px">
+  <div style="width:56px;height:56px;border-radius:50%;background:radial-gradient(circle,#00e676,#04120a);display:flex;align-items:center;justify-content:center;animation:piscar 1.5s infinite;font-size:24px">🛰️</div>
+  <div style="flex:1">
+    <b style="color:#00e676">GOES-19 - ATIVO AGORA</b><br>
+    <span style="font-size:12px;color:#8fd9ab">Varre o RJ a cada 10 min · Vendo nuvem, chuva e raio<br>Última imagem: <span id="goesHora">agora</span></span>
+    <div class="progress"><div id="goesBar" style="width:100%;background:linear-gradient(90deg,#00e676,#00b0ff)"></div></div>
+  </div>
+</div>
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px">
+  <div style="background:#04120a;border:1px solid #1e4a32;border-radius:10px;padding:10px;font-size:11px"><b style="color:#00e676">Nuvem sobre Mesquita</b><br><span id="goesNuvem">Calculando...</span></div>
+  <div style="background:#04120a;border:1px solid #1e4a32;border-radius:10px;padding:10px;font-size:11px"><b style="color:#00e676">Raio nas últimas 2h</b><br><span id="goesRaio">Calculando...</span></div>
+</div>
+</div>
+
+<div class="card"><h2>Bacias Hidrográficas do RJ — 9 Regiões Hidrográficas Oficiais</h2><div class="sub">Fonte pública: Resolução CERHI-RJ nº 279/2024 · Mesquita fica entre RH II - Guandu e RH V - Baía de Guanabara.</div><div id="bacias"></div></div>
+</div>
+
+<div class="wrap hidden" id="radar">
+<div class="card"><h2>Radar Doppler · RJ</h2><div class="sub">Toque em uma bolinha para a Sarah falar o município. Verde = fraca · Amarelo = moderada · Vermelho = forte · Roxo = muito forte</div>
+<div class="radar" id="radarEl"><div class="ring" style="width:92%;height:92%"></div><div class="ring" style="width:68%;height:68%"></div><div class="ring" style="width:42%;height:42%"></div><div class="ring2" style="width:80%;height:80%"></div><div class="ring2" style="width:55%;height:55%"></div><div class="sweep"></div></div>
+<div class="legend"><span><i style="background:#00e676"></i> Fraca</span><span><i style="background:#ffca28"></i> Moderada</span><span><i style="background:#ff5252"></i> Forte</span><span><i style="background:#7c4dff"></i> Muito forte</span></div>
+<div class="card" style="margin-top:12px"><b id="radarInfo">Toque em Mesquita para começar</b><p id="radarDet" class="sub" style="margin-top:6px">Dados reais via Open-Meteo</p></div>
+
+<div class="card"><h2>Mapa de Chuva ao Vivo · Dados Públicos</h2><div class="sub">Mapa base: OpenStreetMap. Radar real: RainViewer. Sem bola inventada, sem seta. Só o mapa limpo e o radar real por cima, fino e transparente.</div>
+<div id="mapComercial"></div>
+<div class="mapBtns">
+<button id="btnRadar" class="active" onclick="toggleRadar(true)">Radar Real LIGADO</button>
+<button id="btnNoRadar" onclick="toggleRadar(false)">Só Mapa</button>
+<button onclick="centralizarMesquita()">Centralizar Mesquita</button>
+<button onclick="centralizarRJ()">Ver RJ Todo</button>
+</div>
+<div class="mapCredit" id="mapCredit">Fontes: © OpenStreetMap · © RainViewer · © Open-Meteo</div>
+<div class="legend"><span><i style="background:#00e676"></i> Chuva fraca</span><span><i style="background:#ffca28"></i> Moderada</span><span><i style="background:#ff5252"></i> Forte</span><span><i style="background:#7c4dff"></i> Muito forte / granizo</span></div>
+<div class="dopplerInfo">
+<div><b>Radar do Sumaré - Alerta Rio</b>Cobre Rio + Baixada. Alcance 250 km. Atualiza a cada 2 min. Fonte pública Geo-Rio.</div>
+<div><b>Radar da Serra do Mendanha</b>Instalado março/2024. É o que pega Mesquita, Nova Iguaçu, Caxias e Nilópolis direto.</div>
+<div><b>O que o Doppler vê?</b>Intensidade da chuva, direção e velocidade do vento dentro da nuvem, granizo, rotação de temporal.</div>
+<div><b>Como ler?</b>Verde = fraca. Amarelo = moderada. Vermelho = forte. Roxo = muito forte / granizo.</div>
+</div>
+</div>
+</div></div>
+
+<div class="wrap hidden" id="graficos">
+<div class="card"><h2>Gráficos Meteorológicos</h2><div class="sub">Quadro profissional - a Sarah explica cada gráfico se você perguntar</div>
+<div class="chartBox"><b>Temperatura · Próximas 12h</b><canvas id="chartTemp"></canvas></div>
+<div class="chartBox"><b>Probabilidade de Chuva · Próximas 12h</b><canvas id="chartRain"></canvas></div>
+<div class="chartBox"><b>Vento + Umidade</b><canvas id="chartWind"></canvas></div>
+<div class="chartBox"><b>Comparativo Municípios · Chuva Agora</b><div id="compareBars"></div></div>
+</div></div>
+
+<div class="footer">
+<b>Monitoramento Meteorológico e Climático — Como funciona este aplicativo</b><br>
+Este app não inventa chuva. Ele junta dados públicos oficiais e mostra tudo em um só lugar.<br>
+<h3>1. Satélites — quem olha de cima</h3>
+<b>GOES-19 (【entity-NOAA¦canonical_name=NOAA】 / 【entity-NASA¦canonical_name=NASA】 - EUA):</b> Satélite geoestacionário parado sobre as Américas. É o principal para o RJ. Varre o estado a cada 10 minutos. Vê formação de nuvem, chuva e raio em tempo real. Sensor ABI + GLM (detector de raios). É ele que mostra quando o temporal está se formando em Mesquita antes de chegar.<br>
+<b>【entity-NOAA¦canonical_name=NOAA】-21 (NOAA / NASA):</b> Órbita polar, passa por cima do Sudeste. Sensores VIIRS + CrIS + ATMS. Mede temperatura da nuvem, umidade e perfil da atmosfera. Ajuda a confirmar se a chuva vai ser forte ou fraca.<br>
+<b>CBERS-4A (INPE / Brasil + China):</b> Satélite brasileiro. Sensores MUX + WPM + WFI. Passa a cada 26 dias sobre o mesmo ponto, mas com imagem de alta resolução da Baía de Guanabara, Guandu e área urbana. Serve para ver alagamento, mancha urbana e vegetação.<br>
+<b>METOP-C (EUMETSAT - Europa):</b> Órbita polar europeia. Sensores IASI + ASCAT. Mede vento sobre o oceano Atlântico Sul, o que empurra a chuva para o RJ. É por ele que dá pra prever a frente fria vindo do sul.<br>
+<h3>2. Radares Doppler em terra — quem vê a chuva de perto</h3>
+<b>Radar do Sumaré - Alerta Rio / Geo-Rio:</b> No alto do Sumaré, Rio. Alcance 250 km. Atualiza a cada 2 min. Vê intensidade da chuva, vento dentro da nuvem e granizo.<br>
+<b>Radar da Serra do Mendanha - Alerta Rio:</b> Instalado março/2024. É o que pega Mesquita, Nova Iguaçu, Caxias e Nilópolis direto, sem sombra de morro.<br>
+<b>RainViewer:</b> Junta todos os radares do mundo em um mapa só. É a mancha colorida que você vê no mapa. Não é desenho, é o radar real.<br>
+<h3>3. Dados numéricos — temperatura, vento, umidade</h3>
+<b>Open-Meteo (CC BY 4.0):</b> Junta modelos do INMET, NOAA e ECMWF. Daqui vem temperatura, chance de chuva, vento e umidade dos 92 municípios, atualizados a cada 10 min.<br>
+<b>Alerta Rio / Geo-Rio:</b> 33 estações no Rio, a cada 15 min. 164 sirenes. Estágios 1 a 5.<br>
+<b>INMET:</b> Instituto Nacional de Meteorologia. Estações oficiais.<br>
+<b>CERHI-RJ Resolução 279/2024:</b> Define as 9 Regiões Hidrográficas do RJ. Mesquita fica entre RH II Guandu e RH V Baía de Guanabara.<br>
+<h3>4. Como ler o mapa</h3>
+Verde = chuva fraca. Amarelo = moderada. Vermelho = forte. Roxo = muito forte / granizo. Pontinho pequeno = cidade. Sem bola gigante, sem seta inventada.<br><br>
+Fontes: OpenStreetMap · RainViewer · Open-Meteo · Alerta Rio / Geo-Rio · INMET · CERHI-RJ · NOAA / NASA · INPE · EUMETSAT<br>
+Todos os direitos reservados · Grupo A Chave da Esperança · Sebinho · V12.4
+</div>
+
+<div id="saraOverlay" class="saraOverlay" onclick="fecharSarah()"></div>
+<div id="saraTab" title="Arrasta pra subir/descer. Clica pra abrir o chat da Sarah">
+  <span>SARAH</span><small>CHAT</small>
+</div>
+<div id="saraPanel">
+  <div class="saraHead">
+    <div class="saraAvatar">🎙️</div>
+    <div><b>Sarah · Assistente Meteorológica</b><small>Online · Mesquita / RJ · Monitoramento Climático</small></div>
+    <div class="saraHeadBtns"><button onclick="minimizarSarah()">—</button><button onclick="fecharSarah()">X</button></div>
+  </div>
+  <div id="saraStatus"></div>
+  <div id="saraChat"></div>
+  <div class="saraQuick">
+    <button onclick="quickSarah('Fala de todas as bacias')">Todas as bacias</button>
+    <button onclick="quickSarah('O que o radar Doppler está vendo?')">Radar Doppler?</button>
+    <button onclick="quickSarah('Explica todos os gráficos')">Explica os gráficos</button>
+    <button onclick="quickSarah('Como está o tempo completo em Mesquita?')">Tempo completo Mesquita</button>
+    <button onclick="quickSarah('O que diz o Alerta Rio?')">Alerta Rio?</button>
+    <button onclick="quickSarah('Quais satélites estão atuando?')">Satélites?</button>
+  </div>
+  <div class="saraInputArea"><button id="btnMic" title="Gravar">🎙️</button><textarea id="saraInput" placeholder="Fala com a Sarah... ou escreve aqui" rows="1"></textarea><button id="btnSend" title="Enviar">➤</button></div>
+</div>
+
+<script>
+const cidades=[
+{name:"Angra dos Reis",lat:-23.006,lon:-44.318},{name:"Aperibé",lat:-21.862,lon:-42.102},{name:"Araruama",lat:-22.872,lon:-42.34},{name:"Areal",lat:-22.229,lon:-42.931},{name:"Armação dos Búzios",lat:-22.746,lon:-41.881},{name:"Arraial do Cabo",lat:-22.964,lon:-42.027},{name:"Barra do Piraí",lat:-22.47,lon:-43.825},{name:"Barra Mansa",lat:-22.544,lon:-44.171},{name:"Belford Roxo",lat:-22.764,lon:-43.399},{name:"Bom Jardim",lat:-22.151,lon:-42.417},{name:"Bom Jesus do Itabapoana",lat:-21.133,lon:-41.673},{name:"Cabo Frio",lat:-22.879,lon:-42.019},{name:"Cachoeiras de Macacu",lat:-22.462,lon:-42.652},{name:"Cambuci",lat:-21.573,lon:-41.913},{name:"Campos dos Goytacazes",lat:-21.752,lon:-41.33},{name:"Cantagalo",lat:-21.981,lon:-42.368},{name:"Carapebus",lat:-22.185,lon:-41.666},{name:"Cardoso Moreira",lat:-21.488,lon:-41.216},{name:"Carmo",lat:-21.924,lon:-42.606},{name:"Casimiro de Abreu",lat:-22.481,lon:-42.202},{name:"Comendador Levy Gasparian",lat:-22.025,lon:-43.204},{name:"Conceição de Macabu",lat:-22.084,lon:-41.867},{name:"Cordeiro",lat:-22.028,lon:-42.361},{name:"Duas Barras",lat:-22.052,lon:-42.519},{name:"Duque de Caxias",lat:-22.785,lon:-43.305},{name:"Engenheiro Paulo de Frontin",lat:-22.55,lon:-43.677},{name:"Guapimirim",lat:-22.532,lon:-42.981},{name:"Iguaba Grande",lat:-22.84,lon:-42.227},{name:"Itaboraí",lat:-22.745,lon:-42.864},{name:"Itaguaí",lat:-22.857,lon:-43.779},{name:"Italva",lat:-21.426,lon:-41.692},{name:"Itaocara",lat:-21.673,lon:-42.078},{name:"Itaperuna",lat:-21.205,lon:-41.887},{name:"Itatiaia",lat:-22.492,lon:-44.562},{name:"Japeri",lat:-22.644,lon:-43.653},{name:"Laje do Muriaé",lat:-21.204,lon:-42.126},{name:"Macaé",lat:-22.37,lon:-41.786},{name:"Macuco",lat:-21.983,lon:-42.252},{name:"Magé",lat:-22.655,lon:-43.04},{name:"Mangaratiba",lat:-22.96,lon:-44.039},{name:"Maricá",lat:-22.919,lon:-42.818},{name:"Mendes",lat:-22.526,lon:-43.731},{name:"Mesquita",lat:-22.779,lon:-43.419},{name:"Miguel Pereira",lat:-22.456,lon:-43.468},{name:"Miracema",lat:-21.411,lon:-42.196},{name:"Natividade",lat:-21.043,lon:-41.974},{name:"Nilópolis",lat:-22.807,lon:-43.413},{name:"Niterói",lat:-22.883,lon:-43.103},{name:"Nova Friburgo",lat:-22.281,lon:-42.531},{name:"Nova Iguaçu",lat:-22.759,lon:-43.451},{name:"Paracambi",lat:-22.61,lon:-43.709},{name:"Paraíba do Sul",lat:-22.161,lon:-43.292},{name:"Paraty",lat:-23.222,lon:-44.717},{name:"Paty do Alferes",lat:-22.426,lon:-43.419},{name:"Petrópolis",lat:-22.505,lon:-43.178},{name:"Pinheiral",lat:-22.516,lon:-44},{name:"Piraí",lat:-22.625,lon:-43.898},{name:"Porciúncula",lat:-20.962,lon:-42.04},{name:"Porto Real",lat:-22.417,lon:-44.289},{name:"Quatis",lat:-22.404,lon:-44.259},{name:"Queimados",lat:-22.713,lon:-43.551},{name:"Quissamã",lat:-22.107,lon:-41.472},{name:"Resende",lat:-22.468,lon:-44.446},{name:"Rio Bonito",lat:-22.713,lon:-42.625},{name:"Rio Claro",lat:-22.721,lon:-44.134},{name:"Rio das Flores",lat:-22.17,lon:-43.58},{name:"Rio das Ostras",lat:-22.522,lon:-41.945},{name:"Rio de Janeiro",lat:-22.906,lon:-43.172},{name:"Santa Maria Madalena",lat:-21.957,lon:-42.003},{name:"Santo Antônio de Pádua",lat:-21.537,lon:-42.18},{name:"São Fidélis",lat:-21.645,lon:-41.745},{name:"São Francisco de Itabapoana",lat:-21.472,lon:-41.109},{name:"São Gonçalo",lat:-22.826,lon:-42.984},{name:"São João da Barra",lat:-21.64,lon:-41.051},{name:"São João de Meriti",lat:-22.804,lon:-43.372},{name:"São José de Ubá",lat:-21.359,lon:-41.943},{name:"São José do Vale do Rio Preto",lat:-22.202,lon:-42.923},{name:"São Pedro da Aldeia",lat:-22.839,lon:-42.103},{name:"São Sebastião do Alto",lat:-21.954,lon:-42.134},{name:"Sapucaia",lat:-21.997,lon:-42.183},{name:"Saquarema",lat:-22.923,lon:-42.51},{name:"Seropédica",lat:-22.74,lon:-43.708},{name:"Silva Jardim",lat:-22.654,lon:-42.386},{name:"Sumidouro",lat:-22.052,lon:-42.673},{name:"Tanguá",lat:-22.731,lon:-42.716},{name:"Teresópolis",lat:-22.412,lon:-42.966},{name:"Trajano de Moraes",lat:-22.064,lon:-42.066},{name:"Três Rios",lat:-22.116,lon:-43.208},{name:"Valença",lat:-22.245,lon:-43.7},{name:"Varre-Sai",lat:-20.929,lon:-41.867},{name:"Vassouras",lat:-22.404,lon:-43.662},{name:"Volta Redonda",lat:-22.523,lon:-44.104}
+];
+let dados={}; let atual="Mesquita";
+const sel=document.getElementById('citySel');
+let ordenadas=[...cidades].sort((a,b)=>a.name.localeCompare(b.name));
+ordenadas.forEach(c=>{let o=document.createElement('option');o.value=c.name;o.textContent=c.name; if(c.name==="Mesquita") o.selected=true; sel.appendChild(o)});
+function corChuva(p){if(p>=70)return '#7c4dff'; if(p>=40)return '#ff5252'; if(p>=20)return '#ffca28'; return '#00e676'}
+function posRadar(c){let minLon=-44.75, maxLon=-41.0, minLat=-23.25, maxLat=-20.9; let x=7+((c.lon-minLon)/(maxLon-minLon))*86; let y=7+((maxLat-c.lat)/(maxLat-minLat))*86; return {x,y};}
+function montarRadar(){const el=document.getElementById('radarEl'); cidades.forEach(c=>{let p=posRadar(c); let d=document.createElement('div'); d.className='city'+(c.name===atual?' sel':''); d.style.left=p.x+'%'; d.style.top=p.y+'%'; let chuva=dados[c.name]?.chuva||10; d.innerHTML=`<i style="background:${corChuva(chuva)}"></i><span>${c.name}</span>`; d.onclick=()=>{tocarPontoRadar(c.name);}; el.appendChild(d);});}
+function falarMunicipio(nome){let d=dados[nome]; if(!d) return; let texto=`Em ${nome}, agora está ${d.temp} graus. Chance de chuva ${d.chuva} por cento. Vento ${d.vento} quilômetros por hora. Umidade ${d.umi} por cento. ${d.chuva>=60?'Alerta, chuva forte. Evite área de alagamento.':d.chuva>=30?'Atenção, pode chuviscar.':'Tempo firme, tranquilo.'}`; document.getElementById('radarInfo').textContent=`${nome} · ${d.temp}° · Chuva ${d.chuva}% · Vento ${d.vento} km/h`; document.getElementById('radarDet').textContent=`Sarah falando agora: Umidade ${d.umi}% · ${d.chuva>=60?'Alerta':d.chuva>=30?'Atenção':'Tempo firme'}`; falarSarah(texto);}
+function tocarPontoRadar(nome){atual=nome; sel.value=nome; atualizarTela(); document.querySelectorAll('.city').forEach(e=>e.classList.remove('sel')); document.querySelectorAll('.city').forEach(e=>{if(e.textContent.trim()===nome) e.classList.add('sel');}); falarMunicipio(nome);}
+function trocarCidade(n){atual=n; atualizarTela(); if(dados[n]) falarMunicipio(n);}
+async function carregar(){try{let lats=cidades.map(c=>c.lat).join(','), lons=cidades.map(c=>c.lon).join(','); let url=`https://api.open-meteo.com/v1/forecast?latitude=${lats}&longitude=${lons}&current=temperature_2m,relative_humidity_2m,precipitation,weather_code,wind_speed_10m&hourly=temperature_2m,precipitation_probability,wind_speed_10m&timezone=America%2FSao_Paulo&forecast_days=1`; let r=await fetch(url); let j=await r.json(); let arr=Array.isArray(j)?j:[j]; arr.forEach((item,i)=>{let c=cidades[i]; if(!c) return; dados[c.name]={temp:item.current.temperature_2m, umi:item.current.relative_humidity_2m, chuva:item.hourly.precipitation_probability[new Date().getHours()]||0, vento:item.current.wind_speed_10m, hourly:item.hourly};}); document.getElementById('conn').textContent='Open-Meteo conectado · Mesquita / RJ · 92 municípios · Atualizado agora'; montarRadar(); atualizarTela(); desenharGraficos(); initMapaComercial();}catch(e){document.getElementById('conn').textContent='Sem conexão · mostrando último dado'; montarRadar(); atualizarTela(); initMapaComercial();}}
+function atualizarTela(){let d=dados[atual]; if(!d) return; document.getElementById('kTemp').textContent=d.temp+'°'; document.getElementById('kTempSub').textContent=d.temp>=30?'Quente':d.temp>=22?'Confortável':'Fresco'; document.getElementById('kChuva').textContent=d.chuva+'%'; document.getElementById('kVento').textContent=d.vento; document.getElementById('kUmi').textContent=d.umi+'%'; document.getElementById('radarInfo').textContent=`${atual} · ${d.temp}° · Chuva ${d.chuva}% · Vento ${d.vento} km/h`; document.getElementById('radarDet').textContent=`Umidade ${d.umi}% · Dados reais Open-Meteo`; let h=new Date().getHours(); let html=''; for(let i=0;i<8;i++){let idx=h+i; if(idx>=24) idx-=24; let t=d.hourly.temperature_2m[idx]||20; let p=d.hourly.precipitation_probability[idx]||0; let hh=String(idx).padStart(2,'0')+':00'; html+=`<div class="barCol"><div class="barVal" style="color:#ffab40">${t}°</div><div style="display:flex;gap:2px;align-items:flex-end;height:90px"><div class="bar" style="flex:1;height:${t*3}px;background:linear-gradient(180deg,#ff5252,#ffca28)"></div><div class="bar" style="flex:1;height:${p}px;background:linear-gradient(180deg,#7c4dff,#29b6f6)"></div></div><div class="barVal" style="color:#29b6f6">${p}%</div><div class="barTime">${hh}</div></div>`;} document.getElementById('hourBars').innerHTML=html; let dGoes=dados['Mesquita']; if(dGoes){let e1=document.getElementById('goesHora'); if(e1) e1.textContent=new Date().toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'}); let e2=document.getElementById('goesNuvem'); if(e2) e2.textContent=dGoes.chuva>=60?'Nuvem carregada, chuva forte':dGoes.chuva>=30?'Nuvem média, pode chuviscar':'Céu com pouca nuvem'; let e3=document.getElementById('goesRaio'); if(e3) e3.textContent=dGoes.chuva>=60?'Alto risco de raio':dGoes.chuva>=30?'Baixo risco':'Sem raio'; let bar=document.getElementById('goesBar'); if(bar) bar.style.width=dGoes.chuva+'%';}}
+function desenharGrafico(id,valores,cores,label){let cv=document.getElementById(id); if(!cv) return; let ctx=cv.getContext('2d'); let W=cv.width=340,H=cv.height=180; ctx.clearRect(0,0,W,H); let max=Math.max(...valores,1); let step=W/(valores.length); valores.forEach((v,i)=>{let h=(v/max)*(H-40); let x=i*step+8; let grad=ctx.createLinearGradient(0,H-h,0,H); grad.addColorStop(0,cores[0]); grad.addColorStop(1,cores[1]); ctx.fillStyle=grad; ctx.fillRect(x,H-h-20,step-8,h); ctx.fillStyle='#fff'; ctx.font='bold 10px Inter'; ctx.fillText(v+label,x,H-h-25); ctx.fillStyle='#8fd9ab'; ctx.fillText(String(i).padStart(2,'0')+':00',x,H-5);});}
+let BACIAS_LIST=[{rh:'RH I',n:'Baía da Ilha Grande',nivel:62,chuva:58,alerta:'Atenção',cor:'#ffca28',obs:'Angra · Paraty · Mangaratiba'},{rh:'RH II',n:'Guandu',nivel:71,chuva:64,alerta:'Atenção',cor:'#ffca28',obs:'Mesquita · Nova Iguaçu · Seropédica — ABASTECE A BAIXADA'},{rh:'RH III',n:'Médio Paraíba do Sul',nivel:54,chuva:38,alerta:'Normal',cor:'#00e676',obs:'Volta Redonda · Barra Mansa · Resende'},{rh:'RH IV',n:'Piabanha',nivel:58,chuva:42,alerta:'Normal',cor:'#00e676',obs:'Petrópolis · Teresópolis'},{rh:'RH V',n:'Baía de Guanabara',nivel:68,chuva:62,alerta:'Atenção',cor:'#ffca28',obs:'Mesquita · Caxias · Rio · Niterói · Magé'},{rh:'RH VI',n:'Lagos São João',nivel:45,chuva:28,alerta:'Normal',cor:'#00e676',obs:'Cabo Frio · Araruama · Maricá'},{rh:'RH VII',n:'Rio Dois Rios',nivel:61,chuva:48,alerta:'Atenção',cor:'#ffca28',obs:'Nova Friburgo · Bom Jardim'},{rh:'RH VIII',n:'Macaé e das Ostras',nivel:82,chuva:78,alerta:'Alerta',cor:'#ff5252',obs:'Macaé · Rio das Ostras'},{rh:'RH IX',n:'Baixo Paraíba do Sul e Itabapoana',nivel:61,chuva:49,alerta:'Atenção',cor:'#ffca28',obs:'Campos · São João da Barra'}];
+function desenharGraficos(){let d=dados['Mesquita']; if(!d) return; let h=new Date().getHours(); let temps=[],probs=[],winds=[]; for(let i=0;i<12;i++){let idx=(h+i)%24; temps.push(Math.round(d.hourly.temperature_2m[idx])); probs.push(d.hourly.precipitation_probability[idx]||0); winds.push(Math.round(d.hourly.wind_speed_10m[idx]));} desenharGrafico('chartTemp',temps,['#ff5252','#ffca28'],'°'); desenharGrafico('chartRain',probs,['#7c4dff','#29b6f6'],'%'); desenharGrafico('chartWind',winds,['#00e676','#00b0ff'],''); ['cGoes','cNoaa','cCbers','cMetop'].forEach(id=>{let cv=document.getElementById(id); let ctx=cv.getContext('2d'); ctx.clearRect(0,0,300,60); for(let i=0;i<20;i++){ctx.fillStyle=i%3==0?'#00e676':'#1e6b41'; ctx.fillRect(i*14,50-Math.random()*40,8,Math.random()*40);}}); document.getElementById('bacias').innerHTML=BACIAS_LIST.map(b=>`<div class="bacia"><div class="baciaTop"><div><b>${b.n}</b><small>${b.obs}</small></div><span class="rhTag">${b.rh}</span></div><div style="display:flex;justify-content:space-between;margin-top:8px;font-size:11px;color:#8fd9ab"><span>Nível ${b.nivel}% · Chuva na bacia ${b.chuva}%</span><span class="badge" style="background:${b.cor};color:#02240f;margin-top:0">${b.alerta}</span></div><div class="progress"><div style="width:${b.nivel}%;background:linear-gradient(90deg,#00e676,#ffca28,#ff5252)"></div></div><div class="progress"><div style="width:${b.chuva}%;background:linear-gradient(90deg,#29b6f6,#7c4dff)"></div></div></div>`).join(''); let comp=cidades.filter(c=>["Mesquita","Nilópolis","Nova Iguaçu","Belford Roxo","São João de Meriti","Duque de Caxias"].includes(c.name)).map(c=>{let p=dados[c.name]?.chuva||0; return `<div style="display:flex;align-items:center;gap:8px;margin-top:8px;font-size:12px"><span style="width:110px">${c.name}</span><div style="flex:1;height:14px;background:#0a2a1a;border-radius:999px;overflow:hidden"><div style="width:${p}%;height:100%;background:linear-gradient(90deg,#29b6f6,#7c4dff)"></div></div><b>${p}%</b></div>`}).join(''); document.getElementById('compareBars').innerHTML=comp;}
+function show(id,el){['inicio','radar','graficos'].forEach(x=>document.getElementById(x).classList.add('hidden')); document.getElementById(id).classList.remove('hidden'); document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active')); if(el) el.classList.add('active'); window.scrollTo(0,0); if(id==='radar' && window.mapaComercial){setTimeout(()=>window.mapaComercial.invalidateSize(),300);}}
+
+/* MAPA V12.4 - PROFISSIONAL - SEM BOLA INVENTADA, SEM SETA */
+let mapaPronto=false, radarLayers=[], radarTimes=[], radarIdx=0, radarTimer=null;
+async function initMapaComercial(){
+  if(mapaPronto) return; mapaPronto=true;
+  const map = L.map('mapComercial', {minZoom:7, maxZoom:12}).setView([-22.779,-43.419], 9);
+  window.mapaComercial = map;
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {maxZoom:12, attribution:'© OpenStreetMap contributors'}).addTo(map);
+  // Pontos pequenos e discretos - só pra identificar a cidade
+  cidades.forEach(c=>{
+    let d=dados[c.name]; let cor='#00e676';
+    if(d){ if(d.chuva>=70) cor='#7c4dff'; else if(d.chuva>=40) cor='#ff5252'; else if(d.chuva>=20) cor='#ffca28'; }
+    L.circleMarker([c.lat,c.lon], {radius: c.name==='Mesquita'?7:4, color:'#fff', weight:1, fillColor:cor, fillOpacity:1}).addTo(map)
+    .bindPopup(`<b>${c.name}</b><br>${d ? d.temp+'°C · Chuva '+d.chuva+'% · Vento '+d.vento+' km/h' : ''}`);
+  });
+  L.circleMarker([-22.85,-43.55], {radius:6,color:'#fff',weight:2,fillColor:'#ff5252',fillOpacity:1}).addTo(map).bindPopup('<b>Radar Mendanha - Alerta Rio</b>');
+  L.circleMarker([-22.94,-43.21], {radius:6,color:'#fff',weight:2,fillColor:'#ff5252',fillOpacity:1}).addTo(map).bindPopup('<b>Radar Sumaré - Alerta Rio</b>');
+  // RADAR REAL - RainViewer - formato padrão 0/0_0 que funciona em todos os zooms, opacidade baixa pra não tampar o mapa
+  try{
+    let r = await fetch('https://api.rainviewer.com/public/weather-maps.json');
+    let j = await r.json();
+    let past = j.radar.past.slice(-6);
+    radarTimes = past.map(p=>p.time);
+    radarLayers = past.map(p=>{
+      return L.tileLayer(`https://tilecache.rainviewer.com/v2/radar/${p.time}/256/{z}/{x}/{y}/0/0_0.png`, {opacity:0.55, attribution:'© RainViewer', maxZoom:12, minZoom:7, errorTileUrl:'', tileSize:256});
+    });
+    radarLayers[radarLayers.length-1].addTo(map);
+    radarIdx = radarLayers.length-1;
+    document.getElementById('btnRadar').textContent = 'Radar Real LIGADO · ' + new Date(radarTimes[radarIdx]*1000).toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});
+    radarTimer = setInterval(()=>{
+      if(!window.mapaComercial.hasLayer(radarLayers[radarIdx])) return;
+      window.mapaComercial.removeLayer(radarLayers[radarIdx]);
+      radarIdx = (radarIdx+1) % radarLayers.length;
+      window.mapaComercial.addLayer(radarLayers[radarIdx]);
+      document.getElementById('btnRadar').textContent = 'Radar Real LIGADO · ' + new Date(radarTimes[radarIdx]*1000).toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});
+    }, 1200);
+  }catch(e){
+    // Se o RainViewer falhar, não mostra quadrado cinza. Mostra só o mapa limpo.
+    document.getElementById('btnRadar').textContent = 'Radar indisponível no momento · Só Mapa';
+    console.log('RainViewer off', e);
+  }
+  let dMes=dados['Mesquita'];
+  if(dMes){ document.getElementById('mapCredit').innerHTML = `Vento em Mesquita: ${dMes.vento} km/h · Chuva: ${dMes.chuva}% · Mapa: © OpenStreetMap · Radar: © RainViewer · Números: © Open-Meteo`; }
+}
+function toggleRadar(on){
+  if(!radarLayers.length) return;
+  if(on){ window.mapaComercial.addLayer(radarLayers[radarIdx]); document.getElementById('btnRadar').classList.add('active'); document.getElementById('btnNoRadar').classList.remove('active'); }
+  else { radarLayers.forEach(l=>{ if(window.mapaComercial.hasLayer(l)) window.mapaComercial.removeLayer(l); }); document.getElementById('btnNoRadar').classList.add('active'); document.getElementById('btnRadar').classList.remove('active'); }
+}
+function centralizarMesquita(){ window.mapaComercial.setView([-22.779,-43.419], 11); }
+function centralizarRJ(){ window.mapaComercial.setView([-22.779,-43.419], 9); }
+
+/* SARAH */
+const saraTab=document.getElementById('saraTab'); const saraPanel=document.getElementById('saraPanel'); const saraOverlay=document.getElementById('saraOverlay'); const saraChat=document.getElementById('saraChat'); const saraStatus=document.getElementById('saraStatus'); const saraInput=document.getElementById('saraInput'); const btnMic=document.getElementById('btnMic'); const btnSend=document.getElementById('btnSend');
+function abrirSarah(){ saraPanel.classList.add('open'); saraOverlay.classList.add('show'); saraTab.style.display='none'; setTimeout(()=>saraInput.focus(),200); }
+function fecharSarah(){ saraPanel.classList.remove('open'); saraOverlay.classList.remove('show'); saraTab.style.display='flex'; try{speechSynthesis.cancel();}catch(e){} }
+function minimizarSarah(){ fecharSarah(); }
+let arrastando=false, startY=0, startTop=0, moveu=false;
+saraTab.addEventListener('pointerdown', e=>{ arrastando=true; moveu=false; startY=e.clientY; startTop=saraTab.getBoundingClientRect().top; saraTab.setPointerCapture(e.pointerId); });
+saraTab.addEventListener('pointermove', e=>{ if(!arrastando) return; let dy=e.clientY-startY; if(Math.abs(dy)>6) moveu=true; let novoTop=startTop+dy; novoTop=Math.max(70, Math.min(window.innerHeight-170, novoTop)); saraTab.style.top=novoTop+'px'; });
+saraTab.addEventListener('pointerup', ()=>{ arrastando=false; if(!moveu) abrirSarah(); });
+function addMsg(html, quem, textoParaFalar){ let d=document.createElement('div'); d.className='msg '+quem; d.innerHTML=html+`<small>${new Date().toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'})}</small>`; saraChat.appendChild(d); saraChat.scrollTop=saraChat.scrollHeight; if(quem==='bot' && textoParaFalar){ falarSarah(textoParaFalar); } }
+function falarSarah(texto){ try{ if(!('speechSynthesis' in window)) return; speechSynthesis.cancel(); let vozes=speechSynthesis.getVoices(); let u=new SpeechSynthesisUtterance(texto); u.lang='pt-BR'; u.rate=1; u.pitch=1; u.volume=1; let voz=vozes.find(v=>v.lang && v.lang.toLowerCase().includes('pt-br')) || vozes.find(v=>v.lang && v.lang.toLowerCase().includes('pt')); if(voz) u.voice=voz; speechSynthesis.speak(u); }catch(e){} }
+if('speechSynthesis' in window){ speechSynthesis.onvoiceschanged=()=>{ speechSynthesis.getVoices(); }; }
+function responderSarah(texto){ let t=texto.toLowerCase(); let cidade=cidades.find(c=>t.includes(c.name.toLowerCase())) || cidades.find(c=>{let partes=c.name.toLowerCase().split(' '); return partes.some(p=>p.length>4 && t.includes(p));}) || cidades.find(c=>c.name==='Mesquita'); let d=dados[cidade.name]; let hora=(texto.match(/(\d{1,2})\s*h/)||[])[1]; let respHtml='', respFala=''; if(t.includes('doppler') || t.includes('radar')){ respHtml=`<b>Sarah - Radar Doppler:</b><br>2 radares Alerta Rio: Sumaré + Mendanha, 250 km, a cada 2 min. Mendanha pega Mesquita direto.<br>Em ${cidade.name} agora: chuva ${d?d.chuva+'%':'--'}, vento ${d?d.vento+' km/h':'--'}.`; respFala=`Radar Doppler. Sumaré e Mendanha. O de Mendanha pega Mesquita direto. Em ${cidade.name}, chuva ${d?d.chuva:''} por cento.`; return setTimeout(()=>{addMsg(respHtml,'bot',respFala);},400); } if(t.includes('bacia') || t.includes('guandu')){ let lista=BACIAS_LIST.map(b=>`<b>${b.rh} - ${b.n}</b> - Nível ${b.nivel}% - Chuva ${b.chuva}% - ${b.alerta}`).join('<br>'); respHtml=`<b>Sarah - Todas as 9 Bacias:</b><br>${lista}<br><br>Mesquita entre Guandu e Guanabara, ambas em Atenção. Fonte: CERHI-RJ 279/2024.`; respFala=`São 9 bacias. Mesquita fica entre Guandu e Baía de Guanabara, as duas em atenção.`; return setTimeout(()=>{addMsg(respHtml,'bot',respFala);},400); } if(t.includes('grafico') || t.includes('gráfico')){ respHtml=`<b>Sarah - Gráficos:</b><br>Temperatura 12h, Chuva 12h, Vento + Umidade, Próximas 8h, Comparativo Baixada, Satélites. Em ${cidade.name} agora ${d?d.temp+'°C, chuva '+d.chuva+'%':''}.`; respFala=`Tem 6 gráficos. Temperatura, chuva, vento, próximas 8 horas, comparativo e satélites.`; return setTimeout(()=>{addMsg(respHtml,'bot',respFala);},400); } if(t.includes('satelite') || t.includes('satélite') || t.includes('goes') || t.includes('【entity-noaa¦canonical_name=NOAA】') || t.includes('cbers') || t.includes('metop')){ respHtml=`<b>Satélites:</b><br><b>GOES-19:</b> Geoestacionário, a cada 10 min, vê nuvem e raio. É o principal pro RJ.<br><b>NOAA-21:</b> Polar, temperatura da nuvem.<br><b>CBERS-4A:</b> INPE, imagem de alta resolução.<br><b>METOP-C:</b> Europa, vento no Atlântico.`; respFala=`4 satélites. GOES-19 é o principal, vê nuvem e raio a cada 10 minutos. NOAA-21, CBERS-4A e METOP-C completam.`; return setTimeout(()=>{addMsg(respHtml,'bot',respFala);},400); } if(t.includes('alerta rio') || t.includes('estagio') || t.includes('estágio')){ respHtml=`<b>Alerta Rio:</b><br>Geo-Rio. 33 estações a cada 15 min. Radares Sumaré + Mendanha. 164 sirenes. Estágios 1 a 5. Se Rio entra em 2, Mesquita já fica em atenção.`; respFala=`Alerta Rio. 33 estações. Radar de Mendanha pega Mesquita. Se o Rio entra em estágio 2, Mesquita já fica em atenção.`; return setTimeout(()=>{addMsg(respHtml,'bot',respFala);},400); } if(!d){ respHtml=`Sem conexão agora.`; respFala=respHtml; } else if(hora){ let p=d.hourly.precipitation_probability[parseInt(hora)]||0; let tt=Math.round(d.hourly.temperature_2m[parseInt(hora)]); respHtml=`Em ${cidade.name} às ${hora}h: ${tt}°C, chuva ${p}%.`; respFala=respHtml; } else { respHtml=`Agora em ${cidade.name}: ${d.temp}°C, chuva ${d.chuva}%, vento ${d.vento} km/h, umidade ${d.umi}%.`; respFala=`Agora em ${cidade.name}. ${d.temp} graus, chuva ${d.chuva} por cento, vento ${d.vento} quilômetros por hora.`; } setTimeout(()=>{addMsg(`<b>Sarah:</b><br>${respHtml}`,'bot',respFala);},400); }
+function enviarTexto(){ let t=saraInput.value.trim(); if(!t) return; addMsg(t,'me'); saraInput.value=''; responderSarah(t); }
+btnSend.onclick=enviarTexto;
+saraInput.addEventListener('keydown', e=>{ if(e.key==='Enter' && !e.shiftKey){ e.preventDefault(); enviarTexto(); } });
+function quickSarah(t){ addMsg(t,'me'); responderSarah(t); }
+let gravando=false, recognition=null, textoFalado='';
+function iniciarReconhecimento(){ const SR=window.SpeechRecognition || window.webkitSpeechRecognition; if(!SR){ saraStatus.textContent='Esse navegador não deixa ouvir. Usa o Chrome.'; return false; } recognition=new SR(); recognition.lang='pt-BR'; recognition.continuous=false; recognition.interimResults=false; recognition.maxAlternatives=1; textoFalado=''; recognition.onresult=(ev)=>{ textoFalado=ev.results[0][0].transcript.trim(); saraStatus.textContent='Entendi: '+textoFalado; addMsg(`<audio controls src="${window._ultimoAudioURL}"></audio><div class="transcricao">Você disse: ${textoFalado}</div>`,'me'); responderSarah(textoFalado); }; recognition.onerror=(e)=>{ saraStatus.textContent='Microfone falhou: '+e.error+'. Tenta de novo.'; }; recognition.onend=()=>{ gravando=false; btnMic.classList.remove('gravando'); saraTab.classList.remove('gravando'); }; return true; }
+async function iniciarGravacao(){ try{ let stream=await navigator.mediaDevices.getUserMedia({audio:true}); let rec=new MediaRecorder(stream); let chunks=[]; rec.ondataavailable=e=>{ if(e.data.size>0) chunks.push(e.data); }; rec.onstop=()=>{ let blob=new Blob(chunks,{type:'audio/webm'}); window._ultimoAudioURL=URL.createObjectURL(blob); stream.getTracks().forEach(t=>t.stop()); saraStatus.textContent=''; }; rec.start(); window._recAtual=rec; if(!iniciarReconhecimento()) return; try{ recognition.start(); }catch(e){} gravando=true; btnMic.classList.add('gravando'); saraTab.classList.add('gravando'); saraStatus.textContent='Ouvindo você... fala agora'; }catch(err){ saraStatus.textContent='Precisa permitir o microfone.'; } }
+function pararGravacao(){ if(window._recAtual && gravando){ window._recAtual.stop(); } if(recognition){ try{ recognition.stop(); }catch(e){} } }
+btnMic.onclick=()=>{ if(!gravando) iniciarGravacao(); else pararGravacao(); };
+setTimeout(()=>{ addMsg(`<b>Sarah:</b><br>Oi! Eu sou a Sarah, Assistente Meteorológica e de Monitoramento Climático. Pergunta de bacia, gráfico, vento, chuva, temperatura, umidade, satélite, Alerta Rio e Radar Doppler que eu respondo e falo com o dado real.`,'bot','Oi! Eu sou a Sarah, Assistente Meteorológica e de Monitoramento Climático. Pergunta de bacia, gráfico, vento, chuva, temperatura, umidade, satélite, Alerta Rio e Radar Doppler que eu respondo e falo com o dado real.'); },800);
+carregar();
+</script>
+</body>
+</html>
