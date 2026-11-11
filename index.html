@@ -1,0 +1,358 @@
+<!DOCTYPE html>
+<html lang="pt-br" class="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<title>SARAH AI NEXUS V11.4 • PROJETO CIDADÃO SENSOR • MESQUITA EM FOCO</title>
+
+<meta name="theme-color" content="#030712">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Orbitron:wght@600;800;900&family=JetBrains+Mono:wght@400;600;800&display=swap" rel="stylesheet">
+
+<script src="https://cdn.tailwindcss.com/3.4.16"></script>
+<script>
+    tailwind.config = {
+        darkMode: "class",
+        theme: {
+            extend: {
+                fontFamily: {
+                    sans: ['Plus Jakarta Sans', 'system-ui', 'sans-serif'],
+                    display: ['Orbitron', 'sans-serif'],
+                    mono: ['JetBrains Mono', 'monospace'],
+                },
+                colors: {
+                    void: "#030712",
+                    deepSpace: "#041125",
+                    commandPanel: "#0A1B38",
+                    cyberCyan: "#00F2FE",
+                    cyberBlue: "#38BDF8",
+                    cyberGreen: "#00FF9D",
+                    cyberAmber: "#FFB703",
+                    cyberRose: "#FF0055",
+                }
+            }
+        }
+    };
+</script>
+
+<!-- React 18 CDN -->
+<script crossorigin src="https://unpkg.com/react@18.3.1/umd/react.production.min.js"></script>
+<script crossorigin src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.production.min.js"></script>
+<script crossorigin src="https://unpkg.com/@babel/standalone@7.26.4/babel.min.js"></script>
+
+<style>
+    @keyframes radarSweep { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+    .radar-sweep { animation: radarSweep 4s linear infinite; }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+
+    html, body {
+        width: 100%; height: 100%;
+        min-height: 100vh; min-height: 100dvh;
+        margin: 0; padding: 0;
+        overflow-x: hidden;
+        background-color: #030712;
+        color: #E2E8F0;
+        font-family: 'JetBrains Mono', monospace;
+    }
+
+    #root {
+        width: 100%;
+        min-height: 100vh; min-height: 100dvh;
+        display: flex; flex-direction: column; align-items: center;
+    }
+
+    .seu-container-raru {
+        width: 100%; max-width: 640px; margin: 0 auto;
+        min-height: 100vh; min-height: 100dvh;
+        padding: 12px 14px 110px 14px;
+        display: flex; flex-direction: column;
+    }
+
+    .cyber-card {
+        background: linear-gradient(135deg, rgba(10, 27, 56, 0.94) 0%, rgba(4, 17, 37, 0.97) 100%);
+        border: 1px solid rgba(0, 242, 254, 0.35);
+        border-radius: 20px;
+        padding: 18px;
+        margin-bottom: 14px;
+    }
+
+    .cyber-button {
+        background: linear-gradient(135deg, rgba(0, 242, 254, 0.15) 0%, rgba(56, 189, 248, 0.25) 100%);
+        border: 1px solid #00F2FE;
+        color: #00F2FE !important;
+        font-family: 'Orbitron', sans-serif;
+        font-weight: 800;
+        border-radius: 12px;
+        padding: 12px 18px;
+        display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+        cursor: pointer;
+    }
+</style>
+</head>
+<body class="selection:bg-cyan-400 selection:text-black">
+    <div id="root">
+        <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; color: #00F2FE; font-family: monospace; text-align: center; padding: 20px;">
+            <h2 style="font-size: 14px; font-weight: bold; margin-bottom: 8px;">CARREGANDO SARAH AI NEXUS V11.4...</h2>
+        </div>
+    </div>
+
+    <script type="text/babel">
+        const { useState, useEffect } = React;
+
+        const MUNICIPIOS_92 = [
+            {n:"Mesquita",lat:-22.78,lon:-43.43,ip:"10.10.21.15",baciaId:"guandu"},
+            {n:"Angra dos Reis",lat:-23.00,lon:-44.31,ip:"10.10.60.01",baciaId:"lagunas"}, {n:"Aperibé",lat:-21.62,lon:-42.10,ip:"10.10.60.02",baciaId:"paraiba"}, {n:"Araruama",lat:-22.87,lon:-42.33,ip:"10.10.60.03",baciaId:"lagunas"}, {n:"Areal",lat:-22.23,lon:-43.11,ip:"10.10.60.04",baciaId:"paraiba"}, {n:"Armação dos Búzios",lat:-22.75,lon:-41.88,ip:"10.10.60.05",baciaId:"sao_joao"}, {n:"Arraial do Cabo",lat:-22.96,lon:-42.02,ip:"10.10.60.06",baciaId:"lagunas"},
+            {n:"Barra do Piraí",lat:-22.47,lon:-43.81,ip:"10.10.60.07",baciaId:"guandu"}, {n:"Barra Mansa",lat:-22.54,lon:-44.17,ip:"10.10.60.08",baciaId:"guandu"}, {n:"Belford Roxo",lat:-22.76,lon:-43.39,ip:"10.10.60.09",baciaId:"guandu"}, {n:"Bom Jardim",lat:-22.15,lon:-42.41,ip:"10.10.60.10",baciaId:"paraiba"}, {n:"Bom Jesus do Itabapoana",lat:-21.14,lon:-41.67,ip:"10.10.60.11",baciaId:"paraiba"},
+            {n:"Cabo Frio",lat:-22.88,lon:-42.01,ip:"10.10.41.20",baciaId:"lagunas"}, {n:"Cachoeiras de Macacu",lat:-22.46,lon:-42.65,ip:"10.10.60.12",baciaId:"piratininga"}, {n:"Cambuci",lat:-21.56,lon:-41.90,ip:"10.10.60.13",baciaId:"paraiba"}, {n:"Campos dos Goytacazes",lat:-21.75,lon:-41.32,ip:"10.10.51.92",baciaId:"paraiba"}, {n:"Cantagalo",lat:-21.97,lon:-42.36,ip:"10.10.60.14",baciaId:"paraiba"},
+            {n:"Carapebus",lat:-22.21,lon:-41.65,ip:"10.10.60.15",baciaId:"macae"}, {n:"Comendador Levy Gasparian",lat:-22.03,lon:-43.20,ip:"10.10.60.16",baciaId:"paraiba"}, {n:"Carmo",lat:-21.92,lon:-42.61,ip:"10.10.60.17",baciaId:"paraiba"}, {n:"Casimiro de Abreu",lat:-22.48,lon:-42.20,ip:"10.10.60.18",baciaId:"sao_joao"}, {n:"Duque de Caxias",lat:-22.78,lon:-43.31,ip:"10.10.23.14",baciaId:"piratininga"},
+            {n:"Engenheiro Paulo de Frontin",lat:-22.54,lon:-43.68,ip:"10.10.60.19",baciaId:"guandu"}, {n:"Guapimirim",lat:-22.53,lon:-42.98,ip:"10.10.60.20",baciaId:"piratininga"}, {n:"Iguaba Grande",lat:-22.84,lon:-42.22,ip:"10.10.60.21",baciaId:"lagunas"}, {n:"Itaboraí",lat:-22.74,lon:-42.85,ip:"10.10.60.22",baciaId:"piratininga"}, {n:"Itaguaí",lat:-22.85,lon:-43.77,ip:"10.10.60.23",baciaId:"guandu"},
+            {n:"Italva",lat:-21.42,lon:-41.74,ip:"10.10.60.24",baciaId:"paraiba"}, {n:"Itaocara",lat:-21.47,lon:-42.07,ip:"10.10.60.25",baciaId:"paraiba"}, {n:"Itaperuna",lat:-21.20,lon:-41.88,ip:"10.10.60.26",baciaId:"paraiba"}, {n:"Itatiaia",lat:-22.49,lon:-44.56,ip:"10.10.60.27",baciaId:"guandu"}, {n:"Japeri",lat:-22.64,lon:-43.65,ip:"10.10.60.28",baciaId:"guandu"},
+            {n:"Laje do Muriaé",lat:-21.20,lon:-42.12,ip:"10.10.60.29",baciaId:"paraiba"}, {n:"Macaé",lat:-22.37,lon:-41.78,ip:"10.10.60.30",baciaId:"macae"}, {n:"Macuco",lat:-21.98,lon:-42.49,ip:"10.10.60.31",baciaId:"paraiba"}, {n:"Magé",lat:-22.65,lon:-43.04,ip:"10.10.60.32",baciaId:"piratininga"}, {n:"Mangaratiba",lat:-22.95,lon:-44.04,ip:"10.10.60.33",baciaId:"guandu"},
+            {n:"Maricá",lat:-22.91,lon:-42.81,ip:"10.10.60.34",baciaId:"piratininga"}, {n:"Mendes",lat:-22.52,lon:-43.73,ip:"10.10.60.35",baciaId:"guandu"}, {n:"Miguel Pereira",lat:-22.45,lon:-43.46,ip:"10.10.60.36",baciaId:"guandu"}, {n:"Miracema",lat:-21.41,lon:-42.19,ip:"10.10.60.37",baciaId:"paraiba"},
+            {n:"Natividade",lat:-21.04,lon:-41.97,ip:"10.10.60.38",baciaId:"paraiba"}, {n:"Nilópolis",lat:-22.81,lon:-43.41,ip:"10.10.60.39",baciaId:"guandu"}, {n:"Niterói",lat:-22.88,lon:-43.11,ip:"10.10.12.08",baciaId:"piratininga"}, {n:"Nova Friburgo",lat:-22.28,lon:-42.53,ip:"10.10.60.40",baciaId:"paraiba"}, {n:"Nova Iguaçu",lat:-22.75,lon:-43.45,ip:"10.10.22.12",baciaId:"guandu"},
+            {n:"Paracambi",lat:-22.61,lon:-43.71,ip:"10.10.60.41",baciaId:"guandu"}, {n:"Paraíba do Sul",lat:-22.16,lon:-43.29,ip:"10.10.60.42",baciaId:"paraiba"}, {n:"Paraty",lat:-23.22,lon:-44.71,ip:"10.10.60.43",baciaId:"lagunas"}, {n:"Paty do Alferes",lat:-22.42,lon:-43.43,ip:"10.10.60.44",baciaId:"guandu"}, {n:"Petrópolis",lat:-22.50,lon:-43.17,ip:"10.10.31.05",baciaId:"paraiba"},
+            {n:"Pinheiral",lat:-22.51,lon:-44.00,ip:"10.10.60.45",baciaId:"guandu"}, {n:"Piraí",lat:-22.62,lon:-43.89,ip:"10.10.60.46",baciaId:"guandu"}, {n:"Porciúncula",lat:-20.97,lon:-42.04,ip:"10.10.60.47",baciaId:"paraiba"}, {n:"Porto Real",lat:-22.41,lon:-44.28,ip:"10.10.60.48",baciaId:"guandu"}, {n:"Quatis",lat:-22.41,lon:-44.25,ip:"10.10.60.49",baciaId:"guandu"},
+            {n:"Queimados",lat:-22.71,lon:-43.55,ip:"10.10.60.50",baciaId:"guandu"}, {n:"Quissamã",lat:-22.10,lon:-41.47,ip:"10.10.60.51",baciaId:"macae"}, {n:"Resende",lat:-22.47,lon:-44.44,ip:"10.10.60.52",baciaId:"guandu"}, {n:"Rio Bonito",lat:-22.70,lon:-42.62,ip:"10.10.60.53",baciaId:"piratininga"}, {n:"Rio Claro",lat:-22.73,lon:-44.13,ip:"10.10.60.54",baciaId:"guandu"},
+            {n:"Rio das Ostras",lat:-22.52,lon:-41.94,ip:"10.10.60.55",baciaId:"macae"}, {n:"Rio de Janeiro",lat:-22.90,lon:-43.17,ip:"10.10.11.10",baciaId:"piratininga"}, {n:"Santa Maria Madalena",lat:-21.95,lon:-42.00,ip:"10.10.60.56",baciaId:"paraiba"}, {n:"Santo Antônio de Pádua",lat:-21.53,lon:-42.18,ip:"10.10.60.57",baciaId:"paraiba"}, {n:"São Fidélis",lat:-21.64,lon:-41.74,ip:"10.10.60.58",baciaId:"paraiba"},
+            {n:"São Francisco de Itabapoana",lat:-21.46,lon:-41.11,ip:"10.10.60.59",baciaId:"paraiba"}, {n:"São Gonçalo",lat:-22.82,lon:-43.05,ip:"10.10.60.60",baciaId:"piratininga"}, {n:"São João da Barra",lat:-21.64,lon:-41.05,ip:"10.10.60.61",baciaId:"paraiba"}, {n:"São João de Meriti",lat:-22.80,lon:-43.37,ip:"10.10.60.62",baciaId:"guandu"}, {n:"São José de Ubá",lat:-21.35,lon:-41.94,ip:"10.10.60.63",baciaId:"paraiba"},
+            {n:"São José do Vale do Rio Preto",lat:-22.15,lon:-43.15,ip:"10.10.60.64",baciaId:"paraiba"}, {n:"São Pedro da Aldeia",lat:-22.84,lon:-42.10,ip:"10.10.60.65",baciaId:"lagunas"}, {n:"São Sebastião do Alto",lat:-21.95,lon:-42.13,ip:"10.10.60.66",baciaId:"paraiba"}, {n:"Sapucaia",lat:-21.99,lon:-43.13,ip:"10.10.60.67",baciaId:"paraiba"}, {n:"Saquarema",lat:-22.91,lon:-42.50,ip:"10.10.60.68",baciaId:"lagunas"},
+            {n:"Seropédica",lat:-22.74,lon:-43.70,ip:"10.10.60.69",baciaId:"guandu"}, {n:"Silva Jardim",lat:-22.65,lon:-42.38,ip:"10.10.60.70",baciaId:"sao_joao"}, {n:"Sumidouro",lat:-22.04,lon:-42.67,ip:"10.10.60.71",baciaId:"paraiba"}, {n:"Tanguá",lat:-22.72,lon:-42.70,ip:"10.10.60.72",baciaId:"piratininga"}, {n:"Teresópolis",lat:-22.41,lon:-42.96,ip:"10.10.60.73",baciaId:"paraiba"},
+            {n:"Trajano de Moraes",lat:-22.06,lon:-42.06,ip:"10.10.60.74",baciaId:"paraiba"}, {n:"Três Rios",lat:-22.11,lon:-43.21,ip:"10.10.60.75",baciaId:"paraiba"}, {n:"Valença",lat:-22.25,lon:-43.70,ip:"10.10.60.76",baciaId:"paraiba"}, {n:"Varre-Sai",lat:-20.93,lon:-41.86,ip:"10.10.60.77",baciaId:"paraiba"}, {n:"Vassouras",lat:-22.40,lon:-43.66,ip:"10.10.60.78",baciaId:"guandu"}, {n:"Volta Redonda",lat:-22.52,lon:-44.10,ip:"10.10.60.79",baciaId:"guandu"}
+        ];
+
+        function falarSarah(texto) {
+            if (!("speechSynthesis" in window)) return;
+            try {
+                window.speechSynthesis.cancel();
+                const cleanText = String(texto).replace(/([\u2700-\u27BF]|[\uE000-\uF8FF]|\uD83C[\uDC00-\uDFFF]|\uD83D[\uDC00-\uDFFF]|[\u2011-\u26FF]|\uD83E[\uDD00-\uDDFF])/g, '').replace(/https?:\/\/\S+/g, "").trim();
+                if (!cleanText) return;
+                const utterance = new SpeechSynthesisUtterance(cleanText);
+                utterance.lang = "pt-BR";
+                utterance.rate = 1.02; utterance.pitch = 1.05;
+                const voices = window.speechSynthesis.getVoices();
+                const selectedVoice = voices.find(v => v.lang.toLowerCase().includes('pt-br') && v.name.toLowerCase().includes('female')) || voices[0];
+                if (selectedVoice) utterance.voice = selectedVoice;
+                window.speechSynthesis.speak(utterance);
+            } catch(e) {}
+        }
+
+        // Radar Tático em CSS/SVG puro (Sem tela preta)
+        function RadarMeteorologicoModule() {
+            const [dados, setDados] = useState({});
+            const [status, setStatus] = useState('Conectando Open-Meteo...');
+            const [cidadeSel, setCidadeSel] = useState('Mesquita');
+
+            function corPorChuva(p){
+                if(p >= 70) return '#7C4DFF';
+                if(p >= 40) return '#FF0055';
+                if(p >= 20) return '#FFB703';
+                return '#00FF9D';
+            }
+            function textoPorChuva(p){
+                if(p >= 70) return 'Muito forte';
+                if(p >= 40) return 'Forte';
+                if(p >= 20) return 'Moderada';
+                return 'Fraca / Estável';
+            }
+
+            useEffect(() => {
+                async function carregar(){
+                    try{
+                        const lats = MUNICIPIOS_92.map(c => c.lat).join(',');
+                        const lons = MUNICIPIOS_92.map(c => c.lon).join(',');
+                        const url = `https://api.open-meteo.com/v1/forecast?latitude=${lats}&longitude=${lons}&current=temperature_2m,relative_humidity_2m,wind_speed_10m&hourly=precipitation_probability&timezone=America%2FSao_Paulo&forecast_days=1`;
+                        const r = await fetch(url);
+                        const j = await r.json();
+                        const arr = Array.isArray(j) ? j : [j];
+                        const mapa = {};
+                        arr.forEach((item, i) => {
+                            const c = MUNICIPIOS_92[i];
+                            if(!c) return;
+                            const hora = new Date().getHours();
+                            mapa[c.n] = {
+                                temp: item.current.temperature_2m,
+                                umi: item.current.relative_humidity_2m,
+                                vento: item.current.wind_speed_10m,
+                                chuva: item.hourly.precipitation_probability[hora] || 0
+                            };
+                        });
+                        setDados(mapa);
+                        setStatus('Open-Meteo conectado · 92 municípios · Dados reais');
+                    }catch(e){ setStatus('Modo simulação ativo'); }
+                }
+                carregar();
+            }, []);
+
+            function posRadar(c){
+                const minLon = -44.75, maxLon = -41.0, minLat = -23.25, maxLat = -20.9;
+                return {
+                    x: 7 + ((c.lon - minLon) / (maxLon - minLon)) * 86,
+                    y: 7 + ((maxLat - c.lat) / (maxLat - minLat)) * 86
+                };
+            }
+
+            const PONTOS_BACIAS = [
+                { rh: 'RH I', nome: 'Baía da Ilha Grande', lat: -23.05, lon: -44.35 },
+                { rh: 'RH II', nome: 'Guandu', lat: -22.65, lon: -43.70 },
+                { rh: 'RH V', nome: 'Baía de Guanabara', lat: -22.75, lon: -43.15 },
+            ];
+
+            function falar(cNome){
+                const d = dados[cNome];
+                if(!d) return;
+                setCidadeSel(cNome);
+                try{
+                    window.speechSynthesis.cancel();
+                    const u = new SpeechSynthesisUtterance(`Em ${cNome}, agora está ${d.temp} graus. Chance de chuva ${d.chuva} por cento.`);
+                    u.lang = 'pt-BR';
+                    window.speechSynthesis.speak(u);
+                }catch(e){}
+            }
+
+            const dSel = dados[cidadeSel];
+
+            return (
+                <div className="space-y-4 w-full font-mono">
+                    <div className="rounded-[22px] border border-cyan-400/40 bg-[#02122A] p-4 space-y-3 shadow-[0_0_30px_rgba(0,255,255,0.15)] relative overflow-hidden">
+                        <div className="flex justify-between items-start gap-2">
+                            <h3 className="text-[14px] leading-tight font-black text-cyan-300 uppercase tracking-widest text-center flex-1">Radar Meteorológico<br/>& Nuvens ao Vivo</h3>
+                            <span className="text-[9px] text-emerald-400 font-bold text-right leading-tight shrink-0 pt-1">GOES-19 • FLUXO<br/>ATIVO</span>
+                        </div>
+                        <p className="text-[11px] text-slate-300 text-center leading-relaxed">{status}<br/>Varredura tática com animação contínua de massas e tempestades na Baixada Fluminense.</p>
+
+                        <div className="relative w-full aspect-square rounded-full border-[3px] border-cyan-400/70 overflow-hidden mx-auto shadow-[inset_0_0_40px_rgba(0,255,255,0.15),0_0_30px_rgba(0,255,255,0.2)] max-w-[320px]" style={{ background: "radial-gradient(circle at 50% 50%, #0A2A4A 0%, #041830 55%, #020A1A 100%)" }}>
+                            <div className="absolute rounded-full border border-cyan-400/40 pointer-events-none" style={{ width: "92%", height: "92%", left: "50%", top: "50%", transform: "translate(-50%,-50%)" }} />
+                            <div className="absolute rounded-full border border-cyan-400/40 pointer-events-none" style={{ width: "66%", height: "66%", left: "50%", top: "50%", transform: "translate(-50%,-50%)" }} />
+                            <div className="absolute rounded-full border border-cyan-400/50 pointer-events-none" style={{ width: "38%", height: "38%", left: "50%", top: "50%", transform: "translate(-50%,-50%)" }} />
+                            <div className="absolute left-1/2 top-0 bottom-0 w-px bg-cyan-400/40 pointer-events-none" />
+                            <div className="absolute top-1/2 left-0 right-0 h-px bg-cyan-400/40 pointer-events-none" />
+                            <div className="absolute inset-0 pointer-events-none radar-sweep" style={{ background: "conic-gradient(from 0deg, rgba(0,255,255,0.35) 0deg, rgba(0,255,255,0.12) 40deg, transparent 70deg)" }} />
+
+                            {PONTOS_BACIAS.map(b => {
+                                const p = posRadar(b);
+                                return (
+                                    <div key={b.rh} className="absolute text-center cursor-pointer z-[6]" style={{ left: p.x + "%", top: p.y + "%", transform: "translate(-50%,-50%)" }} onClick={() => setCidadeSel(b.nome)}>
+                                        <div className="mx-auto w-[14px] h-[14px] rotate-45 border-2 border-white rounded-[3px]" style={{ background: '#00FF9D', boxShadow: "0 0 8px #00FF9D" }} />
+                                        <span className="text-[7px] px-1 py-[1px] rounded mt-[2px] inline-block font-black" style={{ background: "#00E676", color: "#02240F" }}>{b.rh}</span>
+                                    </div>
+                                );
+                            })}
+
+                            {MUNICIPIOS_92.map(c => {
+                                const p = posRadar(c);
+                                const d = dados[c.n];
+                                const chuva = d ? d.chuva : 0;
+                                const cor = d ? corPorChuva(chuva) : '#94A3B8';
+                                const sel = c.n === cidadeSel;
+                                return (
+                                    <div key={c.n} onClick={() => falar(c.n)} className="absolute text-center cursor-pointer z-[5]" style={{ left: p.x + "%", top: p.y + "%", transform: "translate(-50%,-50%)" }}>
+                                        <div className="mx-auto rounded-full border-2 border-white" style={{ width: sel ? 14 : 9, height: sel ? 14 : 9, background: sel ? "#00E676" : cor, boxShadow: sel ? "0 0 10px #00E676" : "0 0 5px " + cor }} />
+                                        <span className="text-[7px] px-1 py-[1px] rounded whitespace-nowrap inline-block mt-[1px]" style={{ background: sel ? "#00E676" : "rgba(0,0,0,.85)", color: sel ? "#02240F" : "#fff", fontWeight: sel ? 900 : 400 }}>{c.n}</span>
+                                    </div>
+                                );
+                            })}
+                        </div>
+
+                        <div className="bg-black/40 border border-cyan-400/30 rounded-xl p-3">
+                            <b className="text-[12px] text-white">{cidadeSel} · {dSel ? `${dSel.temp}°C · Chuva ${dSel.chuva}% (${textoPorChuva(dSel.chuva)}) · Vento ${dSel.vento} km/h` : 'Carregando...'}</b>
+                            <p className="text-[10px] text-slate-400 mt-1">Toque em um ponto no radar para ouvir a leitura por voz.</p>
+                        </div>
+                    </div>
+                </div>
+            );
+        }
+
+        // Módulo Balança ESG
+        function ModuloCidadaoSensorModule({ onGoToDashboard, showToast }) {
+            const [petKg, setPetKg] = useState(10);
+            const [aluminioKg, setAluminioKg] = useState(3);
+            const [ferroKg, setFerroKg] = useState(15);
+            const [papelaoKg, setPapelaoKg] = useState(20);
+            const [vidroKg, setVidroKg] = useState(5);
+            const [oleoL, setOleoL] = useState(4);
+
+            const pesoTotalKg = Number(petKg) + Number(aluminioKg) + Number(ferroKg) + Number(papelaoKg) + Number(vidroKg) + Number(oleoL);
+            const valorTotal = (petKg * 2.5) + (aluminioKg * 8.0) + (ferroKg * 1.2) + (papelaoKg * 0.7) + (vidroKg * 0.35) + (oleoL * 3.0);
+
+            return (
+                <div className="space-y-4 max-w-4xl mx-auto font-mono">
+                    <div className="cyber-card p-5 rounded-[28px] shadow-xl space-y-4 border border-cyan-400/40">
+                        <div className="flex items-center justify-between border-b border-cyan-400/25 pb-3">
+                            <h2 className="text-xs font-black text-cyan-300 tracking-widest">[BALANÇA] CIDADÃO SENSOR • ESG</h2>
+                            <button onClick={onGoToDashboard} className="cyber-button text-[10px] py-2 px-4">RADAR</button>
+                        </div>
+                        <div className="bg-void/90 border border-cyan-400/30 rounded-xl p-4 space-y-2">
+                            <span className="text-xs font-bold text-white">Peso Total: {pesoTotalKg.toFixed(1)} kg/L</span>
+                            <span className="text-xs font-bold text-cyan-400 block">Valor Estimado: R$ {valorTotal.toFixed(2)}</span>
+                        </div>
+                    </div>
+                </div>
+            );
+        }
+
+        // Módulo Cloudflare Workers
+        function AdminAreaRestritaModule({ showToast, onClose }) {
+            const [pin, setPin] = useState("");
+            const [unlocked, setUnlocked] = useState(false);
+            const [workerUrlInput, setWorkerUrlInput] = useState(() => localStorage.getItem("raru_cloudflare_worker_url") || "");
+
+            return (
+                <div className="cyber-card p-4 space-y-4 border border-cyan-400/50 font-mono">
+                    <div className="flex justify-between items-center border-b border-cyan-400/30 pb-2">
+                        <h3 className="text-xs font-black text-cyan-300 uppercase">ÁREA RESTRITA • CLOUDFLARE WORKERS</h3>
+                        <button onClick={onClose} className="cyber-button text-[9px] py-1 px-3 !border-rose-500 !text-rose-500">FECHAR</button>
+                    </div>
+
+                    {!unlocked ? (
+                        <form onSubmit={(e) => { e.preventDefault(); if(pin==="303500"){ setUnlocked(true); showToast("Desbloqueado com sucesso."); } else showToast("PIN Incorreto."); }} className="flex gap-2">
+                            <input type="password" placeholder="PIN (303500)" value={pin} onChange={e=>setPin(e.target.value)} className="flex-1 bg-void border border-cyan-400/40 rounded-xl p-2.5 text-xs text-white text-center" />
+                            <button type="submit" className="cyber-button text-xs py-2 px-4">ENTRAR</button>
+                        </form>
+                    ) : (
+                        <div className="space-y-3">
+                            <input type="text" value={workerUrlInput} onChange={e=>setWorkerUrlInput(e.target.value)} placeholder="https://seu-worker.workers.dev" className="w-full bg-deepSpace border border-cyan-400/40 rounded-xl p-2.5 text-xs text-white" />
+                            <button onClick={() => { localStorage.setItem("raru_cloudflare_worker_url", workerUrlInput); showToast("URL salva!"); }} className="cyber-button w-full text-xs py-2.5">SALVAR CONFIGURAÇÃO</button>
+                        </div>
+                    )}
+                </div>
+            );
+        }
+
+        // App Principal
+        function App() {
+            const [activeTab, setActiveTab] = useState("radar");
+            const [toast, setToast] = useState(null);
+            const showToast = (msg) => { setToast(msg); setTimeout(() => setToast(null), 3000); };
+
+            return (
+                <div className="seu-container-raru">
+                    {toast && <div className="fixed top-4 left-1/2 -translate-x-1/2 z-50 cyber-card px-4 py-2 text-xs text-cyan-300 font-black shadow-2xl border border-cyan-400/60">{toast}</div>}
+                    
+                    <header className="cyber-card px-3 py-2 flex items-center justify-between mb-2">
+                        <h1 className="text-[11px] font-black text-white">SARAH AI NEXUS V11.4 • CIDADÃO SENSOR</h1>
+                    </header>
+
+                    <main className="w-full py-2 space-y-4 pb-20">
+                        {activeTab === "radar" && <RadarMeteorologicoModule />}
+                        {activeTab === "balanca" && <ModuloCidadaoSensorModule onGoToDashboard={() => setActiveTab("radar")} showToast={showToast} />}
+                        {activeTab === "admin" && <AdminAreaRestritaModule showToast={showToast} onClose={() => setActiveTab("radar")} />}
+                    </main>
+
+                    <footer className="cyber-card fixed bottom-0 left-0 right-0 z-40 p-2 flex justify-around max-w-[640px] mx-auto rounded-t-2xl">
+                        <button onClick={() => setActiveTab("radar")} className={`cyber-button text-[10px] py-2 px-4 ${activeTab === 'radar' ? '!bg-cyan-400 !text-black' : ''}`}>Radar</button>
+                        <button onClick={() => setActiveTab("balanca")} className={`cyber-button text-[10px] py-2 px-4 ${activeTab === 'balanca' ? '!bg-cyan-400 !text-black' : ''}`}>Balança</button>
+                        <button onClick={() => setActiveTab("admin")} className={`cyber-button text-[10px] py-2 px-4 ${activeTab === 'admin' ? '!bg-cyan-400 !text-black' : ''}`}>Cloudflare</button>
+                    </footer>
+                </div>
+            );
+        }
+
+        ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+    </script>
+</body>
+</html>
