@@ -1,0 +1,365 @@
+<p className="text-cyberCyan font-bold">Prevenção inteligente para todos, Baixada.</p>
+                        </div>
+                    </div>
+                </div>
+            );
+        }
+
+        function VistoriaRARU_NEXUS({ onBackToDashboard, showToast, vozSelecionada }) {
+            const [mun, setMun] = React.useState(MUNICIPIOS_92[0]);
+            const [fotos, setFotos] = React.useState([]);
+            const [camOn, setCamOn] = React.useState(false);
+            // ============================================================
+            // NOVO: nome do agente de campo salvo no navegador (base da IA)
+            // ============================================================
+            const [nome, setNome] = React.useState(() => {
+                try { return localStorage.getItem("raru_user_name") || ''; } catch(e) { return ''; }
+            });
+            const [bairro, setBairro] = React.useState('');
+            const [rel, setRel] = React.useState('');
+            const [gps, setGps] = React.useState({lat:0, lon:0, acc:''});
+            const [isAiAnalyzing, setIsAiAnalyzing] = React.useState(false);
+            const [clima, setClima] = React.useState(null);
+
+            const [frenteSelecionada, setFrenteSelecionada] = React.useState(FRENTES_EQUIPES_TABELA[5]);
+            const [alarmeRusso, setAlarmeRusso] = React.useState(false);
+            const [alarmeCemaden, setAlarmeCemaden] = React.useState(false);
+            const [cemadenNivel, setCemadenNivel] = React.useState('VERDE');
+            const [vento, setVento] = React.useState(0);
+
+            const audioRef = React.useRef(null);
+            const sireneIntervalRef = React.useRef(null);
+            const timeoutSireneRef = React.useRef(null);
+
+            const RISCOS_RARU = ["R1 - BAIXO / PREVENTIVO","R2 - MODERADO / ALERTA","R3 - ALTO / ENXURRADA","R4 - EVACUAÇÃO PREVENTIVA","RH - CONVERGÊNCIA SERRAS","RE - ESTRUTURAL / TALUDE"];
+            const [risco, setRisco] = React.useState(RISCOS_RARU[1]);
+            const [protAtual, setProtAtual] = React.useState(null);
+
+            const videoRef = React.useRef(null);
+            const streamRef = React.useRef(null);
+
+            // NOVO: sincroniza o nome digitado na vistoria com o nome global da IA
+            const atualizarNomeAgente = (novoNome) => {
+                setNome(novoNome);
+                try {
+                    const limpo = novoNome.trim();
+                    localStorage.setItem("raru_user_name", limpo);
+                    window.__sarahUserName = limpo;
+                } catch(e) {}
+            };
+
+            React.useEffect(() => {
+                if (!mun?.lat) return;
+                fetch(`https://api.open-meteo.com/v1/forecast?latitude=${mun.lat}&longitude=${mun.lon}&current=temperature_2m,relative_humidity_2m,precipitation,wind_speed_10m,wind_gusts_10m&timezone=auto`)
+                    .then(r => r.json())
+                    .then(d => {
+                        setClima(d.current);
+                        setVento(d.current?.wind_gusts_10m || d.current?.wind_speed_10m || 0);
+                        const chuva = d.current?.precipitation || 0;
+                        if(chuva >= 50) setCemadenNivel('VERMELHO');
+                        else if(chuva >= 30) setCemadenNivel('LARANJA');
+                        else if(chuva >= 10) setCemadenNivel('AMARELO');
+                        else setCemadenNivel('VERDE');
+                    })
+                    .catch(() => {});
+            }, [mun]);
+
+            React.useEffect(() => {
+                return () => {
+                    pararTodasSirenes();
+                    if (streamRef.current) streamRef.current.getTracks().forEach(t => t.stop());
+                };
+            }, []);
+
+            const pararTodasSirenes = () => {
+                setAlarmeRusso(false);
+                setAlarmeCemaden(false);
+                if(sireneIntervalRef.current) clearInterval(sireneIntervalRef.current);
+                if(timeoutSireneRef.current) clearTimeout(timeoutSireneRef.current);
+                try{ audioRef.current?._osc?.stop(); audioRef.current?.close(); }catch(e){}
+                audioRef.current = null;
+            };
+
+            const dispararSirene5Minutos = (tipo) => {
+                pararTodasSirenes();
+                if (tipo === 'russo') setAlarmeRusso(true);
+                else setAlarmeCemaden(true);
+                showToast(`Sirene ${tipo === 'russo' ? 'Alarme Russo' : 'CEMADEN'} disparada por 5 minutos.`);
+                falarSarah(`Atenção comunidade! Alerta máximo disparado pela estação de sobrevivência.`, vozSelecionada);
+                try {
+                    if(!audioRef.current) audioRef.current = new (window.AudioContext||window.webkitAudioContext)();
+                    const ctx = audioRef.current; ctx.resume();
+                    const osc = ctx.createOscillator(); const gain = ctx.createGain();
+                    osc.type = tipo === 'russo' ? 'sawtooth' : 'sine';
+                    osc.frequency.value = tipo === 'russo' ? 450 : 600;
+                    gain.gain.value = 0.15;
+                    osc.connect(gain); gain.connect(ctx.destination); osc.start();
+                    audioRef.current._osc = osc;
+                    let subindo = true;
+                    sireneIntervalRef.current = setInterval(()=>{
+                        let f = osc.frequency.value;
+                        if(subindo){ f+=30; if(f>=950) subindo=false; }
+                        else { f-=30; if(f<=400) subindo=true; }
+                        osc.frequency.setTargetAtTime(f, ctx.currentTime, 0.1);
+                    }, 80);
+                    timeoutSireneRef.current = setTimeout(() => {
+                        pararTodasSirenes();
+                        showToast("Ciclo de 5 minutos da sirene encerrado.");
+                    }, 300000);
+                } catch(e) {}
+            };
+
+            const atualizarGPS = () => {
+                if(!navigator.geolocation) return;
+                navigator.geolocation.getCurrentPosition(p => {
+                  setGps({ lat: p.coords.latitude, lon: p.coords.longitude, acc: Math.round(p.coords.accuracy) });
+                  setMun(m => ({ ...m, lat: p.coords.latitude, lon: p.coords.longitude }));
+                  showToast(`GPS ${Math.round(p.coords.accuracy)}m sincronizado.`);
+                }, () => {}, { enableHighAccuracy: true, timeout: 5000 });
+            };
+
+            const startCam = async () => {
+                try {
+                  const s = await navigator.mediaDevices.getUserMedia({ video: { facingMode: { ideal: "environment" } } });
+                  streamRef.current = s; setCamOn(true);
+                  setTimeout(() => { if(videoRef.current){ videoRef.current.srcObject = s; videoRef.current.play().catch(() => {}); } }, 100);
+                  atualizarGPS();
+                } catch { showToast('Câmera bloqueada.'); }
+            };
+            const stopCam = () => { if(streamRef.current) streamRef.current.getTracks().forEach(t => t.stop()); setCamOn(false); };
+
+            const capturarFotoFinal = () => {
+                const v = videoRef.current; if(!v) return null;
+                const canvas = document.createElement('canvas');
+                canvas.width = 600;
+                canvas.height = Math.round(600 * (v.videoHeight / v.videoWidth));
+                const ctx = canvas.getContext('2d');
+                ctx.drawImage(v, 0, 0, canvas.width, canvas.height);
+                ctx.fillStyle = 'rgba(3,7,18,0.92)';
+                ctx.fillRect(0, canvas.height - 120, canvas.width, 120);
+                ctx.fillStyle = '#00F2FE'; ctx.font = 'bold 10px monospace';
+                ctx.fillText(`DATA ${new Date().toLocaleString('pt-BR')} | GPS ${(gps.lat||mun.lat).toFixed(5)}, ${(gps.lon||mun.lon).toFixed(5)}`, 10, canvas.height - 98);
+                ctx.fillStyle = '#fff'; ctx.font = 'bold 10px monospace';
+                ctx.fillText(`AGENTE ${(nome || 'Comunitário').slice(0,22)} | LOCALIDADE ${(bairro || 'Local').slice(0,18)} | ${mun.n}`, 10, canvas.height - 80);
+                ctx.fillStyle = '#FF0055'; ctx.font = 'bold 10px monospace';
+                ctx.fillText(`RISCO ${risco} | CEMADEN ${cemadenNivel}`, 10, canvas.height - 62);
+                ctx.fillStyle = '#FFA500'; ctx.font = 'bold 9px monospace';
+                ctx.fillText(`FRENTE ${frenteSelecionada.slice(0, 45)}`, 10, canvas.height - 44);
+                ctx.fillStyle = '#FFD600'; ctx.font = 'bold 9px monospace';
+                ctx.fillText(`GOES-19 | CHUVA ${clima?.precipitation||0}mm | VENTO ${vento||0}km/h`, 10, canvas.height - 24);
+                ctx.fillStyle = '#00FF88'; ctx.font = 'bold 9px monospace';
+                ctx.fillText(`CIDADÃO SENSOR - AÇÃO COMUNITÁRIA INDEPENDENTE (GADE)`, 10, canvas.height - 8);
+                const base64Final = canvas.toDataURL('image/jpeg', 0.70);
+                setFotos([base64Final]);
+                showToast(`Foto final gerada com carimbo.`);
+                return base64Final;
+            };
+
+            const textoVistoria = (prot) => `[REGISTRO DE VISTORIA COMUNITÁRIA - CIDADÃO SENSOR]
+Protocolo: ${prot || protAtual || 'PROT-RARU'}
+Agente de Campo: ${nome || 'Comunitário'}
+Local: ${mun.n} - ${bairro}
+Classificação: ${risco}
+Frente: ${frenteSelecionada}
+CEMADEN: ${cemadenNivel} | Alarme Russo: ${alarmeRusso ? 'ATIVADO' : 'OFF'}
+GOES-19 | Chuva ${clima?.precipitation||0}mm | Vento ${vento}km/h
+GPS: ${(gps.lat||mun.lat).toFixed(5)}, ${(gps.lon||mun.lon).toFixed(5)}
+Relatório: ${rel}
+Anexo: 1 foto com carimbo técnico`;
+
+            const enviarWhatsComum = async () => {
+                const dados = await gerarDados(); if(!dados) return;
+                const texto = textoVistoria(dados.protocolo);
+                if(fotos[0] && navigator.canShare){
+                    try{
+                        const blob = await (await fetch(fotos[0])).blob();
+                        const file = new File([blob], `vistoria-${mun.n}.jpg`, {type:'image/jpeg'});
+                        if(navigator.canShare({files:[file]})){ await navigator.share({text: texto, files:[file]}); showToast('WhatsApp Comum enviado com foto.'); return; }
+                    }catch(e){}
+                }
+                window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(texto)}`, '_blank');
+                if(fotos[0]) baixarFotoLeve(fotos[0]);
+                showToast('WhatsApp Comum aberto.');
+            };
+
+            const enviarWhatsBusiness = () => {
+                gerarDados().then(dados => { if(!dados) return;
+                    window.open(`https://wa.me/?text=${encodeURIComponent(textoVistoria(dados.protocolo))}`, '_blank');
+                    if(fotos[0]) baixarFotoLeve(fotos[0]);
+                    showToast('Selecione WhatsApp Business.');
+                });
+            };
+
+            const adicionarNoStatusComFoto = async () => {
+                if(fotos.length===0){ showToast('Capture 1 foto primeiro.'); return; }
+                const texto = textoVistoria();
+                try{
+                    const blob = await (await fetch(fotos[0])).blob();
+                    const file = new File([blob], `vistoria-${mun.n}.jpg`, {type:'image/jpeg'});
+                    if(navigator.canShare && navigator.canShare({files:[file]})){
+                        await navigator.share({ title:'Vistoria Comunitária', text: texto, files:[file] });
+                        showToast('Selecione WhatsApp > Status.'); return;
+                    }
+                }catch(e){}
+                baixarFotoLeve(fotos[0]);
+                window.open(`https://wa.me/?text=${encodeURIComponent(texto)}`, '_blank');
+            };
+
+            const baixarFotoLeve = (base64) => { const a=document.createElement('a'); a.href=base64; a.download=`vistoria-${mun.n}.jpg`; a.click(); };
+
+            const gerarLaudoComSarahAI = async () => {
+                if(!bairro) { showToast('Informe o bairro para a IA redigir o relatório.'); return; }
+                setIsAiAnalyzing(true);
+                showToast('Sarah AI redigindo relatório técnico...');
+                const promptVistoria = `Elabore um Relatório Técnico Preliminar de Vistoria Comunitária e Geotécnica assinado pelo agente de campo ${nome}, para o município de ${mun.n}, bairro ${bairro}, sob a frente ${frenteSelecionada}. Classificação de Risco: ${risco}. Dados climáticos atuais: precipitação ${clima?.precipitation||0}mm, vento ${vento}km/h, nível CEMADEN ${cemadenNivel}. Relato adicional do agente: ${rel}. Estruture com rigor técnico, inclua diretrizes de Soluções Baseadas na Natureza (SbN) se aplicável, e encerre obrigatoriamente com a Nota de Conformidade legal do CONFEA/CREA.`;
+                try {
+                    const respostaGroq = await chamarSarahGroq([{ role: 'user', content: promptVistoria }], mun.n, bairro, 'vistoria', clima);
+                    setRel(respostaGroq);
+                    setIsAiAnalyzing(false);
+                    showToast(`Relatório técnico gerado pela Sarah AI para ${nome || 'o agente'}.`);
+                } catch(e) {
+                    setRel(`RELATÓRIO TÉCNICO COMUNITÁRIO - CIDADÃO SENSOR\nAgente de Campo: ${nome || 'Comunitário'}\nMunicípio: ${mun.n} | Bairro: ${bairro}\nFrente: ${frenteSelecionada}\nClassificação de Risco: ${risco}\nCondições: ${clima?.precipitation||0}mm precipitação, vento ${vento}km/h, CEMADEN ${cemadenNivel}.`);
+                    setIsAiAnalyzing(false);
+                    showToast('Erro na IA, relatório padrão aplicado.');
+                }
+            };
+
+            const gerarDados = async () => {
+                if(!nome) { showToast('Informe o nome do responsável.'); return null; }
+                if(!bairro) { showToast('Informe o bairro.'); return null; }
+                const seq = Math.floor(Math.random() * 8999 + 1000);
+                const sig = mun.n.slice(0, 3).toUpperCase();
+                const prot = `PROT-RARU-${sig}-2026-${seq}`;
+                setProtAtual(prot);
+                return { protocolo: prot };
+            };
+
+            const gerarPDFLeve = async () => {
+                const dados = await gerarDados(); if(!dados) return;
+                const canvas = document.createElement('canvas');
+                canvas.width = 600; canvas.height = 800;
+                const ctx = canvas.getContext('2d');
+                ctx.fillStyle = '#02040A'; ctx.fillRect(0,0,600,800);
+                ctx.fillStyle = '#00F2FE'; ctx.font = 'bold 16px monospace';
+                ctx.fillText('RELATÓRIO COMUNITÁRIO - CIDADÃO SENSOR', 20, 35);
+                ctx.fillStyle = '#fff'; ctx.font = '11px monospace';
+                ctx.fillText(`Protocolo: ${dados.protocolo}`, 20, 60);
+                ctx.fillText(`Agente/Responsável: ${nome}`, 20, 82);
+                ctx.fillText(`Local: ${mun.n} - ${bairro}`, 20, 104);
+                ctx.fillText(`Frente: ${frenteSelecionada.slice(0, 50)}`, 20, 126);
+                ctx.fillText(`Risco: ${risco} | CEMADEN: ${cemadenNivel}`, 20, 148);
+                const finalizar = () => {
+                    const base64PDF = canvas.toDataURL('image/jpeg', 0.70);
+                    const win = window.open('', '_blank');
+                    win.document.write(`<html><head><title>Relatório Comunitário</title><style>body{margin:0;background:#000;display:flex;justify-content:center} img{width:100%;max-width:600px} .btn{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:#00F2FE;color:#000;font-weight:900;padding:12px 20px;border-radius:999px;border:0} @media print{.btn{display:none}}</style></head><body><img src="${base64PDF}"><button class="btn" onclick="window.print()">SALVAR RELATÓRIO PDF</button></body></html>`);
+                    showToast('Relatório PDF gerado.');
+                };
+                if(fotos[0]){ const img = new Image(); img.onload = ()=>{ ctx.drawImage(img, 20, 430, 280, 180); finalizar(); }; img.src = fotos[0]; }
+                else finalizar();
+            };
+
+            return (
+                <div className="w-full space-y-3.5 font-mono max-w-4xl mx-auto">
+                    <style>{`
+                        .carimbo-css{ background:rgba(3,7,18,0.88); border:1px solid #00F2FE; border-radius:8px; padding:6px 8px; display:flex; flex-direction:column; gap:2px; font-size:8px; color:#00F2FE; line-height:1.4; }
+                        .carimbo-css span:nth-child(2){ color:#fff; }
+                        .carimbo-css span:nth-child(3){ color:#FF0055; font-weight:900; }
+                    `}</style>
+                    <div className="p-4 rounded-2xl border border-cyberCyan/40 space-y-3 bg-[#030712] shadow-2xl cyber-card relative overflow-hidden">
+                        <div className="absolute inset-0 cloud-layer-anim"></div>
+                        <div className="relative z-10 flex justify-between items-center border-b border-cyberCyan/30 pb-2.5">
+                            <h3 className="text-[11px] text-cyberCyan font-black uppercase tracking-wider">VISTORIA COMUNITÁRIA &amp; SIRENES (5 MIN)</h3>
+                            <button onClick={onBackToDashboard} className="cyber-button-danger text-[10px] py-1 px-3 !min-h-[32px]">FECHAR</button>
+                        </div>
+                        <div className="bg-black border border-cyberRose/30 rounded-xl p-2 text-[9px] text-cyberRose font-bold text-center">NO-MAE MESQUITA IP 10.10.21.15 - SISTEMA DE ALERTA POPULAR</div>
+
+                        <div className="bg-black border border-orange-500/40 rounded-xl p-3 space-y-2">
+                            <div className="flex justify-between items-center">
+                                <b className="text-[10px] text-white">CONTROLE DE SIRENES (DURAÇÃO: 5 MIN)</b>
+                                <span className="text-[9px] text-yellow-300 font-bold">CEMADEN: {cemadenNivel}</span>
+                            </div>
+                            <div className="grid grid-cols-2 gap-2">
+                                <button onClick={() => alarmeRusso ? pararTodasSirenes() : dispararSirene5Minutos('russo')} className={`cyber-button text-[10px] py-2.5 ${alarmeRusso ? '!bg-red-500 !text-white !border-red-400 animate-pulse' : '!border-red-500/50 !text-red-300'}`}>
+                                    {alarmeRusso ? 'PARAR ALARME RUSSO' : 'DISPARAR ALARME RUSSO (5 MIN)'}
+                                </button>
+                                <button onClick={() => alarmeCemaden ? pararTodasSirenes() : dispararSirene5Minutos('cemaden')} className={`cyber-button text-[10px] py-2.5 ${alarmeCemaden ? '!bg-amber-500 !text-black !border-amber-400 animate-pulse' : '!border-amber-500/50 !text-amber-300'}`}>
+                                    {alarmeCemaden ? 'PARAR SIRENE CEMADEN' : 'DISPARAR SIRENE CEMADEN (5 MIN)'}
+                                </button>
+                            </div>
+                        </div>
+
+                        <div className="space-y-1.5 bg-void/90 p-3 rounded-xl border border-cyberCyan/30">
+                            <label className="text-[9px] text-cyberCyan font-bold uppercase block">Selecionar Frente / Ator Comunitário ou Técnico:</label>
+                            <select value={frenteSelecionada} onChange={e => setFrenteSelecionada(e.target.value)} className="w-full bg-black text-white border border-cyberCyan/40 rounded-xl p-2.5 text-[10px] font-bold cursor-pointer">
+                                {FRENTES_EQUIPES_TABELA.map((f, i) => <option key={i} value={f}>{f}</option>)}
+                            </select>
+                        </div>
+
+                        <select value={mun.n} onChange={e => { const m = MUNICIPIOS_92.find(x => x.n === e.target.value); setMun(m); }} className="w-full bg-black text-cyberCyan border border-cyberCyan/40 rounded-xl p-2.5 text-xs font-bold cursor-pointer">
+                            {MUNICIPIOS_92.map((m, i) => <option key={i} value={m.n}>{m.n} (IP: {m.ip})</option>)}
+                        </select>
+
+                        <div className="bg-black border border-cyberCyan/30 rounded-xl p-3 space-y-2.5">
+                            <div className="flex justify-between items-center">
+                                <span className="text-[10px] text-cyberCyan font-bold uppercase">CÂMERA COM CARIMBO DA FRENTE</span>
+                                {!camOn ?
+                                    <button onClick={startCam} className="cyber-button text-[10px] py-1.5 px-3">LIGAR Câmera</button> :
+                                    <button onClick={stopCam} className="cyber-button-danger text-[10px] py-1.5 px-3">DESLIGAR</button>
+                                }
+                            </div>
+                            <div className="bg-black rounded-xl overflow-hidden border border-cyberCyan/30 relative" style={{ minHeight: '180px' }}>
+                                <video ref={videoRef} autoPlay playsInline muted style={{ width: '100%', height: '180px', objectFit: 'cover', display: camOn ? 'block' : 'none' }} />
+                                {!camOn && <div className="h-[180px] grid place-items-center text-slate-500 text-xs font-bold">Toque em Ligar Câmera para registrar</div>}
+                                {camOn && (
+                                    <div className="absolute inset-0 pointer-events-none">
+                                        <div className="absolute top-0 left-0 right-0 h-[2px] bg-cyberCyan animate-raru-scan" />
+                                        <div className="absolute bottom-2 left-2 right-2">
+                                            <div className="carimbo-css">
+                                                <span>{`GPS ${(gps.lat||mun.lat).toFixed(4)}, ${(gps.lon||mun.lon).toFixed(4)} | CEMADEN ${cemadenNivel}`}</span>
+                                                <span>RISCO {risco}</span>
+                                                <span>FRENTE {frenteSelecionada.slice(0, 38)}...</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
+                            {camOn && (
+                                <button onClick={capturarFotoFinal} className="cyber-button-solid w-full text-xs py-3">
+                                    CAPTURAR FOTO COM CARIMBO TÉCNICO
+                                </button>
+                            )}
+                            {fotos.length > 0 && (
+                                <div className="grid grid-cols-1 gap-2 pt-2">
+                                    {fotos.map((img, idx) => (
+                                        <div key={idx} className="relative rounded-lg overflow-hidden border border-cyberCyan/40">
+                                            <img src={img} alt="Vistoria" className="w-full h-32 object-cover" />
+                                            <button onClick={() => setFotos([])} className="absolute top-1 right-1 bg-red-500 text-white w-5 h-5 text-[10px] font-bold flex items-center justify-center rounded-full">X</button>
+                                            <span className="absolute bottom-1 left-1 bg-black/80 text-[8px] text-green-300 px-2 py-1 rounded">FOTO FINAL APLICADA</span>
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
+                        </div>
+
+                        <div className="space-y-3">
+                            {/* NOVO: campo do nome salva automaticamente no navegador e alimenta a IA e os laudos */}
+                            <input value={nome} onChange={e => atualizarNomeAgente(e.target.value)} placeholder="Agente Comunitário / Responsável * (salvo como seu nome no app)" className="w-full bg-black border border-cyberCyan/30 rounded-xl p-2.5 text-xs text-white" />
+                            <select value={risco} onChange={e => setRisco(e.target.value)} className="w-full bg-black border border-cyberCyan/30 rounded-xl p-2.5 text-xs text-cyberCyan font-bold cursor-pointer">
+                                {RISCOS_RARU.map((r, i) => <option key={i} value={r}>{r}</option>)}
+                            </select>
+                            <input value={bairro} onChange={e => setBairro(e.target.value)} placeholder="Bairro / Comunidade * (Rocha Sobrinho, Vila Sebinho...)" className="w-full bg-black border border-cyberCyan/30 rounded-xl p-2.5 text-xs text-white" />
+                            <button onClick={gerarLaudoComSarahAI} disabled={isAiAnalyzing} className="cyber-button-solid w-full text-xs py-3.5">
+                                {isAiAnalyzing ? "SARAH AI REDIGINDO RELATÓRIO..." : "GERAR RELATÓRIO TÉCNICO COM SARAH AI"}
+                            </button>
+                            <textarea value={rel} onChange={e => setRel(e.target.value)} rows="5" placeholder="Relato técnico da inspeção comunitária..." className="w-full bg-black border border-cyberCyan/30 rounded-xl p-3 text-xs text-white resize-none leading-relaxed" />
+                            <button onClick={gerarPDFLeve} className="cyber-button w-full text-xs py-3">GERAR RELATÓRIO PDF COMUNITÁRIO</button>
+                            <div className="grid grid-cols-2 gap-2.5">
+                                <button onClick={enviarWhatsComum} className="cyber-button text-xs py-3">WHATSAPP COMUM</button>
+                                <button onClick={enviarWhatsBusiness} className="cyber-button text-xs py-3">WHATSAPP BUSINESS</button>
+                            </div>
+                            <button onClick={adicionarNoStatusComFoto} className="cyber-button-solid w-full text-xs py-3">PUBLICAR NO STATUS COM FOTO</button>
+                        </div>
+                    </div>
+                </div>
+            );
+        }
