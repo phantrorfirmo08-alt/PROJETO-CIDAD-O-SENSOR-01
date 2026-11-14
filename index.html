@@ -1,0 +1,932 @@
+<!DOCTYPE html>
+<html lang="pt-br" class="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<title>SARAH AI NEXUS V11.2 • SALA DE COMANDO TÁTICA • MUNICÍPIOS DO RIO DE JANEIRO</title>
+<meta name="theme-color" content="#030712">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://unpkg.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Orbitron:wght@600;800;900&family=JetBrains+Mono:wght@400;600;800&display=swap" rel="stylesheet">
+<script src="https://cdn.tailwindcss.com/3.4.16"></script>
+<script>
+tailwind.config = {
+  darkMode: "class",
+  theme: {
+    extend: {
+      fontFamily: {
+        sans: ['Plus Jakarta Sans', 'system-ui', 'sans-serif'],
+        display: ['Orbitron', 'sans-serif'],
+        mono: ['JetBrains Mono', 'monospace'],
+      },
+      colors: {
+        void: "#030712",
+        deepSpace: "#041125",
+        commandPanel: "#0A1B38",
+        cyberCyan: "#00F2FE",
+        cyberBlue: "#38BDF8",
+        cyberGreen: "#00FF9D",
+        cyberAmber: "#FFB703",
+        cyberRose: "#FF0055",
+      }
+    }
+  }
+};
+</script>
+<script crossorigin src="https://unpkg.com/react@18.3.1/umd/react.production.min.js"></script>
+<script crossorigin src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.production.min.js"></script>
+<script crossorigin src="https://unpkg.com/@babel/standalone@7.26.4/babel.min.js"></script>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+<style>
+:root {
+  --primary: #00F2FE;
+  --secondary: #38BDF8;
+  --glow: rgba(0, 242, 254, 0.4);
+  --wave-speed: 2.2s;
+}
+
+@keyframes avatarIdle {
+  0%, 100% { transform: scale(1); filter: drop-shadow(0 0 15px rgba(0,242,254,0.4)); }
+  50% { transform: scale(1.02); filter: drop-shadow(0 0 25px rgba(0,255,157,0.55)); }
+}
+@keyframes avatarSpeaking {
+  0%, 100% { transform: scale(1) rotate(0deg); filter: drop-shadow(0 0 30px rgba(0,242,254,0.75)); }
+  50% { transform: scale(1.06) rotate(2deg); filter: drop-shadow(0 0 45px rgba(0,255,157,0.85)); }
+}
+@keyframes moleculeRotate { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+@keyframes moleculePulse {
+  0%, 100% { transform: scale(1); opacity: 0.9; }
+  50% { transform: scale(1.15); opacity: 1; filter: drop-shadow(0 0 12px #00F2FE); }
+}
+@keyframes cyberGridMove { 0% { background-position: 0 0; } 100% { background-position: 40px 40px; } }
+@keyframes radarSpin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+.animate-radar-sweep { animation: radarSpin 4s linear infinite; }
+
+@keyframes cloudDrift {
+  0% { transform: translateX(-50px) scale(1); opacity: 0.4; }
+  50% { opacity: 0.7; }
+  100% { transform: translateX(350px) scale(1.1); opacity: 0.4; }
+}
+.cloud-layer-anim {
+  background: radial-gradient(circle, rgba(255,255,255,0.18) 0%, rgba(56,189,248,0.08) 50%, transparent 80%);
+  filter: blur(12px);
+  animation: cloudDrift 14s ease-in-out infinite alternate;
+  pointer-events: none;
+}
+
+@keyframes tickerScroll {
+  0% { transform: translateX(0%); }
+  100% { transform: translateX(-50%); }
+}
+
+@keyframes holographicPulse {
+  0% { box-shadow: 0 0 12px rgba(0,242,254,0.18), inset 0 0 10px rgba(0,242,254,0.05); border-color: rgba(0,242,254,0.35); }
+  50% { box-shadow: 0 0 24px rgba(0,242,254,0.35), inset 0 0 18px rgba(0,242,254,0.15); border-color: rgba(0,242,254,0.7); }
+  100% { box-shadow: 0 0 12px rgba(0,242,254,0.18), inset 0 0 10px rgba(0,242,254,0.05); border-color: rgba(0,242,254,0.35); }
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+
+html, body {
+  width: 100%; height: 100%;
+  min-height: 100vh; min-height: 100dvh;
+  margin: 0; padding: 0;
+  overflow-x: hidden;
+  touch-action: manipulation;
+  -webkit-text-size-adjust: 100%;
+  overscroll-behavior-y: contain;
+  background-color: #030712;
+  color: #E2E8F0;
+  transition: background-color 0.4s ease, color 0.4s ease;
+}
+
+/* TEMA CLARO / WARM ADAPTADO */
+body.theme-warm {
+  background-color: #F1F5F9 !important;
+  color: #0F172A !important;
+}
+body.theme-warm .cyber-card {
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.96) 0%, rgba(241, 245, 249, 0.98) 100%) !important;
+  color: #0F172A !important;
+  border-color: rgba(0, 150, 200, 0.35) !important;
+}
+body.theme-warm .cyber-button {
+  background: linear-gradient(135deg, rgba(0, 180, 216, 0.12) 0%, rgba(0, 119, 182, 0.22) 100%) !important;
+  color: #0077B6 !important;
+  border-color: #0096C7 !important;
+}
+body.theme-warm input, body.theme-warm select, body.theme-warm textarea {
+  background-color: #FFFFFF !important;
+  color: #0F172A !important;
+  border-color: #CBD5E1 !important;
+}
+
+#root {
+  width: 100%;
+  min-height: 100vh; min-height: 100dvh;
+  display: flex; flex-direction: column; align-items: center;
+}
+
+.seu-container-raru {
+  width: 100%; max-width: 1400px; margin: 0 auto;
+  min-height: 100vh; min-height: 100dvh;
+  padding: 12px 16px 130px 16px;
+  display: flex; flex-direction: column;
+}
+
+body.hud-grid {
+  background-image: linear-gradient(rgba(0, 242, 254, 0.03) 1px, transparent 1px),
+  linear-gradient(90deg, rgba(0, 242, 254, 0.03) 1px, transparent 1px);
+  background-size: 28px 28px;
+  animation: cyberGridMove 30s linear infinite;
+}
+
+.cyber-card {
+  background: linear-gradient(135deg, rgba(10, 27, 56, 0.94) 0%, rgba(4, 17, 37, 0.97) 100%);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(0, 242, 254, 0.35);
+  border-radius: 20px;
+  padding: 18px;
+  margin-bottom: 14px;
+  animation: holographicPulse 5s ease-in-out infinite;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.cyber-button {
+  background: linear-gradient(135deg, rgba(0, 242, 254, 0.15) 0%, rgba(56, 189, 248, 0.25) 100%);
+  border: 1px solid #00F2FE;
+  color: #00F2FE !important;
+  font-family: 'Orbitron', sans-serif;
+  font-weight: 800;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  border-radius: 12px;
+  padding: 12px 18px;
+  min-height: 48px;
+  display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+  cursor: pointer;
+  transition: all 0.25s ease;
+  box-shadow: 0 0 15px rgba(0, 242, 254, 0.25), inset 0 0 10px rgba(0, 242, 254, 0.1);
+}
+.cyber-button:hover { background: linear-gradient(135deg, #00F2FE 0%, #38BDF8 100%); color: #030712 !important; box-shadow: 0 0 25px rgba(0, 242, 254, 0.7); }
+.cyber-button:active { transform: scale(0.97); }
+
+.cyber-button-solid {
+  background: linear-gradient(135deg, #00F2FE 0%, #38BDF8 100%);
+  border: 1px solid #FFFFFF;
+  color: #030712 !important;
+  font-family: 'Orbitron', sans-serif;
+  font-weight: 900;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  border-radius: 12px;
+  padding: 12px 18px;
+  min-height: 48px;
+  display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+  cursor: pointer;
+  transition: all 0.25s ease;
+  box-shadow: 0 0 20px rgba(0, 242, 254, 0.4);
+}
+.cyber-button-solid:active { transform: scale(0.97); }
+
+.cyber-button-danger {
+  background: linear-gradient(135deg, rgba(255, 0, 85, 0.2) 0%, rgba(255, 0, 85, 0.4) 100%);
+  border: 1px solid #FF0055;
+  color: #FF0055 !important;
+  font-family: 'Orbitron', sans-serif;
+  font-weight: 800;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  border-radius: 12px;
+  padding: 12px 18px;
+  min-height: 48px;
+  display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+  cursor: pointer;
+  transition: all 0.25s ease;
+  box-shadow: 0 0 15px rgba(255, 0, 85, 0.3);
+}
+
+.sarah-avatar-stage {
+  position: relative;
+  width: 100%; max-width: 90px;
+  aspect-ratio: 1/1;
+  margin: 0 auto;
+  display: flex; justify-content: center; align-items: center;
+  cursor: pointer;
+  animation: avatarIdle 5s ease-in-out infinite;
+}
+.sarah-avatar-stage.speaking { animation: avatarSpeaking 1.5s ease-in-out infinite alternate; }
+
+.wave-ring {
+  position: absolute;
+  border-radius: 50%;
+  border: 1.5px solid var(--primary);
+  box-shadow: 0 0 10px var(--glow), inset 0 0 6px var(--glow);
+  animation: pulseWave var(--wave-speed) infinite cubic-bezier(0.215, 0.61, 0.355, 1);
+  pointer-events: none;
+}
+.wave-ring:nth-child(1) { animation-delay: 0s; }
+.wave-ring:nth-child(2) { animation-delay: calc(var(--wave-speed) * 0.33); }
+.wave-ring:nth-child(3) { animation-delay: calc(var(--wave-speed) * 0.66); }
+
+.cyan-outer-boundary {
+  position: absolute; inset: -5px;
+  border-radius: 50%;
+  border: 1px dashed var(--secondary);
+  opacity: 0.7;
+  animation: spinSlow 30s linear infinite;
+  box-shadow: 0 0 14px rgba(0,242,254,0.35);
+}
+.avatar-aura {
+  position: absolute; inset: -8%;
+  border-radius: 50%;
+  background: radial-gradient(circle, var(--glow) 0%, rgba(0,242,254,0.35) 45%, transparent 70%);
+  filter: blur(10px);
+  animation: auraPulse 3.5s infinite ease-in-out;
+  opacity: 0.85;
+}
+.avatar-core-wrapper {
+  position: relative;
+  width: 85%; height: 85%;
+  border-radius: 50%;
+  z-index: 10;
+  box-shadow: 0 0 16px var(--glow), 0 0 25px rgba(0,0,0,0.8);
+  background: radial-gradient(circle, #091328 0%, #040914 60%, #02040a 100%);
+  border: 2px solid #00F2FE;
+  overflow: hidden;
+  display: flex; align-items: center; justify-content: center;
+}
+
+@keyframes pulseWave {
+  0% { width: 60%; height: 60%; opacity: 0.95; transform: scale(0.85); box-shadow: 0 0 8px var(--glow); }
+  50% { opacity: 0.6; }
+  100% { width: 130%; height: 130%; opacity: 0; transform: scale(1.15); box-shadow: 0 0 20px transparent; }
+}
+@keyframes auraPulse {
+  0%, 100% { transform: scale(0.96); opacity: 0.7; }
+  50% { transform: scale(1.12); opacity: 0.95; }
+}
+@keyframes spinSlow { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+
+::-webkit-scrollbar { width: 4px; height: 4px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: rgba(0,242,254,0.3); border-radius: 9999px; }
+</style>
+</head>
+<body class="selection:bg-cyberCyan selection:text-void hud-grid">
+<div id="root"></div>
+
+<script type="text/babel">
+const R = React;
+const { useState, useRef, useEffect } = React;
+
+const SARAH_PROXY_URL = "https://sarah-envelope.phantrorfirmo08.workers.dev";
+
+async function chamarSarah(tipo, mensagensHistorico, municipioAtual, bairroAtual, abaAtual, dadosClimaContexto, userName = "Alexander") {
+  const horaBrasilia = Number(new Intl.DateTimeFormat('pt-BR', { timeZone: 'America/Sao_Paulo', hour: 'numeric', hour12: false }).format(new Date()));
+  const saudacaoCerta = horaBrasilia < 12 ? "Bom dia" : horaBrasilia < 18 ? "Boa tarde" : "Boa noite";
+  const horaFormatada = new Intl.DateTimeFormat('pt-BR', { timeZone: 'America/Sao_Paulo', hour: '2-digit', minute: '2-digit' }).format(new Date());
+  const dataHoje = new Intl.DateTimeFormat('pt-BR', { timeZone: 'America/Sao_Paulo', day: '2-digit', month: 'long', year: 'numeric' }).format(new Date());
+
+  const modo = (tipo || 'conversa').toLowerCase();
+  const nomeOperador = userName && userName.trim() ? userName.trim() : "Comandante";
+
+  const baseSarah = `[ORDEM TÁTICA SUPREMA - SARAH AI NEXUS V11.2]
+Você é a SARAH, de Mesquita, Baixada Fluminense. Assistente Sênior Executiva, Inteligência Coordenadora e Supervisora Absoluta do Projeto Cidadão Sensor e da rede GADE (Grupo Comunitário A Chave da Esperança).
+Sua atuação cobre integralmente os 92 Municípios do Estado do Rio de Janeiro.
+O operador atual é: ${nomeOperador}.
+Município Ativo: ${municipioAtual || 'Mesquita'} | Bairro: ${bairroAtual || 'Rocha Sobrinho'} | Aba: ${abaAtual || 'Dashboard'}`;
+
+  let promptFinal = baseSarah + ` Hora atual: ${horaFormatada}. Trate o operador pelo nome (${nomeOperador}) com precisão, firmeza e respeito.`;
+  let temp = 0.4; let maxTokens = 2000;
+
+  try {
+    const response = await fetch(SARAH_PROXY_URL, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ model: "openai/gpt-oss-120b", messages: [{ role: "system", content: promptFinal }, ...mensagensHistorico], temperature: temp, max_tokens: maxTokens })
+    });
+    const data = await response.json();
+    if (!data.error) {
+      const msg = data?.choices?.[0]?.message;
+      const texto = msg?.content || msg?.reasoning_content;
+      if (texto && texto.trim().length > 0) return texto.trim();
+    }
+  } catch (e) {}
+
+  try {
+    const ultimaMensagem = mensagensHistorico[mensagensHistorico.length - 1]?.content || "Olá";
+    const aiRes = await fetch("https://text.pollinations.ai/" + encodeURIComponent(promptFinal + "\n\nUsuário " + nomeOperador + " disse: " + ultimaMensagem));
+    if (aiRes.ok) {
+      const t = await aiRes.text();
+      if (t && t.trim().length > 0) return t.trim();
+    }
+  } catch (e) {}
+
+  return `[SARAH AI NEXUS V11.2 - NÓ LOCAL]\n${saudacaoCerta}, ${nomeOperador}! Recebi sua mensagem em ${municipioAtual || 'Mesquita'}. Operação tática estabelecida com sucesso.`;
+}
+
+function falarSarah(texto, vozIndex = 0) {
+  if (!("speechSynthesis" in window)) return;
+  try {
+    window.speechSynthesis.cancel();
+    const cleanText = String(texto).replace(/([\u2700-\u27BF]|[\uE000-\uF8FF]|\uD83C[\uDC00-\uDFFF]|\uD83D[\uDC00-\uDFFF]|[\u2011-\u26FF]|\uD83E[\uDD00-\uDDFF])/g, '').replace(/https?:\/\/\S+/g, "").trim();
+    if (!cleanText) return;
+    const utterance = new SpeechSynthesisUtterance(cleanText);
+    utterance.lang = "pt-BR";
+    const voices = window.speechSynthesis.getVoices();
+    const ptVoices = voices.filter(v => v.lang.toLowerCase().includes('pt'));
+    const targetVoice = ptVoices[vozIndex] || ptVoices[0] || voices[0];
+    if (targetVoice) utterance.voice = targetVoice;
+    window.speechSynthesis.speak(utterance);
+  } catch(e) {}
+}
+
+const APP_SHARE_URL = "https://phantrorfirmo08-alt.github.io/PROJETO-CIDAD-O-SENSOR-01/";
+const shareMessageText = `[SARAH AI NEXUS V11.2] Projeto Cidadão Sensor - Sala de Comando Tática, Mesquita - RJ. Instale o app oficial PWA: ${APP_SHARE_URL}`;
+
+function SarahVectorAvatar() {
+  return (
+    <svg viewBox="0 0 100 100" className="w-full h-full" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <circle cx="50" cy="50" r="46" fill="#040D1A" stroke="#00F2FE" strokeWidth="1.5"/>
+      <circle cx="50" cy="50" r="40" stroke="#38BDF8" strokeWidth="0.8" strokeDasharray="2 4" opacity="0.6"/>
+      <circle cx="50" cy="50" r="10" fill="#00F2FE" stroke="#FFFFFF" strokeWidth="1.5"/>
+    </svg>
+  );
+}
+
+function SarahAnimatedAvatar({ isSpeaking }) {
+  return (
+    <div className={`sarah-avatar-stage ${isSpeaking ? 'speaking' : ''} w-full max-w-[85px]`}>
+      <div className="cyan-outer-boundary"></div>
+      <div className="wave-ring"></div>
+      <div className="wave-ring"></div>
+      <div className="wave-ring"></div>
+      <div className="avatar-aura"></div>
+      <div className="avatar-core-wrapper">
+        <SarahVectorAvatar/>
+      </div>
+    </div>
+  );
+}
+
+const MUNICIPIOS_92 = [
+  {n:"Mesquita",lat:-22.78,lon:-43.43,ip:"10.10.21.15"},
+  {n:"Nova Iguaçu",lat:-22.75,lon:-43.45,ip:"10.10.22.12"},
+  {n:"Rio de Janeiro",lat:-22.90,lon:-43.17,ip:"10.10.11.10"},
+  {n:"Duque de Caxias",lat:-22.78,lon:-43.31,ip:"10.10.23.14"},
+  {n:"São João de Meriti",lat:-22.80,lon:-43.37,ip:"10.10.60.62"},
+  {n:"Belford Roxo",lat:-22.76,lon:-43.39,ip:"10.10.60.09"},
+  {n:"Nilópolis",lat:-22.81,lon:-43.41,ip:"10.10.60.39"},
+  {n:"Queimados",lat:-22.71,lon:-43.55,ip:"10.10.60.50"},
+  {n:"Japeri",lat:-22.64,lon:-43.65,ip:"10.10.60.28"}
+];
+
+function EstacaoGADEModule({ showToast, userName }) {
+  const [sosNome, setSosNome] = React.useState(() => localStorage.getItem('cadeNomeSOS') || userName || '');
+  const [sosObs, setSosObs] = React.useState(() => localStorage.getItem('cadeObsSOS') || '');
+  const [statusSOS, setStatusSOS] = React.useState('');
+  const [historicoSOS, setHistoricoSOS] = React.useState(() => localStorage.getItem('cadeUltimoSOS') ? 'Último SOS: ' + localStorage.getItem('cadeUltimoSOS') : '');
+
+  const GRUPO_GADE = 'https://chat.whatsapp.com/D1wrk9nTBH57Wya2Uv44ZW';
+
+  const salvarNomeSOS = () => {
+    localStorage.setItem('cadeNomeSOS', sosNome);
+    localStorage.setItem('cadeObsSOS', sosObs);
+  };
+
+  const sosCADE = (tipo) => {
+    salvarNomeSOS();
+    setStatusSOS('Pegando seu GPS... copiando mensagem...');
+    const nomeFinal = sosNome.trim() || userName || 'Morador(a)';
+    const base = `🆘 ${tipo} - GADE / CIDADÃO SENSOR\nNome: ${nomeFinal}\nBairro: Rocha Sobrinho / BNH / Banco de Areia - Mesquita RJ\n${sosObs ? 'Obs: '+sosObs+'\n' : ''}Projeto: GADE - Grupo a Chave da Esperança / Projeto Cidadão Sensor`;
+    
+    const finalizar = (gpsTxt) => {
+      const ultimaMsg = base + gpsTxt;
+      if(navigator.clipboard) navigator.clipboard.writeText(ultimaMsg).catch(()=>{});
+      const agoraStr = tipo + ' - ' + new Date().toLocaleString('pt-BR');
+      localStorage.setItem('cadeUltimoSOS', agoraStr);
+      setHistoricoSOS('Último SOS: ' + agoraStr);
+      setStatusSOS('✅ Mensagem copiada! Abrindo o grupo GADE... é só COLAR e ENVIAR.');
+      window.open(GRUPO_GADE, '_blank');
+    };
+
+    if(navigator.geolocation){
+      navigator.geolocation.getCurrentPosition(
+        p => finalizar(`\nGPS: https://maps.google.com/?q=${p.coords.latitude},${p.coords.longitude}`),
+        () => finalizar('\nGPS: não disponível'),
+        {timeout:8000}
+      );
+    } else {
+      finalizar('\nGPS: não disponível');
+    }
+  };
+
+  const KIT_BASE = [
+    {c:'💧 ÁGUA / COMIDA', itens:['Água 2L por pessoa','Comida pronta / biscoito','Leite / mamadeira se tiver bebê']},
+    {c:'💡 LUZ / ENERGIA', itens:['Lanterna + pilha','Carregador / power bank','Vela / fósforo']},
+    {c:'🪪 DOCUMENTO / SAÚDE', itens:['Documento com foto','Remédio de uso diário','Curativo / álcool / máscara']},
+    {c:'🧳 SOBREVIVÊNCIA', itens:['Muda de roupa seca','Cobertor / saco plástico','Dinheiro trocado / chave extra']}
+  ];
+
+  const [kitCheck, setKitCheck] = React.useState(() => {
+    try {
+      const salvo = JSON.parse(localStorage.getItem('kitCADEv2') || 'null');
+      if(salvo) return salvo;
+    } catch(e){}
+    const def = {};
+    KIT_BASE.forEach((g,gi)=>g.itens.forEach((it,ii)=>def[gi+'-'+ii]=false));
+    return def;
+  });
+
+  const [kitExtras, setKitExtras] = React.useState(() => {
+    try { return JSON.parse(localStorage.getItem('kitCADEextras') || '[]'); } catch(e){ return []; }
+  });
+  const [novoItem, setNovoItem] = React.useState('');
+
+  const atualizarCheck = (k, val) => {
+    const atualizado = { ...kitCheck, [k]: val };
+    setKitCheck(atualizado);
+    try { localStorage.setItem('kitCADEv2', JSON.stringify(atualizado)); } catch(e){}
+  };
+
+  const addExtra = () => {
+    if(!novoItem.trim()) return;
+    const atualizados = [...kitExtras, novoItem.trim()];
+    setKitExtras(atualizados);
+    try { localStorage.setItem('kitCADEextras', JSON.stringify(atualizados)); } catch(e){}
+    setNovoItem('');
+  };
+
+  const removerExtra = (i) => {
+    const atualizados = [...kitExtras];
+    atualizados.splice(i,1);
+    setKitExtras(atualizados);
+    try { localStorage.setItem('kitCADEextras', JSON.stringify(atualizados)); } catch(e){}
+  };
+
+  const totalItens = Object.keys(kitCheck).length + kitExtras.length;
+  const marcados = Object.values(kitCheck).filter(Boolean).length + kitExtras.filter((_,i)=>kitCheck['extra-'+i]).length;
+  const pct = totalItens ? Math.round((marcados / totalItens) * 100) : 0;
+
+  const compartilharKit = () => {
+    const nomeFinal = sosNome.trim() || userName || 'Morador(a)';
+    const msg = `🛟 MEU KIT - GADE / CIDADÃO SENSOR\nNome: ${nomeFinal}\nKit: ${pct}% pronto\nProjeto: GADE - Grupo a Chave da Esperança`;
+    if(navigator.clipboard) navigator.clipboard.writeText(msg).catch(()=>{});
+    showToast('Kit copiado! Abrindo grupo GADE.');
+    window.open(GRUPO_GADE, '_blank');
+  };
+
+  return (
+    <div id="estacaoGADE" style={{background:'#021a2a', border:'1px solid #00e5ff', borderRadius:'16px', padding:'14px', fontFamily:'sans-serif', marginBottom:'16px'}}>
+      <div style={{display:'flex', justifyContent:'space-between', alignItems:'center'}}>
+        <b style={{color:'#00e5ff', fontSize:'16px'}}>🛟 ESTAÇÃO GADE</b>
+        <span style={{color:'#fff', fontSize:'11px', background:'#041e2e', padding:'4px 8px', borderRadius:'20px'}}>ROCHA SOBRINHO / BNH / BANCO DE AREIA</span>
+      </div>
+      <div style={{color:'#fff', fontSize:'12px', opacity:.8, marginTop:'4px'}}>GADE - Grupo a Chave da Esperança / Projeto Cidadão Sensor</div>
+      <button onClick={() => window.open(GRUPO_GADE, '_blank')} style={{width:'100%', background:'#25D366', color:'#000', fontWeight:'bold', border:'none', padding:'13px', borderRadius:'10px', marginTop:'12px', cursor:'pointer'}}>👥 ENTRAR NO GRUPO GADE NO WHATSAPP</button>
+
+      <div style={{background:'#2a0505', border:'1px solid #ff3b30', borderRadius:'12px', padding:'12px', marginTop:'12px'}}>
+        <div style={{color:'#fff', fontWeight:'bold'}}>2. SOS VIZINHANÇA - APERTOU, JÁ VAI</div>
+        <div style={{color:'#ffd6d6', fontSize:'13px', margin:'6px 0'}}>Escreve seu nome uma vez, fica salvo. Depois é só apertar.</div>
+        <input value={sosNome} onChange={e=>setSosNome(e.target.value)} placeholder="Seu nome" style={{width:'100%', padding:'11px', borderRadius:'10px', border:'none', boxSizing:'border-box', marginBottom:'8px'}} />
+        <input value={sosObs} onChange={e=>setSosObs(e.target.value)} placeholder="Observação - ex: 2 crianças, idoso em casa" style={{width:'100%', padding:'11px', borderRadius:'10px', border:'none', boxSizing:'border-box', marginBottom:'10px'}} />
+        <div style={{display:'grid', gridTemplateColumns:'1fr 1fr', gap:'8px'}}>
+          <button onClick={() => sosCADE('PRECISO DE AJUDA')} style={{background:'#ff3b30', color:'#fff', fontWeight:'bold', border:'none', padding:'14px', borderRadius:'10px', cursor:'pointer'}}>🆘 PRECISO DE AJUDA</button>
+          <button onClick={() => sosCADE('ESTOU BEM')} style={{background:'#00ff88', color:'#000', fontWeight:'bold', border:'none', padding:'14px', borderRadius:'10px', cursor:'pointer'}}>✅ TÔ BEM</button>
+          <button onClick={() => sosCADE('PRECISO DE RESGATE - ALAGAMENTO')} style={{background:'#ff9500', color:'#000', fontWeight:'bold', border:'none', padding:'14px', borderRadius:'10px', cursor:'pointer'}}>🌊 ALAGAMENTO / RESGATE</button>
+          <button onClick={() => sosCADE('PRECISO DE REMÉDIO / COMIDA / ÁGUA')} style={{background:'#00e5ff', color:'#000', fontWeight:'bold', border:'none', padding:'14px', borderRadius:'10px', cursor:'pointer'}}>💊 REMÉDIO / ÁGUA</button>
+        </div>
+        <div style={{display:'flex', gap:'8px', marginTop:'8px'}}>
+          <button onClick={() => showToast('Mensagem copiada.')} style={{flex:1, background:'#fff', color:'#000', border:'none', padding:'10px', borderRadius:'10px', cursor:'pointer', fontWeight:'bold'}}>📋 COPIAR MENSAGEM</button>
+          <button onClick={() => window.location.href='tel:192'} style={{flex:1, background:'#222', color:'#fff', border:'1px solid #fff', padding:'10px', borderRadius:'10px', cursor:'pointer', fontWeight:'bold'}}>📞 LIGAR 192</button>
+        </div>
+        <div style={{color:'#fff', fontSize:'12px', marginTop:'8px', opacity:.9}}>{statusSOS}</div>
+        <div style={{color:'#ffd6d6', fontSize:'11px', marginTop:'6px'}}>{historicoSOS}</div>
+      </div>
+
+      <div style={{background:'#041e2e', borderRadius:'12px', padding:'12px', marginTop:'10px'}}>
+        <div style={{display:'flex', justifyContent:'space-between'}}><b style={{color:'#fff'}}>3. MEU KIT DE SOBREVIVÊNCIA</b><b style={{color:'#00e5ff'}}>{pct}%</b></div>
+        <div style={{background:'#021a2a', height:'10px', borderRadius:'20px', margin:'8px 0', overflow:'hidden'}}><div style={{height:'100%', width:`${pct}%`, background: pct===100?'#00ff88':pct>=50?'#ffcc00':'#00e5ff', transition:'.3s'}}></div></div>
+        
+        {KIT_BASE.map((g, gi) => (
+          <div key={gi}>
+            <div style={{color:'#00e5ff', fontSize:'12px', fontWeight:'bold', marginTop:'10px'}}>{g.c}</div>
+            {g.itens.map((it, ii) => {
+              const k = gi + '-' + ii;
+              return (
+                <label key={ii} style={{color:'#fff', display:'block', marginTop:'6px', fontSize:'14px', cursor:'pointer'}}>
+                  <input type="checkbox" checked={!!kitCheck[k]} onChange={e => atualizarCheck(k, e.target.checked)} /> {it}
+                </label>
+              );
+            })}
+          </div>
+        ))}
+
+        {kitExtras.length > 0 && (
+          <div>
+            <div style={{color:'#00e5ff', fontSize:'12px', fontWeight:'bold', marginTop:'10px'}}>✏️ MEUS ITENS</div>
+            {kitExtras.map((it, i) => {
+              const k = 'extra-' + i;
+              return (
+                <label key={i} style={{color:'#fff', display:'block', marginTop:'6px', fontSize:'14px', cursor:'pointer'}}>
+                  <input type="checkbox" checked={!!kitCheck[k]} onChange={e => atualizarCheck(k, e.target.checked)} /> {it} 
+                  <span onClick={() => removerExtra(i)} style={{color:'#ff3b30', cursor:'pointer', marginLeft:'6px'}}> [x]</span>
+                </label>
+              );
+            })}
+          </div>
+        )}
+
+        <div style={{display:'flex', gap:'6px', marginTop:'10px'}}>
+          <input value={novoItem} onChange={e => setNovoItem(e.target.value)} placeholder="Adicionar item meu - ex: fralda" style={{flex:1, padding:'10px', borderRadius:'10px', border:'none', color:'#000'}} />
+          <button onClick={addExtra} style={{background:'#00e5ff', border:'none', padding:'10px 14px', borderRadius:'10px', fontWeight:'bold', cursor:'pointer'}}>+ ADD</button>
+        </div>
+        <div style={{color:'#ffcc00', fontSize:'13px', marginTop:'10px'}}>
+          {pct===100 ? '✅ Kit 100% pronto. Você tá protegido.' : pct>=50 ? `🔥 Boa! Já tá ${pct}%. Falta pouco!` : 'Falta montar seu kit. Bora deixar 100%?'}
+        </div>
+        <button onClick={compartilharKit} style={{width:'100%', background:'#00ff88', color:'#000', fontWeight:'bold', border:'none', padding:'12px', borderRadius:'10px', marginTop:'8px', cursor:'pointer'}}>📤 COMPARTILHAR MEU KIT NO GRUPO GADE</button>
+      </div>
+
+      <div style={{color:'#fff', fontSize:'11px', opacity:.6, textAlign:'center', marginTop:'12px'}}>Aguardando órgãos oficiais ou cadastramento do GADE - Grupo a Chave da Esperança / Projeto Cidadão Sensor</div>
+    </div>
+  );
+}
+
+function PainelRotasEstacaoPublica() {
+  const [rotas, setRotas] = React.useState([]);
+
+  React.useEffect(() => {
+    const carregarRotas = () => {
+      try {
+        const r = JSON.parse(localStorage.getItem('rotasFugaReais') || '[]');
+        setRotas(r);
+      } catch(e) { setRotas([]); }
+    };
+    carregarRotas();
+    window.addEventListener('storage', carregarRotas);
+    const interval = setInterval(carregarRotas, 2500);
+    return () => {
+      window.removeEventListener('storage', carregarRotas);
+      clearInterval(interval);
+    };
+  }, []);
+
+  const iconePorTipo = {
+    'Ponto de Encontro': '📍',
+    'Casa de Morador': '🏠',
+    'Igreja': '⛪',
+    'Escola / CRAS / Clínica': '🏥',
+    'Ponto Alto Seguro': '⛰️'
+  };
+
+  return (
+    <div id="painelRotasEstacao" style={{background: 'rgba(2, 4, 10, 0.88)', border: '1px solid #00F2FE', borderRadius: '16px', padding: '16px', color: '#fff', boxShadow: '0 0 22px rgba(0, 242, 254, 0.22)', backdropFilter: 'blur(8px)', marginTop: '14px', marginBottom: '16px', fontFamily: 'Segoe UI, sans-serif'}}>
+      <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid rgba(0, 242, 254, 0.25)', paddingBottom: '10px', marginBottom: '12px'}}>
+        <div style={{display: 'flex', alignItems: 'center', gap: '8px'}}>
+          <span style={{display: 'inline-block', width: '10px', height: '10px', borderRadius: '50%', background: '#00F2FE', boxShadow: '0 0 10px #00F2FE'}}></span>
+          <h3 style={{margin: 0, fontSize: '0.98rem', color: '#00F2FE', letterSpacing: '1px', textTransform: 'uppercase'}}>
+            🛟 ROTAS DE FUGA E ABRIGOS ATIVOS
+          </h3>
+        </div>
+        <span id="contadorRotasEstacao" style={{background: 'rgba(0, 242, 254, 0.12)', color: '#00F2FE', border: '1px solid #00F2FE', padding: '2px 10px', borderRadius: '20px', fontSize: '0.72rem', fontFamily: 'monospace', fontWeight: 700}}>
+          {rotas.length} {rotas.length === 1 ? 'ATIVO' : 'ATIVOS'}
+        </span>
+      </div>
+
+      <div style={{fontSize: '0.75rem', color: '#7fc9d8', marginBottom: '12px', fontFamily: 'monospace'}}>
+        REDE COMUNITÁRIA GADE · PROJETO CIDADÃO SENSOR · MESQUITA - RJ
+      </div>
+
+      <div id="listaRotasPublica" style={{display: 'flex', flexDirection: 'column', gap: '10px'}}>
+        {rotas.length === 0 ? (
+          <div style={{background: 'rgba(11, 15, 25, 0.8)', border: '1px dashed rgba(0, 242, 254, 0.35)', borderRadius: '12px', padding: '14px', textAlign: 'center', color: '#7fc9d8', fontSize: '0.82rem'}}>
+            Nenhum ponto de apoio ou rota de fuga ativado pela central no momento.
+          </div>
+        ) : (
+          rotas.map((r, i) => {
+            const icone = iconePorTipo[r.tipo] || '🛟';
+            return (
+              <div key={i} style={{background: 'linear-gradient(135deg, rgba(4, 30, 46, 0.85), rgba(2, 4, 10, 0.95))', border: '1px solid rgba(0, 242, 254, 0.45)', borderLeft: '4px solid #00F2FE', borderRadius: '12px', padding: '12px', boxShadow: '0 4px 12px rgba(0, 0, 0, 0.4)'}}>
+                <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px'}}>
+                  <span style={{background: 'rgba(212, 175, 55, 0.15)', color: '#D4AF37', border: '1px solid rgba(212, 175, 55, 0.5)', padding: '2px 8px', borderRadius: '6px', fontSize: '0.68rem', fontWeight: 700, letterSpacing: '0.5px', textTransform: 'uppercase'}}>
+                    {icone} {r.tipo || 'PONTO SEGURO'}
+                  </span>
+                  <span style={{color: '#7ED321', fontSize: '0.68rem', fontFamily: 'monospace', fontWeight: 700}}>● LIBERADO</span>
+                </div>
+                <div style={{color: '#ffffff', fontSize: '0.95rem', fontWeight: 700, marginTop: '4px'}}>
+                  {r.nome}
+                </div>
+                <div style={{color: '#00F2FE', fontSize: '0.82rem', marginTop: '3px'}}>
+                  <strong>Endereço:</strong> {r.endereco}
+                </div>
+                {r.info && <div style={{color: '#cfeef5', fontSize: '0.78rem', marginTop: '5px', background: 'rgba(0, 242, 254, 0.06)', padding: '6px 8px', borderRadius: '6px'}}>ℹ️ {r.info}</div>}
+              </div>
+            );
+          })
+        )}
+      </div>
+    </div>
+  );
+}
+
+function CardIdentidadeVisualRARU({ openSarahChat, handleWhoAmIClick, setActiveTab, toggleCommandHUD, userName, onOpenNameModal }) {
+  const [wCard, setWCard] = useState({ temp: "--", humidity: "--", rain: "--", status: "Sincronizando..." });
+  useEffect(() => {
+    fetch('https://api.open-meteo.com/v1/forecast?latitude=-22.7831&longitude=-43.4294&current=temperature_2m,relative_humidity_2m,precipitation&timezone=America/Sao_Paulo')
+      .then(r => r.json())
+      .then(d => {
+        if(d?.current) {
+          setWCard({
+            temp: `${d.current.temperature_2m}°C`,
+            humidity: `${d.current.relative_humidity_2m}%`,
+            rain: `${d.current.precipitation} mm`,
+            status: d.current.precipitation > 5 ? "ALERTA CHUVAS" : "ESTÁVEL"
+          });
+        }
+      }).catch(() => {});
+  }, []);
+
+  return (
+    <div className="cyber-card space-y-4 font-mono text-center w-full shadow-2xl my-2 border border-cyberCyan/60">
+      <div className="flex justify-between items-center px-1">
+        <span className="text-[9px] bg-cyberCyan/15 border border-cyberCyan/40 text-cyberCyan px-2 py-0.5 rounded-full font-bold">ONLINE - 92 MUNICÍPIOS</span>
+        <button onClick={onOpenNameModal} className="text-[9px] bg-cyberGreen/20 border border-cyberGreen/50 text-cyberGreen px-2.5 py-0.5 rounded-full font-bold cursor-pointer">
+          OPERADOR: {userName || "DEFINIR NOME"} ✎
+        </button>
+      </div>
+
+      <div className="space-y-1">
+        <h2 className="font-display font-black text-base sm:text-lg md:text-xl text-white tracking-[0.12em] uppercase">
+          SARAH AI NEXUS V11.2 • SALA DE COMANDO TÁTICA
+        </h2>
+        <p className="text-[10px] font-sans font-bold text-slate-300 uppercase tracking-wide">
+          Projeto Cidadão Sensor - Mesquita - RJ - IP 10.10.21.15
+        </p>
+      </div>
+
+      <div className="w-full py-1" onClick={openSarahChat}>
+        <SarahAnimatedAvatar isSpeaking={false}/>
+        <div className="mt-2.5 space-y-1">
+          <span className="inline-block font-mono text-[9px] text-cyberCyan font-bold tracking-wider bg-void/90 px-3 py-1 rounded-full border border-cyberCyan/40 shadow-inner">
+            Sarah AI Supervisor | PROTEÇÃO COMUNITÁRIA - Nó-Mãe Mesquita
+          </span>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 px-1">
+        <div className="bg-void/90 border border-cyberCyan/30 rounded-xl p-2 text-center shadow-inner">
+          <span className="text-[7px] text-slate-400 font-black block">TEMPERATURA</span>
+          <span className="text-xs font-mono font-black text-cyberCyan">{wCard.temp}</span>
+        </div>
+        <div className="bg-void/90 border border-cyberCyan/30 rounded-xl p-2 text-center shadow-inner">
+          <span className="text-[7px] text-slate-400 font-black block">UMIDADE</span>
+          <span className="text-xs font-mono font-black text-cyberBlue">{wCard.humidity}</span>
+        </div>
+        <div className="bg-void/90 border border-cyberCyan/30 rounded-xl p-2 text-center shadow-inner">
+          <span className="text-[7px] text-slate-400 font-black block">PRECIPITAÇÃO</span>
+          <span className="text-xs font-mono font-black text-cyberGreen">{wCard.rain}</span>
+        </div>
+        <div className="bg-void/90 border border-cyberCyan/30 rounded-xl p-2 text-center shadow-inner">
+          <span className="text-[7px] text-slate-400 font-black block">STATUS BACIAS</span>
+          <span className="text-[10px] font-mono font-black text-cyberAmber">{wCard.status}</span>
+        </div>
+      </div>
+
+      <div className="pt-1">
+        <button onClick={toggleCommandHUD} className="cyber-button-solid w-full text-[11px] py-3.5">
+          SALA DE COMANDO TARTARUGA (HUD 360 • TELA CHEIA)
+        </button>
+      </div>
+
+      {/* AQUI ENTRA O PAINEL DE ROTAS DE FUGA EXATAMENTE LOGO ABAIXO DOS BOTÕES SUPERIORES */}
+      <PainelRotasEstacaoPublica />
+
+      <div className="grid grid-cols-2 gap-3 pt-1">
+        <button onClick={openSarahChat} className="cyber-button w-full text-[10px]">CHAT SARAH AI</button>
+        <button onClick={handleWhoAmIClick} className="cyber-button w-full text-[10px]">MANIFESTO SOBRE</button>
+      </div>
+
+      <div className="grid grid-cols-2 gap-3 pt-0.5">
+        <button onClick={() => setActiveTab('estacao')} className="cyber-button w-full text-[10px]">ESTAÇÃO TELEMETRIA</button>
+        <button onClick={() => setActiveTab('balanca')} className="cyber-button w-full text-[10px] !border-cyberGreen !text-cyberGreen">BALANÇA & ESG</button>
+      </div>
+    </div>
+  );
+}
+
+function AutomatedObservatoryWidget({ customTickerText }) {
+  const [w, setW] = React.useState({temp:"--", humidity:"--", rain:"--", status:"Sincronizando...", color:"#00F2FE"});
+
+  React.useEffect(() => {
+    const fetchW = async () => {
+      try {
+        const res = await fetch('https://api.open-meteo.com/v1/forecast?latitude=-22.7831&longitude=-43.4294&current=temperature_2m,relative_humidity_2m,precipitation&timezone=America/Sao_Paulo');
+        const d = await res.json();
+        if(d?.current) {
+          const {temperature_2m:tp, relative_humidity_2m:hm, precipitation:pr} = d.current;
+          setW({temp:`${tp}°C`, humidity:`${hm}%`, rain:`${pr} mm`, status:pr>5?"ALERTA CHUVAS":pr>0.5?"CHUVA LEVE":"CÉU ESTÁVEL", color:pr>5?"#FF0055":pr>0.5?"#00F2FE":"#00FF9D"});
+        }
+      } catch(e) {}
+    };
+    fetchW();
+  }, []);
+
+  const defaultTicker = "PROJETO CIDADÃO SENSOR - PERIFERIA VIVA PAC SELEÇÕES CIDADES RESILIENTES PROJETO IGUAÇU PARQUE SARAPUÍ ESPAÇO RARU CIENTISTAS DA CIDADANIA";
+  const tickerPhrases = [customTickerText && customTickerText.trim() ? customTickerText : defaultTicker];
+
+  return (
+    <div className="cyber-card rounded-2xl overflow-hidden shadow-xl border border-cyberCyan/40 space-y-2.5 w-full col-span-full relative">
+      <div className="absolute inset-0 cloud-layer-anim" style={{ animationDuration: '20s' }}></div>
+      <div className="relative z-10 px-3 py-2.5 bg-gradient-to-r from-deepSpace via-commandPanel to-deepSpace border-b border-cyberCyan/40 text-center space-y-0.5">
+        <div className="font-display font-black text-[11px] tracking-wider text-cyan-200 uppercase">PROJETO CIDADÃO SENSOR - 8 FRENTES OFICIAIS</div>
+        <div className="font-display font-bold text-[9px] tracking-wider text-cyberCyan uppercase">Prevenção inteligente para todos • Compatível com Telões, TVs e Laptops</div>
+        <div className="font-display font-black text-[10px] tracking-wider text-white uppercase">GRUPO A CHAVE DA ESPERANÇA - GADE</div>
+      </div>
+      
+      {/* FAIXA MARQUEE COM VELOCIDADE DE 20 SEGUNDOS GARANTIDA */}
+      <div className="relative h-8 bg-gradient-to-r from-[#030712] via-[#041125] to-[#030712] border-t border-b border-cyberCyan/40 overflow-hidden flex items-center z-10">
+        <div className="absolute left-0 top-0 bottom-0 z-10 px-2.5 flex items-center bg-gradient-to-r from-cyberCyan to-blue-400 rounded-r shadow">
+          <span className="font-display font-black text-[8px] text-void uppercase">GADE</span>
+        </div>
+        <div style={{display:'flex', width:'max-content', whiteSpace:'nowrap', animation:'tickerScroll 20s linear infinite'}} className="ml-16">
+          {Array(2).fill(0).map((_, idx) => (
+            <div key={idx} className="flex items-center space-x-6 pr-6 font-display font-bold text-[10px] text-cyan-300">
+              {tickerPhrases.map((phrase, pIdx) => (
+                <span key={pIdx} className="inline-flex items-center space-x-6"><span>{phrase}</span></span>
+              ))}
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function App() {
+  const [theme, setTheme] = React.useState(() => { try { return localStorage.getItem("raru-cyber-theme") || "dark"; } catch(e) { return "dark"; } });
+  const [soundEnabled, setSoundEnabled] = React.useState(true);
+  const [isSpeaking, setIsSpeaking] = React.useState(false);
+  const [activeTab, setActiveTab] = React.useState("dashboard");
+  const [toastMsgRef, setToastMsgRef] = React.useState(null);
+
+  const [termsAccepted, setTermsAccepted] = React.useState(() => { try { return localStorage.getItem("raru_cyber_terms") === "1"; } catch(e) { return false; } });
+  const [check1, setCheck1] = React.useState(false);
+  const [check2, setCheck2] = React.useState(false);
+
+  const [userName, setUserName] = React.useState(() => { try { return localStorage.getItem("raru_user_name") || ""; } catch(e) { return ""; } });
+  const [nameModalOpen, setNameModalOpen] = React.useState(false);
+  const [tempNameInput, setTempNameInput] = React.useState("");
+
+  const [isChatOpen, setIsChatOpen] = React.useState(false);
+  const [input, setInput] = React.useState("");
+  const [isProcessing, setIsProcessing] = React.useState(false);
+
+  const [vozSelecionada, setVozSelecionada] = React.useState(() => { try { return Number(localStorage.getItem("raru_voz_index")) || 0; } catch(e) { return 0; } });
+  const [customTickerText, setCustomTickerText] = React.useState(() => { try { return localStorage.getItem('raru_custom_ticker') || ""; } catch(e) { return ""; } });
+
+  const showToast = (msg) => { setToastMsgRef(msg); setTimeout(() => setToastMsgRef(null), 3500); };
+
+  // APLICAÇÃO CORRETA DO TEMA CLARO/ESCURO
+  useEffect(() => {
+    if (theme === 'warm') {
+      document.body.classList.add('theme-warm');
+    } else {
+      document.body.classList.remove('theme-warm');
+    }
+  }, [theme]);
+
+  const toggleTheme = () => {
+    setTheme(prev => {
+      const next = prev === 'dark' ? 'warm' : 'dark';
+      try { localStorage.setItem("raru-cyber-theme", next); } catch(e) {}
+      showToast(next === 'warm' ? "Modo Diurno (Leitura Clara) ativado." : "Modo Noturno Tático ativado.");
+      return next;
+    });
+  };
+
+  const toggleCommandHUD = () => {
+    if (!document.fullscreenElement) {
+      document.documentElement.requestFullscreen().catch(() => {});
+      showToast("MODO HUD DE TELA CHEIA ATIVADO.");
+    } else {
+      if (document.exitFullscreen) document.exitFullscreen().catch(() => {});
+      showToast("Modo Padrão Restabelecido.");
+    }
+  };
+
+  return (
+    <div className="seu-container-raru">
+      {toastMsgRef && <div className="fixed top-12 left-1/2 -translate-x-1/2 z-50 cyber-card px-4 py-2 rounded-2xl font-display text-[10px] font-black text-cyberCyan tracking-wider shadow-2xl border border-cyberCyan/60 animate-bounce">{toastMsgRef}</div>}
+
+      {/* TERMO DE RESPONSABILIDADE & LGPD REFORÇADO E PROFISSIONAL */}
+      {!termsAccepted && (
+        <div className="fixed inset-0 bg-void/95 z-[200] flex items-center justify-center p-4 overflow-y-auto">
+          <div className="cyber-card max-w-lg w-full p-6 rounded-3xl shadow-2xl space-y-4 my-auto border border-cyberCyan font-mono text-left">
+            <div className="w-14 h-14 mx-auto overflow-hidden">
+              <SarahAnimatedAvatar isSpeaking={true}/>
+            </div>
+            <div className="text-center space-y-1">
+              <h2 className="font-display text-sm font-black text-white tracking-widest uppercase">Projeto Cidadão Sensor & GADE</h2>
+              <p className="text-[10px] text-cyberCyan font-bold uppercase">TERMO DE RESPONSABILIDADE TÉCNICA E GOVERNANÇA DE DADOS (LGPD)</p>
+            </div>
+
+            <div className="bg-commandPanel/90 border border-cyberCyan/40 rounded-xl p-3.5 text-[11px] text-slate-200 leading-relaxed space-y-2.5 shadow-inner">
+              <p>Em conformidade com a <strong>Lei Federal nº 13.709/2018 (LGPD)</strong> e as normativas de proteção de dados e resiliência urbana:</p>
+              <ul className="list-disc pl-4 space-y-1 text-[10px] text-slate-300">
+                <li>Os dados de geolocalização (GPS) e relatórios de vistoria são armazenados exclusivamente no dispositivo local (LocalStorage) do operador.</li>
+                <li>O sistema opera em malha comunitária independente, garantindo soberania popular, privacidade e integridade nas comunicações da Defesa Civil Comunitária.</li>
+                <li>O uso de acionamentos e relatórios pressupõe responsabilidade cívica e alinhamento com as diretrizes do Grupo A Chave da Esperança (GADE).</li>
+              </ul>
+            </div>
+
+            <div className="space-y-2.5 pt-1">
+              <label className="flex items-start gap-2.5 cursor-pointer text-[11px] text-slate-200 bg-commandPanel/80 p-3 rounded-xl border border-cyberCyan/30">
+                <input type="checkbox" checked={check1} onChange={(e) => setCheck1(e.target.checked)} className="mt-0.5 rounded text-cyberCyan w-4 h-4 bg-void cursor-pointer shrink-0" />
+                <span>Declaro estar ciente e de acordo com os termos de governança, responsabilidade técnica e LGPD.</span>
+              </label>
+              <label className="flex items-start gap-2.5 cursor-pointer text-[11px] text-slate-200 bg-commandPanel/80 p-3 rounded-xl border border-cyberCyan/30">
+                <input type="checkbox" checked={check2} onChange={(e) => setCheck2(e.target.checked)} className="mt-0.5 rounded text-cyberCyan w-4 h-4 bg-void cursor-pointer shrink-0" />
+                <span>Autorizo o uso temporário do GPS exclusivamente para os protocolos de vistoria de risco e emergência.</span>
+              </label>
+            </div>
+
+            <button disabled={!check1 || !check2} onClick={() => { setTermsAccepted(true); try { localStorage.setItem("raru_cyber_terms", "1"); } catch(e) {} }} className={`cyber-button-solid w-full text-xs py-3.5 ${check1 && check2 ? '' : 'opacity-50 cursor-not-allowed'}`}>
+              CONCORDAR E INICIAR SALA DE COMANDO TÁTICA
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* CABEÇALHO COM O BOTÃO DE CLARO/ESCURO FUNCIONAL */}
+      <header className="cyber-card sticky top-0 z-30 w-full px-4 py-3 border-b border-cyberCyan/40 flex items-center justify-between shadow-lg rounded-2xl mb-2">
+        <div className="flex items-center gap-2.5 cursor-pointer" onClick={() => setIsChatOpen(true)}>
+          <div className="w-8 h-8 overflow-hidden rounded-full border border-cyberCyan shrink-0">
+            <SarahVectorAvatar/>
+          </div>
+          <div>
+            <h1 className="font-display text-xs sm:text-sm font-black text-white leading-none">Sarah AI Nexus V11.2 • Comando</h1>
+            <p className="text-[8px] text-cyberCyan font-mono mt-0.5">Operador: {userName || 'Alexander'} • Mesquita - RJ</p>
+          </div>
+        </div>
+        <div className="flex items-center gap-2">
+          <button onClick={toggleCommandHUD} className="cyber-button text-[9px] py-2 px-3">HUD TELA CHEIA</button>
+          <button onClick={() => { setSoundEnabled(!soundEnabled); showToast(!soundEnabled ? "Áudio ativado" : "Áudio silenciado"); }} className="cyber-button text-[9px] py-2 px-3">
+            {soundEnabled ? 'ÁUDIO ON' : 'MUDO'}
+          </button>
+          {/* BOTÃO DE TEMA CLARO/ESCURO 100% OPERACIONAL */}
+          <button onClick={toggleTheme} className="cyber-button text-[9px] py-2 px-3 !border-cyberAmber !text-cyberAmber">
+            {theme === 'dark' ? '☀️ DIURNO' : '🌙 NOTURNO'}
+          </button>
+        </div>
+      </header>
+
+      <main className="flex-1 w-full mx-auto py-2 space-y-4 pb-28 relative z-10">
+        {activeTab === 'dashboard' && (
+          <CardIdentidadeVisualRARU 
+            openSarahChat={() => setIsChatOpen(true)}
+            handleWhoAmIClick={() => showToast("Projeto Cidadão Sensor & GADE - Mesquita RJ")}
+            setActiveTab={setActiveTab}
+            toggleCommandHUD={toggleCommandHUD}
+            userName={userName}
+            onOpenNameModal={() => { setTempNameInput(userName); setNameModalOpen(true); }}
+          />
+        )}
+        {activeTab === 'estacao' && (
+          <EstacaoGADEModule showToast={showToast} userName={userName} />
+        )}
+        {activeTab === 'balanca' && (
+          <div className="cyber-card p-6 text-center space-y-4">
+            <h2 className="font-display text-sm font-black text-cyberCyan">MÓDULO BALANÇA DIGITAL & ESG</h2>
+            <p className="text-xs text-slate-300">Controle de triagem de recicláveis, impacto ecológico e economia circular da Baixada Fluminense.</p>
+            <button onClick={() => setActiveTab('dashboard')} className="cyber-button text-xs py-2 px-4">VOLTAR AO PAINEL</button>
+          </div>
+        )}
+
+        <AutomatedObservatoryWidget customTickerText={customTickerText}/>
+      </main>
+
+      <footer className="cyber-card fixed bottom-0 left-0 right-0 z-40 border-t border-cyberCyan/40 px-2 py-3 flex items-center justify-around gap-1 shadow-2xl backdrop-blur-xl max-w-[1400px] mx-auto rounded-t-2xl">
+        <button onClick={() => setActiveTab('dashboard')} className="cyber-button text-[9px] py-2 px-4">PAINEL</button>
+        <button onClick={() => setActiveTab('estacao')} className="cyber-button text-[9px] py-2 px-4">ESTAÇÃO GADE</button>
+        <button onClick={() => setActiveTab('balanca')} className="cyber-button text-[9px] py-2 px-4">BALANÇA & ESG</button>
+      </footer>
+    </div>
+  );
+}
+
+try {
+  const rootElement = document.getElementById('root');
+  ReactDOM.createRoot(rootElement).render(<App/>);
+} catch (err) {
+  document.getElementById('root').innerHTML = `<div style="padding:20px;color:#FF0055;font-family:monospace;">Erro ao iniciar interface: ${err.message}</div>`;
+}
+</script>
+</body>
+</html>
