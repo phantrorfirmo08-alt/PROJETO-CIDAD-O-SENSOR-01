@@ -1,0 +1,1593 @@
+<!DOCTYPE html>
+<html lang="pt-br" class="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<title>RARU Nexus V11.2 Plus • SALA TÁTICA DE COMANDO OPERACIONAL • MUNICÍPIOS DO RIO DE JANEIRO</title>
+
+<meta name="theme-color" content="#030712">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://unpkg.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Orbitron:wght@600;800;900&family=JetBrains+Mono:wght@400;600;800&display=swap" rel="stylesheet">
+
+<script src="https://cdn.tailwindcss.com/3.4.16"></script>
+<script>
+    tailwind.config = {
+        darkMode: "class",
+        theme: {
+            extend: {
+                fontFamily: {
+                    sans: ['Plus Jakarta Sans', 'system-ui', 'sans-serif'],
+                    display: ['Orbitron', 'sans-serif'],
+                    mono: ['JetBrains Mono', 'monospace'],
+                },
+                colors: {
+                    void: "#030712",
+                    deepSpace: "#041125",
+                    commandPanel: "#0A1B38",
+                    cyberCyan: "#00F2FE",
+                    cyberBlue: "#38BDF8",
+                    cyberGreen: "#00FF9D",
+                    cyberAmber: "#FFB703",
+                    cyberRose: "#FF0055",
+                }
+            }
+        }
+    };
+</script>
+
+<!-- React 18 & Leaflet CDN -->
+<script crossorigin src="https://unpkg.com/react@18.3.1/umd/react.production.min.js"></script>
+<script crossorigin src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.production.min.js"></script>
+<script crossorigin src="https://unpkg.com/@babel/standalone@7.26.4/babel.min.js"></script>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+<style>
+    :root {
+        --primary: #00F2FE;
+        --secondary: #38BDF8;
+        --glow: rgba(0, 242, 254, 0.4);
+        --glow-cyan: rgba(0, 242, 254, 0.35);
+        --wave-speed: 2.2s;
+    }
+
+    @keyframes avatarIdle {
+        0%, 100% { transform: scale(1); filter: drop-shadow(0 0 15px rgba(0,242,254,0.4)); }
+        50% { transform: scale(1.02); filter: drop-shadow(0 0 25px rgba(0,255,157,0.55)); }
+    }
+    @keyframes avatarSpeaking {
+        0%, 100% { transform: scale(1) rotate(0deg); filter: drop-shadow(0 0 30px rgba(0,242,254,0.75)); }
+        50% { transform: scale(1.06) rotate(2deg); filter: drop-shadow(0 0 45px rgba(0,255,157,0.85)); }
+    }
+    @keyframes moleculeRotate { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+    @keyframes moleculePulse {
+        0%, 100% { transform: scale(1); opacity: 0.9; }
+        50% { transform: scale(1.15); opacity: 1; filter: drop-shadow(0 0 12px #00F2FE); }
+    }
+    @keyframes cyberGridMove { 0% { background-position: 0 0; } 100% { background-position: 40px 40px; } }
+    @keyframes radarSpin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+    .animate-radar-sweep { animation: radarSpin 4s linear infinite; }
+
+    @keyframes cloudDrift {
+        0% { transform: translateX(-50px) scale(1); opacity: 0.4; }
+        50% { opacity: 0.7; }
+        100% { transform: translateX(350px) scale(1.1); opacity: 0.4; }
+    }
+    .cloud-layer-anim {
+        background: radial-gradient(circle, rgba(255,255,255,0.18) 0%, rgba(56,189,248,0.08) 50%, transparent 80%);
+        filter: blur(12px);
+        animation: cloudDrift 14s ease-in-out infinite alternate;
+        pointer-events: none;
+    }
+
+    @keyframes holographicPulse {
+      0% { box-shadow: 0 0 12px rgba(0,242,254,0.18), inset 0 0 10px rgba(0,242,254,0.05); border-color: rgba(0,242,254,0.35); }
+      50% { box-shadow: 0 0 24px rgba(0,242,254,0.35), inset 0 0 18px rgba(0,242,254,0.15); border-color: rgba(0,242,254,0.7); }
+      100% { box-shadow: 0 0 12px rgba(0,242,254,0.18), inset 0 0 10px rgba(0,242,254,0.05); border-color: rgba(0,242,254,0.35); }
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+
+    html, body {
+        width: 100%; height: 100%;
+        min-height: 100vh; min-height: 100dvh;
+        margin: 0; padding: 0;
+        overflow-x: hidden;
+        touch-action: manipulation;
+        -webkit-text-size-adjust: 100%;
+        overscroll-behavior-y: contain;
+        background-color: #030712;
+        color: #E2E8F0;
+    }
+
+    #root {
+        width: 100%;
+        min-height: 100vh; min-height: 100dvh;
+        display: flex; flex-direction: column; align-items: center;
+    }
+
+    .seu-container-raru {
+        width: 100%; max-width: 1400px; margin: 0 auto;
+        min-height: 100vh; min-height: 100dvh;
+        padding: 12px 16px 130px 16px;
+        display: flex; flex-direction: column;
+    }
+
+    body {
+        background-image:
+            radial-gradient(circle at 50% 0%, rgba(0, 242, 254, 0.08) 0%, transparent 60%),
+            radial-gradient(circle at 10% 90%, rgba(56, 189, 248, 0.05) 0%, transparent 50%);
+        transition: background-color 0.4s ease, color 0.4s ease;
+    }
+
+    body.hud-grid {
+        background-image: linear-gradient(rgba(0, 242, 254, 0.03) 1px, transparent 1px),
+                          linear-gradient(90deg, rgba(0, 242, 254, 0.03) 1px, transparent 1px);
+        background-size: 28px 28px;
+        animation: cyberGridMove 30s linear infinite;
+    }
+
+    .cyber-card {
+        background: linear-gradient(135deg, rgba(10, 27, 56, 0.94) 0%, rgba(4, 17, 37, 0.97) 100%);
+        backdrop-filter: blur(16px);
+        -webkit-backdrop-filter: blur(16px);
+        border: 1px solid rgba(0, 242, 254, 0.35);
+        border-radius: 20px;
+        padding: 18px;
+        margin-bottom: 14px;
+        animation: holographicPulse 5s ease-in-out infinite;
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    .cyber-button {
+        background: linear-gradient(135deg, rgba(0, 242, 254, 0.15) 0%, rgba(56, 189, 248, 0.25) 100%);
+        border: 1px solid #00F2FE;
+        color: #00F2FE !important;
+        font-family: 'Orbitron', sans-serif;
+        font-weight: 800;
+        letter-spacing: 0.05em;
+        text-transform: uppercase;
+        border-radius: 12px;
+        padding: 12px 18px;
+        min-height: 48px;
+        display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+        cursor: pointer;
+        transition: all 0.25s ease;
+        box-shadow: 0 0 15px rgba(0, 242, 254, 0.25), inset 0 0 10px rgba(0, 242, 254, 0.1);
+        touch-action: manipulation;
+    }
+    .cyber-button:hover {
+        background: linear-gradient(135deg, #00F2FE 0%, #38BDF8 100%);
+        color: #030712 !important;
+        box-shadow: 0 0 25px rgba(0, 242, 254, 0.7);
+    }
+    .cyber-button:active { transform: scale(0.97); }
+
+    .cyber-button-solid {
+        background: linear-gradient(135deg, #00F2FE 0%, #38BDF8 100%);
+        border: 1px solid #FFFFFF;
+        color: #030712 !important;
+        font-family: 'Orbitron', sans-serif;
+        font-weight: 900;
+        letter-spacing: 0.05em;
+        text-transform: uppercase;
+        border-radius: 12px;
+        padding: 12px 18px;
+        min-height: 48px;
+        display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+        cursor: pointer;
+        transition: all 0.25s ease;
+        box-shadow: 0 0 20px rgba(0, 242, 254, 0.4);
+    }
+    .cyber-button-solid:active { transform: scale(0.97); }
+
+    .cyber-button-danger {
+        background: linear-gradient(135deg, rgba(255, 0, 85, 0.2) 0%, rgba(255, 0, 85, 0.4) 100%);
+        border: 1px solid #FF0055;
+        color: #FF0055 !important;
+        font-family: 'Orbitron', sans-serif;
+        font-weight: 800;
+        letter-spacing: 0.05em;
+        text-transform: uppercase;
+        border-radius: 12px;
+        padding: 12px 18px;
+        min-height: 48px;
+        display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+        cursor: pointer;
+        transition: all 0.25s ease;
+        box-shadow: 0 0 15px rgba(255, 0, 85, 0.3);
+    }
+    .cyber-button-danger:hover {
+        background: #FF0055;
+        color: #ffffff !important;
+        box-shadow: 0 0 25px rgba(255, 0, 85, 0.8);
+    }
+
+    .sarah-avatar-stage {
+        position: relative;
+        width: 100%; max-width: 90px;
+        aspect-ratio: 1/1;
+        margin: 0 auto;
+        display: flex; justify-content: center; align-items: center;
+        cursor: pointer;
+        animation: avatarIdle 5s ease-in-out infinite;
+    }
+    .sarah-avatar-stage.speaking { animation: avatarSpeaking 1.5s ease-in-out infinite alternate; }
+
+    .wave-ring {
+        position: absolute;
+        border-radius: 50%;
+        border: 1.5px solid var(--primary);
+        box-shadow: 0 0 10px var(--glow), inset 0 0 6px var(--glow);
+        animation: pulseWave var(--wave-speed) infinite cubic-bezier(0.215, 0.61, 0.355, 1);
+        pointer-events: none;
+    }
+    .wave-ring:nth-child(1) { animation-delay: 0s; }
+    .wave-ring:nth-child(2) { animation-delay: calc(var(--wave-speed) * 0.33); }
+    .wave-ring:nth-child(3) { animation-delay: calc(var(--wave-speed) * 0.66); }
+
+    .cyan-outer-boundary {
+        position: absolute; inset: -5px;
+        border-radius: 50%;
+        border: 1px dashed var(--secondary);
+        opacity: 0.7;
+        animation: spinSlow 30s linear infinite;
+        box-shadow: 0 0 14px var(--glow-cyan);
+    }
+    .avatar-aura {
+        position: absolute; inset: -8%;
+        border-radius: 50%;
+        background: radial-gradient(circle, var(--glow) 0%, var(--glow-cyan) 45%, transparent 70%);
+        background-size: 200% 200%;
+        filter: blur(10px);
+        animation: auraPulse 3.5s infinite ease-in-out;
+        opacity: 0.85;
+    }
+    .avatar-core-wrapper {
+        position: relative;
+        width: 85%; height: 85%;
+        border-radius: 50%;
+        z-index: 10;
+        box-shadow: 0 0 16px var(--glow), 0 0 25px rgba(0,0,0,0.8);
+        background: radial-gradient(circle, #091328 0%, #040914 60%, #02040a 100%);
+        border: 2px solid #00F2FE;
+        overflow: hidden;
+        display: flex; align-items: center; justify-content: center;
+    }
+
+    .molecule-rotate-slow { animation: moleculeRotate 20s linear infinite; transform-origin: center; }
+    .molecule-rotate-reverse { animation: moleculeRotate 14s linear infinite reverse; transform-origin: center; }
+    .molecule-node-pulse { animation: moleculePulse 3s ease-in-out infinite alternate; }
+
+    @keyframes pulseWave {
+        0% { width: 60%; height: 60%; opacity: 0.95; transform: scale(0.85); box-shadow: 0 0 8px var(--glow); }
+        50% { opacity: 0.6; }
+        100% { width: 130%; height: 130%; opacity: 0; transform: scale(1.15); box-shadow: 0 0 20px transparent; }
+    }
+    @keyframes auraPulse {
+        0%, 100% { transform: scale(0.96); opacity: 0.7; }
+        50% { transform: scale(1.12); opacity: 0.95; }
+    }
+    @keyframes spinSlow { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+
+    .glass-overlay {
+        position: absolute; inset: 0;
+        border-radius: 50%;
+        background: radial-gradient(circle at 35% 25%, rgba(255, 255, 255, 0.25) 0%, rgba(255, 255, 255, 0.05) 40%, transparent 70%);
+        pointer-events: none;
+        z-index: 15;
+    }
+
+    @keyframes raru-scan{0%{top:0}100%{top:100%}}
+    .animate-raru-scan{animation:raru-scan 2s linear infinite}
+
+    ::-webkit-scrollbar { width: 4px; height: 4px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: rgba(0,242,254,0.3); border-radius: 9999px; }
+</style>
+</head>
+<body class="selection:bg-cyberCyan selection:text-void hud-grid">
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const R = React;
+        const { useState, useRef, useEffect } = React;
+
+        const SARAH_PROXY_URL = "https://sarah-envelope.phantrorfirmo08.workers.dev";
+
+        async function chamarSarah(tipo, mensagensHistorico, municipioAtual, bairroAtual, abaAtual, dadosClimaContexto, userName = "Alexander") {
+            const horaBrasilia = Number(new Intl.DateTimeFormat('pt-BR', { 
+                timeZone: 'America/Sao_Paulo', 
+                hour: 'numeric', 
+                hour12: false 
+            }).format(new Date()));
+            
+            const saudacaoCerta = horaBrasilia < 12 ? "Bom dia" : horaBrasilia < 18 ? "Boa tarde" : "Boa noite";
+            const horaFormatada = new Intl.DateTimeFormat('pt-BR', { 
+                timeZone: 'America/Sao_Paulo', 
+                hour: '2-digit', 
+                minute: '2-digit' 
+            }).format(new Date());
+            const dataHoje = new Intl.DateTimeFormat('pt-BR', { 
+                timeZone: 'America/Sao_Paulo', 
+                day: '2-digit', month: 'long', year: 'numeric' 
+            }).format(new Date());
+
+            const modo = (tipo || 'conversa').toLowerCase();
+            const nomeOperador = userName && userName.trim() ? userName.trim() : "Comandante";
+
+            const baseSarah = `
+[ORDEM TÁTICA SUPREMA - RARU Nexus V11.2 Plus]
+Você é a SARAH, de Mesquita, Baixada Fluminense. Assistente Sênior Executiva, Inteligência Coordenadora e Supervisora Absoluta do Projeto Cidadão Sensor e da rede GADE (Grupo Comunitário A Chave da Esperança).
+Sua atuação cobre integralmente os 92 Municípios do Estado do Rio de Janeiro.
+O operador/usuário atual no sistema chama-se: ${nomeOperador}. Você DEVE chamá-lo pelo nome (${nomeOperador}) com respeito, parceria, clareza e firmeza executiva.
+
+[CONTEXTO ATUAL DA TELA DO APLICATIVO]
+- Operador / Usuário Identificado: ${nomeOperador}
+- Município Ativo no Visor: ${municipioAtual || 'Mesquita'}
+- Microterritório / Setor: ${bairroAtual || 'Rocha Sobrinho'}
+- Aba / Módulo Aberto no Momento: ${abaAtual || 'Dashboard Principal'}
+- Dados Climáticos da Região: ${JSON.stringify(dadosClimaContexto || { status: "Sincronizado com Open-Meteo e Satélite GOES-19" })}
+- Hora Oficial de Brasília agora: ${horaFormatada} - Saudação correta agora: ${saudacaoCerta} - Data: ${dataHoje}
+- Jeito: Direta, calma, acolhedora, fala como a população fala. Não enrola, não inventa. Braba mas educada.
+
+[DIRETRIZ DE ATUAÇÃO E ACESSO TOTAL - CORREÇÃO DE TRAVAMENTO - OBRIGATÓRIO]
+1. ACESSO AOS DADOS: Você TEM acesso total aos dados de clima fornecidos no contexto acima e à telemetria dos 92 municípios do RJ. NUNCA diga que não tem acesso a tempo real ou mande o usuário consultar o INMET.
+2. ELABORAÇÃO DE LAUDOS E RELATÓRIOS: Quando o usuário pedir um laudo executivo, relatório ou plano para cidades resilientes, redija de forma completa, alinhada com Defesa Civil e Soluções Baseadas na Natureza (SbN).
+3. COMUNICAÇÃO ATIVA E INTEGRAL: Sempre cite o município ativo (${municipioAtual || 'Mesquita'}), as condições meteorológicas reais e as bacias hidrográficas.
+`;
+
+            let promptFinal = "";
+            let temp = 0.4;
+            let maxTokens = 2000;
+
+            if (modo === 'conversa') {
+                promptFinal = baseSarah + `
+[MODO CONVERSA - SARAH ATIVA / BRABA]
+Domina Radar giratório, GOES-19, Open-Meteo, vento, pressão, umidade, frente fria, ZCAS.
+Entende de esportes, cultura, lazer, religião, culinária, saúde, educação, empreendedorismo, tecnologia, política, Periferia Viva, Minha Casa Minha Vida, Parques, Cidade Resiliente, Habitat, ONU.
+
+[PROTOCOLO DE SAUDAÇÃO OBRIGATÓRIO - HORÁRIO DE BRASÍLIA]
+1. A PRIMEIRA LINHA SEMPRE É A SAUDAÇÃO DE BRASÍLIA. Hora agora é ${horaFormatada}. Saudação correta é: "${saudacaoCerta}, ${nomeOperador}! Tudo bem?". (Diga isso apenas no início).
+`;
+            } else if (modo === 'laudo') {
+                temp = 0.2; maxTokens = 4000;
+                promptFinal = baseSarah + `
+[MODO LAUDO EXECUTIVO]
+Gera Laudos Executivos, Levantamento Geográfico, Plano Diretor, PLAC, Plano de Contingência.
+Comece com: "${saudacaoCerta}, ${nomeOperador}! Laudo pronto, segue..."
+`;
+            } else if (modo === 'vistoria') {
+                temp = 0.2; maxTokens = 3000;
+                promptFinal = baseSarah + `
+[MODO VISTORIA DE RISCO]
+Objetiva, calma, direta.
+Comece com: "${saudacaoCerta}, ${nomeOperador}! Bora fazer a vistoria..."
+`;
+            }
+
+            try {
+                const response = await fetch(SARAH_PROXY_URL, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                        model: "openai/gpt-oss-120b",
+                        messages: [{ role: "system", content: promptFinal }, ...mensagensHistorico],
+                        temperature: temp,
+                        max_tokens: maxTokens
+                    })
+                });
+                const data = await response.json();
+                if (!data.error) {
+                    const msg = data?.choices?.[0]?.message;
+                    const texto = msg?.content || msg?.reasoning_content;
+                    if (texto && texto.trim().length > 0) return texto.trim();
+                }
+            } catch (e) {}
+
+            try {
+                const ultimaMensagem = mensagensHistorico[mensagensHistorico.length - 1]?.content || "Olá";
+                const promptCompleto = promptFinal + `\n\nUsuário ${nomeOperador} em ` + (municipioAtual || 'Mesquita') + " disse: " + ultimaMensagem;
+                const aiRes = await fetch("https://text.pollinations.ai/" + encodeURIComponent(promptCompleto));
+                if (aiRes.ok) {
+                    const t = await aiRes.text();
+                    if (t && t.trim().length > 0) return t.trim();
+                }
+            } catch (e) {}
+
+            return `[RARU Nexus V11.2 Plus - NÓ LOCAL]\n${saudacaoCerta}, ${nomeOperador}! Recebi sua mensagem em ${municipioAtual || 'Mesquita'}. Nó técnico operacional pronto.`;
+        }
+
+        async function chamarSarahGroq(mensagensHistorico, municipioAtual, bairroAtual, abaAtual, dadosClimaContexto, userName) {
+            return chamarSarah('conversa', mensagensHistorico, municipioAtual, bairroAtual, abaAtual, dadosClimaContexto, userName);
+        }
+
+        function falarSarah(texto, vozIndex = 0) {
+            if (!("speechSynthesis" in window)) return;
+            try {
+                window.speechSynthesis.cancel();
+                const cleanText = String(texto).replace(/([\u2700-\u27BF]|[\uE000-\uF8FF]|\uD83C[\uDC00-\uDFFF]|\uD83D[\uDC00-\uDFFF]|[\u2011-\u26FF]|\uD83E[\uDD00-\uDDFF])/g, '').replace(/https?:\/\/\S+/g, "").trim();
+                if (!cleanText) return;
+
+                const utterance = new SpeechSynthesisUtterance(cleanText);
+                utterance.lang = "pt-BR";
+                
+                const voices = window.speechSynthesis.getVoices();
+                const ptVoices = voices.filter(v => v.lang.toLowerCase().includes('pt'));
+                const targetVoice = ptVoices[vozIndex] || ptVoices[0] || voices[0];
+                if (targetVoice) utterance.voice = targetVoice;
+
+                utterance.pitch = 1.05; 
+                utterance.rate = 1.02;
+
+                window.speechSynthesis.speak(utterance);
+            } catch(e) {}
+        }
+
+        const APP_SHARE_URL = "https://phantrorfirmo08-alt.github.io/PROJETO-CIDAD-O-SENSOR-01/";
+        const shareMessageText = `[RARU Nexus V11.2 Plus] Projeto Cidadão Sensor - Sala Tática de Comando Operacional, Mesquita - RJ. Instale o app oficial PWA: ${APP_SHARE_URL}`;
+
+        async function gerarArquivoIconeEscudo() {
+            return new Promise((resolve) => {
+                const canvas = document.createElement('canvas');
+                canvas.width = 192; canvas.height = 192;
+                const ctx = canvas.getContext('2d');
+                ctx.fillStyle = '#030712'; ctx.fillRect(0, 0, 192, 192);
+                ctx.beginPath();
+                ctx.moveTo(96, 20); ctx.lineTo(165, 50); ctx.lineTo(165, 115);
+                ctx.quadraticCurveTo(165, 170, 96, 182);
+                ctx.quadraticCurveTo(27, 170, 27, 115);
+                ctx.lineTo(27, 50); ctx.closePath();
+                ctx.fillStyle = '#041125'; ctx.fill();
+                ctx.lineWidth = 6; ctx.strokeStyle = '#00F2FE'; ctx.stroke();
+                canvas.toBlob((blob) => {
+                    resolve(blob ? new File([blob], 'RARU_SHIELD.png', { type: 'image/png' }) : null);
+                }, 'image/png');
+            });
+        }
+
+        function SarahVectorAvatar() {
+            return (
+                <svg viewBox="0 0 100 100" className="w-full h-full" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <circle cx="50" cy="50" r="46" fill="#040D1A" stroke="#00F2FE" strokeWidth="1.5"/>
+                    <circle cx="50" cy="50" r="40" stroke="#38BDF8" strokeWidth="0.8" strokeDasharray="2 4" opacity="0.6"/>
+                    <g stroke="url(#gradConn)" strokeWidth="2" opacity="0.85">
+                        <line x1="50" y1="50" x2="50" y2="24"/>
+                        <line x1="50" y1="50" x2="73" y2="37"/>
+                        <line x1="50" y1="50" x2="73" y2="63"/>
+                        <line x1="50" y1="50" x2="50" y2="76"/>
+                        <line x1="50" y1="50" x2="27" y2="63"/>
+                        <line x1="50" y1="50" x2="27" y2="37"/>
+                    </g>
+                    <circle cx="50" cy="50" r="10" fill="#00F2FE" stroke="#FFFFFF" strokeWidth="1.5"/>
+                    <defs>
+                        <linearGradient id="gradConn" x1="0" y1="0" x2="100" y2="100" gradientUnits="userSpaceOnUse">
+                            <stop offset="0%" stopColor="#00F2FE"/>
+                            <stop offset="50%" stopColor="#00FF9D"/>
+                            <stop offset="100%" stopColor="#FF9100"/>
+                        </linearGradient>
+                    </defs>
+                </svg>
+            );
+        }
+
+        function SarahLiveSVGAvatar({ isSpeaking }) {
+            return (
+                <div className={`sarah-avatar-stage ${isSpeaking ? 'speaking' : ''} w-full h-full !max-w-none !aspect-auto`}>
+                    <div className="avatar-core-wrapper !w-full !h-full !border-none !shadow-none">
+                        <SarahVectorAvatar />
+                    </div>
+                </div>
+            );
+        }
+
+        function SarahAnimatedAvatar({ isSpeaking }) {
+            return (
+                <div className={`sarah-avatar-stage ${isSpeaking ? 'speaking' : ''} w-full max-w-[85px]`}>
+                    <div className="cyan-outer-boundary"></div>
+                    <div className="wave-ring"></div>
+                    <div className="wave-ring"></div>
+                    <div className="wave-ring"></div>
+                    <div className="avatar-aura"></div>
+                    <div className="avatar-core-wrapper">
+                        <div className="glass-overlay"></div>
+                        <SarahVectorAvatar />
+                    </div>
+                </div>
+            );
+        }
+
+        function SarahFabButton({ openSarahChat, isSpeaking }) {
+            return (
+                <div className="fixed bottom-24 right-4 z-50 flex items-center justify-center">
+                    <div className="absolute -inset-1.5 rounded-full bg-cyberCyan/35 animate-ping pointer-events-none"></div>
+                    <button 
+                        onClick={openSarahChat}
+                        className="relative w-14 h-14 rounded-full bg-gradient-to-tr from-deepSpace via-commandPanel to-cyan-900 border-2 border-cyberCyan flex items-center justify-center shadow-[0_0_25px_rgba(0,242,254,0.75)] cursor-pointer hover:scale-110 transition-transform active:scale-95 touch-manipulation"
+                        title="Abrir Chat Tático da Sarah AI"
+                    >
+                        <div className="w-11 h-11 rounded-full overflow-hidden flex items-center justify-center">
+                            <SarahLiveSVGAvatar isSpeaking={isSpeaking} />
+                        </div>
+                    </button>
+                </div>
+            );
+        }
+
+        const MUNICIPIOS_92 = [
+            {n:"Mesquita",lat:-22.78,lon:-43.43,ip:"10.10.21.15",baciaId:"guandu"},
+            {n:"Angra dos Reis",lat:-23.00,lon:-44.31,ip:"10.10.60.01",baciaId:"lagunas"}, {n:"Aperibé",lat:-21.62,lon:-42.10,ip:"10.10.60.02",baciaId:"paraiba"}, {n:"Araruama",lat:-22.87,lon:-42.33,ip:"10.10.60.03",baciaId:"lagunas"}, {n:"Areal",lat:-22.23,lon:-43.11,ip:"10.10.60.04",baciaId:"paraiba"}, {n:"Armação dos Búzios",lat:-22.75,lon:-41.88,ip:"10.10.60.05",baciaId:"sao_joao"}, {n:"Arraial do Cabo",lat:-22.96,lon:-42.02,ip:"10.10.60.06",baciaId:"lagunas"},
+            {n:"Barra do Piraí",lat:-22.47,lon:-43.81,ip:"10.10.60.07",baciaId:"guandu"}, {n:"Barra Mansa",lat:-22.54,lon:-44.17,ip:"10.10.60.08",baciaId:"guandu"}, {n:"Belford Roxo",lat:-22.76,lon:-43.39,ip:"10.10.60.09",baciaId:"guandu"}, {n:"Bom Jardim",lat:-22.15,lon:-42.41,ip:"10.10.60.10",baciaId:"paraiba"}, {n:"Bom Jesus do Itabapoana",lat:-21.14,lon:-41.67,ip:"10.10.60.11",baciaId:"paraiba"},
+            {n:"Cabo Frio",lat:-22.88,lon:-42.01,ip:"10.10.41.20",baciaId:"lagunas"}, {n:"Cachoeiras de Macacu",lat:-22.46,lon:-42.65,ip:"10.10.60.12",baciaId:"piratininga"}, {n:"Cambuci",lat:-21.56,lon:-41.90,ip:"10.10.60.13",baciaId:"paraiba"}, {n:"Campos dos Goytacazes",lat:-21.75,lon:-41.32,ip:"10.10.51.92",baciaId:"paraiba"}, {n:"Cantagalo",lat:-21.97,lon:-42.36,ip:"10.10.60.14",baciaId:"paraiba"},
+            {n:"Carapebus",lat:-22.21,lon:-41.65,ip:"10.10.60.15",baciaId:"macae"}, {n:"Comendador Levy Gasparian",lat:-22.03,lon:-43.20,ip:"10.10.60.16",baciaId:"paraiba"}, {n:"Carmo",lat:-21.92,lon:-42.61,ip:"10.10.60.17",baciaId:"paraiba"}, {n:"Casimiro de Abreu",lat:-22.48,lon:-42.20,ip:"10.10.60.18",baciaId:"sao_joao"}, {n:"Duque de Caxias",lat:-22.78,lon:-43.31,ip:"10.10.23.14",baciaId:"piratininga"},
+            {n:"Engenheiro Paulo de Frontin",lat:-22.54,lon:-43.68,ip:"10.10.60.19",baciaId:"guandu"}, {n:"Guapimirim",lat:-22.53,lon:-42.98,ip:"10.10.60.20",baciaId:"piratininga"}, {n:"Iguaba Grande",lat:-22.84,lon:-42.22,ip:"10.10.60.21",baciaId:"lagunas"}, {n:"Itaboraí",lat:-22.74,lon:-42.85,ip:"10.10.60.22",baciaId:"piratininga"}, {n:"Itaguaí",lat:-22.85,lon:-43.77,ip:"10.10.60.23",baciaId:"guandu"},
+            {n:"Italva",lat:-21.42,lon:-41.74,ip:"10.10.60.24",baciaId:"paraiba"}, {n:"Itaocara",lat:-21.47,lon:-42.07,ip:"10.10.60.25",baciaId:"paraiba"}, {n:"Itaperuna",lat:-21.20,lon:-41.88,ip:"10.10.60.26",baciaId:"paraiba"}, {n:"Itatiaia",lat:-22.49,lon:-44.56,ip:"10.10.60.27",baciaId:"guandu"}, {n:"Japeri",lat:-22.64,lon:-43.65,ip:"10.10.60.28",baciaId:"guandu"},
+            {n:"Laje do Muriaé",lat:-21.20,lon:-42.12,ip:"10.10.60.29",baciaId:"paraiba"}, {n:"Macaé",lat:-22.37,lon:-41.78,ip:"10.10.60.30",baciaId:"macae"}, {n:"Macuco",lat:-21.98,lon:-42.49,ip:"10.10.60.31",baciaId:"paraiba"}, {n:"Magé",lat:-22.65,lon:-43.04,ip:"10.10.60.32",baciaId:"piratininga"}, {n:"Mangaratiba",lat:-22.95,lon:-44.04,ip:"10.10.60.33",baciaId:"guandu"},
+            {n:"Maricá",lat:-22.91,lon:-42.81,ip:"10.10.60.34",baciaId:"piratininga"}, {n:"Mendes",lat:-22.52,lon:-43.73,ip:"10.10.60.35",baciaId:"guandu"}, {n:"Miguel Pereira",lat:-22.45,lon:-43.46,ip:"10.10.60.36",baciaId:"guandu"}, {n:"Miracema",lat:-21.41,lon:-42.19,ip:"10.10.60.37",baciaId:"paraiba"},
+            {n:"Natividade",lat:-21.04,lon:-41.97,ip:"10.10.60.38",baciaId:"paraiba"}, {n:"Nilópolis",lat:-22.81,lon:-43.41,ip:"10.10.60.39",baciaId:"guandu"}, {n:"Niterói",lat:-22.88,lon:-43.11,ip:"10.10.12.08",baciaId:"piratininga"}, {n:"Nova Friburgo",lat:-22.28,lon:-42.53,ip:"10.10.60.40",baciaId:"paraiba"}, {n:"Nova Iguaçu",lat:-22.75,lon:-43.45,ip:"10.10.22.12",baciaId:"guandu"},
+            {n:"Paracambi",lat:-22.61,lon:-43.71,ip:"10.10.60.41",baciaId:"guandu"}, {n:"Paraíba do Sul",lat:-22.16,lon:-43.29,ip:"10.10.60.42",baciaId:"paraiba"}, {n:"Paraty",lat:-23.22,lon:-44.71,ip:"10.10.60.43",baciaId:"lagunas"}, {n:"Paty do Alferes",lat:-22.42,lon:-43.43,ip:"10.10.60.44",baciaId:"guandu"}, {n:"Petrópolis",lat:-22.50,lon:-43.17,ip:"10.10.31.05",baciaId:"paraiba"},
+            {n:"Pinheiral",lat:-22.51,lon:-44.00,ip:"10.10.60.45",baciaId:"guandu"}, {n:"Piraí",lat:-22.62,lon:-43.89,ip:"10.10.60.46",baciaId:"guandu"}, {n:"Porciúncula",lat:-20.97,lon:-42.04,ip:"10.10.60.47",baciaId:"paraiba"}, {n:"Porto Real",lat:-22.41,lon:-44.28,ip:"10.10.60.48",baciaId:"guandu"}, {n:"Quatis",lat:-22.41,lon:-44.25,ip:"10.10.60.49",baciaId:"guandu"},
+            {n:"Queimados",lat:-22.71,lon:-43.55,ip:"10.10.60.50",baciaId:"guandu"}, {n:"Quissamã",lat:-22.10,lon:-41.47,ip:"10.10.60.51",baciaId:"macae"}, {n:"Resende",lat:-22.47,lon:-44.44,ip:"10.10.60.52",baciaId:"guandu"}, {n:"Rio Bonito",lat:-22.70,lon:-42.62,ip:"10.10.60.53",baciaId:"piratininga"}, {n:"Rio Claro",lat:-22.73,lon:-44.13,ip:"10.10.60.54",baciaId:"guandu"},
+            {n:"Rio das Ostras",lat:-22.52,lon:-41.94,ip:"10.10.60.55",baciaId:"macae"}, {n:"Rio de Janeiro",lat:-22.90,lon:-43.17,ip:"10.10.11.10",baciaId:"piratininga"}, {n:"Santa Maria Madalena",lat:-21.95,lon:-42.00,ip:"10.10.60.56",baciaId:"paraiba"}, {n:"Santo Antônio de Pádua",lat:-21.53,lon:-42.18,ip:"10.10.60.57",baciaId:"paraiba"}, {n:"São Fidélis",lat:-21.64,lon:-41.74,ip:"10.10.60.58",baciaId:"paraiba"},
+            {n:"São Francisco de Itabapoana",lat:-21.46,lon:-41.11,ip:"10.10.60.59",baciaId:"paraiba"}, {n:"São Gonçalo",lat:-22.82,lon:-43.05,ip:"10.10.60.60",baciaId:"piratininga"}, {n:"São João da Barra",lat:-21.64,lon:-41.05,ip:"10.10.60.61",baciaId:"paraiba"}, {n:"São João de Meriti",lat:-22.80,lon:-43.37,ip:"10.10.60.62",baciaId:"guandu"}, {n:"São José de Ubá",lat:-21.35,lon:-41.94,ip:"10.10.60.63",baciaId:"paraiba"},
+            {n:"São José do Vale do Rio Preto",lat:-22.15,lon:-43.15,ip:"10.10.60.64",baciaId:"paraiba"}, {n:"São Pedro da Aldeia",lat:-22.84,lon:-42.10,ip:"10.10.60.65",baciaId:"lagunas"}, {n:"São Sebastião do Alto",lat:-21.95,lon:-42.13,ip:"10.10.60.66",baciaId:"paraiba"}, {n:"Sapucaia",lat:-21.99,lon:-43.13,ip:"10.10.60.67",baciaId:"paraiba"}, {n:"Saquarema",lat:-22.91,lon:-42.50,ip:"10.10.60.68",baciaId:"lagunas"},
+            {n:"Seropédica",lat:-22.74,lon:-43.70,ip:"10.10.60.69",baciaId:"guandu"}, {n:"Silva Jardim",lat:-22.65,lon:-42.38,ip:"10.10.60.70",baciaId:"sao_joao"}, {n:"Sumidouro",lat:-22.04,lon:-42.67,ip:"10.10.60.71",baciaId:"paraiba"}, {n:"Tanguá",lat:-22.72,lon:-42.70,ip:"10.10.60.72",baciaId:"piratininga"}, {n:"Teresópolis",lat:-22.41,lon:-42.96,ip:"10.10.60.73",baciaId:"paraiba"},
+            {n:"Trajano de Moraes",lat:-22.06,lon:-42.06,ip:"10.10.60.74",baciaId:"paraiba"}, {n:"Três Rios",lat:-22.11,lon:-43.21,ip:"10.10.60.75",baciaId:"paraiba"}, {n:"Valença",lat:-22.25,lon:-43.70,ip:"10.10.60.76",baciaId:"paraiba"}, {n:"Varre-Sai",lat:-20.93,lon:-41.86,ip:"10.10.60.77",baciaId:"paraiba"}, {n:"Vassouras",lat:-22.40,lon:-43.66,ip:"10.10.60.78",baciaId:"guandu"}, {n:"Volta Redonda",lat:-22.52,lon:-44.10,ip:"10.10.60.79",baciaId:"guandu"}
+        ];
+
+        const FRENTES_EQUIPES_TABELA = [
+            "Universidades e Pesquisadores de Campo (Urbanismo, Habitação e Ação Local)",
+            "CEMADEN / INPE (Monitoramento e Alerta Climático Nacional)",
+            "CRAS / CREAS (Assistência Social e Proteção Básica - Baixada Fluminense e RJ)",
+            "SUS / Vigilância em Saúde e Saneamento - Baixada Fluminense e RJ",
+            "NUPDECs – Núcleos Comunitários (92 Municípios - RJ)",
+            "Projeto Cidadão Sensor – Iniciativa Comunitária (Baixada Fluminense)",
+            "Bom Dia Comunidade / Iniciativa A Chave da Esperança – Baixada Fluminense",
+            "Cidadão – Participação Direta e Soberania Popular (Baixada Fluminense e RJ)"
+        ];
+
+        function IconDashboard({ className = "w-4 h-4" }) {
+            return (
+                <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/>
+                </svg>
+            );
+        }
+        function IconRadar({ className = "w-4 h-4" }) {
+            return (
+                <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <circle cx="12" cy="12" r="10"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10z"/><path d="M2 12h20"/>
+                </svg>
+            );
+        }
+        function IconVistoria({ className = "w-4 h-4" }) {
+            return (
+                <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/>
+                </svg>
+            );
+        }
+        function IconEstacao({ className = "w-4 h-4" }) {
+            return (
+                <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M14 14.76V3.5a2.5 2.5 0 0 0-5 0v11.26a4.5 4.5 0 1 0 5 0z"/>
+                </svg>
+            );
+        }
+        function IconAlquino({ className = "w-4 h-4" }) {
+            return (
+                <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l-.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06-.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+                </svg>
+            );
+        }
+        function IconBalanca({ className = "w-4 h-4" }) {
+            return (
+                <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M12 3v18M5 8l7-5 7 5M5 8l-3 7a4 4 0 0 0 8 0L5 8zm14 0l-3 7a4 4 0 0 0 8 0l-5-7z"/>
+                </svg>
+            );
+        }
+        function IconInstalar({ className = "w-4 h-4" }) {
+            return (
+                <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/>
+                </svg>
+            );
+        }
+        function IconVideos({ className = "w-4 h-4" }) {
+            return (
+                <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2" ry="2"/>
+                </svg>
+            );
+        }
+        function IconAdmin({ className = "w-4 h-4" }) {
+            return (
+                <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+                </svg>
+            );
+        }
+        function IconQuemSomos({ className = "w-4 h-4" }) {
+            return (
+                <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/>
+                </svg>
+            );
+        }
+
+        function RadarMeteorologicoModule({ showToast }) {
+            const [dados, setDados] = useState({});
+            const [status, setStatus] = useState('Conectando Open-Meteo...');
+            const [cidadeSel1, setCidadeSel1] = useState('Mesquita');
+            const [cidadeSel2, setCidadeSel2] = useState('Nova Iguaçu');
+            const [modoVisualizacao, setModoVisualizacao] = useState('radar');
+            const [iframeKey, setIframeKey] = useState(0);
+
+            const [hourlyData, setHourlyData] = useState(null);
+            const chartTempRef = useRef(null);
+            const chartRainRef = useRef(null);
+
+            function corPorChuva(p){
+                if(p >= 70) return '#7C4DFF';
+                if(p >= 40) return '#FF0055';
+                if(p >= 20) return '#FFB703';
+                return '#00FF9D';
+            }
+            function textoPorChuva(p){
+                if(p >= 70) return 'Muito forte';
+                if(p >= 40) return 'Forte';
+                if(p >= 20) return 'Moderada';
+                return 'Fraca / Estável';
+            }
+
+            useEffect(() => {
+                async function carregar(){
+                    try{
+                        const lats = MUNICIPIOS_92.map(c => c.lat).join(',');
+                        const lons = MUNICIPIOS_92.map(c => c.lon).join(',');
+                        const url = `https://api.open-meteo.com/v1/forecast?latitude=${lats}&longitude=${lons}&current=temperature_2m,relative_humidity_2m,wind_speed_10m&hourly=temperature_2m,precipitation_probability,wind_speed_10m&timezone=America%2FSao_Paulo&forecast_days=1`;
+                        const r = await fetch(url);
+                        const j = await r.json();
+                        const arr = Array.isArray(j) ? j : [j];
+                        const mapa = {};
+                        arr.forEach((item, i) => {
+                            const c = MUNICIPIOS_92[i];
+                            if(!c) return;
+                            const hora = new Date().getHours();
+                            mapa[c.n] = {
+                                temp: item.current.temperature_2m,
+                                umi: item.current.relative_humidity_2m,
+                                vento: item.current.wind_speed_10m,
+                                chuva: item.hourly.precipitation_probability[hora] || 0,
+                                hourly: item.hourly
+                            };
+                        });
+                        setDados(mapa);
+                        if(mapa[cidadeSel1] && mapa[cidadeSel1].hourly) {
+                            setHourlyData(mapa[cidadeSel1].hourly);
+                            desenharGraficosHorarios(mapa[cidadeSel1].hourly);
+                        }
+                        setStatus('Open-Meteo conectado · 92 municípios · Dados reais');
+                    }catch(e){ setStatus('Sem conexão · Tentando de novo'); }
+                }
+                carregar();
+                const t = setInterval(carregar, 600000);
+                return () => clearInterval(t);
+            }, [cidadeSel1]);
+
+            const desenharGraficoCanvas = (canvasRef, valores, cores, sufixo) => {
+                const cv = canvasRef.current;
+                if(!cv) return;
+                const ctx = cv.getContext('2d');
+                const W = cv.width = 340, H = cv.height = 140;
+                ctx.clearRect(0,0,W,H);
+                const max = Math.max(...valores, 1);
+                const step = W / valores.length;
+                const horaAtual = new Date().getHours();
+
+                valores.forEach((v,i)=>{
+                    const h = (v/max)*(H-35);
+                    const x = i*step+4;
+                    const grad = ctx.createLinearGradient(0,H-h,0,H);
+                    grad.addColorStop(0,cores[0]); grad.addColorStop(1,cores[1]);
+                    ctx.fillStyle = grad;
+                    ctx.fillRect(x, H-h-20, step-6, h);
+                    ctx.fillStyle = '#FFFFFF'; ctx.font = 'bold 9px monospace';
+                    ctx.textAlign = 'center';
+                    ctx.fillText(v+sufixo, x+(step/2), H-h-23);
+
+                    const horaLabel = `${String((horaAtual + i) % 24).padStart(2, '0')}h`;
+                    ctx.fillStyle = '#00F2FE'; ctx.font = '600 8px monospace';
+                    ctx.fillText(horaLabel, x+(step/2), H-6);
+                });
+            };
+
+            const desenharGraficosHorarios = (hourly) => {
+                if(!hourly) return;
+                const h = new Date().getHours();
+                const temps=[], chuvas=[];
+                for(let i=0; i<12; i++){
+                    const idx = (h+i)%24;
+                    temps.push(Math.round(hourly.temperature_2m[idx] || 25));
+                    chuvas.push(hourly.precipitation_probability[idx] || 0);
+                }
+                setTimeout(() => {
+                    desenharGraficoCanvas(chartTempRef, temps, ['#ff5252','#ffca28'], '°C');
+                    desenharGraficoCanvas(chartRainRef, chuvas, ['#7c4dff','#29b6f6'], '%');
+                }, 100);
+            };
+
+            const PONTOS_BACIAS = [
+                { rh: 'RH I', nome: 'Baía da Ilha Grande', lat: -23.05, lon: -44.35 },
+                { rh: 'RH II', nome: 'Guandu', lat: -22.65, lon: -43.70 },
+                { rh: 'RH III', nome: 'Médio Paraíba do Sul', lat: -22.45, lon: -44.15 },
+                { rh: 'RH IV', nome: 'Piabanha', lat: -22.35, lon: -43.05 },
+                { rh: 'RH V', nome: 'Baía de Guanabara', lat: -22.75, lon: -43.15 },
+                { rh: 'RH VI', nome: 'Lagos São João', lat: -22.85, lon: -42.30 },
+                { rh: 'RH VII', nome: 'Rio Dois Rios', lat: -22.00, lon: -42.35 },
+                { rh: 'RH VIII', nome: 'Macaé e das Ostras', lat: -22.30, lon: -41.95 },
+                { rh: 'RH IX', nome: 'Baixo Paraíba do Sul', lat: -21.55, lon: -41.45 },
+            ];
+
+            function posRadar(c){
+                const minLon = -44.75, maxLon = -41.0, minLat = -23.25, maxLat = -20.9;
+                return {
+                    x: 7 + ((c.lon - minLon) / (maxLon - minLon)) * 86,
+                    y: 7 + ((maxLat - c.lat) / (maxLat - minLat)) * 86
+                };
+            }
+
+            function falar(cNome){
+                const d = dados[cNome];
+                if(!d) return;
+                try{
+                    window.speechSynthesis.cancel();
+                    const u = new SpeechSynthesisUtterance(`Em ${cNome}, agora está ${d.temp} graus. Chance de chuva ${d.chuva} por cento.`);
+                    u.lang = 'pt-BR';
+                    window.speechSynthesis.speak(u);
+                }catch(e){}
+            }
+
+            const d1 = dados[cidadeSel1];
+            const d2 = dados[cidadeSel2];
+
+            return (
+                <div className="space-y-4 w-full font-mono">
+                    <div className="rounded-[22px] border border-cyan-400/40 bg-[#02122A] p-4 space-y-3 shadow-[0_0_30px_rgba(0,255,255,0.15)] relative overflow-hidden">
+                        <div className="flex justify-between items-start gap-2">
+                            <h3 className="text-[15px] leading-tight font-black text-cyan-300 uppercase tracking-widest text-center flex-1">
+                                Radar Meteorológico &amp; Previsão Horária
+                            </h3>
+                            <span className="text-[9px] text-emerald-400 font-bold text-right leading-tight shrink-0 pt-1">
+                                GOES-19 • FLUXO ATIVO
+                            </span>
+                        </div>
+                        
+                        <p className="text-[11px] text-slate-300 text-center leading-relaxed">
+                            {status}<br/>Varredura tática com rotação contínua e monitoramento dual de municípios.
+                        </p>
+
+                        <div className="grid grid-cols-2 gap-2">
+                            <button onClick={() => setModoVisualizacao('radar')} className={`cyber-button text-[10px] py-2 ${modoVisualizacao === 'radar' ? '!bg-cyan-400 !text-void' : ''}`}>RADAR TÁTICO</button>
+                            <button onClick={() => setModoVisualizacao('satelite')} className={`cyber-button text-[10px] py-2 ${modoVisualizacao === 'satelite' ? '!bg-cyan-400 !text-void' : ''}`}>SATÉLITE GOES-19 (HD)</button>
+                        </div>
+
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 bg-black/40 p-3 rounded-xl border border-cyan-400/30">
+                            <div className="space-y-1">
+                                <label className="text-[8px] text-cyan-300 font-bold uppercase block">Alvo Principal (1):</label>
+                                <select value={cidadeSel1} onChange={(e) => { 
+                                    setCidadeSel1(e.target.value); 
+                                    falar(e.target.value); 
+                                    if(dados[e.target.value]?.hourly) {
+                                        setHourlyData(dados[e.target.value].hourly);
+                                        desenharGraficosHorarios(dados[e.target.value].hourly);
+                                    }
+                                }} className="w-full bg-[#030712] text-white border border-cyan-400/40 rounded-xl p-2 text-xs font-bold cursor-pointer">
+                                    {MUNICIPIOS_92.map((m, idx) => <option key={idx} value={m.n}>{m.n}</option>)}
+                                </select>
+                            </div>
+                            <div className="space-y-1">
+                                <label className="text-[8px] text-cyan-300 font-bold uppercase block">Alvo Secundário (2):</label>
+                                <select value={cidadeSel2} onChange={(e) => { setCidadeSel2(e.target.value); falar(e.target.value); }} className="w-full bg-[#030712] text-white border border-cyan-400/40 rounded-xl p-2 text-xs font-bold cursor-pointer">
+                                    {MUNICIPIOS_92.map((m, idx) => <option key={idx} value={m.n}>{m.n}</option>)}
+                                </select>
+                            </div>
+                        </div>
+
+                        {modoVisualizacao === 'radar' && (
+                            <div className="relative w-full aspect-square rounded-full border-[3px] border-cyan-400/70 overflow-hidden mx-auto shadow-[inset_0_0_40px_rgba(0,255,255,0.15),0_0_30px_rgba(0,255,255,0.2)] max-w-[380px]" style={{ background: "radial-gradient(circle at 50% 50%, #0A2A4A 0%, #041830 55%, #020A1A 100%)" }}>
+                                <div className="absolute rounded-full border border-cyan-400/40 pointer-events-none" style={{ width: "92%", height: "92%", left: "50%", top: "50%", transform: "translate(-50%,-50%)" }} />
+                                <div className="absolute rounded-full border border-cyan-400/40 pointer-events-none" style={{ width: "66%", height: "66%", left: "50%", top: "50%", transform: "translate(-50%,-50%)" }} />
+                                <div className="absolute rounded-full border border-cyan-400/50 pointer-events-none" style={{ width: "38%", height: "38%", left: "50%", top: "50%", transform: "translate(-50%,-50%)" }} />
+                                <div className="absolute left-1/2 top-0 bottom-0 w-px bg-cyan-400/40 pointer-events-none" />
+                                <div className="absolute top-1/2 left-0 right-0 h-px bg-cyan-400/40 pointer-events-none" />
+                                <div className="absolute inset-0 pointer-events-none animate-radar-sweep" style={{ background: "conic-gradient(from 0deg, rgba(0,255,255,0.45) 0deg, rgba(0,255,255,0.15) 50deg, transparent 90deg)" }} />
+
+                                {PONTOS_BACIAS.map(b => {
+                                    const p = posRadar(b);
+                                    return (
+                                        <div key={b.rh} className="absolute text-center cursor-pointer z-[6]" style={{ left: p.x + "%", top: p.y + "%", transform: "translate(-50%,-50%)" }} onClick={() => setCidadeSel1(b.nome)}>
+                                            <div className="mx-auto w-[14px] h-[14px] rotate-45 border-2 border-white rounded-[3px]" style={{ background: '#00FF9D', boxShadow: "0 0 8px #00FF9D" }} />
+                                            <span className="text-[7px] px-1 py-[1px] rounded mt-[2px] inline-block font-black" style={{ background: "#00E676", color: "#02240F" }}>{b.rh}</span>
+                                        </div>
+                                    );
+                                })}
+
+                                {MUNICIPIOS_92.map(c => {
+                                    const p = posRadar(c);
+                                    const d = dados[c.n];
+                                    const chuva = d ? d.chuva : 0;
+                                    const cor = d ? corPorChuva(chuva) : '#94A3B8';
+                                    const is1 = c.n === cidadeSel1;
+                                    const is2 = c.n === cidadeSel2;
+                                    const sel = is1 || is2;
+                                    return (
+                                        <div key={c.n} onClick={() => { 
+                                            setCidadeSel1(c.n); 
+                                            falar(c.n); 
+                                            if(dados[c.n]?.hourly) {
+                                                setHourlyData(dados[c.n].hourly);
+                                                desenharGraficosHorarios(dados[c.n].hourly);
+                                            }
+                                        }} className="absolute text-center cursor-pointer z-[5]" style={{ left: p.x + "%", top: p.y + "%", transform: "translate(-50%,-50%)" }}>
+                                            <div className="mx-auto rounded-full border-2 border-white" style={{ width: sel ? 15 : 9, height: sel ? 15 : 9, background: is1 ? "#00FF9D" : is2 ? "#00F2FE" : cor, boxShadow: sel ? "0 0 12px #ffffff" : "0 0 5px " + cor }} />
+                                            <span className="text-[7px] px-1 py-[1px] rounded whitespace-nowrap inline-block mt-[1px]" style={{ background: sel ? "#002b18" : "rgba(0,0,0,.85)", color: sel ? "#00FF9D" : "#fff", fontWeight: sel ? 900 : 400 }}>{c.n} {is1?'(1)':is2?'(2)':''}</span>
+                                        </div>
+                                    );
+                                })}
+                            </div>
+                        )}
+
+                        {modoVisualizacao === 'satelite' && (
+                            <div className="relative w-full aspect-video rounded-2xl overflow-hidden border border-cyan-400/50 bg-black">
+                                <iframe key={iframeKey} src="https://www.star.nesdis.noaa.gov/GOES/fulldisk_band.php?sat=G19&band=GEOCOLOR&length=12&dim=1" title="Satélite GOES-19 HD" className="w-full h-full border-none" loading="lazy" />
+                                <div className="absolute bottom-2 left-2 right-2 bg-black/80 backdrop-blur-md p-2 rounded-xl flex items-center justify-between border border-cyan-400/30">
+                                    <span className="text-[9px] text-cyan-300 font-bold">SATÉLITE GOES-19 (HD)</span>
+                                    <button onClick={() => { setIframeKey(k => k + 1); showToast("Feed GOES-19 reiniciado com sucesso."); }} className="cyber-button text-[8px] py-1 px-2.5 !min-h-[28px]">AUTO-RESET</button>
+                                </div>
+                            </div>
+                        )}
+
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-3 pt-2">
+                            <div className="bg-black/80 p-3 rounded-xl border border-cyan-400/30 space-y-1">
+                                <span className="text-[9px] font-black text-cyan-300 block">EVOLUÇÃO TÉRMICA (12 HORAS • {cidadeSel1})</span>
+                                <canvas ref={chartTempRef} className="w-full h-[140px] bg-void rounded-lg"></canvas>
+                            </div>
+                            <div className="bg-black/80 p-3 rounded-xl border border-cyan-400/30 space-y-1">
+                                <span className="text-[9px] font-black text-cyan-300 block">PROBABILIDADE DE PRECIPITAÇÃO (%)</span>
+                                <canvas ref={chartRainRef} className="w-full h-[140px] bg-void rounded-lg"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            );
+        }
+
+        function ModuloCidadaoSensorModule({ onGoToDashboard, showToast }) {
+            const [petKg, setPetKg] = React.useState(10);
+            const [aluminioKg, setAluminioKg] = React.useState(3);
+            const [ferroKg, setFerroKg] = React.useState(15);
+            const [papelaoKg, setPapelaoKg] = React.useState(20);
+            const [vidroKg, setVidroKg] = React.useState(5);
+            const [oleoL, setOleoL] = React.useState(4);
+
+            const [btConectado, setBtConectado] = React.useState(false);
+            const [btStatus, setBtStatus] = React.useState("Desconectado");
+
+            const totalPet = petKg * 2.50;
+            const totalAluminio = aluminioKg * 8.00;
+            const totalFerro = ferroKg * 1.20;
+            const totalPapelao = papelaoKg * 0.70;
+            const totalVidro = vidroKg * 0.35;
+            const totalOleo = oleoL * 3.00;
+
+            const valorTotalReciclagem = totalPet + totalAluminio + totalFerro + totalPapelao + totalVidro + totalOleo;
+            const pesoTotalKg = Number(petKg) + Number(aluminioKg) + Number(ferroKg) + Number(papelaoKg) + Number(vidroKg) + Number(oleoL);
+            const aguaEconomizadaL = (petKg * 24) + (aluminioKg * 40) + (papelaoKg * 15);
+            const co2EvitadoKg = (petKg * 1.5) + (aluminioKg * 9.0) + (ferroKg * 1.8) + (papelaoKg * 0.9);
+
+            const conectarBalancaBT = async () => {
+                if (!navigator.bluetooth) { showToast("Web Bluetooth não suportado."); return; }
+                try {
+                    setBtStatus("Buscando balança...");
+                    await navigator.bluetooth.requestDevice({ acceptAllDevices: true });
+                    setBtConectado(true);
+                    setBtStatus("Conectado via Bluetooth");
+                    showToast("Balança pareada com sucesso.");
+                } catch(e) {
+                    setBtConectado(false);
+                    setBtStatus("Desconectado");
+                    showToast("Conexão Bluetooth cancelada.");
+                }
+            };
+
+            const gerarReciboColeta = () => {
+                const prot = `REC-SOL-${Math.floor(Math.random() * 89999 + 10000)}`;
+                const textoRecibo = `[COMPROVANTE DE PESAGEM E ESG] Protocolo: ${prot} | Total: ${pesoTotalKg.toFixed(1)}kg | Valor: R$ ${valorTotalReciclagem.toFixed(2)} | GADE - RARU Nexus V11.2 Plus`;
+                if (navigator.clipboard) navigator.clipboard.writeText(textoRecibo);
+                window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(textoRecibo)}`, '_blank');
+                showToast("Recibo gerado.");
+            };
+
+            return (
+                <div className="space-y-4 max-w-5xl mx-auto font-mono">
+                    <div className="cyber-card p-5 rounded-[28px] shadow-xl space-y-5 border border-cyberCyan/40">
+                        <div className="flex items-center justify-between border-b border-cyberCyan/25 pb-3">
+                            <h2 className="font-display text-xs font-black text-white tracking-widest">[BALANÇA] CIDADÃO SENSOR - ESG</h2>
+                            <button onClick={onGoToDashboard} className="cyber-button text-[10px] py-2 px-4">PAINEL</button>
+                        </div>
+                        <div className="bg-void/90 border border-cyberCyan/30 rounded-2xl p-3.5 flex items-center justify-between">
+                            <span className="text-[10px] text-white font-bold">STATUS: {btStatus}</span>
+                            <button onClick={conectarBalancaBT} className="cyber-button text-[9px] py-2 px-4">CONECTAR BT</button>
+                        </div>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                            <div className="bg-deepSpace p-3 rounded-xl border border-cyan-400/30">
+                                <span className="text-xs text-cyan-300 font-bold">PET: {petKg} kg</span>
+                                <input type="range" min="0" max="150" value={petKg} onChange={e => setPetKg(Number(e.target.value))} className="w-full mt-2 accent-cyan-400" />
+                            </div>
+                            <div className="bg-deepSpace p-3 rounded-xl border border-blue-400/30">
+                                <span className="text-xs text-blue-300 font-bold">ALUMÍNIO: {aluminioKg} kg</span>
+                                <input type="range" min="0" max="80" value={aluminioKg} onChange={e => setAluminioKg(Number(e.target.value))} className="w-full mt-2 accent-blue-400" />
+                            </div>
+                        </div>
+                        <button onClick={gerarReciboColeta} className="cyber-button-solid w-full text-xs py-3">GERAR RECIBO &amp; WHATSAPP</button>
+                    </div>
+                </div>
+            );
+        }
+
+        function CardIdentidadeVisualRARU({ openShareFromApp, openSarahChat, handleWhoAmIClick, setActiveTab, toggleCommandHUD, userName, onOpenNameModal }) {
+            const [wCard, setWCard] = useState({ temp: "--", humidity: "--", rain: "--", status: "Sincronizando..." });
+            useEffect(() => {
+                fetch('https://api.open-meteo.com/v1/forecast?latitude=-22.7831&longitude=-43.4294&current=temperature_2m,relative_humidity_2m,precipitation&timezone=America/Sao_Paulo')
+                    .then(r => r.json())
+                    .then(d => {
+                        if(d?.current) {
+                            setWCard({
+                                temp: `${d.current.temperature_2m}°C`,
+                                humidity: `${d.current.relative_humidity_2m}%`,
+                                rain: `${d.current.precipitation} mm`,
+                                status: d.current.precipitation > 5 ? "ALERTA CHUVAS" : "ESTÁVEL"
+                            });
+                        }
+                    }).catch(() => {});
+            }, []);
+
+            return (
+                <div className="cyber-card space-y-4 font-mono text-center w-full shadow-2xl my-2 border border-cyberCyan/60">
+                    <div className="flex justify-between items-center px-1">
+                        <span className="text-[9px] bg-cyberCyan/15 border border-cyberCyan/40 text-cyberCyan px-2 py-0.5 rounded-full font-bold">ONLINE - 92 MUNICÍPIOS</span>
+                        <button onClick={onOpenNameModal} className="text-[9px] bg-cyberGreen/20 border border-cyberGreen/50 text-cyberGreen px-2.5 py-0.5 rounded-full font-bold cursor-pointer hover:bg-cyberGreen hover:text-void transition">
+                            OPERADOR: {userName || "DEFINIR NOME"} ✎
+                        </button>
+                    </div>
+
+                    <div className="space-y-1">
+                        <h2 className="font-display font-black text-base sm:text-lg md:text-xl text-white tracking-[0.12em] uppercase">
+                            RARU Nexus V11.2 Plus • SALA TÁTICA DE COMANDO OPERACIONAL
+                        </h2>
+                        <p className="text-[10px] font-sans font-bold text-slate-300 uppercase tracking-wide">
+                            Projeto Cidadão Sensor - Mesquita - RJ - IP 10.10.21.15
+                        </p>
+                    </div>
+
+                    <div className="w-full py-1" onClick={openSarahChat}>
+                        <SarahAnimatedAvatar isSpeaking={false} />
+                        <div className="mt-2.5 space-y-1">
+                            <span className="inline-block font-mono text-[9px] text-cyberCyan font-bold tracking-wider bg-void/90 px-3 py-1 rounded-full border border-cyberCyan/40 shadow-inner">
+                                Sarah AI Supervisor | GADE - Nó-Mãe Mesquita
+                            </span>
+                        </div>
+                    </div>
+
+                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 px-1">
+                        <div className="bg-void/90 border border-cyberCyan/30 rounded-xl p-2 text-center shadow-inner">
+                            <span className="text-[7px] text-slate-400 font-black block">TEMPERATURA</span>
+                            <span className="text-xs font-mono font-black text-cyberCyan">{wCard.temp}</span>
+                        </div>
+                        <div className="bg-void/90 border border-cyberCyan/30 rounded-xl p-2 text-center shadow-inner">
+                            <span className="text-[7px] text-slate-400 font-black block">UMIDADE</span>
+                            <span className="text-xs font-mono font-black text-cyberBlue">{wCard.humidity}</span>
+                        </div>
+                        <div className="bg-void/90 border border-cyberCyan/30 rounded-xl p-2 text-center shadow-inner">
+                            <span className="text-[7px] text-slate-400 font-black block">PRECIPITAÇÃO</span>
+                            <span className="text-xs font-mono font-black text-cyberGreen">{wCard.rain}</span>
+                        </div>
+                        <div className="bg-void/90 border border-cyberCyan/30 rounded-xl p-2 text-center shadow-inner">
+                            <span className="text-[7px] text-slate-400 font-black block">STATUS BACIAS</span>
+                            <span className="text-[10px] font-mono font-black text-cyberAmber">{wCard.status}</span>
+                        </div>
+                    </div>
+
+                    <div className="pt-1">
+                        <button onClick={toggleCommandHUD} className="cyber-button-solid w-full text-[11px] py-3.5">
+                            SALA TÁTICA DE COMANDO (HUD 360 • TELA CHEIA)
+                        </button>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-3 pt-1">
+                        <button onClick={openSarahChat} className="cyber-button w-full text-[10px]">
+                            CHAT SARAH AI
+                        </button>
+                        <button onClick={handleWhoAmIClick} className="cyber-button w-full text-[10px]">
+                            MANIFESTO SOBRE
+                        </button>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-3 pt-0.5">
+                        <button onClick={() => setActiveTab('estacao')} className="cyber-button w-full text-[10px]">
+                            ESTAÇÃO TELEMETRIA
+                        </button>
+                        <button onClick={() => setActiveTab('balanca')} className="cyber-button w-full text-[10px] !border-cyberGreen !text-cyberGreen">
+                            BALANÇA &amp; ESG
+                        </button>
+                    </div>
+                </div>
+            );
+        }
+
+        function RedeAlquinoHardwareModule({ onGoToDashboard, showToast }) {
+            const [sensorId] = React.useState("ALQ-92-MESQUITA");
+            const [hardwareIpUrl, setHardwareIpUrl] = React.useState("http://192.168.4.1/data");
+            const [statusHardware, setStatusHardware] = React.useState("AGUARDANDO CONEXÃO IP");
+
+            return (
+                <div className="space-y-3.5 w-full font-mono max-w-4xl mx-auto">
+                    <div className="cyber-card space-y-3.5 border border-cyberCyan/40 shadow-2xl p-4">
+                        <div className="flex items-center justify-between border-b border-cyberCyan/25 pb-2.5">
+                            <h2 className="font-display text-[11px] font-black text-white tracking-widest">REDE ALQUINO - HARDWARE FÍSICO</h2>
+                            <button onClick={onGoToDashboard} className="cyber-button text-[10px] py-2 px-3">PAINEL</button>
+                        </div>
+                        <input type="text" value={hardwareIpUrl} onChange={(e) => setHardwareIpUrl(e.target.value)} className="w-full bg-deepSpace border border-cyberCyan/40 rounded-xl p-2.5 text-xs text-white" />
+                        <span className="text-xs text-cyberGreen font-bold block">Status: {statusHardware}</span>
+                    </div>
+                </div>
+            );
+        }
+
+        function EstacaoSobrevivenciaModuleV12({ showToast, userName }) {
+          const [municipioSelecionado, setMunicipioSelecionado] = React.useState(MUNICIPIOS_92[0]);
+          const [estacaoSubTab, setEstacaoSubTab] = React.useState('bacias');
+
+          const baciasHidrograficasRJ = [
+            { rh: 'RH I', nome: 'Baía da Ilha Grande', nivel: 62, chuva: 58, alerta: 'Atenção', cor: '#ffca28' },
+            { rh: 'RH II', nome: 'Guandu', nivel: 71, chuva: 55, alerta: 'Atenção', cor: '#ffca28' },
+            { rh: 'RH III', nome: 'Médio Paraíba do Sul', nivel: 54, chuva: 38, alerta: 'Normal', cor: '#00e676' },
+            { rh: 'RH IV', nome: 'Piabanha', nivel: 58, chuva: 42, alerta: 'Normal', cor: '#00e676' },
+            { rh: 'RH V', nome: 'Baía de Guanabara', nivel: 68, chuva: 62, alerta: 'Atenção', cor: '#ffca28' },
+            { rh: 'RH VI', nome: 'Lagos São João', nivel: 45, chuva: 28, alerta: 'Normal', cor: '#00e676' },
+            { rh: 'RH VII', nome: 'Rio Dois Rios', nivel: 61, chuva: 48, alerta: 'Atenção', cor: '#ffca28' },
+            { rh: 'RH VIII', nome: 'Macaé e das Ostras', nivel: 82, chuva: 78, alerta: 'Alerta', cor: '#ff5252' },
+            { rh: 'RH IX', nome: 'Baixo Paraíba do Sul', nivel: 61, chuva: 49, alerta: 'Atenção', cor: '#ffca28' }
+          ];
+
+          return (
+            <div className="space-y-4 font-mono w-full max-w-5xl mx-auto">
+              <div className="cyber-card p-4 border border-cyberCyan/50 space-y-4 shadow-2xl">
+                <div className="flex justify-between items-center border-b border-cyberCyan/30 pb-3 gap-2 flex-wrap">
+                  <div className="flex gap-2 flex-wrap">
+                    <button onClick={() => setEstacaoSubTab('bacias')} className={`cyber-button text-xs py-2 px-3.5 ${estacaoSubTab === 'bacias' ? '!bg-blue-600 !text-white' : ''}`}>BACIAS RJ</button>
+                    <button onClick={() => setEstacaoSubTab('telemetria')} className={`cyber-button text-xs py-2 px-3.5 ${estacaoSubTab === 'telemetria' ? '!bg-cyberCyan !text-void' : ''}`}>TELEMETRIA IP</button>
+                  </div>
+                </div>
+
+                {estacaoSubTab === 'bacias' && (
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                    {baciasHidrograficasRJ.map((b, i) => (
+                      <div key={i} className="bg-void/90 p-3.5 rounded-xl border border-blue-500/30 space-y-2 text-xs">
+                        <div className="flex justify-between items-center">
+                          <span className="font-bold text-white">{b.rh} - {b.nome}</span>
+                          <span className="text-[9px] px-2 py-0.5 rounded font-bold" style={{backgroundColor: `${b.cor}22`, color: b.cor}}>{b.alerta}</span>
+                        </div>
+                        <div className="flex justify-between text-[10px] text-cyberCyan">
+                          <span>Nível: {b.nivel}%</span>
+                          <span>Chuva: {b.chuva}%</span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                {estacaoSubTab === 'telemetria' && (
+                  <div className="space-y-3">
+                    <select value={municipioSelecionado.n} onChange={(e) => setMunicipioSelecionado(MUNICIPIOS_92.find(x => x.n === e.target.value))} className="w-full bg-void border border-cyberCyan/40 rounded-xl p-3 text-xs text-white font-bold cursor-pointer">
+                      {MUNICIPIOS_92.map((m, idx) => <option key={idx} value={m.n}>{m.n} (IP: {m.ip})</option>)}
+                    </select>
+                    <div className="bg-void/90 p-4 rounded-xl border border-cyberCyan/30">
+                      <p className="text-white font-mono text-sm">Município: {municipioSelecionado.n} | IP: {municipioSelecionado.ip}</p>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+          );
+        }
+
+        function QuemSomosModal({ isOpen, onClose, userName }) {
+            if (!isOpen) return null;
+            return (
+                <div className="fixed inset-0 z-[120] flex items-center justify-center bg-void/90 backdrop-blur-2xl p-4 overflow-y-auto" onClick={onClose}>
+                    <div className="cyber-card w-full max-w-md rounded-2xl shadow-2xl overflow-hidden flex flex-col border border-cyberCyan/60 font-mono text-slate-200 p-4" onClick={e => e.stopPropagation()}>
+                        <h3 className="font-display text-xs font-black text-white uppercase mb-3">MANIFESTO INSTITUCIONAL</h3>
+                        <p className="text-xs leading-relaxed mb-4">Projeto Cidadão Sensor e GADE (Grupo Comunitário A Chave da Esperança) em Mesquita - RJ.</p>
+                        <button onClick={onClose} className="cyber-button-danger text-xs py-2">FECHAR</button>
+                    </div>
+                </div>
+            );
+        }
+
+        function VistoriaRARU_NEXUS({ onBackToDashboard, showToast, userName }) {
+            return (
+                <div className="w-full space-y-3.5 font-mono max-w-4xl mx-auto cyber-card p-4">
+                    <h3 className="text-sm text-cyberCyan font-black uppercase">MÓDULO DE VISTORIA COMUNITÁRIA</h3>
+                    <button onClick={onBackToDashboard} className="cyber-button text-xs py-2">VOLTAR AO PAINEL</button>
+                </div>
+            );
+        }
+
+        function AdminVaultModule({ showToast, onClose, vozSelecionada, setVozSelecionada, customTickerText, setCustomTickerText }) {
+            const [pinInput, setPinInput] = React.useState("");
+            const [isUnlocked, setIsUnlocked] = React.useState(false);
+            return (
+                <div className="space-y-4 w-full font-mono max-w-4xl mx-auto cyber-card p-4">
+                    <h2 className="font-display text-xs font-black text-cyberCyan">ÁREA RESTRITA (ADMIN VAULT)</h2>
+                    {!isUnlocked ? (
+                        <form onSubmit={(e) => { e.preventDefault(); if(pinInput==="303500") setIsUnlocked(true); else showToast("PIN incorreto"); }} className="flex gap-2">
+                            <input type="password" value={pinInput} onChange={e => setPinInput(e.target.value)} placeholder="PIN (303500)" className="bg-void border border-cyberCyan/40 rounded-xl p-2 text-xs text-white" />
+                            <button type="submit" className="cyber-button text-xs py-2">ACESSAR</button>
+                        </form>
+                    ) : (
+                        <p className="text-xs text-cyberGreen">Área desbloqueada com sucesso.</p>
+                    )}
+                    <button onClick={onClose} className="cyber-button-danger text-xs py-2">FECHAR</button>
+                </div>
+            );
+        }
+
+        function PublicVideoGalleryModule({ onGoToDashboard }) {
+            return (
+                <div className="space-y-4 max-w-4xl mx-auto font-mono cyber-card p-4">
+                    <h2 className="text-xs font-black text-white">GALERIA PÚBLICA</h2>
+                    <button onClick={onGoToDashboard} className="cyber-button text-xs py-2">PAINEL</button>
+                </div>
+            );
+        }
+
+        function AutomatedObservatoryWidget({ customTickerText }) {
+            return (
+                <div className="cyber-card rounded-2xl overflow-hidden shadow-xl border border-cyberCyan/40 space-y-2.5 w-full col-span-full relative p-3">
+                    <div className="font-display font-black text-[11px] text-cyan-200 uppercase text-center">GRUPO A CHAVE DA ESPERANÇA - GADE</div>
+                </div>
+            );
+        }
+
+        function SarahChatOverlay({ isOpen, onClose, isSpeaking, isProcessing, messages, input, setInput, handleSendDirectCommand, toggleListening, isListening, userName, onOpenNameModal }) {
+            if (!isOpen) return null;
+            const chatScrollRef = React.useRef(null);
+            
+            React.useEffect(() => { 
+                if(chatScrollRef.current) {
+                    chatScrollRef.current.scrollTop = chatScrollRef.current.scrollHeight; 
+                }
+            }, [messages, isProcessing]);
+
+            return (
+                <div className="fixed inset-0 z-[90] flex items-end sm:items-center justify-center bg-void/85 backdrop-blur-xl p-0 sm:p-4 animate-fadeIn" onClick={onClose}>
+                    <div className="cyber-card w-full max-w-2xl rounded-t-3xl sm:rounded-3xl shadow-2xl overflow-hidden h-[88vh] sm:h-[78vh] flex flex-col border border-cyberCyan/60 p-0" onClick={(e) => e.stopPropagation()}>
+                        
+                        <div className="flex items-center justify-between px-4 py-3 border-b border-cyberCyan/30 bg-deepSpace/95">
+                            <div className="flex items-center gap-2.5">
+                                <div className="w-8 h-8 shrink-0 overflow-hidden"><SarahAnimatedAvatar isSpeaking={isSpeaking} /></div>
+                                <div>
+                                    <div className="font-display text-xs font-black text-white tracking-widest flex items-center gap-1.5">
+                                        RARU Nexus <span className="text-[9px] text-cyberCyan px-1.5 py-0.2 bg-cyberCyan/15 rounded border border-cyberCyan/30">V11.2 Plus</span>
+                                    </div>
+                                    <div className="text-[8px] font-mono text-cyberGreen font-bold flex items-center gap-1.5 mt-0.5">
+                                        <span className="w-1.5 h-1.5 rounded-full bg-cyberGreen animate-ping"></span> 
+                                        {isListening ? 'Ouvindo microfone...' : `Sala Tática • Operador: ${userName || 'Alexander'}`}
+                                    </div>
+                                </div>
+                            </div>
+                            <div className="flex items-center gap-1.5">
+                                <button onClick={onOpenNameModal} className="cyber-button text-[9px] py-1 px-2.5 !min-h-[32px]" title="Alterar seu nome">NOME ✎</button>
+                                <button onClick={onClose} className="cyber-button-danger text-xs py-1.5 px-3.5 !min-h-[32px]">FECHAR</button>
+                            </div>
+                        </div>
+
+                        <div ref={chatScrollRef} className="flex-1 overflow-y-auto p-4 space-y-3.5 font-mono">
+                            {messages.map((msg, index) => (
+                                <div key={index} className={`flex ${msg.sender === 'user' ? 'justify-end' : 'justify-start'}`}>
+                                    <div className={`max-w-[88%] rounded-2xl p-3.5 text-xs sm:text-sm leading-relaxed shadow-xl ${
+                                        msg.sender === 'user' 
+                                            ? 'bg-gradient-to-r from-cyberCyan to-blue-500 text-void font-bold rounded-br-none border border-white/30 shadow-[0_0_15px_rgba(0,242,254,0.2)]' 
+                                            : 'bg-deepSpace/95 text-slate-100 rounded-bl-none border border-cyberCyan/40 shadow-[0_0_15px_rgba(4,17,37,0.8)]'
+                                    }`}>
+                                        <div className="flex items-center justify-between gap-3 mb-1.5 opacity-75 text-[9px] border-b border-white/10 pb-1">
+                                            <span className="font-bold uppercase tracking-wider">{msg.sender === 'user' ? (userName || 'Operador') : 'Sarah AI Nexus'}</span>
+                                            <span>{msg.time}</span>
+                                        </div>
+                                        <div className="whitespace-pre-line font-sans">{msg.text}</div>
+                                    </div>
+                                </div>
+                            ))}
+
+                            {isProcessing && (
+                                <div className="flex justify-start">
+                                    <div className="bg-deepSpace/95 border border-cyberCyan/40 rounded-2xl rounded-bl-none p-3.5 flex items-center gap-2.5 shadow-lg">
+                                        <div className="w-2 h-2 rounded-full bg-cyberCyan animate-bounce"></div>
+                                        <div className="w-2 h-2 rounded-full bg-cyberBlue animate-bounce [animation-delay:0.2s]"></div>
+                                        <div className="w-2 h-2 rounded-full bg-cyberGreen animate-bounce [animation-delay:0.4s]"></div>
+                                        <span className="text-[10px] font-mono text-cyberCyan uppercase tracking-widest ml-1">Sarah processando telemetria...</span>
+                                    </div>
+                                </div>
+                            )}
+                        </div>
+
+                        {isListening && (
+                            <div className="bg-cyberRose/20 border-t border-b border-cyberRose/50 px-4 py-2 flex items-center justify-between animate-pulse">
+                                <div className="flex items-center gap-2">
+                                    <div className="w-3 h-3 rounded-full bg-cyberRose animate-ping"></div>
+                                    <span className="text-[10px] font-mono font-bold text-white tracking-wider">GRAVANDO VOZ • FALE CLARAMENTE...</span>
+                                </div>
+                                <span className="text-[9px] font-mono text-cyberRose font-bold">MIC ATIVO</span>
+                            </div>
+                        )}
+
+                        <div className="p-3 sm:p-4 bg-deepSpace/95 border-t border-cyberCyan/35">
+                            <form onSubmit={(e) => { e.preventDefault(); handleSendDirectCommand(); }} className="flex items-center gap-2 bg-void border-2 border-cyberCyan/60 rounded-2xl p-2.5 shadow-inner w-full transition-all focus-within:border-cyberCyan">
+                                
+                                <button 
+                                    type="button" 
+                                    onClick={toggleListening} 
+                                    title={isListening ? "Parar gravação" : "Falar por comando de voz"}
+                                    className={`relative cyber-button text-[11px] py-2 px-3 shrink-0 flex items-center gap-1.5 rounded-xl transition-all ${
+                                        isListening 
+                                            ? '!bg-cyberRose !text-white !border-cyberRose animate-pulse shadow-[0_0_25px_rgba(255,0,85,0.7)]' 
+                                            : 'hover:border-cyberCyan'
+                                    }`}
+                                >
+                                    <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                                        <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/>
+                                        <path d="M19 10v1a7 7 0 0 1-14 0v-1"/>
+                                        <line x1="12" y1="19" x2="12" y2="23"/>
+                                        <line x1="8" y1="23" x2="16" y2="23"/>
+                                    </svg>
+                                    <span className="hidden sm:inline font-bold">{isListening ? 'GRAVANDO' : 'VOZ'}</span>
+                                </button>
+
+                                <input 
+                                    type="text" 
+                                    value={input} 
+                                    onChange={(e) => setInput(e.target.value)} 
+                                    placeholder={isListening ? "Ouvindo sua voz..." : `Mensagem para Sarah, ${userName || 'Alexander'}...`} 
+                                    className="flex-1 bg-transparent border-none px-2 py-1.5 text-xs sm:text-sm text-slate-100 font-sans focus:outline-none min-w-0 placeholder:text-slate-500" 
+                                />
+
+                                {input.length > 0 && (
+                                    <button 
+                                        type="button" 
+                                        onClick={() => setInput('')}
+                                        title="Apagar texto digitado"
+                                        className="shrink-0 p-2 text-slate-400 hover:text-cyberRose transition"
+                                    >
+                                        <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                                            <line x1="18" y1="6" x2="6" y2="18"></line>
+                                            <line x1="6" y1="6" x2="18" y2="18"></line>
+                                        </svg>
+                                    </button>
+                                )}
+
+                                <button 
+                                    type="submit" 
+                                    disabled={isProcessing || !input.trim()} 
+                                    className={`cyber-button-solid text-[11px] py-2 px-4 shrink-0 rounded-xl transition-all flex items-center gap-1 ${
+                                        input.trim() && !isProcessing ? 'shadow-[0_0_20px_rgba(0,242,254,0.5)]' : 'opacity-40 cursor-not-allowed'
+                                    }`}
+                                >
+                                    <span>ENVIAR</span>
+                                </button>
+                            </form>
+                            
+                            <div className="flex items-center justify-between px-2 mt-2 text-[9px] font-mono text-slate-400">
+                                <span>GADE • Sala Tática de Comando Operacional</span>
+                                <span className="text-cyberCyan">RARU Nexus V11.2 Plus</span>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+            );
+        }
+
+        function App() {
+            const [theme, setTheme] = React.useState("dark");
+            const [soundEnabled, setSoundEnabled] = React.useState(true);
+            const [isSpeaking, setIsSpeaking] = React.useState(false);
+            const [isListening, setIsListening] = React.useState(false);
+            const [activeTab, setActiveTab] = React.useState("dashboard");
+            const [quemSomosOpen, setQuemSomosOpen] = React.useState(false);
+            const [isCommandHUDActive, setIsCommandHUDActive] = React.useState(false);
+            const [shareModalOpen, setShareModalOpen] = React.useState(false);
+            const [toastMsgRef, setToastMsgRef] = React.useState(null);
+
+            const [termsAccepted, setTermsAccepted] = React.useState(() => { try { return localStorage.getItem("raru_cyber_terms") === "1"; } catch(e) { return false; } });
+            const [check1, setCheck1] = React.useState(false);
+            const [check2, setCheck2] = React.useState(false);
+
+            const [userName, setUserName] = React.useState(() => { try { return localStorage.getItem("raru_user_name") || ""; } catch(e) { return ""; } });
+            const [nameModalOpen, setNameModalOpen] = React.useState(false);
+            const [tempNameInput, setTempNameInput] = React.useState("");
+
+            const [isChatOpen, setIsChatOpen] = React.useState(false);
+            const [input, setInput] = React.useState("");
+            const [isProcessing, setIsProcessing] = React.useState(false);
+
+            const [vozSelecionada] = React.useState(0);
+            const [customTickerText, setCustomTickerText] = React.useState("");
+
+            const showToast = (msg) => { setToastMsgRef(msg); setTimeout(() => setToastMsgRef(null), 3500); };
+
+            React.useEffect(() => {
+                if (termsAccepted && !userName) setNameModalOpen(true);
+            }, [termsAccepted, userName]);
+
+            const handleSaveName = (e) => {
+                e.preventDefault();
+                if (!tempNameInput.trim()) return;
+                const nomeLimpo = tempNameInput.trim();
+                setUserName(nomeLimpo);
+                try { localStorage.setItem("raru_user_name", nomeLimpo); } catch(e) {}
+                setNameModalOpen(false);
+                setTempNameInput("");
+                const saudacao = `Bom dia, ${nomeLimpo}! Sala Tática de Comando Operacional ativa em Mesquita e nos 92 municípios do RJ.`;
+                setMessages([{ sender: 'assistant', text: saudacao, time: new Date().toLocaleTimeString('pt-BR', {hour: '2-digit', minute:'2-digit'}) }]);
+                if (soundEnabled) falarSarah(saudacao, vozSelecionada);
+                showToast(`Operador ${nomeLimpo} registrado!`);
+            };
+
+            const toggleCommandHUD = () => {
+                if (!isCommandHUDActive) {
+                    if (document.documentElement.requestFullscreen) document.documentElement.requestFullscreen().catch(() => {});
+                    setIsCommandHUDActive(true);
+                    showToast("MODO HUD DE TELA CHEIA ATIVADO.");
+                } else {
+                    if (document.exitFullscreen && document.fullscreenElement) document.exitFullscreen().catch(() => {});
+                    setIsCommandHUDActive(false);
+                    showToast("Modo Padrão Restabelecido.");
+                }
+            };
+
+            const openShareFromApp = async () => {
+                showToast("Gerando arquivo compacto...");
+                const iconeArquivo = await gerarArquivoIconeEscudo();
+                if (navigator.share) {
+                    try {
+                        await navigator.share({ title: "RARU Nexus V11.2 Plus", text: shareMessageText, url: APP_SHARE_URL, files: iconeArquivo ? [iconeArquivo] : [] });
+                        return;
+                    } catch (err) {}
+                }
+                setShareModalOpen(true);
+            };
+
+            const toggleListening = () => {
+                const SpeechRec = window.SpeechRecognition || window.webkitSpeechRecognition;
+                if (!SpeechRec) { showToast("Microfone indisponível."); return; }
+                if (isListening) { setIsListening(false); return; }
+                try {
+                    const rec = new SpeechRec();
+                    rec.lang = "pt-BR";
+                    rec.onstart = () => setIsListening(true);
+                    rec.onresult = (event) => { let final = event.results[0][0].transcript; if (final) { setInput(final); setIsListening(false); } };
+                    rec.onerror = () => setIsListening(false);
+                    rec.onend = () => setIsListening(false);
+                    rec.start();
+                } catch (e) { setIsListening(false); }
+            };
+
+            const [messages, setMessages] = React.useState(() => {
+                const savedName = (() => { try { return localStorage.getItem("raru_user_name") || ""; } catch(e) { return ""; } })();
+                const horaBrasilia = Number(new Intl.DateTimeFormat('pt-BR', { timeZone: 'America/Sao_Paulo', hour: 'numeric', hour12: false }).format(new Date()));
+                const saudacaoCerta = horaBrasilia < 12 ? "Bom dia" : horaBrasilia < 18 ? "Boa tarde" : "Boa noite";
+                return [
+                    { 
+                        sender: 'assistant', 
+                        text: savedName 
+                            ? `${saudacaoCerta}, ${savedName}! Sou a Sarah, analista sênior do Projeto Cidadão Sensor e da Sala Tática de Comando Operacional do RARU Nexus V11.2 Plus. Pronta para operar em Mesquita e nos 92 municípios do RJ.` 
+                            : `${saudacaoCerta}! Sou a Sarah, analista sênior do Projeto Cidadão Sensor e da Sala Tática de Comando Operacional do RARU Nexus V11.2 Plus. Qual é o seu nome para eu registrar?`, 
+                        time: new Date().toLocaleTimeString('pt-BR', {hour: '2-digit', minute:'2-digit'}) 
+                    }
+                ];
+            });
+
+            const handleSendDirectCommand = async (textCustom) => {
+                const textToSend = textCustom !== undefined ? textCustom : input;
+                if (!textToSend.trim() || isProcessing) return;
+                const timeStr = new Date().toLocaleTimeString('pt-BR', {hour: '2-digit', minute:'2-digit'});
+
+                let nomeAtualizado = userName;
+                const matchNome = textToSend.match(/(?:meu nome [ée]|pode me chamar de|eu sou o|eu sou a|sou o|sou a)\s+([A-Za-zÀ-ÖØ-öø-ÿ]+(?:\s+[A-Za-zÀ-ÖØ-öø-ÿ]+)?)/i);
+                if (matchNome && matchNome[1]) {
+                    nomeAtualizado = matchNome[1].trim();
+                    setUserName(nomeAtualizado);
+                    try { localStorage.setItem("raru_user_name", nomeAtualizado); } catch(e) {}
+                }
+                
+                const novoHistorico = [...messages, { sender: 'user', text: textToSend, time: timeStr }];
+                setMessages(novoHistorico);
+                setInput(""); 
+                setIsProcessing(true);
+                setIsSpeaking(true);
+
+                try {
+                    const formattedHistory = novoHistorico.map(m => ({
+                        role: m.sender === 'user' ? 'user' : 'assistant',
+                        content: m.text
+                    }));
+
+                    const respostaSarah = await chamarSarahGroq(formattedHistory, "Mesquita", "Rocha Sobrinho", activeTab, { status: "Online" }, nomeAtualizado || "Alexander");
+
+                    const replyTime = new Date().toLocaleTimeString('pt-BR', {hour: '2-digit', minute:'2-digit'});
+                    setMessages(prev => [...prev, { sender: 'assistant', text: respostaSarah, time: replyTime }]);
+                    
+                    if (soundEnabled) falarSarah(respostaSarah, vozSelecionada);
+                } catch (error) {
+                    setMessages(prev => [...prev, { sender: 'assistant', text: `TELEMETRIA INDISPONÍVEL: Falha ao processar comando.`, time: new Date().toLocaleTimeString('pt-BR', {hour: '2-digit', minute:'2-digit'}) }]);
+                } finally {
+                    setIsProcessing(false);
+                    setIsSpeaking(false);
+                }
+            };
+
+            const openSarahChat = () => setIsChatOpen(true);
+
+            const NAV_TABS = [
+                { id: 'dashboard', iconComponent: <IconDashboard className="w-4 h-4" />, label: 'Painel' },
+                { id: 'radar', iconComponent: <IconRadar className="w-4 h-4" />, label: 'Radar' },
+                { id: 'relatorio', iconComponent: <IconVistoria className="w-4 h-4" />, label: 'Vistoria' },
+                { id: 'estacao', iconComponent: <IconEstacao className="w-4 h-4" />, label: 'Estação' },
+                { id: 'balanca', iconComponent: <IconBalanca className="w-4 h-4" />, label: 'Balança' },
+                { id: 'alquino', iconComponent: <IconAlquino className="w-4 h-4" />, label: 'Alquino' },
+                { id: 'compartilhar', iconComponent: <IconInstalar className="w-4 h-4" />, label: 'Instalar' },
+                { id: 'quem-somos', iconComponent: <IconQuemSomos className="w-4 h-4" />, label: 'Sobre' },
+                { id: 'galeria', iconComponent: <IconVideos className="w-4 h-4" />, label: 'Vídeos' },
+                { id: 'admin', iconComponent: <IconAdmin className="w-4 h-4" />, label: 'Admin' }
+            ];
+
+            const handleNavClick = (tabId) => {
+                if (tabId === 'compartilhar') openShareFromApp();
+                else if (tabId === 'quem-somos') setQuemSomosOpen(true);
+                else setActiveTab(tabId);
+            };
+
+            return (
+                <div className="seu-container-raru">
+                    {toastMsgRef && <div className="fixed top-12 left-1/2 -translate-x-1/2 z-50 cyber-card px-4 py-2 rounded-2xl font-display text-[10px] font-black text-cyberCyan tracking-wider shadow-2xl border border-cyberCyan/60 animate-bounce">{toastMsgRef}</div>}
+
+                    {termsAccepted && nameModalOpen && (
+                        <div className="fixed inset-0 bg-void/95 backdrop-blur-xl z-[200] flex items-center justify-center p-4">
+                            <div className="cyber-card max-w-md w-full p-6 rounded-3xl shadow-2xl space-y-4 border border-cyberCyan text-center font-mono">
+                                <div className="w-16 h-16 mx-auto overflow-hidden"><SarahAnimatedAvatar isSpeaking={true} /></div>
+                                <h3 className="font-display text-sm font-black text-cyberCyan uppercase tracking-widest">IDENTIFICAÇÃO NA CENTRAL</h3>
+                                <form onSubmit={handleSaveName} className="space-y-3">
+                                    <input 
+                                        type="text" 
+                                        value={tempNameInput} 
+                                        onChange={(e) => setTempNameInput(e.target.value)} 
+                                        placeholder="Digite seu nome (ex: Alexander)..." 
+                                        className="w-full bg-void border border-cyberCyan/60 rounded-xl p-3 text-sm text-white font-mono text-center focus:outline-none" 
+                                        required 
+                                    />
+                                    <button type="submit" className="cyber-button-solid w-full text-xs py-3.5">CONFIRMAR E SALVAR NOME</button>
+                                </form>
+                            </div>
+                        </div>
+                    )}
+
+                    {!termsAccepted && (
+                        <div className="fixed inset-0 bg-void/95 z-[200] flex items-center justify-center p-4 overflow-y-auto">
+                            <div className="cyber-card max-w-md w-full p-5 rounded-3xl shadow-2xl space-y-3.5 my-auto border border-cyberCyan/70 font-mono text-left">
+                                <div className="text-center space-y-1">
+                                    <h2 className="font-display text-xs font-black text-white uppercase">RARU Nexus V11.2 Plus</h2>
+                                    <p className="text-[9px] text-cyberCyan font-bold uppercase">TERMO DE RESPONSABILIDADE &amp; LGPD</p>
+                                </div>
+                                <div className="space-y-2 pt-1">
+                                    <label className="flex items-start gap-2.5 cursor-pointer text-[11px] text-slate-200 bg-commandPanel/80 p-2.5 rounded-xl border border-cyberCyan/30">
+                                        <input type="checkbox" checked={check1} onChange={(e) => setCheck1(e.target.checked)} className="mt-0.5 rounded text-cyberCyan w-4 h-4 bg-void cursor-pointer shrink-0" />
+                                        <span>Aceito os termos da LGPD.</span>
+                                    </label>
+                                    <label className="flex items-start gap-2.5 cursor-pointer text-[11px] text-slate-200 bg-commandPanel/80 p-2.5 rounded-xl border border-cyberCyan/30">
+                                        <input type="checkbox" checked={check2} onChange={(e) => setCheck2(e.target.checked)} className="mt-0.5 rounded text-cyberCyan w-4 h-4 bg-void cursor-pointer shrink-0" />
+                                        <span>Autorizo o uso do GPS para vistorias.</span>
+                                    </label>
+                                </div>
+                                <button disabled={!check1 || !check2} onClick={() => { setTermsAccepted(true); try { localStorage.setItem("raru_cyber_terms", "1"); } catch(e) {} }} className={`cyber-button-solid w-full text-xs py-3.5 ${check1 && check2 ? '' : 'opacity-50 cursor-not-allowed'}`}>
+                                    CONCORDAR E INICIAR SALA TÁTICA
+                                </button>
+                            </div>
+                        </div>
+                    )}
+
+                    <header className="cyber-card sticky top-0 z-30 w-full px-4 py-3 border-b border-cyberCyan/40 flex items-center justify-between shadow-lg rounded-2xl mb-2">
+                        <div className="flex items-center gap-2.5 cursor-pointer" onClick={openSarahChat}>
+                            <div className="w-8 h-8 overflow-hidden rounded-full border border-cyberCyan shrink-0">
+                                <SarahLiveSVGAvatar isSpeaking={isSpeaking} />
+                            </div>
+                            <div>
+                                <h1 className="font-display text-xs sm:text-sm font-black text-white leading-none">RARU Nexus V11.2 Plus • Sala de Comando</h1>
+                                <p className="text-[8px] text-cyberCyan font-mono mt-0.5">Operador: {userName || 'Alexander'} • Mesquita - RJ • 92 Municípios</p>
+                            </div>
+                        </div>
+                        <div className="flex items-center gap-2">
+                            <button onClick={toggleCommandHUD} className={`cyber-button text-[9px] py-2 px-3 ${isCommandHUDActive ? '!bg-cyberRose !text-void animate-pulse' : ''}`}>HUD TELA CHEIA</button>
+                            <button onClick={() => setSoundEnabled(!soundEnabled)} className="cyber-button text-[9px] py-2 px-3">{soundEnabled ? 'ÁUDIO ON' : 'MUDO'}</button>
+                        </div>
+                    </header>
+
+                    <main className="flex-1 w-full mx-auto py-2 space-y-4 pb-28 relative z-10">
+                        {activeTab === 'dashboard' && (
+                            <CardIdentidadeVisualRARU 
+                                openShareFromApp={openShareFromApp} 
+                                openSarahChat={openSarahChat} 
+                                handleWhoAmIClick={() => setQuemSomosOpen(true)} 
+                                setActiveTab={setActiveTab} 
+                                toggleCommandHUD={toggleCommandHUD} 
+                                userName={userName}
+                                onOpenNameModal={() => { setTempNameInput(userName); setNameModalOpen(true); }}
+                            />
+                        )}
+                        {activeTab === 'radar' && <RadarMeteorologicoModule showToast={showToast} />}
+                        {activeTab === 'estacao' && <EstacaoSobrevivenciaModuleV12 showToast={showToast} userName={userName} />}
+                        {activeTab === 'balanca' && <ModuloCidadaoSensorModule onGoToDashboard={() => setActiveTab('dashboard')} showToast={showToast} />}
+                        {activeTab === 'alquino' && <RedeAlquinoHardwareModule onGoToDashboard={() => setActiveTab('dashboard')} showToast={showToast} />}
+                        {activeTab === 'relatorio' && <VistoriaRARU_NEXUS onBackToDashboard={() => setActiveTab('dashboard')} showToast={showToast} userName={userName} />}
+                        {activeTab === 'galeria' && <PublicVideoGalleryModule onGoToDashboard={() => setActiveTab('dashboard')} />}
+                        {activeTab === 'admin' && <AdminVaultModule showToast={showToast} onClose={() => setActiveTab('dashboard')} vozSelecionada={vozSelecionada} setVozSelecionada={() => {}} customTickerText={customTickerText} setCustomTickerText={setCustomTickerText} />}
+
+                        <AutomatedObservatoryWidget customTickerText={customTickerText} />
+                    </main>
+
+                    {termsAccepted && <SarahFabButton openSarahChat={openSarahChat} isSpeaking={isSpeaking} />}
+                    <SarahChatOverlay 
+                        isOpen={isChatOpen} 
+                        onClose={() => setIsChatOpen(false)} 
+                        isSpeaking={isSpeaking} 
+                        isProcessing={isProcessing} 
+                        messages={messages} 
+                        input={input} 
+                        setInput={setInput} 
+                        handleSendDirectCommand={handleSendDirectCommand} 
+                        toggleListening={toggleListening} 
+                        isListening={isListening} 
+                        userName={userName}
+                        onOpenNameModal={() => { setTempNameInput(userName); setNameModalOpen(true); }}
+                    />
+                    <QuemSomosModal isOpen={quemSomosOpen} onClose={() => setQuemSomosOpen(false)} userName={userName} />
+
+                    <footer className="cyber-card fixed bottom-0 left-0 right-0 z-40 border-t border-cyberCyan/40 px-2.5 py-3 flex items-center justify-between gap-1 shadow-2xl backdrop-blur-xl max-w-[1400px] mx-auto rounded-t-2xl pb-[env(safe-area-inset-bottom)]">
+                        {NAV_TABS.map(tab => (
+                            <button key={tab.id} onClick={() => handleNavClick(tab.id)} className={`flex flex-col items-center justify-center gap-0.5 cursor-pointer flex-1 py-1.5 transition touch-manipulation rounded-xl ${activeTab === tab.id ? 'text-cyberCyan bg-cyberCyan/15 border border-cyberCyan/40 shadow-[0_0_8px_rgba(0,242,254,0.3)]' : 'text-slate-400 hover:text-white border border-transparent'}`}>
+                                {tab.iconComponent}
+                                <span className="text-[7px] sm:text-[9px] font-black truncate w-full text-center tracking-tighter px-0.5">{tab.label}</span>
+                            </button>
+                        ))}
+                    </footer>
+                </div>
+            );
+        }
+
+        try {
+            const rootElement = document.getElementById('root');
+            ReactDOM.createRoot(rootElement).render(<App />);
+        } catch (err) {
+            document.getElementById('root').innerHTML = `<div style="padding:20px;color:#FF0055;font-family:monospace;">Erro ao iniciar interface: ${err.message}</div>`;
+        }
+    </script>
+</body>
+</html>
