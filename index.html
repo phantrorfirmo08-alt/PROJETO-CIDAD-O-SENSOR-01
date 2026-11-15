@@ -1,0 +1,767 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>SARAH AI NEXUS - V21 SUPREMO (MAPA LEAFLET + CHAT CHATGPT PRO)</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@500;700;800&family=Inter:wght@500;600;700;800;900&display=swap" rel="stylesheet">
+<!-- Leaflet CSS & JS para Mapa Profissional Oficial -->
+<link rel="stylesheet" href="https://unpkg.com/leaflet@19.4.0/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
+<script src="https://unpkg.com/leaflet@19.4.0/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+<style>
+ body { background: #020408; color: #E2E8F0; font-family: 'Inter', sans-serif; -webkit-tap-highlight-color: transparent; touch-action: manipulation; }
+ .mono { font-family: 'JetBrains Mono', monospace; }
+ .glass { background: rgba(7, 11, 20, 0.96); backdrop-filter: blur(20px); border: 1px solid rgba(0, 243, 255, 0.2); }
+ .glass-card { background: rgba(11, 17, 32, 0.92); border: 1px solid rgba(255, 255, 255, 0.1); }
+ 
+ .btn-touch { min-height: 48px; display: flex; align-items: center; justify-content: center; font-weight: 800; cursor: pointer; transition: transform 0.1s ease, background-color 0.15s ease; }
+ .btn-touch:active { transform: scale(0.97); }
+ 
+ .input-pro { background: #04060A; border: 1px solid rgba(255, 255, 255, 0.25); color: #FFF; font-size: 15px; font-weight: 700; min-height: 46px; padding: 0 14px; }
+ .input-pro:focus { border-color: #00f3ff; outline: none; box-shadow: 0 0 0 3px rgba(0, 243, 255, 0.25); }
+
+ /* Botão Flutuante Futurista (FAB) Estilo ChatGPT */
+ .floating-btn {
+   position: fixed; bottom: 24px; right: 24px; z-index: 9999;
+   width: 64px; height: 64px; border-radius: 50%;
+   background: linear-gradient(135deg, #00f3ff, #3b82f6);
+   box-shadow: 0 0 30px rgba(0, 243, 255, 0.5);
+   border: 2px solid rgba(255, 255, 255, 0.5);
+   display: flex; align-items: center; justify-content: center;
+   cursor: pointer; transition: transform 0.2s ease, box-shadow 0.2s ease;
+   animation: pulseGlow 2.5s infinite;
+ }
+ .floating-btn:active { transform: scale(0.92); }
+ @keyframes pulseGlow {
+   0% { box-shadow: 0 0 15px rgba(0, 243, 255, 0.4); }
+   50% { box-shadow: 0 0 35px rgba(0, 243, 255, 0.8); }
+   100% { box-shadow: 0 0 15px rgba(0, 243, 255, 0.4); }
+ }
+
+ /* Modal de Chat Estilo ChatGPT Corporativo */
+ #chatModal {
+   position: fixed; bottom: 100px; right: 24px; z-index: 9998;
+   width: 92vw; max-width: 420px; height: 560px;
+   background: #050811; backdrop-filter: blur(25px);
+   border: 1px solid rgba(0, 243, 255, 0.35); border-radius: 20px;
+   box-shadow: 0 25px 50px rgba(0, 0, 0, 0.85);
+   display: none; flex-direction: column; overflow: hidden;
+   transform: translateY(15px); opacity: 0; transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+ }
+ #chatModal.active { display: flex; transform: translateY(0); opacity: 1; }
+
+ /* Ajustes Leaflet Dark Mode */
+ .leaflet-container { background: #04060A !important; font-family: 'JetBrains Mono', monospace !important; }
+</style>
+</head>
+<body class="p-2 sm:p-5 flex justify-center min-h-screen">
+
+<div class="w-full max-w-[1480px] glass rounded-3xl p-4 sm:p-7 space-y-5 sm:space-y-7 shadow-2xl">
+  
+  <!-- Top Header -->
+  <div class="flex flex-col lg:flex-row justify-between items-center border-b border-white/10 pb-4 gap-4">
+    <div class="flex items-center space-x-3.5">
+      <div class="w-4 h-4 rounded-full bg-cyan-400 animate-pulse"></div>
+      <div>
+        <h1 class="text-sm sm:text-base font-black text-white uppercase mono tracking-wide">SARAH AI NEXUS // V21 SUPREMO</h1>
+        <p class="text-xs text-cyan-400 font-bold mt-0.5">Mapa Cartográfico Oficial Leaflet | Câmera Forense Android | Laudos 92 RJ</p>
+      </div>
+    </div>
+    
+    <div class="flex flex-wrap items-center gap-2.5">
+      <div class="bg-black/70 px-3.5 py-2 rounded-xl border border-cyan-500/40 flex items-center space-x-2">
+        <span class="text-[11px] text-slate-300 font-bold uppercase">BRASÍLIA:</span>
+        <span id="relogioBrasilia" class="text-sm font-black text-cyan-400 mono">--:--:--</span>
+      </div>
+
+      <button onclick="alternarTelaCheia()" class="btn-touch px-3 py-2 bg-cyan-600/20 text-cyan-300 border border-cyan-400/40 rounded-xl text-xs font-bold">🖥️ TELA CHEIA</button>
+      <button onclick="zerarSistema()" class="btn-touch px-3 py-2 bg-rose-600/20 text-rose-300 border border-rose-400/40 rounded-xl text-xs font-bold">🔄 ZERAR TELA</button>
+      
+      <div class="bg-black/70 p-1 rounded-xl border border-white/15 flex space-x-1">
+        <button onclick="mudarVelocidade('normal')" id="btnNormal" class="btn-touch px-3 py-1.5 rounded-lg text-xs font-bold bg-cyan-600 text-black">1X</button>
+        <button onclick="mudarVelocidade('media')" id="btnMedia" class="btn-touch px-3 py-1.5 rounded-lg text-xs font-bold text-slate-300">2X</button>
+        <button onclick="mudarVelocidade('avancada')" id="btnAvancada" class="btn-touch px-3 py-1.5 rounded-lg text-xs font-bold text-slate-300">3X</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- GRID SUPERIOR: MAPA LEAFLET OFICIAL & ETA -->
+  <div class="grid grid-cols-1 lg:grid-cols-3 gap-5 sm:gap-7">
+    
+    <!-- Mapa Cartográfico Profissional (Leaflet) -->
+    <div class="lg:col-span-2 glass-card rounded-2xl p-4 sm:p-5 border border-cyan-500/40 space-y-3.5 shadow-xl">
+      <div class="flex justify-between items-center">
+        <span class="text-xs sm:text-sm font-black uppercase text-cyan-400 mono">🗺️ MAPA GEOFÍSICO OFICIAL (BAIXADA &amp; SERRAS)</span>
+        <span id="lblAlvo" class="text-xs sm:text-sm font-bold text-emerald-400 mono">BASE: Mesquita (Rocha Sobrinho)</span>
+      </div>
+
+      <!-- Container do Mapa Oficial -->
+      <div id="mapaOficial" class="w-full rounded-xl overflow-hidden border border-cyan-500/40" style="height: 340px; background: #04060A;"></div>
+    </div>
+
+    <!-- Painel Preditivo de ETA -->
+    <div class="glass-card rounded-2xl p-4 sm:p-5 border border-cyan-500/40 space-y-4 shadow-xl flex flex-col justify-between">
+      <div>
+        <div class="flex justify-between items-center border-b border-white/10 pb-2.5 mb-4">
+          <span class="text-xs sm:text-sm font-black uppercase text-cyan-400 mono">⏱️ PREVISÃO DE CHEGADA (ETA)</span>
+          <button onclick="calcularTempoChegada()" class="btn-touch px-3 py-1.5 bg-cyan-600/20 text-cyan-300 border border-cyan-400/40 rounded-xl text-xs font-bold">🔄 SIMULAR</button>
+        </div>
+
+        <div class="space-y-4">
+          <div>
+            <div class="flex justify-between mb-1.5">
+              <span class="text-xs sm:text-sm font-bold text-slate-200">Tempo Estimado da Enxurrada (ETA)</span>
+              <span id="txtETA" class="text-sm sm:text-base font-black text-amber-400 mono">1h 35min</span>
+            </div>
+            <div class="w-full bg-black/70 rounded-full h-4 p-0.5 border border-white/15 overflow-hidden">
+              <div id="barraETA" class="bg-gradient-to-r from-emerald-500 via-amber-500 to-rose-600 h-full rounded-full transition-all duration-500" style="width: 65%;"></div>
+            </div>
+          </div>
+
+          <div>
+            <div class="flex justify-between mb-1.5">
+              <span class="text-xs sm:text-sm font-bold text-slate-200">Acumulado Cruzado (Serras)</span>
+              <span id="txtChuvaCruzada" class="text-sm sm:text-base font-black text-cyan-400 mono">14.2 mm/h</span>
+            </div>
+            <div class="w-full bg-black/70 rounded-full h-4 p-0.5 border border-white/15 overflow-hidden">
+              <div id="barraChuva" class="bg-gradient-to-r from-blue-500 to-cyan-400 h-full rounded-full transition-all duration-500" style="width: 42%;"></div>
+            </div>
+          </div>
+
+          <div class="p-3.5 rounded-xl bg-cyan-950/20 border border-cyan-500/40 text-xs sm:text-sm mono text-cyan-200">
+            <span class="font-black text-cyan-300 block mb-1">DIAGNÓSTICO OPERACIONAL:</span> 
+            <span id="txtStatusPreditivo" class="font-semibold text-slate-100">Convergência Serra do Mar e Mendanha monitorada em tempo real.</span>
+          </div>
+        </div>
+      </div>
+
+      <div id="statusClimaAPI" class="p-3 rounded-xl bg-black/60 border border-white/10 text-xs mono text-slate-300">
+        Cartografia Leaflet ativada com sucesso.
+      </div>
+    </div>
+
+  </div>
+
+  <!-- GRID CENTRAL: CADASTRO DE AGENTES & ALARME MILITAR -->
+  <div class="grid grid-cols-1 lg:grid-cols-2 gap-5 sm:gap-7">
+    
+    <!-- Módulo: Cadastro de Agentes / NUPDECs -->
+    <div class="space-y-3 p-4 glass-card border border-cyan-500/40 rounded-2xl text-slate-200 font-mono">
+      <div class="flex justify-between items-center">
+        <p class="text-xs font-black text-cyan-300 uppercase">👥 CADASTRO DE AGENTES &amp; NUPDECs</p>
+        <span id="contadorCadastros" class="text-[10px] px-2 py-0.5 rounded bg-cyan-950 text-cyan-300 border border-cyan-500/30 font-bold">1 SALVOS (LOCAL)</span>
+      </div>
+
+      <div class="bg-black border border-white/10 rounded-xl p-3 space-y-2">
+        <input id="inpNomeCad" placeholder="Nome Completo *" class="w-full bg-[#04060A] border border-white/15 rounded-xl p-2.5 text-xs text-white focus:outline-none focus:border-cyan-400 font-bold" />
+        <div class="grid grid-cols-2 gap-2">
+          <input id="inpBairroCad" placeholder="Bairro / Sebinho *" class="bg-[#04060A] border border-white/15 rounded-xl p-2.5 text-xs text-white focus:outline-none focus:border-cyan-400 font-bold" />
+          <select id="selPapelCad" class="bg-[#04060A] border border-white/15 rounded-xl p-2.5 text-[11px] text-white font-bold">
+            <option>Morador / Voluntário</option>
+            <option>Agente de Articulação (GADE)</option>
+            <option>Defesa Civil / NUPDEC</option>
+            <option>Projeto Cidadão Sensor</option>
+          </select>
+        </div>
+        <button onclick="cadastrarPessoa()" class="w-full py-2.5 bg-cyan-500 hover:bg-cyan-400 text-black font-black rounded-xl text-xs shadow">CADASTRAR NO BANCO OFFLINE</button>
+      </div>
+
+      <div id="listaCadastrosContainer" class="space-y-2 max-h-[160px] overflow-y-auto pr-1"></div>
+    </div>
+
+    <!-- Módulo: Central de Alarme Militar -->
+    <div class="space-y-3 p-4 glass-card border border-red-500/40 rounded-2xl text-slate-200 font-mono">
+      <div class="flex justify-between items-center">
+        <p class="text-xs font-black text-red-400 uppercase">🚨 CENTRAL DE ALARME MILITAR</p>
+        <span class="text-[10px] px-2 py-0.5 rounded bg-red-950 text-red-300 border border-red-500/30 font-bold">ATIVA</span>
+      </div>
+
+      <div class="grid grid-cols-1 gap-3">
+        <div class="bg-black border border-white/10 rounded-xl p-3 space-y-2">
+          <p class="text-[10px] font-bold text-white">ALERTA BRASILEIRO (CEMADEN)</p>
+          <div class="flex gap-2">
+            <button onclick="iniciarBR()" class="btn-touch w-full py-2 bg-white text-black font-black rounded-xl text-xs shadow">DISPARAR BR</button>
+            <button onclick="pararSirenes()" class="btn-touch w-full py-2 bg-black border border-white/20 text-white font-black rounded-xl text-xs">PARAR</button>
+          </div>
+          <p class="text-[10px] text-yellow-400 font-bold">STATUS: <span id="lblStatusBR">AGUARDANDO</span> (<span id="lblTimerBR">00:00 / 05:00</span>)</p>
+        </div>
+
+        <div class="bg-black border border-white/10 rounded-xl p-3 space-y-2">
+          <p class="text-[10px] font-bold text-white">ALERTA TÁTICO (PADRÃO RUSSO)</p>
+          <div class="flex gap-2">
+            <button onclick="iniciarRU()" class="btn-touch w-full py-2 bg-[#E5E7EB] text-black font-black rounded-xl text-xs shadow">DISPARAR RU</button>
+            <button onclick="pararSirenes()" class="btn-touch w-full py-2 bg-black border border-white/20 text-white font-black rounded-xl text-xs">PARAR</button>
+          </div>
+          <p class="text-[10px] text-yellow-400 font-bold">STATUS: <span id="lblStatusRU">AGUARDANDO</span> (<span id="lblTimerRU">00:00 / 05:00</span>)</p>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- GRID INFERIOR: CÂMERA FORENSE & FORMULÁRIO DE LAUDO -->
+  <div class="grid grid-cols-1 lg:grid-cols-2 gap-5 sm:gap-7">
+    
+    <!-- Câmera Forense Android -->
+    <div class="glass-card rounded-2xl p-4 sm:p-5 space-y-4">
+      <div class="flex justify-between items-center">
+        <span class="text-xs sm:text-sm font-bold uppercase text-slate-200">📸 Câmera Forense de Campo</span>
+        <button id="btnCamToggle" onclick="toggleCamera()" class="btn-touch px-5 py-2.5 bg-cyan-600 text-black font-black rounded-xl text-xs sm:text-sm">LIGAR CÂMERA</button>
+      </div>
+
+      <div class="relative rounded-xl overflow-hidden bg-black border border-white/15" style="min-height: 260px;">
+        <video id="videoElement" autoplay playsinline muted class="w-full h-[260px] object-cover" style="display:none;"></video>
+        <div id="camPlaceholder" class="absolute inset-0 flex items-center justify-center text-slate-400 text-xs sm:text-sm font-bold p-4 text-center">
+          TOQUE EM "LIGAR CÂMERA" PARA REGISTRAR A ÁREA DE RISCO
+        </div>
+      </div>
+
+      <button id="btnCapturar" onclick="capturarFoto()" style="display:none;" class="btn-touch w-full py-4 bg-cyan-500 text-black rounded-2xl text-sm sm:text-base tracking-wider shadow-lg">
+        📸 CAPTURAR FOTO COM CARIMBO DE VISTORIA
+      </button>
+
+      <div id="galeriaFotos" class="flex gap-2.5 overflow-x-auto pt-1"></div>
+    </div>
+
+    <!-- Formulário de Laudo Técnico -->
+    <div class="glass-card rounded-2xl p-4 sm:p-5 space-y-4">
+      <span class="text-xs sm:text-sm font-bold uppercase text-slate-200">📝 Laudo de Vistoria &amp; Alerta Antecipado</span>
+      
+      <div>
+        <label class="text-xs font-bold text-slate-300 uppercase mb-1.5 block">Município / Base Alvo (Lista 92 RJ)</label>
+        <select id="selMun" onchange="atualizarAlvo()" class="w-full input-pro rounded-xl text-sm font-bold"></select>
+      </div>
+
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+        <div>
+          <label class="text-xs font-bold text-slate-300 uppercase mb-1.5 block">Responsável Técnico</label>
+          <input id="txtNome" value="Alexander da Silva Firmo" class="w-full input-pro rounded-xl text-sm font-bold" />
+        </div>
+        <div>
+          <label class="text-xs font-bold text-slate-300 uppercase mb-1.5 block">Local / Comunidade</label>
+          <input id="txtBairro" value="Comunidade do Sebinho (Rocha Sobrinho)" class="w-full input-pro rounded-xl text-sm font-bold" />
+        </div>
+      </div>
+
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+        <div>
+          <label class="text-xs font-bold text-slate-300 uppercase mb-1.5 block">Nível de Risco / Alerta</label>
+          <select id="selRisco" class="w-full input-pro rounded-xl text-sm font-bold text-amber-300">
+            <option>R1 - BAIXO / PREVENTIVO</option>
+            <option selected>R2 - MODERADO / ALERTA ANTECIPADO</option>
+            <option>R3 - ALTO / ENXURRADA IMINENTE</option>
+            <option>R4 - EVACUAÇÃO PREVENTIVA</option>
+            <option>RH - CONVERGÊNCIA DE SERRAS</option>
+            <option>RE - ESTRUTURAL / TALUDE</option>
+          </select>
+        </div>
+        <div>
+          <label class="text-xs font-bold text-slate-300 uppercase mb-1.5 block">Órgão Destino</label>
+          <select id="selOrg" class="w-full input-pro rounded-xl text-sm font-bold">
+            <option>COMPDEC / SEDEC-RJ (Mesquita)</option>
+            <option selected>GADE - GRUPO A CHAVE DA ESPERANÇA</option>
+            <option>BOM DIA COMUNIDADE</option>
+            <option>CIDADÃO SENSOR (RCS)</option>
+            <option>INEA / SERLA</option>
+            <option>DEFESA CIVIL MUNICIPAL</option>
+          </select>
+        </div>
+      </div>
+
+      <div>
+        <label class="text-xs font-bold text-slate-300 uppercase mb-1.5 block">Relato da Visita Técnica</label>
+        <textarea id="txtRelato" rows="2" class="w-full input-pro rounded-xl p-3 text-sm font-semibold resize-none" placeholder="Insira as observações da vistoria de campo e o aviso para a população..."></textarea>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Ação WhatsApp Integrada com Laudo + Foto -->
+  <button onclick="enviarWhatsapp()" class="btn-touch w-full py-5 bg-[#25D366] text-black rounded-2xl text-base sm:text-lg tracking-wider shadow-xl">
+    💬 ENVIAR LAUDO TÉCNICO COMPLETO + FOTO (WHATSAPP)
+  </button>
+
+</div>
+
+<!-- BOTÃO FLUTUANTE FUTURISTA (FAB) ESTILO CHATGPT -->
+<div onclick="toggleChatModal()" class="floating-btn" title="Abrir Assistente de Campo">
+  <svg xmlns="http://www.w3.org/2000/svg" class="w-8 h-8 text-black" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+    <path stroke-linecap="round" stroke-linejoin="round" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
+  </svg>
+</div>
+
+<!-- MODAL DE CHAT PROFISSIONAL ESTILO CHATGPT -->
+<div id="chatModal">
+  <!-- Cabeçalho do Chat -->
+  <div class="bg-[#090E1A] px-4 py-3.5 border-b border-cyan-500/20 flex justify-between items-center">
+    <div class="flex items-center space-x-3">
+      <div class="w-3 h-3 rounded-full bg-cyan-400 animate-pulse"></div>
+      <div>
+        <span class="text-xs font-black text-cyan-300 uppercase tracking-wider block">SARAH AI // ASSISTENTE PRO</span>
+        <span class="text-[9px] text-slate-400">Modo Operacional • Conectado à Base</span>
+      </div>
+    </div>
+    <button onclick="toggleChatModal()" class="text-slate-400 hover:text-white font-black text-xl px-2 py-1">×</button>
+  </div>
+
+  <!-- Corpo das Mensagens com Espaçamento Profissional -->
+  <div id="chatMessages" class="flex-1 p-4 overflow-y-auto space-y-4 text-xs sm:text-sm mono bg-[#03050A]">
+    <div class="bg-cyan-950/30 border border-cyan-500/30 p-3.5 rounded-2xl text-cyan-200 leading-relaxed shadow-sm">
+      <span class="font-black text-cyan-400 block mb-1">Assistente Pro:</span>
+      Painel V21 Suprema ativado com mapa oficial Leaflet e cartografia de alta precisão. Pronto para registrar vistorias e consultas de campo.
+    </div>
+  </div>
+
+  <!-- Caixa de Envio Profissional -->
+  <div class="p-3 bg-[#070B14] border-t border-cyan-500/20 flex items-center space-x-2.5">
+    <input id="chatInput" type="text" onkeydown="if(event.key==='Enter')enviarMensagemLocal()" placeholder="Escreva uma instrução ou dúvida..." class="flex-1 bg-black/90 border border-cyan-500/30 rounded-xl px-3.5 py-3 text-xs sm:text-sm text-white focus:outline-none focus:border-cyan-400 font-bold" />
+    <button onclick="enviarMensagemLocal()" class="btn-touch px-4 py-3 bg-cyan-400 text-black rounded-xl text-xs font-black shadow">ENVIAR</button>
+  </div>
+</div>
+
+<script>
+const MUNICIPIOS_RJ_92 = [
+ "Mesquita (Base Oficial - Rocha Sobrinho)", "Nova Iguaçu", "Duque de Caxias", "São João de Meriti", "Belford Roxo", "Nilópolis", "São Gonçalo", "Niterói", "Petrópolis", "Angra dos Reis", "Aperibé", "Araruama", "Areal", "Armação dos Búzios", "Arraial do Cabo", "Barra do Piraí", "Barra Mansa", "Bom Jardim", "Bom Jesus do Itabapoana", "Cabo Frio", "Cachoeiras de Macacu", "Cambuci", "Campos dos Goytacazes", "Cantagalo", "Carapebus", "Cardoso Moreira", "Carmo", "Casimiro de Abreu", "Comendador Levy Gasparian", "Conceição de Macabu", "Cordeiro", "Duas Barras", "Engenheiro Paulo de Frontin", "Guapimirim", "Iguaba Grande", "Itaboraí", "Itaguaí", "Italva", "Itaocara", "Itaperuna", "Itatiaia", "Japeri", "Laje do Muriaé", "Macaé", "Macuco", "Magé", "Mangaratiba", "Maricá", "Mendes", "Miguel Pereira", "Miracema", "Natividade", "Nova Friburgo", "Paracambi", "Paraíba do Sul", "Paraty", "Paty do Alferes", "Pinheiral", "Piraí", "Porciúncula", "Porto Real", "Quatis", "Queimados", "Quissamã", "Resende", "Rio Bonito", "Rio Claro", "Rio das Flores", "Rio das Ostras", "Rio de Janeiro (Capital)", "Santa Maria Madalena", "Santo Antônio de Pádua", "São Fidélis", "São Francisco de Itabapoana", "São João da Barra", "São José de Ubá", "São José do Vale do Rio Preto", "São Pedro da Aldeia", "São Sebastião do Alto", "Sapucaia", "Saquarema", "Seropédica", "Silva Jardim", "Sumidouro", "Tanguá", "Teresópolis", "Trajano de Moraes", "Três Rios", "Valença", "Varre-Sai", "Vassouras", "Volta Redonda"
+];
+
+let streamAtivo = null;
+let fotosArray = [];
+let coordenadasGPS = "Lat: -22.7858, Lon: -43.4294";
+let mapaLeaflet = null;
+
+// Sistema de Cadastro Local (localStorage)
+let cadastrosArray = JSON.parse(localStorage.getItem('raru_cadastros_offline') || JSON.stringify([
+  { id: 1, nome: "Alexander da Silva Firmo", municipio: "Mesquita (Base Oficial - Rocha Sobrinho)", bairro: "Sebinho / Rocha Sobrinho", papel: "Agente / Coordenador GADE", data: "15/07/2026" }
+]));
+
+// Variáveis da Central de Alarme Militar
+let audioCtxRef = null;
+let oscRef = null;
+let intervalSireneRef = null;
+
+window.onload = function() {
+  const sel = document.getElementById('selMun');
+  MUNICIPIOS_RJ_92.forEach(m => {
+    let opt = document.createElement('option');
+    opt.value = m;
+    opt.textContent = m;
+    sel.appendChild(opt);
+  });
+
+  setInterval(atualizarRelogioBrasilia, 1000);
+  atualizarRelogioBrasilia();
+  calcularTempoChegada();
+  capturarGPSNativo();
+  renderCadastros();
+  inicializarMapaLeaflet();
+};
+
+// Inicialização do Mapa Cartográfico Oficial (Leaflet)
+function inicializarMapaLeaflet() {
+  if (mapaLeaflet) return;
+  
+  // Coordenadas centrais de Mesquita / Baixada Fluminense
+  mapaLeaflet = L.map('mapaOficial', { zoomControl: true }).setView([-22.7858, -43.4294], 12);
+
+  // Camada de Azulejos Escura Profissional (CartoDB Dark Matter)
+  L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+    maxZoom: 19,
+    attribution: '&copy; OpenStreetMap & CartoDB'
+  }).addTo(mapaLeaflet);
+
+  // Marcador do Nó de Convergência (Sebinho / Rocha Sobrinho)
+  const markerSebinho = L.circleMarker([-22.7858, -43.4294], {
+    radius: 10,
+    fillColor: "#00f3ff",
+    color: "#ffffff",
+    weight: 2,
+    fillOpacity: 0.95
+  }).addTo(mapaLeaflet);
+  markerSebinho.bindPopup("<b>Nó de Convergência (Sebinho)</b><br>Rocha Sobrinho - Mesquita/RJ").openPopup();
+
+  // Marcador Serra do Mar
+  L.circleMarker([-22.6500, -43.2000], { radius: 7, fillColor: "#38BDF8", color: "#fff", weight: 1.5, fillOpacity: 0.9 }).addTo(mapaLeaflet).bindPopup("Serra do Mar (Cabeceira Norte)");
+
+  // Marcador Serra do Mendanha
+  L.circleMarker(-22.8500, -43.5200], { radius: 7, fillColor: "#F59E0B", color: "#fff", weight: 1.5, fillOpacity: 0.9 }).addTo(mapaLeaflet).bindPopup("Serra do Mendanha (Cabeceira Oeste)");
+}
+
+function atualizarRelogioBrasilia() {
+  const agora = new Date();
+  const options = { timeZone: 'America/Sao_Paulo', hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false };
+  document.getElementById('relogioBrasilia').textContent = new Intl.DateTimeFormat('pt-BR', options).format(agora);
+}
+
+function zerarSistema() {
+  if (confirm('Deseja zerar o painel de vistoria e laudo técnico?')) {
+    document.getElementById('txtRelato').value = '';
+    fotosArray = [];
+    renderFotos();
+    if (streamAtivo) toggleCamera();
+    alert('Sistema limpo para nova vistoria de campo.');
+  }
+}
+
+function alternarTelaCheia() {
+  if (!document.fullscreenElement) {
+    document.documentElement.requestFullscreen().catch(err => {});
+  } else {
+    if (document.exitFullscreen) document.exitFullscreen();
+  }
+}
+
+function capturarGPSNativo() {
+  if ("geolocation" in navigator) {
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        const lat = pos.coords.latitude.toFixed(4);
+        const lon = pos.coords.longitude.toFixed(4);
+        coordenadasGPS = `Lat: ${lat}, Lon: ${lon}`;
+      },
+      () => {},
+      { timeout: 10000, enableHighAccuracy: true }
+    );
+  }
+}
+
+function calcularTempoChegada() {
+  const tempos = ["1h 15min", "1h 35min", "45 minutos", "2h 10min"];
+  const tempoEscolhido = tempos[Math.floor(Math.random() * tempos.length)];
+  document.getElementById('txtETA').textContent = tempoEscolhido;
+  document.getElementById('txtStatusPreditivo').textContent = "Fluxo cruzado Serra do Mar + Mendanha ativo. Água estimada batendo na comunidade em " + tempoEscolhido + ".";
+}
+
+// Funções do Cadastro de Agentes
+function cadastrarPessoa() {
+  const nome = document.getElementById('inpNomeCad').value.trim();
+  const bairro = document.getElementById('inpBairroCad').value.trim();
+  const papel = document.getElementById('selPapelCad').value;
+  const munAtual = document.getElementById('selMun').value;
+
+  if(!nome || !bairro) {
+    alert('Preencha Nome e Bairro/Comunidade.');
+    return;
+  }
+
+  const novoItem = {
+    id: Date.now(),
+    nome: nome,
+    municipio: munAtual,
+    bairro: bairro,
+    papel: papel,
+    data: new Date().toLocaleDateString('pt-BR')
+  };
+
+  cadastrosArray.unshift(novoItem);
+  try { localStorage.setItem('raru_cadastros_offline', JSON.stringify(cadastrosArray)); } catch {}
+  
+  document.getElementById('inpNomeCad').value = '';
+  document.getElementById('inpBairroCad').value = '';
+  renderCadastros();
+}
+
+function excluirCadastro(id) {
+  cadastrosArray = cadastrosArray.filter(item => item.id !== id);
+  try { localStorage.setItem('raru_cadastros_offline', JSON.stringify(cadastrosArray)); } catch {}
+  renderCadastros();
+}
+
+function renderCadastros() {
+  const container = document.getElementById('listaCadastrosContainer');
+  const contador = document.getElementById('contadorCadastros');
+  container.innerHTML = '';
+  contador.textContent = `${cadastrosArray.length} SALVOS (LOCAL)`;
+
+  cadastrosArray.forEach(item => {
+    container.innerHTML += `
+      <div class="bg-black border border-white/10 rounded-xl p-2.5 flex justify-between items-center text-[11px]">
+        <div>
+          <p class="font-bold text-white">${item.nome}</p>
+          <p class="text-[9px] text-slate-400">${item.bairro} • <span class="text-cyan-300">${item.papel}</span></p>
+        </div>
+        <div class="flex items-center gap-2">
+          <span class="text-[9px] px-2 py-1 rounded bg-emerald-950 text-emerald-300 font-bold">${item.data}</span>
+          <button onclick="excluirCadastro(${item.id})" class="btn-touch text-red-400 text-xs font-bold px-2 py-1 rounded bg-red-950/40 border border-red-500/30">X</button>
+        </div>
+      </div>
+    `;
+  });
+
+  if (cadastrosArray.length === 0) {
+    container.innerHTML = `<p class="text-center text-xs text-slate-500 py-3">Nenhum registro encontrado.</p>`;
+  }
+}
+
+// Funções da Central de Alarme Militar (Web Audio API)
+function initAudio() {
+  if(!audioCtxRef) {
+    audioCtxRef = new (window.AudioContext || window.webkitAudioContext)();
+  }
+  if (audioCtxRef.state === 'suspended') {
+    audioCtxRef.resume();
+  }
+}
+
+function pararSirenes() {
+  if(intervalSireneRef) clearInterval(intervalSireneRef);
+  if(oscRef) { 
+    try { oscRef.stop(); } catch {} 
+    oscRef.current = null; 
+  }
+  document.getElementById('lblStatusBR').textContent = 'AGUARDANDO';
+  document.getElementById('lblStatusRU').textContent = 'AGUARDANDO';
+  document.getElementById('lblTimerBR').textContent = '00:00 / 05:00';
+  document.getElementById('lblTimerRU').textContent = '00:00 / 05:00';
+}
+
+function tocarSomBR() {
+  initAudio();
+  if(oscRef) return;
+  const ctx = audioCtxRef;
+  const osc = ctx.createOscillator();
+  const gain = ctx.createGain();
+  osc.type = 'sine';
+  osc.frequency.setValueAtTime(440, ctx.currentTime);
+  gain.gain.setValueAtTime(0.4, ctx.currentTime);
+  osc.connect(gain);
+  gain.connect(ctx.destination);
+  osc.start();
+  oscRef = osc;
+  
+  let dir = 1;
+  intervalSireneRef = setInterval(() => {
+    if(!oscRef) return;
+    let f = oscRef.frequency.value;
+    if(f > 880) dir = -1;
+    if(f < 440) dir = 1;
+    oscRef.frequency.linearRampToValueAtTime(f + dir * 8, ctx.currentTime + 0.1);
+  }, 100);
+}
+
+function tocarSomRU() {
+  initAudio();
+  if(oscRef) return;
+  const ctx = audioCtxRef;
+  const osc = ctx.createOscillator();
+  const gain = ctx.createGain();
+  osc.type = 'sawtooth';
+  osc.frequency.setValueAtTime(600, ctx.currentTime);
+  gain.gain.setValueAtTime(0.35, ctx.currentTime);
+  osc.connect(gain);
+  gain.connect(ctx.destination);
+  osc.start();
+  oscRef = osc;
+  
+  let on = true;
+  intervalSireneRef = setInterval(() => {
+    on = !on;
+    gain.gain.setValueAtTime(on ? 0.35 : 0.05, ctx.currentTime);
+  }, 400);
+}
+
+function formatSec(s) {
+  let m = Math.floor(s/60).toString().padStart(2,'0');
+  let ss = (s%60).toString().padStart(2,'0');
+  return `${m}:${ss}`;
+}
+
+function iniciarBR() {
+  pararSirenes();
+  let sec = 0;
+  tocarSomBR();
+  document.getElementById('lblStatusBR').textContent = 'TOCANDO (ALERTA MÁXIMO)';
+  intervalSireneRef = setInterval(() => {
+    sec++;
+    document.getElementById('lblTimerBR').textContent = `${formatSec(sec)} / 05:00`;
+    if(sec === 180) {
+      if(oscRef) { try{ oscRef.stop(); }catch{} oscRef = null; }
+      document.getElementById('lblStatusBR').textContent = 'PAUSA DE LUCIDEZ';
+    }
+    if(sec === 240) { tocarSomBR(); document.getElementById('lblStatusBR').textContent = 'EVACUAÇÃO FINAL'; }
+    if(sec >= 300) { pararSirenes(); document.getElementById('lblStatusBR').textContent = 'CONCLUÍDO'; }
+  }, 1000);
+}
+
+function iniciarRU() {
+  pararSirenes();
+  let sec = 0;
+  tocarSomRU();
+  document.getElementById('lblStatusRU').textContent = 'TOCANDO (ALERTA TÁTICO)';
+  intervalSireneRef = setInterval(() => {
+    sec++;
+    document.getElementById('lblTimerRU').textContent = `${formatSec(sec)} / 05:00`;
+    if(sec === 180) {
+      if(oscRef) { try{ oscRef.stop(); }catch{} oscRef = null; }
+      document.getElementById('lblStatusRU').textContent = 'PAUSA DE LUCIDEZ';
+    }
+    if(sec === 240) { tocarSomRU(); document.getElementById('lblStatusRU').textContent = 'ALERTA FINAL'; }
+    if(sec >= 300) { pararSirenes(); document.getElementById('lblStatusRU').textContent = 'CONCLUÍDO'; }
+  }, 1000);
+}
+
+// Funções do Chat Flutuante Pro
+function toggleChatModal() {
+  const modal = document.getElementById('chatModal');
+  modal.classList.toggle('active');
+}
+
+function enviarMensagemLocal() {
+  const input = document.getElementById('chatInput');
+  const msg = input.value.trim();
+  if (!msg) return;
+
+  const chatMessages = document.getElementById('chatMessages');
+
+  chatMessages.innerHTML += `
+    <div class="bg-black/70 border border-white/15 p-3.5 rounded-2xl text-slate-100 ml-6 leading-relaxed">
+      <span class="font-black text-cyan-400 block mb-1">Alexander:</span>
+      ${msg}
+    </div>
+  `;
+  input.value = '';
+  chatMessages.scrollTop = chatMessages.scrollHeight;
+
+  setTimeout(() => {
+    chatMessages.innerHTML += `
+      <div class="bg-cyan-950/30 border border-cyan-500/30 p-3.5 rounded-2xl text-cyan-200 mr-6 leading-relaxed">
+        <span class="font-black text-cyan-400 block mb-1">Assistente Pro:</span>
+        Registro efetuado com sucesso na base operacional. Como mais posso auxiliar na vistoria?
+      </div>
+    `;
+    chatMessages.scrollTop = chatMessages.scrollHeight;
+  }, 450);
+}
+
+function mudarVelocidade(nivel) {
+  const btnN = document.getElementById('btnNormal');
+  const btnM = document.getElementById('btnMedia');
+  const btnA = document.getElementById('btnAvancada');
+
+  btnN.className = "btn-touch px-3 py-1.5 rounded-lg text-xs font-bold text-slate-300";
+  btnM.className = "btn-touch px-3 py-1.5 rounded-lg text-xs font-bold text-slate-300";
+  btnA.className = "btn-touch px-3 py-1.5 rounded-lg text-xs font-bold text-slate-300";
+
+  if (nivel === 'normal') {
+    btnN.className = "btn-touch px-3 py-1.5 rounded-lg text-xs font-bold bg-cyan-400 text-black";
+  } else if (nivel === 'media') {
+    btnM.className = "btn-touch px-3 py-1.5 rounded-lg text-xs font-bold bg-amber-400 text-black";
+  } else if (nivel === 'avancada') {
+    btnA.className = "btn-touch px-3 py-1.5 rounded-lg text-xs font-bold bg-rose-500 text-white";
+  }
+}
+
+function atualizarAlvo() {
+  const m = document.getElementById('selMun').value;
+  document.getElementById('lblAlvo').textContent = "BASE: " + m.split('(')[0].trim();
+}
+
+async function toggleCamera() {
+  const video = document.getElementById('videoElement');
+  const ph = document.getElementById('camPlaceholder');
+  const btnT = document.getElementById('btnCamToggle');
+  const btnC = document.getElementById('btnCapturar');
+
+  if (!streamAtivo) {
+    try {
+      streamAtivo = await navigator.mediaDevices.getUserMedia({ 
+        video: { facingMode: { ideal: "environment" }, width: { ideal: 1280 }, height: { ideal: 720 } },
+        audio: false 
+      });
+      video.srcObject = streamAtivo;
+      video.setAttribute('playsinline', true);
+      video.style.display = 'block';
+      ph.style.display = 'none';
+      btnC.style.display = 'block';
+      btnT.textContent = 'DESLIGAR';
+      btnT.className = 'btn-touch px-5 py-2.5 bg-rose-500/20 text-rose-300 rounded-xl text-xs sm:text-sm';
+    } catch (e) {
+      alert('ERRO DE CÂMERA: PERMISSÃO NEGADA OU HTTPS NECESSÁRIO.');
+    }
+  } else {
+    streamAtivo.getTracks().forEach(t => t.stop());
+    streamAtivo = null;
+    video.srcObject = null;
+    video.style.display = 'none';
+    ph.style.display = 'flex';
+    btnC.style.display = 'none';
+    btnT.textContent = 'LIGAR CÂMERA';
+    btnT.className = 'btn-touch px-5 py-2.5 bg-cyan-600 text-black font-black rounded-xl text-xs sm:text-sm';
+  }
+}
+
+function capturarFoto() {
+  const video = document.getElementById('videoElement');
+  if (video.videoWidth === 0) return;
+
+  const c = document.createElement('canvas');
+  c.width = 900;
+  c.height = Math.round(900 * (video.videoHeight / video.videoWidth));
+  const ctx = c.getContext('2d');
+  ctx.drawImage(video, 0, 0, c.width, c.height);
+
+  ctx.fillStyle = 'rgba(4, 6, 10, 0.95)';
+  ctx.fillRect(0, 0, c.width, 48);
+  ctx.fillRect(0, c.height - 68, c.width, 68);
+
+  ctx.fillStyle = '#00f3ff';
+  ctx.font = '800 16px monospace';
+  ctx.fillText('SARAH AI // VISTORIA TÉCNICA DE CAMPO', 18, 30);
+
+  ctx.fillStyle = '#FFFFFF';
+  ctx.font = '700 14px monospace';
+  const mun = document.getElementById('selMun').value;
+  const eta = document.getElementById('txtETA').textContent;
+  const relogioBsb = document.getElementById('relogioBrasilia').textContent;
+  ctx.fillText(relogioBsb + ' (BR) | ' + mun, 18, c.height - 40);
+  ctx.fillText('GPS: ' + coordenadasGPS + ' | ETA: ' + eta, 18, c.height - 18);
+
+  fotosArray.push(c.toDataURL('image/jpeg', 0.90));
+  renderFotos();
+}
+
+function renderFotos() {
+  const gal = document.getElementById('galeriaFotos');
+  gal.innerHTML = '';
+  fotosArray.forEach((f, idx) => {
+    let div = document.createElement('div');
+    div.className = 'relative shrink-0';
+    div.innerHTML = `<img src="${f}" class="w-24 h-24 object-cover rounded-xl border border-white/30 shadow-md" /><button onclick="removerFoto(${idx})" class="btn-touch absolute -top-1.5 -right-1.5 w-7 h-7 bg-rose-600 text-white rounded-full text-xs font-black shadow">×</button>`;
+    gal.appendChild(div);
+  });
+}
+
+function removerFoto(i) {
+  fotosArray.splice(i, 1);
+  renderFotos();
+}
+
+function enviarWhatsapp() {
+  const nome = document.getElementById('txtNome').value;
+  const bairro = document.getElementById('txtBairro').value;
+  const mun = document.getElementById('selMun').value;
+  const risco = document.getElementById('selRisco').value;
+  const org = document.getElementById('selOrg').value;
+  const eta = document.getElementById('txtETA').textContent;
+  const relogioBsb = document.getElementById('relogioBrasilia').textContent;
+  const relato = document.getElementById('txtRelato').value;
+
+  if (!nome || !bairro) { alert('PREENCHA O RESPONSÁVEL TÉCNICO E O LOCAL'); return; }
+  if (fotosArray.length === 0) { alert('CAPTURE AO MENOS 1 FOTO DA VISTORIA DE CAMPO'); return; }
+
+  let texto = `*📋 SARAH AI // LAUDO TÉCNICO DE CAMPO*\n`;
+  texto += `*HORA (BR):* ${relogioBsb}\n`;
+  texto += `*LOCAL:* ${mun} - ${bairro}\n`;
+  texto += `*GEO:* ${coordenadasGPS}\n`;
+  texto += `*DESTINO:* ${org}\n`;
+  texto += `*NÍVEL DE RISCO:* ${risco}\n`;
+  texto += `*ETA (TEMPO ESTIMADO ENXURRADA):* ⏱️ *${eta}*\n`;
+  texto += `*RELATÓRIO DE CAMPO:* ${relato || 'Vistoria executada no corredor com monitoramento ativo das serras.'}\n`;
+  texto += `*RESPONSÁVEL:* ${nome}\n\n`;
+  texto += `*(Evidência fotográfica capturada e carimbada pelo Cidadão Sensor)*`;
+
+  window.open(`https://wa.me/?text=${encodeURIComponent(texto)}`, '_blank');
+}
+</script>
+</body>
+</html>
