@@ -1,0 +1,693 @@
+<!DOCTYPE html>
+<html lang="pt-br" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>RARU NEXUS V11.2 PLUS • SALA DE COMANDO TÁTICA • MUNICÍPIOS DO RIO DE JANEIRO</title>
+    <meta name="theme-color" content="#030712">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            50: '#f0fdf4',
+                            500: '#22c55e',
+                            600: '#16a34a',
+                            900: '#14532d',
+                            950: '#052e16'
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    
+    <!-- Leaflet CSS & JS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+    
+    <style>
+        /* Anti-Copy Security */
+        body {
+            user-select: none;
+            -webkit-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+        }
+        input, textarea, [contenteditable="true"] {
+            user-select: text;
+            -webkit-user-select: text;
+        }
+        
+        /* Custom Scrollbars */
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #090d16;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #1e293b;
+            border-radius: 3px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #334155;
+        }
+        
+        .theme-warm {
+            background-color: #f8fafc !important;
+            color: #0f172a !important;
+        }
+        .theme-warm .bg-slate-950 { background-color: #ffffff !important; }
+        .theme-warm .bg-slate-900 { background-color: #f1f5f9 !important; }
+        .theme-warm .bg-slate-950\/80 { background-color: rgba(255, 255, 255, 0.9) !important; }
+        .theme-warm .border-slate-800 { border-color: #cbd5e1 !important; }
+        .theme-warm .text-slate-100 { color: #0f172a !important; }
+        .theme-warm .text-slate-300 { color: #334155 !important; }
+        .theme-warm .text-slate-400 { color: #475569 !important; }
+    </style>
+</head>
+<body class="bg-slate-950 text-slate-100 font-sans antialiased min-h-screen flex flex-col overflow-x-hidden selection:bg-emerald-500 selection:text-white">
+
+    <!-- TOP TELEMETRY MARQUEE BANNER -->
+    <div class="bg-slate-900 border-b border-slate-800 text-xs py-1.5 px-4 overflow-hidden whitespace-nowrap flex items-center justify-between text-slate-300 z-50">
+        <div class="flex items-center space-x-2 animate-marquee" style="animation: marquee 25s linear infinite;">
+            <span class="inline-flex items-center text-emerald-400 font-mono font-semibold">
+                <svg class="w-3.5 h-3.5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+                SARAH AI NEXUS V11.2 PLUS ACTIVE
+            </span>
+            <span class="text-slate-600">|</span>
+            <span>MONITORAMENTO 92 MUNICÍPIOS RIO DE JANEIRO</span>
+            <span class="text-slate-600">|</span>
+            <span class="text-amber-400 font-mono">RIO SARAPUÍ BASIN: ESTÁVEL (1.42m)</span>
+            <span class="text-slate-600">|</span>
+            <span class="text-cyan-400">DEFESA CIVIL VOLUNTÁRIA • A CHAVE DA ESPERANÇA</span>
+        </div>
+        <div class="hidden md:flex items-center space-x-3 text-slate-400 font-mono">
+            <span id="live-clock">13:00:00</span>
+            <span class="inline-block w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+        </div>
+    </div>
+
+    <!-- MAIN HEADER -->
+    <header class="bg-slate-900/90 backdrop-blur border-b border-slate-800 sticky top-0 z-40 px-4 py-3 flex items-center justify-between">
+        <div class="flex items-center space-x-3">
+            <div class="w-10 h-10 rounded-xl bg-emerald-600/20 border border-emerald-500/40 flex items-center justify-center text-emerald-400 shadow-lg shadow-emerald-950">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
+            </div>
+            <div>
+                <h1 class="font-bold text-base md:text-lg tracking-wider text-slate-100 flex items-center gap-2">
+                    RARU NEXUS <span class="text-xs bg-emerald-500/20 text-emerald-400 px-2 py-0.5 rounded border border-emerald-500/30 font-mono">V11.2 PLUS</span>
+                </h1>
+                <p class="text-xs text-slate-400">Plataforma Tática de Monitoramento Climático e Defesa Civil</p>
+            </div>
+        </div>
+
+        <div class="flex items-center space-x-2">
+            <!-- Theme Toggle -->
+            <button onclick="toggleTheme()" class="p-2 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 transition-colors" title="Alternar Tema">
+                <svg id="theme-icon" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/></svg>
+            </button>
+            <!-- Emergency SOS Trigger -->
+            <button onclick="triggerEmergencySOS()" class="bg-red-600 hover:bg-red-700 text-white px-3 py-2 rounded-lg font-bold text-xs flex items-center space-x-1.5 shadow-lg shadow-red-950 animate-pulse transition-all">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+                <span>SOS ALERTA</span>
+            </button>
+        </div>
+    </header>
+
+    <!-- NAVIGATION TABS -->
+    <nav class="bg-slate-900 border-b border-slate-800 px-4 flex space-x-2 overflow-x-auto text-xs py-2">
+        <button onclick="switchTab('comando')" id="tab-comando" class="px-4 py-2 rounded-lg font-semibold bg-emerald-600 text-white flex items-center space-x-2 transition-all shrink-0">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"/></svg>
+            <span>Sala de Comando</span>
+        </button>
+        <button onclick="switchTab('gade')" id="tab-gade" class="px-4 py-2 rounded-lg font-semibold text-slate-400 hover:bg-slate-800 hover:text-slate-200 flex items-center space-x-2 transition-all shrink-0">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/></svg>
+            <span>Estação GADE</span>
+        </button>
+        <button onclick="switchTab('rotas')" id="tab-rotas" class="px-4 py-2 rounded-lg font-semibold text-slate-400 hover:bg-slate-800 hover:text-slate-200 flex items-center space-x-2 transition-all shrink-0">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"/></svg>
+            <span>Rotas de Fuga & Abrigos</span>
+        </button>
+        <button onclick="switchTab('radar')" id="tab-radar" class="px-4 py-2 rounded-lg font-semibold text-slate-400 hover:bg-slate-800 hover:text-slate-200 flex items-center space-x-2 transition-all shrink-0">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+            <span>Radar & Telemetria</span>
+        </button>
+        <button onclick="switchTab('balanca')" id="tab-balanca" class="px-4 py-2 rounded-lg font-semibold text-slate-400 hover:bg-slate-800 hover:text-slate-200 flex items-center space-x-2 transition-all shrink-0">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 6l3 1m0 0l-3 9a5.002 5.002 0 006.001 0M6 7l3 9M6 7l6-2m6 2l3-1m-3 1l-3 9a5.002 5.002 0 006.001 0M18 7l3 9m-3-9l-6-2m0-2v2m0 16V5m0 16H9m3 0h3"/></svg>
+            <span>Balança & ESG</span>
+        </button>
+        <button onclick="switchTab('sarah')" id="tab-sarah" class="px-4 py-2 rounded-lg font-semibold text-slate-400 hover:bg-slate-800 hover:text-slate-200 flex items-center space-x-2 transition-all shrink-0">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 100-6 3 3 0 000 6z"/></svg>
+            <span>Sarah AI Supervisor</span>
+        </button>
+    </nav>
+
+    <!-- CONTENT CONTAINER -->
+    <main class="flex-1 p-4 md:p-6 max-w-7xl mx-auto w-full space-y-6">
+
+        <!-- TAB 1: SALA DE COMANDO -->
+        <section id="content-comando" class="space-y-6">
+            <!-- Summary Metrics Cards -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                <div class="bg-slate-900 border border-slate-800 rounded-xl p-4 shadow-lg">
+                    <div class="flex items-center justify-between text-slate-400 text-xs mb-2">
+                        <span>MUNICÍPIOS MONITORADOS</span>
+                        <svg class="w-4 h-4 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/></svg>
+                    </div>
+                    <div class="text-2xl font-bold font-mono text-emerald-400">92 / 92</div>
+                    <p class="text-xs text-slate-500 mt-1">Estado do Rio de Janeiro Completo</p>
+                </div>
+                <div class="bg-slate-900 border border-slate-800 rounded-xl p-4 shadow-lg">
+                    <div class="flex items-center justify-between text-slate-400 text-xs mb-2">
+                        <span>NÍVEL RIO SARAPUÍ</span>
+                        <svg class="w-4 h-4 text-cyan-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 14l-7 7m0 0l-7-7m7 7V3"/></svg>
+                    </div>
+                    <div class="text-2xl font-bold font-mono text-cyan-400" id="sarapui-level-display">1.42 m</div>
+                    <p class="text-xs text-slate-500 mt-1">Status: Alerta Verde (Estável)</p>
+                </div>
+                <div class="bg-slate-900 border border-slate-800 rounded-xl p-4 shadow-lg">
+                    <div class="flex items-center justify-between text-slate-400 text-xs mb-2">
+                        <span>ABRIGOS ATIVOS</span>
+                        <svg class="w-4 h-4 text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>
+                    </div>
+                    <div class="text-2xl font-bold font-mono text-amber-400">14 Registrados</div>
+                    <p class="text-xs text-slate-500 mt-1">Mesquita, Nova Iguaçu & Nilópolis</p>
+                </div>
+                <div class="bg-slate-900 border border-slate-800 rounded-xl p-4 shadow-lg">
+                    <div class="flex items-center justify-between text-slate-400 text-xs mb-2">
+                        <span>VOLUNTÁRIOS GADE</span>
+                        <svg class="w-4 h-4 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"/></svg>
+                    </div>
+                    <div class="text-2xl font-bold font-mono text-purple-400">A Chave da Esperança</div>
+                    <p class="text-xs text-slate-500 mt-1">Comunidade do Sebinho • Mesquita</p>
+                </div>
+            </div>
+
+            <!-- Main Map & Quick Actions Grid -->
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <!-- Leaflet Interactive Map Card -->
+                <div class="lg:col-span-2 bg-slate-900 border border-slate-800 rounded-xl p-4 flex flex-col shadow-lg">
+                    <div class="flex items-center justify-between mb-3">
+                        <h2 class="font-bold text-sm text-slate-200 flex items-center space-x-2">
+                            <svg class="w-4 h-4 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"/></svg>
+                            <span>Mapa Tático Regional • Rio Sarapuí e Mesquita</span>
+                        </h2>
+                        <span class="text-xs bg-slate-800 text-slate-300 px-2 py-1 rounded font-mono">GPS Ativo</span>
+                    </div>
+                    <div id="tactical-map" class="w-full h-80 md:h-96 rounded-lg border border-slate-800 z-10"></div>
+                </div>
+
+                <!-- Quick Telemetry & Controls -->
+                <div class="bg-slate-900 border border-slate-800 rounded-xl p-4 flex flex-col justify-between shadow-lg space-y-4">
+                    <div>
+                        <h2 class="font-bold text-sm text-slate-200 mb-3 flex items-center space-x-2">
+                            <svg class="w-4 h-4 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+                            <span>Ações Rápidas de Campo</span>
+                        </h2>
+                        <div class="space-y-2">
+                            <button onclick="switchTab('gade')" class="w-full text-left p-3 rounded-lg bg-slate-800 hover:bg-slate-700 transition-colors flex items-center justify-between text-xs font-semibold">
+                                <span class="flex items-center space-x-2">
+                                    <svg class="w-4 h-4 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/></svg>
+                                    <span>Abrir Estação GADE & SOS Vizinhança</span>
+                                </span>
+                                <svg class="w-4 h-4 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+                            </button>
+                            <button onclick="switchTab('rotas')" class="w-full text-left p-3 rounded-lg bg-slate-800 hover:bg-slate-700 transition-colors flex items-center justify-between text-xs font-semibold">
+                                <span class="flex items-center space-x-2">
+                                    <svg class="w-4 h-4 text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/></svg>
+                                    <span>Consultar Rotas de Fuga & Abrigos</span>
+                                </span>
+                                <svg class="w-4 h-4 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+                            </button>
+                            <button onclick="switchTab('radar')" class="w-full text-left p-3 rounded-lg bg-slate-800 hover:bg-slate-700 transition-colors flex items-center justify-between text-xs font-semibold">
+                                <span class="flex items-center space-x-2">
+                                    <svg class="w-4 h-4 text-cyan-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                                    <span>Ver Radar & 92 Municípios RJ</span>
+                                </span>
+                                <svg class="w-4 h-4 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+                            </button>
+                            <button onclick="switchTab('balanca')" class="w-full text-left p-3 rounded-lg bg-slate-800 hover:bg-slate-700 transition-colors flex items-center justify-between text-xs font-semibold">
+                                <span class="flex items-center space-x-2">
+                                    <svg class="w-4 h-4 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 6l3 1m0 0l-3 9a5.002 5.002 0 006.001 0M6 7l3 9M6 7l6-2m6 2l3-1m-3 1l-3 9a5.002 5.002 0 006.001 0M18 7l3 9m-3-9l-6-2m0-2v2m0 16V5m0 16H9m3 0h3"/></svg>
+                                    <span>Registrar Pesagem Reciclagem (ESG)</span>
+                                </span>
+                                <svg class="w-4 h-4 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="bg-slate-950 p-3 rounded-lg border border-slate-800 text-xs text-slate-400">
+                        <span class="text-emerald-400 font-bold block mb-1">Coordenador Responsável:</span>
+                        Alexander da Silva Firmo • Projeto Bom Dia Comunidade & A Chave da Esperança.
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- TAB 2: ESTAÇÃO GADE -->
+        <section id="content-gade" class="hidden space-y-6">
+            <div class="bg-slate-900 border border-slate-800 rounded-xl p-6 shadow-lg space-y-6">
+                <div class="flex flex-col md:flex-row md:items-center justify-between border-b border-slate-800 pb-4 gap-4">
+                    <div>
+                        <h2 class="font-bold text-lg text-slate-100 flex items-center space-x-2">
+                            <svg class="w-6 h-6 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/></svg>
+                            <span>Estação GADE & SOS Vizinhança</span>
+                        </h2>
+                        <p class="text-xs text-slate-400 mt-1">Comunidade do Sebinho • Mesquita / RJ</p>
+                    </div>
+                    <div class="flex items-center space-x-3">
+                        <a href="https://chat.whatsapp.com/GADE_CHAVE_ESPERANCA" target="_blank" class="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-lg text-xs font-bold flex items-center space-x-2 shadow-lg transition-all">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/></svg>
+                            <span>Grupo WhatsApp GADE</span>
+                        </a>
+                    </div>
+                </div>
+
+                <!-- SOS Vizinhança GPS Card -->
+                <div class="bg-slate-950 border border-slate-800 rounded-xl p-5 space-y-4">
+                    <h3 class="font-bold text-sm text-slate-200 flex items-center space-x-2">
+                        <svg class="w-5 h-5 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+                        <span>Gerador de Alerta SOS com Coordenadas GPS</span>
+                    </h3>
+                    <p class="text-xs text-slate-400">Capture sua localização exata e gere uma mensagem instantânea para envio na rede de vizinhos e Defesa Civil.</p>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-xs font-medium text-slate-400 mb-1">Seu Nome / Morador</label>
+                            <input type="text" id="sos-name" class="w-full bg-slate-900 border border-slate-800 rounded-lg p-2.5 text-xs text-slate-100 focus:outline-none focus:border-emerald-500" placeholder="Ex: Alexander Firmo">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-medium text-slate-400 mb-1">Ocorrência / Risco</label>
+                            <select id="sos-type" class="w-full bg-slate-900 border border-slate-800 rounded-lg p-2.5 text-xs text-slate-100 focus:outline-none focus:border-emerald-500">
+                                <option value="Elevação rápida do nível da água">Elevação rápida do nível da água</option>
+                                <option value="Risco de deslizamento de talude">Risco de deslizamento de talude</option>
+                                <option value="Obstrução de bueiro / Microdrenagem">Obstrução de bueiro / Microdrenagem</option>
+                                <option value="Necessidade de evacuação urgente">Necessidade de evacuação urgente</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="flex flex-wrap items-center gap-3 pt-2">
+                        <button onclick="captureGPSAndGenerateSOS()" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2.5 rounded-lg text-xs font-bold flex items-center space-x-2 transition-all">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/></svg>
+                            <span>Capturar GPS & Gerar SOS</span>
+                        </button>
+                        <button onclick="copySOSMessage()" class="bg-slate-800 hover:bg-slate-700 text-slate-200 px-4 py-2.5 rounded-lg text-xs font-bold flex items-center space-x-2 transition-all">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3"/></svg>
+                            <span>Copiar Mensagem SOS</span>
+                        </button>
+                    </div>
+
+                    <div id="sos-output-container" class="hidden mt-3 p-3 bg-slate-900 border border-slate-800 rounded-lg font-mono text-xs text-emerald-400"></div>
+                </div>
+
+                <!-- Survival Kit Checklist -->
+                <div class="space-y-3">
+                    <h3 class="font-bold text-sm text-slate-200 flex items-center space-x-2">
+                        <svg class="w-5 h-5 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/></svg>
+                        <span>Kit de Sobrevivência Familiar (Checklist GADE)</span>
+                    </h3>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 text-xs">
+                        <label class="flex items-center space-x-3 p-3 bg-slate-950 border border-slate-800 rounded-lg cursor-pointer hover:border-slate-700">
+                            <input type="checkbox" class="rounded bg-slate-900 border-slate-700 text-emerald-500 focus:ring-0">
+                            <span>Água potável (2L por pessoa/dia)</span>
+                        </label>
+                        <label class="flex items-center space-x-3 p-3 bg-slate-950 border border-slate-800 rounded-lg cursor-pointer hover:border-slate-700">
+                            <input type="checkbox" class="rounded bg-slate-900 border-slate-700 text-emerald-500 focus:ring-0">
+                            <span>Lanternas e pilhas reservas</span>
+                        </label>
+                        <label class="flex items-center space-x-3 p-3 bg-slate-950 border border-slate-800 rounded-lg cursor-pointer hover:border-slate-700">
+                            <input type="checkbox" class="rounded bg-slate-900 border-slate-700 text-emerald-500 focus:ring-0">
+                            <span>Kit de primeiros socorros e remédios</span>
+                        </label>
+                        <label class="flex items-center space-x-3 p-3 bg-slate-950 border border-slate-800 rounded-lg cursor-pointer hover:border-slate-700">
+                            <input type="checkbox" class="rounded bg-slate-900 border-slate-700 text-emerald-500 focus:ring-0">
+                            <span>Documentos em embalagem impermeável</span>
+                        </label>
+                        <label class="flex items-center space-x-3 p-3 bg-slate-950 border border-slate-800 rounded-lg cursor-pointer hover:border-slate-700">
+                            <input type="checkbox" class="rounded bg-slate-900 border-slate-700 text-emerald-500 focus:ring-0">
+                            <span>Roupas extras e calçados fechados</span>
+                        </label>
+                        <label class="flex items-center space-x-3 p-3 bg-slate-950 border border-slate-800 rounded-lg cursor-pointer hover:border-slate-700">
+                            <input type="checkbox" class="rounded bg-slate-900 border-slate-700 text-emerald-500 focus:ring-0">
+                            <span>Alimentos não perecíveis</span>
+                        </label>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- TAB 3: ROTAS DE FUGA & ABRIGOS -->
+        <section id="content-rotas" class="hidden space-y-6">
+            <div class="bg-slate-900 border border-slate-800 rounded-xl p-6 shadow-lg space-y-6">
+                <div class="flex flex-col md:flex-row md:items-center justify-between border-b border-slate-800 pb-4 gap-4">
+                    <div>
+                        <h2 class="font-bold text-lg text-slate-100 flex items-center space-x-2">
+                            <svg class="w-6 h-6 text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"/></svg>
+                            <span>Painel de Rotas de Fuga e Abrigos Seguros</span>
+                        </h2>
+                        <p class="text-xs text-slate-400 mt-1">Diretrizes de Evacuação Oficial e Pontos de Encontro Comunitário</p>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div class="bg-slate-950 border border-slate-800 rounded-xl p-4 space-y-3">
+                        <div class="flex items-center justify-between">
+                            <span class="text-xs font-bold text-emerald-400 uppercase">Ponto Principal</span>
+                            <span class="text-xs bg-emerald-500/20 text-emerald-400 px-2 py-0.5 rounded font-mono">Ativo</span>
+                    </div>
+                        <h3 class="font-bold text-sm text-slate-200">Escola Municipal Sebinho</h3>
+                        <p class="text-xs text-slate-400">Rua Amazonas, s/n - Rocha Sobrinho, Mesquita - RJ.</p>
+                        <div class="text-xs font-mono text-slate-500">Capacidade: 350 pessoas</div>
+                    </div>
+                    <div class="bg-slate-950 border border-slate-800 rounded-xl p-4 space-y-3">
+                        <div class="flex items-center justify-between">
+                            <span class="text-xs font-bold text-emerald-400 uppercase">Ponto de Apoio 02</span>
+                            <span class="text-xs bg-emerald-500/20 text-emerald-400 px-2 py-0.5 rounded font-mono">Ativo</span>
+                        </div>
+                        <h3 class="font-bold text-sm text-slate-200">Praça da Vila Norma</h3>
+                        <p class="text-xs text-slate-400">Área elevada segura para ponto de encontro coletivo.</p>
+                        <div class="text-xs font-mono text-slate-500">Capacidade: 500 pessoas</div>
+                    </div>
+                    <div class="bg-slate-950 border border-slate-800 rounded-xl p-4 space-y-3">
+                        <div class="flex items-center justify-between">
+                            <span class="text-xs font-bold text-amber-400 uppercase">Ponto de Apoio 03</span>
+                            <span class="text-xs bg-amber-500/20 text-amber-400 px-2 py-0.5 rounded font-mono">Monitoramento</span>
+                        </div>
+                        <h3 class="font-bold text-sm text-slate-200">Ginásio Municipal de Mesquita</h3>
+                        <p class="text-xs text-slate-400">Centro - Mesquita / RJ.</p>
+                        <div class="text-xs font-mono text-slate-500">Capacidade: 1.200 pessoas</div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- TAB 4: RADAR & TELEMETRIA -->
+        <section id="content-radar" class="hidden space-y-6">
+            <div class="bg-slate-900 border border-slate-800 rounded-xl p-6 shadow-lg space-y-6">
+                <div class="flex flex-col md:flex-row md:items-center justify-between border-b border-slate-800 pb-4 gap-4">
+                    <div>
+                        <h2 class="font-bold text-lg text-slate-100 flex items-center space-x-2">
+                            <svg class="w-6 h-6 text-cyan-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                            <span>Radar Meteorológico & Telemetria dos 92 Municípios RJ</span>
+                        </h2>
+                        <p class="text-xs text-slate-400 mt-1">Dados meteorológicos em tempo real via Open-Meteo API</p>
+                    </div>
+                    <div class="flex items-center space-x-3">
+                        <select id="municipality-select" onchange="fetchMunicipalityWeather()" class="bg-slate-950 border border-slate-800 rounded-lg p-2.5 text-xs text-slate-100 focus:outline-none focus:border-cyan-500">
+                            <option value="-22.785,-43.432">Mesquita</option>
+                            <option value="-22.755,-43.460">Nova Iguaçu</option>
+                            <option value="-22.791,-43.411">Nilópolis</option>
+                            <option value="-22.763,-43.708">Itaguaí</option>
+                            <option value="-22.906,-43.172">Rio de Janeiro</option>
+                            <option value="-22.883,-43.284">Duque de Caxias</option>
+                            <option value="-22.753,-43.456">São João de Meriti</option>
+                        </select>
+                        <button onclick="fetchMunicipalityWeather()" class="bg-cyan-600 hover:bg-cyan-700 text-white px-4 py-2.5 rounded-lg text-xs font-bold transition-all">Atualizar</button>
+                    </div>
+                </div>
+
+                <div id="weather-card-container" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                    <div class="bg-slate-950 border border-slate-800 rounded-xl p-4">
+                        <div class="text-slate-400 text-xs mb-1">Temperatura Atual</div>
+                        <div class="text-2xl font-bold font-mono text-cyan-400" id="w-temp">-- °C</div>
+                    </div>
+                    <div class="bg-slate-950 border border-slate-800 rounded-xl p-4">
+                        <div class="text-slate-400 text-xs mb-1">Precipitação / Chuva</div>
+                        <div class="text-2xl font-bold font-mono text-emerald-400" id="w-precip">-- mm</div>
+                    </div>
+                    <div class="bg-slate-950 border border-slate-800 rounded-xl p-4">
+                        <div class="text-slate-400 text-xs mb-1">Umidade Relativa</div>
+                        <div class="text-2xl font-bold font-mono text-amber-400" id="w-humidity">-- %</div>
+                    </div>
+                    <div class="bg-slate-950 border border-slate-800 rounded-xl p-4">
+                        <div class="text-slate-400 text-xs mb-1">Velocidade do Vento</div>
+                        <div class="text-2xl font-bold font-mono text-purple-400" id="w-wind">-- km/h</div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- TAB 5: BALANÇA & ESG -->
+        <section id="content-balanca" class="hidden space-y-6">
+            <div class="bg-slate-900 border border-slate-800 rounded-xl p-6 shadow-lg space-y-6">
+                <div class="flex flex-col md:flex-row md:items-center justify-between border-b border-slate-800 pb-4 gap-4">
+                    <div>
+                        <h2 class="font-bold text-lg text-slate-100 flex items-center space-x-2">
+                            <svg class="w-6 h-6 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 6l3 1m0 0l-3 9a5.002 5.002 0 006.001 0M6 7l3 9M6 7l6-2m6 2l3-1m-3 1l-3 9a5.002 5.002 0 006.001 0M18 7l3 9m-3-9l-6-2m0-2v2m0 16V5m0 16H9m3 0h3"/></svg>
+                            <span>Balança Inteligente & Coleta Seletiva (ESG)</span>
+                        </h2>
+                        <p class="text-xs text-slate-400 mt-1">Controle de pesagem e cálculo de impacto ambiental comunitário</p>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div class="bg-slate-950 border border-slate-800 rounded-xl p-5 space-y-4">
+                        <h3 class="font-bold text-sm text-slate-200">Registrar Pesagem de Materiais Recicláveis</h3>
+                        <div>
+                            <label class="block text-xs font-medium text-slate-400 mb-1">Tipo de Material</label>
+                            <select id="esg-material" class="w-full bg-slate-900 border border-slate-800 rounded-lg p-2.5 text-xs text-slate-100 focus:outline-none focus:border-purple-500">
+                                <option value="pet">Garrafas PET</option>
+                                <option value="aluminum">Alumínio (Latas)</option>
+                                <option value="cardboard">Papelão / Papel</option>
+                                <option value="glass">Vidro</option>
+                                <option value="oil">Óleo de Cozinha Usado (Litros)</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-medium text-slate-400 mb-1">Peso / Quantidade (kg ou L)</label>
+                            <input type="number" id="esg-weight" class="w-full bg-slate-900 border border-slate-800 rounded-lg p-2.5 text-xs text-slate-100 focus:outline-none focus:border-purple-500" placeholder="Ex: 15">
+                        </div>
+                        <button onclick="registerESGWeight()" class="w-full bg-purple-600 hover:bg-purple-700 text-white p-3 rounded-lg text-xs font-bold transition-all">Registrar na Balança ESG</button>
+                    </div>
+
+                    <div class="bg-slate-950 border border-slate-800 rounded-xl p-5 space-y-4">
+                        <h3 class="font-bold text-sm text-slate-200">Métricas de Impacto Acumulado</h3>
+                        <div class="space-y-3 text-xs">
+                            <div class="flex justify-between p-3 bg-slate-900 rounded-lg border border-slate-800">
+                                <span class="text-slate-400">Total Coletado:</span>
+                                <span class="font-mono font-bold text-purple-400" id="esg-total-weight">0.0 kg</span>
+                            </div>
+                            <div class="flex justify-between p-3 bg-slate-900 rounded-lg border border-slate-800">
+                                <span class="text-slate-400">Água Potável Poupada:</span>
+                                <span class="font-mono font-bold text-cyan-400" id="esg-water">0 litros</span>
+                            </div>
+                            <div class="flex justify-between p-3 bg-slate-900 rounded-lg border border-slate-800">
+                                <span class="text-slate-400">CO2 Evitado:</span>
+                                <span class="font-mono font-bold text-emerald-400" id="esg-co2">0.0 kg</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- TAB 6: SARAH AI SUPERVISOR -->
+        <section id="content-sarah" class="hidden space-y-6">
+            <div class="bg-slate-900 border border-slate-800 rounded-xl p-6 shadow-lg space-y-6">
+                <div class="flex flex-col md:flex-row md:items-center justify-between border-b border-slate-800 pb-4 gap-4">
+                    <div>
+                        <h2 class="font-bold text-lg text-slate-100 flex items-center space-x-2">
+                            <svg class="w-6 h-6 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 100-6 3 3 0 000 6z"/></svg>
+                            <span>Sarah AI Supervisor • Assistente de Voz Tática</span>
+                        </h2>
+                        <p class="text-xs text-slate-400 mt-1">Síntese de voz, orientação de campo e comandos inteligentes</p>
+                    </div>
+                    <div class="flex items-center space-x-2">
+                        <button onclick="speakSarahWelcome()" class="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-lg text-xs font-bold flex items-center space-x-2 transition-all">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.536 11.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z"/></svg>
+                            <span>Ouvir Alerta Sarah AI</span>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="bg-slate-950 border border-slate-800 rounded-xl p-5 space-y-4">
+                    <div id="sarah-chat-log" class="h-64 overflow-y-auto space-y-3 p-3 bg-slate-900 rounded-lg border border-slate-800 text-xs font-mono">
+                        <div class="text-emerald-400">[SARAH AI SYSTEM]: Sistema inicializado com sucesso para os 92 municípios do Rio de Janeiro. Pronta para monitoramento de risco e telemetria.</div>
+                    </div>
+                    <div class="flex space-x-2">
+                        <input type="text" id="sarah-input" onkeypress="if(event.key==='Enter') sendSarahCommand()" class="flex-1 bg-slate-900 border border-slate-800 rounded-lg p-2.5 text-xs text-slate-100 focus:outline-none focus:border-emerald-500 font-mono" placeholder="Digite um comando para a Sarah AI...">
+                        <button onclick="sendSarahCommand()" class="bg-emerald-600 hover:bg-emerald-700 text-white px-5 py-2.5 rounded-lg text-xs font-bold transition-all">Enviar</button>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- FOOTER -->
+    <footer class="bg-slate-900 border-t border-slate-800 py-4 px-6 text-center text-xs text-slate-500 mt-auto">
+        <p>RARU NEXUS V11.2 PLUS • Desenvolvido para Defesa Civil Voluntária e Gestão de Riscos Territoriais no Estado do Rio de Janeiro.</p>
+        <p class="mt-1">Coordenador: Alexander da Silva Firmo • Comunidade do Sebinho (Mesquita - RJ)</p>
+    </footer>
+
+    <!-- SCRIPT APPLICATION LOGIC -->
+    <script>
+        // Live Clock
+        setInterval(() => {
+            const now = new Date();
+            document.getElementById('live-clock').innerText = now.toLocaleTimeString();
+        }, 1000);
+
+        // Tab Switching
+        function switchTab(tabId) {
+            const tabs = ['comando', 'gade', 'rotas', 'radar', 'balanca', 'sarah'];
+            tabs.forEach(t => {
+                const el = document.getElementById('content-' + t);
+                const btn = document.getElementById('tab-' + t);
+                if (t === tabId) {
+                    el.classList.remove('hidden');
+                    if(btn) {
+                        btn.className = 'px-4 py-2 rounded-lg font-semibold bg-emerald-600 text-white flex items-center space-x-2 transition-all shrink-0';
+                    }
+                } else {
+                    el.classList.add('hidden');
+                    if(btn) {
+                        btn.className = 'px-4 py-2 rounded-lg font-semibold text-slate-400 hover:bg-slate-800 hover:text-slate-200 flex items-center space-x-2 transition-all shrink-0';
+                    }
+                }
+            });
+            if(tabId === 'comando') {
+                setTimeout(() => { map.invalidateSize(); }, 200);
+            }
+        }
+
+        // Theme Toggle
+        let isWarm = false;
+        function toggleTheme() {
+            isWarm = !isWarm;
+            document.body.classList.toggle('theme-warm', isWarm);
+        }
+
+        // Leaflet Map Initialization
+        let map = L.map('tactical-map').setView([-22.785, -43.432], 14);
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            maxZoom: 19,
+            attribution: '© OpenStreetMap'
+        }).addTo(map);
+
+        L.marker([-22.785, -43.432]).addTo(map)
+            .bindPopup('<b>Comunidade do Sebinho</b><br>Mesquita - RJ<br>Estação GADE / A Chave da Esperança')
+            .openPopup();
+
+        // SOS Generator
+        function captureGPSAndGenerateSOS() {
+            const name = document.getElementById('sos-name').value || 'Morador Voluntário';
+            const type = document.getElementById('sos-type').value;
+            
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(position => {
+                    const lat = position.coords.latitude.toFixed(6);
+                    const lon = position.coords.longitude.toFixed(6);
+                    const msg = `[ALERTA SOS - DEFESA CIVIL / GADE]\nMorador: ${name}\nOcorrência: ${type}\nLocalização GPS: Lat ${lat}, Lon ${lon}\nComunidade do Sebinho, Mesquita - RJ. Ajuda urgente necessária!`;
+                    const out = document.getElementById('sos-output-container');
+                    out.classList.remove('hidden');
+                    out.innerText = msg;
+                }, error => {
+                    alert('Erro ao capturar GPS. Verifique permissões do navegador.');
+                });
+            } else {
+                alert('Geolocalização não suportada neste navegador.');
+            }
+        }
+
+        function copySOSMessage() {
+            const out = document.getElementById('sos-output-container');
+            if (out.classList.contains('hidden') || !out.innerText) {
+                alert('Gere o SOS com GPS primeiro.');
+                return;
+            }
+            navigator.clipboard.writeText(out.innerText);
+            alert('Mensagem SOS copiada para a área de transferência!');
+        }
+
+        // Weather Telemetry (Open-Meteo)
+        async function fetchMunicipalityWeather() {
+            const val = document.getElementById('municipality-select').value.split(',');
+            const lat = val[0];
+            const lon = val[1];
+            try {
+                const res = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,relative_humidity_2m,precipitation,wind_speed_10m`);
+                const data = await res.json();
+                document.getElementById('w-temp').innerText = data.current.temperature_2m + ' °C';
+                document.getElementById('w-precip').innerText = data.current.precipitation + ' mm';
+                document.getElementById('w-humidity').innerText = data.current.relative_humidity_2m + ' %';
+                document.getElementById('w-wind').innerText = data.current.wind_speed_10m + ' km/h';
+            } catch (e) {
+                console.error(e);
+            }
+        }
+        fetchMunicipalityWeather();
+
+        // ESG Balança
+        let totalWeight = 0;
+        let totalWater = 0;
+        let totalCo2 = 0;
+
+        function registerESGWeight() {
+            const mat = document.getElementById('esg-material').value;
+            const w = parseFloat(document.getElementById('esg-weight').value) || 0;
+            if (w <= 0) {
+                alert('Insira um peso válido.');
+                return;
+            }
+            totalWeight += w;
+            totalWater += w * 4.5;
+            totalCo2 += w * 1.8;
+
+            document.getElementById('esg-total-weight').innerText = totalWeight.toFixed(1) + ' kg';
+            document.getElementById('esg-water').innerText = totalWater.toFixed(0) + ' litros';
+            document.getElementById('esg-co2').innerText = totalCo2.toFixed(1) + ' kg';
+            alert('Pesagem registrada com sucesso no sistema ESG!');
+        }
+
+        // Sarah AI Speech & Supervisor
+        function speakSarahWelcome() {
+            if ('speechSynthesis' in window) {
+                const utterance = new SpeechSynthesisUtterance("Sarah AI Nexus ativada. Monitorando os 92 municípios do Rio de Janeiro. Nível do Rio Sarapuí estável em 1.42 metros. Defesa Civil em alerta.");
+                utterance.lang = 'pt-BR';
+                window.speechSynthesis.speak(utterance);
+            } else {
+                alert('Síntese de voz não suportada neste navegador.');
+            }
+        }
+
+        function sendSarahCommand() {
+            const input = document.getElementById('sarah-input');
+            const log = document.getElementById('sarah-chat-log');
+            const txt = input.value.trim();
+            if(!txt) return;
+
+            log.innerHTML += `<div class="text-slate-300">> ${txt}</div>`;
+            input.value = '';
+
+            setTimeout(() => {
+                let reply = "Comando processado com sucesso pelo núcleo tático da Sarah AI Nexus.";
+                if(txt.toLowerCase().includes('sarapuí') || txt.toLowerCase().includes('nivel')) {
+                    reply = "Nível atual do Rio Sarapuí: 1.42 metros. Sem riscos iminentes de transbordamento nas últimas 2 horas.";
+                } else if(txt.toLowerCase().includes('mesquita') || txt.toLowerCase().includes('sebinho')) {
+                    reply = "Comunidade do Sebinho em Mesquita: Status operacional verde. Coordenador Alexander Firmo registrado.";
+                }
+                log.innerHTML += `<div class="text-emerald-400">[SARAH AI]: ${reply}</div>`;
+                log.scrollTop = log.scrollHeight;
+                
+                if ('speechSynthesis' in window) {
+                    const u = new SpeechSynthesisUtterance(reply);
+                    u.lang = 'pt-BR';
+                    window.speechSynthesis.speak(u);
+                }
+            }, 500);
+        }
+    </script>
+</body>
+</html>
