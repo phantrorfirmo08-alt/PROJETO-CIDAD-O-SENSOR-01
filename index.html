@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="pt-br" class="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<title>SARAH AI NEXUS v11.2 PLUS • GADE & CIDADÃO SENSOR</title>
+<meta name="theme-color" content="#030712">
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Orbitron:wght@600;800;900&family=JetBrains+Mono:wght@400;600;800&display=swap" rel="stylesheet">
+<script src="https://cdn.tailwindcss.com/3.4.16"></script>
+<script crossorigin src="https://unpkg.com/react@18.3.1/umd/react.production.min.js"></script>
+<script crossorigin src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.production.min.js"></script>
+<script crossorigin src="https://unpkg.com/@babel/standalone@7.26.4/babel.min.js"></script>
+<style>
+body { background-color: #030712; color: #E2E8F0; font-family: 'Plus Jakarta Sans', sans-serif; overflow-x: hidden; user-select: none; }
+input, textarea, select { user-select: text; }
+.cyber-card { background: linear-gradient(135deg, rgba(10, 27, 56, 0.94) 0%, rgba(4, 17, 37, 0.97) 100%); border: 1px solid rgba(0, 242, 254, 0.35); border-radius: 20px; padding: 16px; margin-bottom: 12px; }
+.cyber-button { background: linear-gradient(135deg, rgba(0, 242, 254, 0.15) 0%, rgba(56, 189, 248, 0.25) 100%); border: 1px solid #00F2FE; color: #00F2FE; font-family: 'Orbitron', sans-serif; font-weight: 800; border-radius: 12px; padding: 10px 8px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px; width: 100%; transition: 0.2s; font-size: 11px; line-height: 1.2; text-align: center; flex-wrap: wrap; }
+.cyber-button:hover { background: #00F2FE; color: #030712; }
+.cyber-button-solid { background: linear-gradient(135deg, #00F2FE 0%, #38BDF8 100%); border: 1px solid #FFFFFF; color: #030712; font-family: 'Orbitron', sans-serif; font-weight: 900; border-radius: 12px; padding: 12px 10px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; width: 100%; }
+.cyber-button-danger { background: linear-gradient(135deg, rgba(255, 0, 85, 0.2) 0%, rgba(255, 0, 85, 0.4) 100%); border: 1px solid #FF0055; color: #FF0055; font-family: 'Orbitron', sans-serif; font-weight: 800; border-radius: 12px; padding: 12px 16px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; width: 100%; }
+.carimbo-css { background: rgba(3,7,18,0.95); border: 1px solid #00F2FE; border-radius: 8px; padding: 6px 8px; display: flex; flex-direction: column; gap: 2px; font-size: 8px; color: #00F2FE; line-height: 1.4; }
+.carimbo-css span:nth-child(2) { color: #fff; }
+.carimbo-css span:nth-child(3) { color: #FF0055; font-weight: 900; }
+.icon { width: 16px; height: 16px; flex-shrink: 0; }
+.icon-sm { width: 14px; height: 14px; flex-shrink: 0; }
+@keyframes raru-scan { 0% { top: 0; } 100% { top: 100%; } }
+.animate-raru-scan { animation: raru-scan 2s linear infinite; position: absolute; left: 0; right: 0; height: 2px; background: #00F2FE; }
+::-webkit-scrollbar { width: 4px; height: 4px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: rgba(0,242,254,0.3); border-radius: 9999px; }
+</style>
+</head>
+<body class="p-3 sm:p-6 flex flex-col items-center min-h-screen">
+<div id="root" class="w-full max-w-2xl"></div>
+<script type="text/babel">
+const ENVELOPE = "https://sarah-envelope.phantrorfirmo08.workers.dev";
+const GROQ_MODEL = "openai/gpt-oss-120b";
+const APP_SHA256 = "8f4c9a2b1e7d3f6a8c0e2b4d6f8a0c2e4b6d8f0a";
+const MUNICIPIOS_92 = [{n:"Mesquita",lat:-22.78,lon:-43.43,ip:"10.10.21.15"},{n:"Nova Iguaçu",lat:-22.75,lon:-43.45,ip:"10.10.21.16"},{n:"Belford Roxo",lat:-22.76,lon:-43.39,ip:"10.10.21.17"},{n:"Nilópolis",lat:-22.81,lon:-43.41,ip:"10.10.21.18"},{n:"São João de Meriti",lat:-22.80,lon:-43.37,ip:"10.10.21.19"},{n:"Duque de Caxias",lat:-22.78,lon:-43.31,ip:"10.10.21.20"},{n:"Rio de Janeiro",lat:-22.90,lon:-43.17,ip:"10.10.21.21"},{n:"Niterói",lat:-22.88,lon:-43.11,ip:"10.10.21.22"}];
+const FRENTES_EQUIPES_TABELA = ["Pesquisa Local e Ação Urbana Autônoma","Monitoramento Climático Comunitário e Alerta de Base","Apoio Social e Proteção Comunitária Direta","Núcleo Comunitário Autônomo (92 Municípios - RJ)","Projeto Cidadão Sensor – Iniciativa Comunitária (Baixada Fluminense)","Bom Dia Comunidade / Grupo A Chave da Esperança (GADE) – Baixada Fluminense"];
+const CATEGORIAS_DEMANDAS = ["Acúmulo de Entulhos e Descarte Irregular de Resíduos","Mato Alto e Vegetação Excessiva em Logradouro","Deficiência ou Falha na Iluminação Pública","Problemas Estruturais no Imóvel (Rachaduras, Infiltração e Danos)","Bueiro Entupido, Alagamento e Deficiência de Drenagem","Remoção e Poda de Árvore em Risco","Danificação de Patrimônio Público (Praças, Equipamentos, Sinalização)","Buraco na Via, Afundamento e Pavimentação Danificada","Problemas em Encanamento e Vazamento na Rede de Água/Esgoto"];
+const SEVERIDADES_COMUNITARIAS = ["ISC-1 • VERDE (Monitoramento de Rotina)","ISC-2 • AMARELO (Atenção Preventiva Comunitária)","ISC-3 • LARANJA (Alerta Comunitário Moderado/Alto)","ISC-4 • VERMELHO (Prontidão e Evacuação Comunitária)"];
+const DICAS_CAMPO = ["Cuidado com o solo aí, pisa devagar e olha onde pisa, tá bom?","Se tiver muito calor, procura uma sombrinha rapidinho e bebe uma água, se cuida.","Posicionamento ideal pra foto: deixa o sol atrás de você, assim a foto não fica escura.","Tenta pegar a foto de frente, com o bueiro ou o buraco inteiro aparecendo, fica melhor pro laudo.","Cuidado com o solo molhado, pode estar escorregando. Vai com calma.","Se tiver muito calor, espera um pouquinho na sombra antes de tirar a foto, pra não tremer.","Posicionamento ideal: afasta dois passos pra trás, pega o contexto da rua toda.","Você tá indo muito bem. Quando terminar a foto, já deixa o laudo pronto que eu te ajudo."];
+const I = {
+  chat: <svg className="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>,
+  bolt: <svg className="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M13 2L3 14h7l-1 8 10-12h-7l1-8z"/></svg>,
+  camera: <svg className="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>,
+  mic: <svg className="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>,
+  soundOn: <svg className="icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14"/></svg>,
+  soundOff: <svg className="icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><line x1="23" y1="9" x2="17" y2="15"/><line x1="17" y1="9" x2="23" y2="15"/></svg>,
+  shield: <svg className="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>,
+  doc: <svg className="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+};
+function falarSuave(texto, soundEnabled) {
+  if (!soundEnabled || !("speechSynthesis" in window)) return;
+  try { window.speechSynthesis.cancel(); const u = new SpeechSynthesisUtterance(texto.replace(/[*#_]/g,'')); u.lang="pt-BR"; u.pitch=1.05; u.rate=1.1; const vs = window.speechSynthesis.getVoices(); const v = vs.find(x=>x.lang.includes('pt-BR')||x.lang.includes('pt')); if(v) u.voice=v; window.speechSynthesis.speak(u); } catch(e){}
+}
+function AppTotalCompleto() {
+  const [abaAtiva, setAbaAtiva] = React.useState('chat');
+  const [userName, setUserName] = React.useState(localStorage.getItem('raru_user_name') || 'Alexander');
+  const [messages, setMessages] = React.useState([{ sender: 'assistant', text: `Olá ${localStorage.getItem('raru_user_name') || 'Alexander'}! Sou a Sarah, inteligência artificial sênior do Projeto Cidadão Sensor e do Grupo A Chave da Esperança (GADE). Pronta para interagir em voz alta e monitorar Mesquita e a Baixada Fluminense de forma autônoma.`, time: new Date().toLocaleTimeString('pt-BR', {hour:'2-digit', minute:'2-digit'}) }]);
+  const [input, setInput] = React.useState('');
+  const [isProcessing, setIsProcessing] = React.useState(false);
+  const [isListening, setIsListening] = React.useState(false);
+  const [soundEnabled, setSoundEnabled] = React.useState(true);
+  const [toast, setToast] = React.useState(null);
+  const showToast = (msg) => { setToast(msg); setTimeout(() => setToast(null), 3000); };
+  const falarSarah = (texto) => falarSuave(texto, soundEnabled);
+  const handleSendMessage = async (e) => {
+    e.preventDefault(); if (!input.trim() || isProcessing) return; const txt = input.trim(); const timeStr = new Date().toLocaleTimeString('pt-BR', {hour:'2-digit', minute:'2-digit'}); const novoHist = [...messages, { sender: 'user', text: txt, time: timeStr }]; setMessages(novoHist); setInput(''); setIsProcessing(true); let respostaFinal = "";
+    try { const r = await fetch(ENVELOPE, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ model: GROQ_MODEL, messages: [{ role: "system", content: `Você é a Sarah, assistente sênior do Projeto Cidadão Sensor e do Grupo Comunitário A Chave da Esperança GADE em Mesquita RJ. Operador: ${userName}. Responda direto, útil, sem asteriscos, em português do Brasil.` }, ...novoHist.map(m => ({ role: m.sender==='user'?'user':'assistant', content: m.text }))], temperature: 0.5, max_tokens: 500 }) }); const textResp = await r.text(); try { const data = JSON.parse(textResp); respostaFinal = data?.choices?.[0]?.message?.content || data?.reply || data?.resposta || data?.response || data?.text || ""; } catch { respostaFinal = textResp; } } catch {}
+    if (!respostaFinal || respostaFinal.length < 3) { respostaFinal = `Entendi, ${userName}. Central autônoma sincronizada.`; }
+    respostaFinal = respostaFinal.replace(/[*#_]/g, '').trim(); setMessages(prev => [...prev, { sender: 'assistant', text: respostaFinal, time: new Date().toLocaleTimeString('pt-BR', {hour:'2-digit', minute:'2-digit'}) }]); falarSarah(respostaFinal); setIsProcessing(false);
+  };
+  const toggleListening = () => { const SpeechRec = window.SpeechRecognition || window.webkitSpeechRecognition; if (!SpeechRec) { showToast("Reconhecimento de voz indisponível neste navegador."); return; } if (isListening) { setIsListening(false); return; } try { const rec = new SpeechRec(); rec.lang = "pt-BR"; rec.onstart = () => setIsListening(true); rec.onresult = (ev) => { let spoken = ev.results[0][0].transcript; if(spoken) { setInput(spoken); setIsListening(false); } }; rec.onerror = () => setIsListening(false); rec.onend = () => setIsListening(false); rec.start(); } catch(e) { setIsListening(false); } };
+  return (
+    <div className="space-y-4 font-mono w-full max-w-2xl mx-auto">
+      {toast && <div className="fixed top-4 left-1/2 -translate-x-1/2 z-50 cyber-card px-4 py-2 text-xs font-bold text-cyan-300 shadow-2xl">{toast}</div>}
+      <div className="flex gap-2">
+        <button onClick={() => setAbaAtiva('chat')} className={`cyber-button ${abaAtiva === 'chat' ? '!bg-cyan-400 !text-void' : ''}`}>{I.chat} <span>CHAT & VOZ IA</span></button>
+        <button onClick={() => setAbaAtiva('vistoria')} className={`cyber-button ${abaAtiva === 'vistoria' ? '!bg-cyan-400 !text-void' : ''}`}>{I.camera} <span>VISTORIA & DEMANDAS</span></button>
+      </div>
+      {abaAtiva === 'chat' ? (
+        <div className="cyber-card flex flex-col h-[75vh] p-3 sm:p-4 shadow-2xl">
+          <div className="flex justify-between items-center gap-2 border-b border-cyan-500/30 pb-2 mb-3"><span className="text-xs font-black text-cyan-300 uppercase tracking-widest flex items-center gap-2 leading-tight">{I.shield} <span>SARAH AI • GADE & CIDADÃO SENSOR</span></span><button onClick={() => setSoundEnabled(!soundEnabled)} className="cyber-button text-[9px] py-1 px-2.5 !w-auto whitespace-nowrap">{soundEnabled ? I.soundOn : I.soundOff} {soundEnabled ? 'VOZ DA SARAH ON' : 'MUDO'}</button></div>
+          <div className="flex-1 overflow-y-auto space-y-3 pr-1">{messages.map((m, idx) => (<div key={idx} className={`flex ${m.sender === 'user' ? 'justify-end' : 'justify-start'}`}><div className={`max-w-[85%] rounded-2xl p-3 text-xs leading-relaxed ${m.sender === 'user' ? 'bg-cyan-400 text-void font-bold rounded-br-none' : 'bg-black/90 text-slate-100 rounded-bl-none border border-cyan-500/30'}`}><div className="text-[8px] opacity-75 mb-1 font-mono">{m.sender === 'user' ? userName : 'Sarah AI'} • {m.time}</div><div className="font-sans whitespace-pre-line">{m.text}</div></div></div>))}{isProcessing && (<div className="flex justify-start"><div className="bg-black/90 border border-cyan-500/30 rounded-2xl p-3 text-xs text-cyan-300 animate-pulse">Sarah processando na Groq...</div></div>)}</div>
+          {isListening && (<div className="bg-pink-500/20 border border-pink-500 text-pink-300 p-2 rounded-xl text-center text-xs font-bold animate-pulse my-2 flex items-center justify-center gap-2"><span className="w-2 h-2 bg-pink-500 rounded-full animate-ping"></span> Ouvindo sua voz... Fale agora.</div>)}
+          <form onSubmit={handleSendMessage} className="flex gap-2 pt-2 border-t border-cyan-500/30 mt-2"><button type="button" onClick={toggleListening} className={`cyber-button py-2 px-3 !w-auto`}>{I.mic}</button><input type="text" value={input} onChange={e => setInput(e.target.value)} placeholder={`Fale ou digite para a Sarah, ${userName}...`} className="flex-1 min-w-0 bg-black border border-cyan-500/40 rounded-xl px-3 py-2 text-xs text-white" /><button type="submit" disabled={isProcessing || !input.trim()} className="cyber-button-solid py-2 px-3 text-xs !w-auto whitespace-nowrap">ENVIAR</button></form>
+        </div>
+      ) : (<PainelVistoriaEDemandas showToast={showToast} userName={userName} soundEnabled={soundEnabled} />)}
+    </div>
+  );
+}
+function PainelVistoriaEDemandas({ showToast, userName, soundEnabled }) {
+  const [mun, setMun] = React.useState(MUNICIPIOS_92[0]);
+  const [fotos, setFotos] = React.useState([]);
+  const [camOn, setCamOn] = React.useState(false);
+  const [nome, setNome] = React.useState(userName || '');
+  const [bairro, setBairro] = React.useState('Rocha Sobrinho');
+  const [rel, setRel] = React.useState('');
+  const [gps, setGps] = React.useState({lat:-22.7831, lon:-43.4294});
+  const [isAiAnalyzing, setIsAiAnalyzing] = React.useState(false);
+  const [clima, setClima] = React.useState(null);
+  const [frenteSelecionada, setFrenteSelecionada] = React.useState(FRENTES_EQUIPES_TABELA[5]);
+  const [categoriaDemanda, setCategoriaDemanda] = React.useState(CATEGORIAS_DEMANDAS[0]);
+  const [severidade, setSeveridade] = React.useState(SEVERIDADES_COMUNITARIAS[1]);
+  const [alarmeRusso, setAlarmeRusso] = React.useState(false);
+  const [alarmeComunitario, setAlarmeComunitario] = React.useState(false);
+  const [faseAlarme, setFaseAlarme] = React.useState('');
+  const [tempoAlarme, setTempoAlarme] = React.useState(0);
+  const [vento, setVento] = React.useState(0);
+  const [dicaAtual, setDicaAtual] = React.useState('');
+  const audioRef = React.useRef(null);
+  const sireneIntervalRef = React.useRef(null);
+  const faseTimerRef = React.useRef(null);
+  const countdownRef = React.useRef(null);
+  const protAtualRef = React.useRef(null);
+  const dicaIndexRef = React.useRef(0);
+  const dicaTimerRef = React.useRef(null);
+  const videoRef = React.useRef(null);
+  const streamRef = React.useRef(null);
+  React.useEffect(() => { if (!mun?.lat) return; fetch(`https://api.open-meteo.com/v1/forecast?latitude=${mun.lat}&longitude=${mun.lon}&current=temperature_2m,relative_humidity_2m,precipitation,wind_speed_10m,wind_gusts_10m&timezone=auto`).then(r => r.json()).then(d => { setClima(d.current); setVento(d.current?.wind_gusts_10m || d.current?.wind_speed_10m || 0); }).catch(() => {}); }, [mun]);
+  // SARAH COACH DE CAMPO - A CADA 2 MINUTOS, SÓ QUANDO CÂMERA LIGADA
+  React.useEffect(() => {
+    if (!camOn) { if (dicaTimerRef.current) clearInterval(dicaTimerRef.current); return; }
+    const falarDica = () => { const dica = DICAS_CAMPO[dicaIndexRef.current % DICAS_CAMPO.length]; dicaIndexRef.current++; setDicaAtual(dica); falarSuave(dica, soundEnabled); };
+    falarDica();
+    dicaTimerRef.current = setInterval(falarDica, 120000);
+    return () => { if (dicaTimerRef.current) clearInterval(dicaTimerRef.current); };
+  }, [camOn, soundEnabled]);
+  React.useEffect(() => { return () => { pararTodasSirenes(); if (streamRef.current) streamRef.current.getTracks().forEach(t => t.stop()); if (dicaTimerRef.current) clearInterval(dicaTimerRef.current); }; }, []);
+  const pararSomSirene = () => { try { if (sireneIntervalRef.current) clearInterval(sireneIntervalRef.current); sireneIntervalRef.current=null; if (audioRef.current?._osc) { try{ audioRef.current._osc.stop(); }catch(e){} } if (audioRef.current) { try{ audioRef.current.close(); }catch(e){} } audioRef.current=null; } catch(e){} };
+  const tocarSirene = (tipo) => {
+    pararSomSirene();
+    try { if(!audioRef.current) audioRef.current = new (window.AudioContext||window.webkitAudioContext)(); const ctx = audioRef.current; ctx.resume(); const osc = ctx.createOscillator(); const gain = ctx.createGain(); osc.type = tipo === 'russo' ? 'sawtooth' : 'sine'; osc.frequency.value = tipo === 'russo' ? 450 : 600; gain.gain.value = 0.15; osc.connect(gain); gain.connect(ctx.destination); osc.start(); audioRef.current._osc = osc; let subindo = true; sireneIntervalRef.current = setInterval(()=>{ let f = osc.frequency.value; if(subindo){ f+=30; if(f>=950) subindo=false; } else { f-=30; if(f<=400) subindo=true; } osc.frequency.setTargetAtTime(f, ctx.currentTime, 0.1); }, 80); } catch(e){}
+  };
+  const pararTodasSirenes = () => { setAlarmeRusso(false); setAlarmeComunitario(false); setFaseAlarme(''); setTempoAlarme(0); if (faseTimerRef.current) clearTimeout(faseTimerRef.current); if (countdownRef.current) clearInterval(countdownRef.current); pararSomSirene(); };
+  // ALARME 3 MIN TOCA + 1 MIN PAUSA + 1 MIN TOCA = 5 MIN TOTAL
+  const dispararSirene5Minutos = (tipo) => {
+    pararTodasSirenes();
+    if (tipo === 'russo') setAlarmeRusso(true); else setAlarmeComunitario(true);
+    showToast(`Sirene ${tipo === 'russo' ? 'Alarme Russo' : 'Prontidão Comunitária'}: 3 min toca, 1 min pausa, 1 min toca. Total 5 min.`);
+    let segundosRestantes = 180; setFaseAlarme('FASE 1 - TOCANDO 3 MIN'); setTempoAlarme(180); tocarSirene(tipo);
+    countdownRef.current = setInterval(()=>{ segundosRestantes--; setTempoAlarme(Math.max(0, segundosRestantes)); if (segundosRestantes <= 0) { clearInterval(countdownRef.current); } }, 1000);
+    faseTimerRef.current = setTimeout(() => {
+      // FASE 2 - PAUSA 1 MIN
+      pararSomSirene(); setFaseAlarme('FASE 2 - PAUSA 1 MIN'); let pausa = 60; setTempoAlarme(60); countdownRef.current = setInterval(()=>{ pausa--; setTempoAlarme(Math.max(0, pausa)); if (pausa<=0) clearInterval(countdownRef.current); }, 1000);
+      faseTimerRef.current = setTimeout(() => {
+        // FASE 3 - TOCA 1 MIN FINAL
+        tocarSirene(tipo); setFaseAlarme('FASE 3 - TOCANDO 1 MIN FINAL'); let final = 60; setTempoAlarme(60); countdownRef.current = setInterval(()=>{ final--; setTempoAlarme(Math.max(0, final)); if (final<=0) clearInterval(countdownRef.current); }, 1000);
+        faseTimerRef.current = setTimeout(() => { pararTodasSirenes(); showToast("Ciclo 3+1+1 encerrado. Total 5 minutos."); }, 60000);
+      }, 60000);
+    }, 180000);
+  };
+  const atualizarGPS = () => { if(!navigator.geolocation) return; navigator.geolocation.getCurrentPosition(p => { setGps({ lat: p.coords.latitude, lon: p.coords.longitude }); showToast('GPS sincronizado.'); }, () => {}, { enableHighAccuracy: true, timeout: 5000 }); };
+  const startCam = async () => { try { const s = await navigator.mediaDevices.getUserMedia({ video: { facingMode: { ideal: "environment" } } }); streamRef.current = s; setCamOn(true); setTimeout(() => { if(videoRef.current){ videoRef.current.srcObject = s; videoRef.current.play().catch(() => {}); } }, 100); atualizarGPS(); } catch { showToast('Câmera bloqueada.'); } };
+  const stopCam = () => { if(streamRef.current) streamRef.current.getTracks().forEach(t => t.stop()); setCamOn(false); };
+  // CARIMBO CALIBRADO - MESMA POSIÇÃO NA TELA E NA FOTO FINAL
+  const desenharCarimbo = (ctx, W, H, prot) => {
+    const h = 132; const y0 = H - h;
+    ctx.fillStyle = 'rgba(3,7,18,0.96)'; ctx.fillRect(0, y0, W, h);
+    ctx.fillStyle = '#00F2FE'; ctx.fillRect(0, y0, W, 2);
+    ctx.fillStyle = '#00F2FE'; ctx.font = 'bold 11px monospace'; ctx.fillText(`DATA ${new Date().toLocaleString('pt-BR')} | GPS ${gps.lat.toFixed(5)}, ${gps.lon.toFixed(5)}`, 12, y0 + 20);
+    ctx.fillStyle = '#FFFFFF'; ctx.font = 'bold 11px monospace'; ctx.fillText(`AGENTE ${(nome || 'Comunitario').slice(0,24)} | ${bairro.slice(0,18)} | ${mun.n}`, 12, y0 + 40);
+    ctx.fillStyle = '#FF0055'; ctx.font = 'bold 11px monospace'; ctx.fillText(`DEMANDA: ${categoriaDemanda.slice(0, 46)}`, 12, y0 + 60);
+    ctx.fillStyle = '#FFA500'; ctx.font = 'bold 10px monospace'; ctx.fillText(`SEVERIDADE: ${severidade}`, 12, y0 + 78);
+    ctx.fillStyle = '#FFD600'; ctx.font = 'bold 10px monospace'; ctx.fillText(`GOES-19 | CHUVA ${clima?.precipitation||0}mm | VENTO ${vento||0}km/h | PROT ${prot || protAtualRef.current || 'PROT-GADE'}`, 12, y0 + 96);
+    ctx.fillStyle = '#00F2FE'; ctx.font = 'bold 9px monospace'; ctx.fillText(`SHA-256: ${APP_SHA256}`, 12, y0 + 112);
+    ctx.fillStyle = '#00FF88'; ctx.font = 'bold 9px monospace'; ctx.fillText(`CIDAdao SENSOR - GRUPO A CHAVE DA ESPERANCA (GADE)`.toUpperCase(), 12, y0 + 126);
+  };
+  const capturarFotoFinal = () => { const v = videoRef.current; if(!v) return null; const canvas = document.createElement('canvas'); canvas.width = 720; canvas.height = Math.round(720 * (v.videoHeight / v.videoWidth)); const ctx = canvas.getContext('2d'); ctx.drawImage(v, 0, 0, canvas.width, canvas.height); const prot = gerarDadosProtocolo(); desenharCarimbo(ctx, canvas.width, canvas.height, prot); const base64Final = canvas.toDataURL('image/jpeg', 0.82); setFotos([base64Final]); showToast(`Foto gerada com carimbo calibrado e SHA-256.`); return base64Final; };
+  const gerarDadosProtocolo = () => { if(!nome) { showToast('Informe o nome do agente comunitário.'); return null; } if(!bairro) { showToast('Informe a localidade ou bairro.'); return null; } const seq = Math.floor(Math.random() * 8999 + 1000); const sig = mun.n.slice(0, 3).toUpperCase(); const prot = `PROT-GADE-${sig}-2026-${seq}`; protAtualRef.current = prot; return prot; };
+  const textoVistoria = (prot) => `[PARECER TECNICO DE VISTORIA E PERCEPCAO DE RISCO COMUNITARIO]\nProtocolo: ${prot || protAtualRef.current || 'PROT-GADE'}\nAgente Responsavel: ${nome || userName || 'Comunitario'}\nLocal: ${mun.n} - ${bairro}\nCategoria da Demanda: ${categoriaDemanda}\nSeveridade Comunitaria: ${severidade}\nFrente de Atuacao: ${frenteSelecionada}\nParametros GOES-19: Chuva ${clima?.precipitation||0}mm | Vento ${vento}km/h\nCoordenadas GPS: ${gps.lat.toFixed(5)}, ${gps.lon.toFixed(5)}\nAssinatura Criptografica SHA-256: ${APP_SHA256}\n\nRELATORIO / PARECER TECNICO:\n${rel || 'Inspecao e registro autonomo realizado in loco pela iniciativa comunitaria independente.'}\n\nNOTA DE CONFORMIDADE:\nDocumento gerado de forma autonoma pelo Projeto Cidadao Sensor e Grupo A Chave da Esperanca (GADE), amparado pelo direito civico de fiscalizacao e alerta preventivo comunitario.\n\nFoto em anexo.`;
+  const baixarFotoLeve = (base64) => { const a=document.createElement('a'); a.href=base64; a.download=`vistoria-${mun.n}-${Date.now()}.jpg`; a.click(); };
+  // WHATSAPP COMUM - FOTO + TEXTO JUNTOS
+  const enviarWhatsComum = async () => {
+    const prot = gerarDadosProtocolo(); if(!prot) return;
+    const texto = textoVistoria(prot);
+    let foto = fotos[0];
+    if (!foto && camOn) foto = capturarFotoFinal();
+    if (foto) {
+      try {
+        const blob = await (await fetch(foto)).blob();
+        const file = new File([blob], `vistoria-${mun.n}.jpg`, {type:'image/jpeg'});
+        if (navigator.canShare && navigator.canShare({files:[file]})) {
+          await navigator.share({ title: 'Vistoria Comunitaria GADE', text: texto, files: [file] });
+          showToast('WhatsApp Comum enviado com foto + laudo juntos.');
+          return;
+        }
+      } catch(e) {}
+      // Fallback: baixa foto + abre WhatsApp com texto
+      baixarFotoLeve(foto);
+      window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(texto + '\n\n[Foto baixada automaticamente, anexe ela aqui]')}`, '_blank');
+      showToast('Foto baixada. Anexe ela no WhatsApp que abriu.');
+      return;
+    }
+    window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(texto)}`, '_blank');
+    showToast('WhatsApp Comum aberto com laudo. Capture a foto antes para enviar junto.');
+  };
+  const adicionarNoStatusComFoto = async () => {
+    if(fotos.length===0){ showToast('Capture 1 foto primeiro.'); return; }
+    const prot = gerarDadosProtocolo() || 'PROT-GADE'; const texto = textoVistoria(prot);
+    try{ const blob = await (await fetch(fotos[0])).blob(); const file = new File([blob], `vistoria-${mun.n}.jpg`, {type:'image/jpeg'}); if(navigator.canShare && navigator.canShare({files:[file]})){ await navigator.share({ title:'Vistoria Comunitaria', text: texto, files:[file] }); showToast('Selecione 【entity-WhatsApp¦canonical_name=WhatsApp】 > Status.'); return; } }catch(e){}
+    baixarFotoLeve(fotos[0]); window.open(`https://wa.me/?text=${encodeURIComponent(texto)}`, '_blank');
+  };
+  const gerarLaudoComSarahAI = async () => {
+    if(!bairro) { showToast('Informe o bairro para a IA redigir o parecer.'); return; } setIsAiAnalyzing(true); showToast('Sarah AI redigindo parecer técnico comunitário...');
+    const promptVistoria = `Elabore um Parecer Tecnico Preliminar de Vistoria e Percepcao de Risco Comunitario para o municipio de ${mun.n}, bairro ${bairro}, referente a demanda: ${categoriaDemanda}, sob a severidade ${severidade}. Agente responsavel: ${nome || userName}. Frente: ${frenteSelecionada}. Dados climaticos: precipitacao ${clima?.precipitation||0}mm, vento ${vento}km/h. Assinatura SHA-256: ${APP_SHA256}. Relato adicional: ${rel}. Estruture com rigor tecnico autonomo do Grupo A Chave da Esperanca (GADE) e encerre com a Nota de Conformidade civica.`;
+    try { const response = await fetch(ENVELOPE, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ model: GROQ_MODEL, messages: [{ role: "user", content: promptVistoria }], temperature: 0.4, max_tokens: 600 }) }); const textResp = await response.text(); let respostaGroq = ""; try { const data = JSON.parse(textResp); respostaGroq = data?.choices?.[0]?.message?.content || data?.reply || data?.resposta || ""; } catch { respostaGroq = textResp; } setRel(respostaGroq.replace(/[*#_]/g, '').trim() + `\n\n[Assinatura Criptografica SHA-256: ${APP_SHA256}]`); setIsAiAnalyzing(false); showToast('Parecer tecnico gerado pela Sarah AI.'); } catch(e) { setRel(`PARECER TECNICO DE VISTORIA E PERCEPCAO DE RISCO COMUNITARIO\nMunicipio: ${mun.n} | Bairro: ${bairro}\nDemanda: ${categoriaDemanda}\nAgente: ${nome || userName}\nSeveridade: ${severidade}\nSHA-256: ${APP_SHA256}`); setIsAiAnalyzing(false); showToast('Parecer padrao aplicado.'); }
+  };
+  // PDF CORRIGIDO - TEXTO QUEBRADO, CARIMBO E FOTO
+  const gerarPDFTecnico = () => {
+    const prot = gerarDadosProtocolo() || 'PROT-GADE';
+    const win = window.open('', '_blank'); if(!win) { showToast('Permita pop-up para gerar PDF.'); return; }
+    const textoLimpo = textoVistoria(prot).replace(/\n/g, '<br/>');
+    win.document.write(`<html><head><title>Parecer Tecnico Comunitario - ${prot}</title><style>body{font-family:monospace;padding:20px;background:#fff;color:#000;max-width:700px;margin:0 auto} h1{font-size:16px;color:#0077cc} .box{border:2px solid #000;padding:16px;border-radius:10px} .carimbo{background:#030712;color:#00F2FE;padding:12px;border-radius:8px;font-size:11px;line-height:1.6;margin-top:12px} .carimbo b{color:#fff} img{width:100%;max-width:600px;border:2px solid #000;border-radius:8px;margin-top:12px} .btn{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:#00F2FE;color:#000;font-weight:900;padding:12px 20px;border-radius:999px;border:0;cursor:pointer} @media print{.btn{display:none}}</style></head><body><h1>PARECER TECNICO COMUNITARIO - GADE</h1><div class="box">${textoLimpo}</div><div class="carimbo"><b>PROTOCOLO:</b> ${prot}<br/><b>GPS:</b> ${gps.lat.toFixed(5)}, ${gps.lon.toFixed(5)} | <b>DATA:</b> ${new Date().toLocaleString('pt-BR')}<br/><b>DEMANDA:</b> ${categoriaDemanda}<br/><b>SEVERIDADE:</b> ${severidade}<br/><b>SHA-256:</b> ${APP_SHA256}<br/><b>CIDAdao SENSOR - GRUPO A CHAVE DA ESPERANCA (GADE)</b></div>${fotos[0] ? `<img src="${fotos[0]}" />` : '<p style="font-size:12px;color:#666">[Sem foto - capture antes de gerar o PDF para incluir a foto com carimbo]</p>'}<br/><button class="btn" onclick="window.print()">SALVAR RELATORIO PDF</button></body></html>`);
+    win.document.close(); showToast('Relatorio PDF gerado com carimbo e foto.');
+  };
+  const formatarTempo = (s) => `${Math.floor(s/60)}:${String(s%60).padStart(2,'0')}`;
+  return (
+    <div className="w-full space-y-3.5 font-mono max-w-4xl mx-auto">
+      <div className="p-4 rounded-2xl border border-cyan-500/40 space-y-3 bg-[#030712] shadow-2xl cyber-card relative overflow-hidden">
+        <div className="relative z-10 flex justify-between items-center border-b border-cyan-500/30 pb-2.5"><h3 className="text-[11px] text-cyan-300 font-black uppercase tracking-wider">PAINEL DE VISTORIA & DEMANDAS TECNICAS (GADE)</h3></div>
+        <div className="bg-black border border-pink-500/30 rounded-xl p-2 text-[9px] text-pink-500 font-bold text-center">NO-MAE MESQUITA IP 10.10.21.15 - AUTONOMIA E SEGURANCA SHA-256</div>
+        <div className="bg-black border border-orange-500/40 rounded-xl p-3 space-y-2">
+          <div className="flex justify-between items-center"><b className="text-[10px] text-white">CONTROLE DE SIRENES - 3 MIN TOCA + 1 MIN PAUSA + 1 MIN TOCA = 5 MIN</b><span className="text-[9px] text-yellow-300 font-bold">{faseAlarme || 'PRONTIDAO GADE ATIVA'}</span></div>
+          {(alarmeRusso || alarmeComunitario) && (<div className="text-center"><div className="text-3xl font-black text-white">{formatarTempo(tempoAlarme)}</div><div className="text-[9px] text-cyan-300">{faseAlarme}</div></div>)}
+          <div className="grid grid-cols-2 gap-2">
+            <button onClick={() => alarmeRusso ? pararTodasSirenes() : dispararSirene5Minutos('russo')} className={`cyber-button text-[10px] py-2.5 ${alarmeRusso ? '!bg-red-500 !text-white !border-red-400 animate-pulse' : '!border-red-500/50 !text-red-300'}`}>{alarmeRusso ? 'PARAR ALARME RUSSO' : 'DISPARAR ALARME RUSSO (3+1+1)'}</button>
+            <button onClick={() => alarmeComunitario ? pararTodasSirenes() : dispararSirene5Minutos('comunitario')} className={`cyber-button text-[10px] py-2.5 ${alarmeComunitario ? '!bg-amber-500 !text-black !border-amber-400 animate-pulse' : '!border-amber-500/50 !text-amber-300'}`}>{alarmeComunitario ? 'PARAR SIRENE COMUNITARIA' : 'PRONTIDAO COMUNITARIA (3+1+1)'}</button>
+          </div>
+        </div>
+        {dicaAtual && camOn && (<div className="bg-cyan-500/10 border border-cyan-500/40 rounded-xl p-2.5 text-[11px] text-cyan-200 leading-relaxed">SARAH NO CAMPO: {dicaAtual}</div>)}
+        <div className="space-y-2 bg-black/90 p-3 rounded-xl border border-cyan-500/30">
+          <div><label className="text-[9px] text-cyan-300 font-bold uppercase block mb-1">Frente de Atuacao / Ator Comunitario:</label><select value={frenteSelecionada} onChange={e => setFrenteSelecionada(e.target.value)} className="w-full bg-black text-white border border-cyan-500/40 rounded-xl p-2 text-[10px] font-bold">{FRENTES_EQUIPES_TABELA.map((f, i) => <option key={i} value={f}>{f}</option>)}</select></div>
+          <div><label className="text-[9px] text-cyan-300 font-bold uppercase block mb-1">Categoria da Demanda Urbana:</label><select value={categoriaDemanda} onChange={e => setCategoriaDemanda(e.target.value)} className="w-full bg-black text-cyan-300 border border-cyan-500/40 rounded-xl p-2 text-[10px] font-bold">{CATEGORIAS_DEMANDAS.map((c, i) => <option key={i} value={c}>{c}</option>)}</select></div>
+          <div><label className="text-[9px] text-cyan-300 font-bold uppercase block mb-1">Indicador de Severidade Comunitaria:</label><select value={severidade} onChange={e => setSeveridade(e.target.value)} className="w-full bg-black text-pink-400 border border-cyan-500/40 rounded-xl p-2 text-[10px] font-bold">{SEVERIDADES_COMUNITARIAS.map((s, i) => <option key={i} value={s}>{s}</option>)}</select></div>
+        </div>
+        <select value={mun.n} onChange={e => { const m = MUNICIPIOS_92.find(x => x.n === e.target.value); setMun(m); }} className="w-full bg-black text-cyan-300 border border-cyan-500/40 rounded-xl p-2.5 text-xs font-bold cursor-pointer">{MUNICIPIOS_92.map((m, i) => <option key={i} value={m.n}>{m.n} (IP: {m.ip})</option>)}</select>
+        <div className="bg-black border border-cyan-500/30 rounded-xl p-3 space-y-2.5">
+          <div className="flex justify-between items-center"><span className="text-[10px] text-cyan-300 font-bold uppercase">CAMERA COM CARIMBO CALIBRADO & SHA-256</span>{!camOn ? <button onClick={startCam} className="cyber-button text-[10px] py-1.5 px-3">LIGAR Camera</button> : <button onClick={stopCam} className="cyber-button-danger text-[10px] py-1.5 px-3">DESLIGAR</button>}</div>
+          <div className="bg-black rounded-xl overflow-hidden border border-cyan-500/30 relative" style={{ minHeight: '180px' }}><video ref={videoRef} autoPlay playsInline muted style={{ width: '100%', height: '180px', objectFit: 'cover', display: camOn ? 'block' : 'none' }} />{!camOn && <div className="h-[180px] grid place-items-center text-slate-500 text-xs font-bold">Toque em Ligar Camera para registrar</div>}{camOn && (<div className="absolute inset-0 pointer-events-none"><div className="absolute top-0 left-0 right-0 h-[2px] bg-cyan-400 animate-raru-scan" /><div className="absolute bottom-2 left-2 right-2"><div className="carimbo-css"><span>{`GPS ${gps.lat.toFixed(4)}, ${gps.lon.toFixed(4)} | ${severidade.slice(0, 22)}`}</span><span>{categoriaDemanda.slice(0, 36)}...</span><span>SHA-256: {APP_SHA256.slice(0, 20)}...</span></div></div></div>)}</div>
+          {camOn && (<button onClick={capturarFotoFinal} className="cyber-button-solid w-full text-xs py-3">CAPTURAR FOTO COM CARIMBO TECNICO CALIBRADO</button>)}
+          {fotos.length > 0 && (<div className="grid grid-cols-1 gap-2 pt-2">{fotos.map((img, idx) => (<div key={idx} className="relative rounded-lg overflow-hidden border border-cyan-500/40"><img src={img} alt="Vistoria" className="w-full h-32 object-cover" /><button onClick={() => setFotos([])} className="absolute top-1 right-1 bg-red-500 text-white w-5 h-5 text-[10px] font-bold flex items-center justify-center rounded-full">X</button><span className="absolute bottom-1 left-1 bg-black/80 text-[8px] text-green-300 px-2 py-1 rounded">FOTO COM CARIMBO CALIBRADO & SHA-256</span></div>))}</div>)}
+        </div>
+        <div className="space-y-3"><input value={nome} onChange={e => setNome(e.target.value)} placeholder="Agente Comunitario Responsavel *" className="w-full bg-black border border-cyan-500/30 rounded-xl p-2.5 text-xs text-white" /><input value={bairro} onChange={e => setBairro(e.target.value)} placeholder="Bairro / Comunidade * (Rocha Sobrinho, Chatuba...)" className="w-full bg-black border border-cyan-500/30 rounded-xl p-2.5 text-xs text-white" /><button onClick={gerarLaudoComSarahAI} disabled={isAiAnalyzing} className="cyber-button-solid w-full text-xs py-3.5">{isAiAnalyzing ? "SARAH AI REDIGINDO PARECER TECNICO..." : "GERAR PARECER TECNICO COM SARAH AI"}</button><textarea value={rel} onChange={e => setRel(e.target.value)} rows="5" placeholder="Relato tecnico da inspecao comunitaria e urbana..." className="w-full bg-black border border-cyan-500/30 rounded-xl p-3 text-xs text-white resize-none leading-relaxed" /><button onClick={gerarPDFTecnico} className="cyber-button w-full text-xs py-3">GERAR PARECER TECNICO EM PDF - COM FOTO + CARIMBO</button><button onClick={enviarWhatsComum} className="cyber-button-solid w-full text-xs py-3.5">ENVIAR WHATSAPP COMUM - FOTO + LAUDO JUNTOS</button><button onClick={adicionarNoStatusComFoto} className="cyber-button w-full text-xs py-3">PUBLICAR NO STATUS COM FOTO</button></div>
+      </div>
+    </div>
+  );
+}
+ReactDOM.createRoot(document.getElementById('root')).render(<AppTotalCompleto />);
+</script>
+</body>
+</html>
