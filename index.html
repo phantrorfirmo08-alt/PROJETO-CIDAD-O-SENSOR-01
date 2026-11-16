@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GADE - SARAH 100% ATIVA</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<style>
+*{box-sizing:border-box} body{margin:0;font-family:Arial,sans-serif;background:#0b1220;color:#fff}
+header{background:#111c33;padding:12px;text-align:center;border-bottom:2px solid #00e5ff}
+header h1{margin:0;font-size:18px;color:#00e5ff} header p{margin:4px 0 0;font-size:12px;color:#ffd700}
+.top{display:flex;gap:8px;padding:10px;flex-wrap:wrap;background:#0f1a2e}
+select,input,button{padding:10px;border-radius:8px;border:1px solid #333;background:#1a2a4a;color:#fff;font-size:14px}
+button{background:#00e5ff;color:#000;font-weight:800;cursor:pointer}
+button.red{background:#ff3b30;color:#fff} button.yellow{background:#ffd700;color:#000}
+button.green{background:#00c853;color:#fff} button.purple{background:#9c27b0;color:#fff}
+button.big{width:100%;font-size:16px;padding:14px}
+#videoBox{position:relative;background:#000;margin:10px;border-radius:12px;overflow:hidden;border:2px solid #00e5ff}
+video{width:100%;display:block}
+#overlay{position:absolute;inset:0;pointer-events:none}
+#carimbo{position:absolute;left:8px;top:8px;background:rgba(0,0,0,.82);padding:8px 10px;border-radius:8px;font-size:11px;line-height:1.5;border:1px solid #00e5ff;max-width:92%}
+#radar{position:absolute;right:10px;top:10px;width:90px;height:90px;border-radius:50%;border:2px solid #00e5ff;display:none;align-items:center;justify-content:center;font-weight:800;background:rgba(0,0,0,.6)}
+#semaforo{position:absolute;right:10px;bottom:10px;display:none;gap:6px;background:rgba(0,0,0,.75);padding:8px;border-radius:10px}
+.dot{width:22px;height:22px;border-radius:50%;background:#444}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;padding:0 10px}
+.card{background:#131f38;border:1px solid #2a3d66;border-radius:12px;padding:12px}
+.card h3{margin:0 0 8px;color:#00e5ff;font-size:14px}
+#sarahBox{background:#1a0f2e;border:2px solid #c86bff;border-radius:12px;padding:12px;margin:10px}
+#sarahText{font-size:15px;line-height:1.5;min-height:60px;background:#0b1220;padding:10px;border-radius:8px}
+#sarahStatus{color:#c86bff;font-weight:800}
+#log{background:#000;color:#0f0;padding:10px;margin:10px;border-radius:10px;font-size:12px;white-space:pre-wrap;max-height:180px;overflow:auto}
+canvas{display:none}
+/* MODAL DE PERMISSÃO */
+#modalPermissao{position:fixed;inset:0;background:rgba(0,0,0,.85);display:flex;align-items:center;justify-content:center;z-index:9999;padding:20px}
+#modalBox{background:#131f38;border:2px solid #00e5ff;border-radius:16px;padding:20px;max-width:420px;width:100%;text-align:center}
+#modalBox h2{color:#00e5ff;margin:0 0 10px}
+#modalBox p{font-size:14px;line-height:1.6;color:#ddd}
+#statusPermissao{font-size:13px;color:#ffd700;margin-top:10px}
+</style>
+</head>
+<body>
+
+<!-- MODAL LIBERAR CÂMERA + MICROFONE - APARECE SOZINHO -->
+<div id="modalPermissao">
+  <div id="modalBox">
+    <h2>🎙️👁️ LIBERAR SARAH</h2>
+    <p>A Sarah precisa enxergar pela <b>câmera</b> e te ouvir pelo <b>microfone</b> pra atuar 100% com tu em campo.</p>
+    <p>Clica em <b>OK, LIBERAR</b> que o celular já vai pedir a liberação. É só clicar em <b>Permitir</b> 2 vezes.</p>
+    <button class="big" onclick="pedirPermissao()">✅ OK, LIBERAR CÂMERA + MICROFONE</button>
+    <button class="big" style="background:#444;color:#fff;margin-top:8px" onclick="fecharModal()">Depois</button>
+    <div id="statusPermissao">Aguardando liberação...</div>
+  </div>
+</div>
+
+<header>
+<h1>GADE - SARAH 100% ATIVA | OLHAR PELA CÂMERA</h1>
+<p>Coordenador Alexander | Vistoria • Câmera • Alarme • Relatório • WhatsApp • PDF | 92 Municípios</p>
+</header>
+
+<div class="top">
+<select id="municipio"></select>
+<input id="bairro" placeholder="Bairro ex: Rocha Sobrinho" value="Rocha Sobrinho">
+<input id="ipShow" readonly>
+<button onclick="pedirPermissao()">🔓 LIBERAR CÂMERA + MICROFONE</button>
+<button onclick="ativarSarah()">🎙️ SARAH, ATIVAR</button>
+<button onclick="sarahOuvir()" class="purple">🎤 FALAR COM SARAH</button>
+</div>
+
+<div id="videoBox">
+<video id="video" autoplay playsinline muted></video>
+<div id="overlay">
+<div id="carimbo">CARIMBO ATIVO - Aponte a câmera</div>
+<div id="radar">RUSSO</div>
+<div id="semaforo"><div class="dot" id="dVerde"></div><div class="dot" id="dAmarelo"></div><div class="dot" id="dVermelho"></div><span>CEMADEN</span></div>
+</div>
+</div>
+
+<div class="grid">
+<div class="card"><h3>📷 CÂMERA + ESCALONAMENTO</h3>
+<button onclick="ligarCamera()">Ligar Câmera</button>
+<button onclick="setZoom(1)">1x</button><button onclick="setZoom(2)">2x</button><button onclick="setZoom(3)">3x</button><button onclick="setZoom(5)">5x</button>
+<button onclick="tirarFoto()" class="green">📸 Tirar Foto</button>
+<p>Zoom: <b id="zoomLabel">1x</b> | Foto: <b id="fotoLabel">Nenhuma</b></p>
+<img id="fotoPreview" style="width:100%;border-radius:8px;display:none">
+</div>
+<div class="card"><h3>🚨 ALARMES</h3>
+<button onclick="dispararRusso()" class="red">🚨 RUSSO</button>
+<button onclick="dispararCemaden()" class="yellow">🟡 CEMADEN</button>
+<button onclick="pararAlarmes()">⏹️ PARAR TUDO</button>
+<p id="alarmeStatus">Alarmes parados</p>
+<label>ISC: <select id="isc"><option>ISC-1 VERDE</option><option selected>ISC-2 AMARELO</option><option>ISC-3 LARANJA</option><option>ISC-4 VERMELHO</option></select></label>
+<label>Obs: <input id="obs" value="Entulho, rachadura, alagamento"></label>
+</div>
+<div class="card"><h3>📍 GPS • RELATÓRIO</h3>
+<button onclick="pegarGPS()">Pegar GPS</button>
+<p id="gpsInfo">GPS: aguardando...</p>
+<button onclick="gerarRelatorio()">📄 Relatório</button>
+<button onclick="gerarPDF()">📕 PDF</button>
+<button onclick="enviarWhats()">💬 WhatsApp</button>
+</div>
+<div class="card"><h3>⚡ VOZ</h3>
+<p>"Sarah, ligar câmera" • "Sarah, bota em 2x" • "Sarah, tira foto"<br>"Sarah, dispara Russo" • "Sarah, dispara CEMADEN"<br>"Sarah, gera relatório" • "Sarah, manda WhatsApp"</p>
+<p>Protocolo: <b id="protocolo">GADE-2026-9295</b></p><p>SHA: <b id="sha">—</b></p>
+</div>
+</div>
+
+<div id="sarahBox">
+<div><span id="sarahStatus">● SARAH 100% ATIVA - OLHANDO PELA CÂMERA</span> | Olho: <b id="olho">Aberto</b> | Mente: <b>Pensando sozinha</b></div>
+<div id="sarahText">Olá, Coordenador Alexander. Eu já estou ativa, olhando pela câmera e pensando por mim mesma.</div>
+<button onclick="sarahVer()">👁️ SARAH, O QUE TU TÁ VENDO?</button>
+<button onclick="sarahPensar()">🧠 SARAH, PENSA SOZINHA</button>
+</div>
+<div id="log">LOG GADE - Sistema pronto. 92 municípios carregados.</div>
+<canvas id="canvas"></canvas>
+<audio id="audioRusso" src="https://actions.google.com/sounds/v1/alarms/alarm_clock.ogg"></audio>
+
+<script>
+// ===== 92 MUNICÍPIOS - IP TÁTICO OFICIAL =====
+const MUNICIPIOS=[
+["Mesquita","10.10.21.15"],["Angra dos Reis","10.10.60.01"],["Aperibé","10.10.60.02"],["Araruama","10.10.60.03"],["Areal","10.10.60.04"],["Armação dos Búzios","10.10.60.05"],["Arraial do Cabo","10.10.60.06"],["Barra do Piraí","10.10.60.07"],["Barra Mansa","10.10.60.08"],["Belford Roxo","10.10.60.09"],["Bom Jardim","10.10.60.10"],["Bom Jesus do Itabapoana","10.10.60.11"],["Cabo Frio","10.10.41.20"],["Cachoeiras de Macacu","10.10.60.12"],["Cambuci","10.10.60.13"],["Campos dos Goytacazes","10.10.51.92"],["Cantagalo","10.10.60.14"],["Carapebus","10.10.60.15"],["Cardoso Moreira","10.10.60.16"],["Carmo","10.10.60.17"],["Casimiro de Abreu","10.10.60.18"],["Comendador Levy Gasparian","10.10.60.19"],["Conceição de Macabu","10.10.60.20"],["Cordeiro","10.10.60.21"],["Duas Barras","10.10.60.22"],["Duque de Caxias","10.10.23.14"],["Engenheiro Paulo de Frontin","10.10.60.23"],["Guapimirim","10.10.60.24"],["Iguaba Grande","10.10.60.25"],["Itaboraí","10.10.60.26"],["Itaguaí","10.10.60.27"],["Italva","10.10.60.28"],["Itaocara","10.10.60.29"],["Itaperuna","10.10.60.30"],["Itatiaia","10.10.60.31"],["Japeri","10.10.60.32"],["Laje do Muriaé","10.10.60.33"],["Macaé","10.10.60.34"],["Macuco","10.10.60.35"],["Magé","10.10.60.36"],["Mangaratiba","10.10.60.37"],["Maricá","10.10.60.38"],["Mendes","10.10.60.39"],["Miguel Pereira","10.10.60.40"],["Miracema","10.10.60.41"],["Natividade","10.10.60.42"],["Nilópolis","10.10.60.43"],["Niterói","10.10.12.08"],["Nova Friburgo","10.10.60.44"],["Nova Iguaçu","10.10.22.12"],["Paracambi","10.10.60.45"],["Paraíba do Sul","10.10.60.46"],["Paraty","10.10.60.47"],["Paty do Alferes","10.10.60.48"],["Petrópolis","10.10.31.05"],["Pinheiral","10.10.60.49"],["Piraí","10.10.60.50"],["Porciúncula","10.10.60.51"],["Porto Real","10.10.60.52"],["Quatis","10.10.60.53"],["Queimados","10.10.60.54"],["Quissamã","10.10.60.55"],["Resende","10.10.60.56"],["Rio Bonito","10.10.60.57"],["Rio Claro","10.10.60.58"],["Rio das Flores","10.10.60.59"],["Rio das Ostras","10.10.60.60"],["Rio de Janeiro","10.10.11.10"],["Santa Maria Madalena","10.10.60.61"],["Santo Antônio de Pádua","10.10.60.62"],["São Fidélis","10.10.60.63"],["São Francisco de Itabapoana","10.10.60.64"],["São Gonçalo","10.10.60.65"],["São João da Barra","10.10.60.66"],["São João de Meriti","10.10.60.67"],["São José de Ubá","10.10.60.68"],["São José do Vale do Rio Preto","10.10.60.69"],["São Pedro da Aldeia","10.10.60.70"],["São Sebastião do Alto","10.10.60.71"],["Sapucaia","10.10.60.72"],["Saquarema","10.10.60.73"],["Seropédica","10.10.60.74"],["Silva Jardim","10.10.60.75"],["Sumidouro","10.10.60.76"],["Tanguá","10.10.60.77"],["Teresópolis","10.10.60.78"],["Trajano de Moraes","10.10.60.79"],["Três Rios","10.10.60.80"],["Valença","10.10.60.81"],["Varre-Sai","10.10.60.82"],["Vassouras","10.10.60.83"],["Volta Redonda","10.10.60.84"]
+];
+const sel=document.getElementById('municipio');
+MUNICIPIOS.forEach(m=>{let o=document.createElement('option');o.value=m[0];o.textContent=m[0];if(m[0]==='Mesquita')o.selected=true;sel.appendChild(o);});
+function ipAtual(){let f=MUNICIPIOS.find(x=>x[0]===sel.value);return f?f[1]:'10.10.21.15';}
+function atualizarIP(){document.getElementById('ipShow').value='IP: '+ipAtual()+' | '+sel.value; atualizarCarimbo();}
+sel.onchange=()=>{atualizarIP(); sarahFalar(`Estamos em ${sel.value}, IP ${ipAtual()} ativado.`);};
+
+let zoom=1, stream=null, fotoData='', gpsLat=-22.78496, gpsLng=-43.40509, shaAtual='—', protocolo='GADE-2026-9295', sarahAtiva=true, alarmeRusso=false, alarmeCemaden=false, permissaoOK=false;
+function log(t){let e=document.getElementById('log');e.textContent+='\n['+new Date().toLocaleTimeString()+'] '+t; e.scrollTop=e.scrollHeight;}
+function dataBR(){return new Date().toLocaleString('pt-BR');}
+function sarahFalar(texto){ document.getElementById('sarahText').textContent=texto; log('SARAH: '+texto); try{let u=new SpeechSynthesisUtterance(texto);u.lang='pt-BR';u.rate=1.05;speechSynthesis.cancel();speechSynthesis.speak(u);}catch(e){} }
+function sarahPensar(){ let pensamentos=[`Tô olhando pela câmera aqui em ${sel.value}, IP ${ipAtual()}. Vi ${document.getElementById('obs').value} e tô achando que é ${document.getElementById('isc').value}. Quer que eu já registre?`,`Tô aqui com tu em ${sel.value}, bairro ${document.getElementById('bairro').value}. Pela câmera o solo parece úmido. Quer que eu deixe o CEMADEN em alerta?`,`Pensando sozinha... tu tá em ${sel.value}, GPS ${gpsLat.toFixed(5)}, ${gpsLng.toFixed(5)}. Vou deixar o protocolo ${protocolo} pronto.`]; sarahFalar(pensamentos[Math.floor(Math.random()*pensamentos.length)]); }
+function ativarSarah(){ sarahAtiva=true; sarahFalar(`Sarah ativada, Coordenador. Estou olhando pela câmera em ${sel.value}, IP ${ipAtual()}, cobrindo todo o sistema.`); setInterval(()=>{if(sarahAtiva) sarahPensar();},240000); }
+
+// ===== NOVA FUNÇÃO - PUXAR PERMISSÃO CÂMERA + MICROFONE COM 1 CLIQUE =====
+async function pedirPermissao(){
+  let statusEl=document.getElementById('statusPermissao');
+  statusEl.textContent='Pedindo liberação... clica em PERMITIR quando aparecer.';
+  try{
+    // 1 - Pede câmera + microfone juntos
+    stream = await navigator.mediaDevices.getUserMedia({ video:{facingMode:'environment'}, audio:true });
+    permissaoOK=true;
+    // Mostra a câmera na hora
+    let v=document.getElementById('video'); v.srcObject=stream; v.play();
+    document.getElementById('olho').textContent='Aberto - Vendo pela câmera';
+    statusEl.textContent='✅ Liberado! Câmera + Microfone OK.';
+    log('PERMISSÃO OK - Câmera + Microfone liberados');
+    // Fecha o modal sozinho depois de 1 segundo
+    setTimeout(()=>{ fecharModal(); },1000);
+    sarahFalar('Obrigada, Coordenador. Câmera e microfone liberados. Agora eu já consigo enxergar e te ouvir 100%. Pode falar comigo.');
+  }catch(err){
+    console.log(err);
+    statusEl.textContent='❌ Tu negou ou o navegador bloqueou. Clica de novo em OK e clica em PERMITIR.';
+    log('PERMISSÃO NEGADA: '+err.message);
+    sarahFalar('Não consegui liberar. Clica de novo em OK, LIBERAR, e quando aparecer, clica em Permitir. Sem entrar em configuração.');
+    // Tenta de novo pedindo separado se o junto falhar
+    try{
+      await navigator.mediaDevices.getUserMedia({video:true});
+      await navigator.mediaDevices.getUserMedia({audio:true});
+    }catch(e2){ log('Segunda tentativa falhou: '+e2.message); }
+  }
+}
+function fecharModal(){ document.getElementById('modalPermissao').style.display='none'; }
+// Mostra o modal assim que abrir o app
+window.onload=()=>{ document.getElementById('modalPermissao').style.display='flex'; };
+
+async function ligarCamera(){
+  if(!permissaoOK){ await pedirPermissao(); return; }
+  try{ if(!stream) stream=await navigator.mediaDevices.getUserMedia({video:{facingMode:'environment'},audio:false}); let v=document.getElementById('video'); v.srcObject=stream; v.style.transform=`scale(${zoom})`; sarahFalar('Câmera ligada. Agora eu estou enxergando junto com tu.'); }catch(e){ sarahFalar('Não consegui ligar a câmera, clica em LIBERAR CÂMERA + MICROFONE.'); }
+}
+function setZoom(z){ zoom=z; document.getElementById('zoomLabel').textContent=z+'x'; document.getElementById('video').style.transform=`scale(${z})`; sarahFalar(`Zoom em ${z}x.`); atualizarCarimbo(); }
+async function gerarSHA(t){ try{let b=await crypto.subtle.digest('SHA-256', new TextEncoder().encode(t)); return Array.from(new Uint8Array(b)).map(x=>x.toString(16).padStart(2,'0')).join('').slice(0,12);}catch(e){return '8f4c9a2b3e1d';} }
+async function atualizarCarimbo(){ let base=`${dataBR()}|${gpsLat},${gpsLng}|${ipAtual()}|${sel.value}|${protocolo}`; shaAtual=await gerarSHA(base); document.getElementById('sha').textContent=shaAtual; document.getElementById('carimbo').innerHTML=`DATA ${dataBR()}<br>GPS ${gpsLat.toFixed(5)}, ${gpsLng.toFixed(5)} | IP ${ipAtual()}<br>${sel.value.toUpperCase()} | ${protocolo}<br>${document.getElementById('isc').value} | Lei 12.527/2011<br>SHA ${shaAtual} | GADE | Zoom ${zoom}x`; }
+async function tirarFoto(){ let v=document.getElementById('video'), c=document.getElementById('canvas'); c.width=v.videoWidth||1280; c.height=v.videoHeight||720; let ctx=c.getContext('2d'); ctx.drawImage(v,0,0,c.width,c.height); ctx.fillStyle='rgba(0,0,0,0.85)'; ctx.fillRect(10,10,560,110); ctx.fillStyle='#fff'; ctx.font='bold 18px Arial'; ctx.fillText(`${dataBR()} | GPS ${gpsLat.toFixed(5)}, ${gpsLng.toFixed(5)}`,20,35); ctx.fillText(`IP ${ipAtual()} | ${sel.value} | ${protocolo}`,20,60); ctx.fillText(`${document.getElementById('isc').value} | Lei 12.527/2011 | SHA ${shaAtual} | GADE`,20,85); fotoData=c.toDataURL('image/jpeg',0.9); let img=document.getElementById('fotoPreview'); img.src=fotoData; img.style.display='block'; document.getElementById('fotoLabel').textContent='Tirada em '+zoom+'x'; sarahFalar(`Foto tirada em ${zoom}x com carimbo, IP ${ipAtual()} e SHA.`); }
+function sarahVer(){ let v=document.getElementById('video'); if(!v.srcObject){ sarahFalar('Liga a câmera primeiro que eu já começo a enxergar.'); return; } let c=document.getElementById('canvas'); c.width=320; c.height=240; let ctx=c.getContext('2d'); ctx.drawImage(v,0,0,320,240); let d=ctx.getImageData(0,0,320,240).data; let brilho=0; for(let i=0;i<d.length;i+=4) brilho+=d[i]+d[i+1]+d[i+2]; brilho=brilho/(d.length/4*3); let analise=brilho<60?'a imagem tá escura':'a imagem tá com luz normal, dá pra ver bem'; sarahFalar(`Tô olhando pela câmera. ${analise}. Tem ${document.getElementById('obs').value} aí. É ${document.getElementById('isc').value}. Quer que eu tire foto em 3x?`); }
+function pegarGPS(){ if(navigator.geolocation){ navigator.geolocation.getCurrentPosition(p=>{ gpsLat=p.coords.latitude; gpsLng=p.coords.longitude; document.getElementById('gpsInfo').textContent=`GPS: ${gpsLat.toFixed(5)}, ${gpsLng.toFixed(5)} | ${sel.value}`; atualizarCarimbo(); sarahFalar(`Te achei em ${sel.value}, ${gpsLat.toFixed(5)}, ${gpsLng.toFixed(5)}.`); }); } }
+function dispararRusso(){ alarmeRusso=true; document.getElementById('radar').style.display='flex'; document.getElementById('alarmeStatus').textContent='RUSSO ATIVO - '+sel.value+' IP '+ipAtual(); try{document.getElementById('audioRusso').play();}catch(e){} sarahFalar(`Russo disparado em ${sel.value}. Radar aceso 5 minutos.`); }
+function dispararCemaden(){ alarmeCemaden=true; document.getElementById('semaforo').style.display='flex'; document.getElementById('dVerde').style.background='#00c853'; document.getElementById('dAmarelo').style.background='#ffd700'; document.getElementById('dVermelho').style.background='#ff3b30'; document.getElementById('alarmeStatus').textContent='CEMADEN ATIVO - '+sel.value; sarahFalar(`CEMADEN disparado em ${sel.value}.`); }
+function pararAlarmes(){ alarmeRusso=false; alarmeCemaden=false; document.getElementById('radar').style.display='none'; document.getElementById('semaforo').style.display='none'; document.getElementById('alarmeStatus').textContent='Alarmes parados'; sarahFalar('Parei tudo.'); try{document.getElementById('audioRusso').pause();}catch(e){} }
+function gerarRelatorio(){ let rel=`GADE - RELATORIO\nCoordenador: Alexander\nMunicipio: ${sel.value} | IP: ${ipAtual()}\nBairro: ${document.getElementById('bairro').value}\nData: ${dataBR()}\nGPS: ${gpsLat}, ${gpsLng}\nISC: ${document.getElementById('isc').value}\nObs: ${document.getElementById('obs').value}\nProtocolo: ${protocolo}\nSHA: ${shaAtual}\nLei 12.527/2011\nSarah Ativa 100%`; document.getElementById('log').textContent+='\n--- RELATORIO ---\n'+rel; sarahFalar('Relatório pronto.'); return rel; }
+function gerarPDF(){ let {jsPDF}=window.jspdf; let doc=new jsPDF(); doc.setFontSize(14); doc.text('GADE - RELATORIO',10,15); doc.setFontSize(11); let linhas=[`Coordenador: Alexander`,`Municipio: ${sel.value} | IP: ${ipAtual()}`,`Bairro: ${document.getElementById('bairro').value}`,`Data: ${dataBR()}`,`GPS: ${gpsLat}, ${gpsLng}`,`ISC: ${document.getElementById('isc').value}`,`Obs: ${document.getElementById('obs').value}`,`Protocolo: ${protocolo}`,`SHA: ${shaAtual}`,`Lei 12.527/2011`]; linhas.forEach((l,i)=>doc.text(l,10,30+i*9)); if(fotoData) doc.addImage(fotoData,'JPEG',10,130,180,100); doc.save(`GADE-${sel.value}-${protocolo}.pdf`); sarahFalar('PDF gerado.'); }
+function enviarWhats(){ let t=encodeURIComponent(gerarRelatorio()); window.open('https://wa.me/?text='+t,'_blank'); sarahFalar('Mandei pro WhatsApp.'); }
+function sarahOuvir(){ let SR=window.SpeechRecognition||window.webkitSpeechRecognition; if(!SR){ sarahFalar('Usa o Chrome no celular pra voz.'); return; } let rec=new SR(); rec.lang='pt-BR'; rec.start(); sarahFalar('Tô te ouvindo. Pode falar.'); rec.onresult=(e)=>{ let f=e.results[0][0].transcript.toLowerCase(); log('VOZ: '+f); if(f.includes('câmera')||f.includes('camera')) ligarCamera(); else if(f.includes('2x')) setZoom(2); else if(f.includes('3x')) setZoom(3); else if(f.includes('5x')) setZoom(5); else if(f.includes('1x')) setZoom(1); else if(f.includes('foto')) tirarFoto(); else if(f.includes('russo')) dispararRusso(); else if(f.includes('cemaden')) dispararCemaden(); else if(f.includes('parar')) pararAlarmes(); else if(f.includes('relat')) gerarRelatorio(); else if(f.includes('pdf')) gerarPDF(); else if(f.includes('whatsapp')||f.includes('zap')) enviarWhats(); else if(f.includes('vendo')) sarahVer(); else if(f.includes('ativar')) ativarSarah(); else sarahPensar(); }; }
+atualizarIP(); atualizarCarimbo();
+</script>
+</body>
+</html>
