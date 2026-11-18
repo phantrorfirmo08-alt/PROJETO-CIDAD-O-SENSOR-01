@@ -3262,7 +3262,226 @@ function App() {
           <div className="cyber-card max-w-md w-full p-5 rounded-3xl shadow-2xl space-y-3.5 my-auto border border-cyberCyan/70 font-mono text-left">
             <div className="w-14 h-14 mx-auto overflow-hidden">
               <SarahAnimatedAvatar isSpeaking={true}/>
+            </div>              <p>Em conformidade com a <strong>Lei Federal nº 13.709/2018 (Lei Geral de Proteção de Dados - LGPD)</strong>, a <strong>Lei nº 12.527/2011 (Lei de Acesso à Informação - LAI)</strong> e o <strong>Marco Civil da Internet (Lei nº 12.965/2014)</strong>, este ambiente opera como ferramenta de prevenção comunitária e monitoramento climático colaborativo.</p>
+              <p className="text-amber-300 font-bold">Aviso: Dados meteorológicos e alertas comunitários têm caráter preventivo e informativo; em emergências reais, acione imediatamente os canais oficiais (199, 193, 192).</p>
             </div>
+            <label className="flex items-start gap-2.5 text-[11px] text-slate-200 cursor-pointer bg-void/70 p-2.5 rounded-xl border border-cyberCyan/20">
+              <input
+                type="checkbox"
+                checked={check1}
+                onChange={(e) => setCheck1(e.target.checked)}
+                className="mt-0.5 accent-cyberCyan w-4 h-4 shrink-0 cursor-pointer"
+              />
+              <span>Declaro ciência de que os registros locais ficam armazenados no dispositivo e que o uso deve respeitar a LGPD e a finalidade preventiva.</span>
+            </label>
+            <label className="flex items-start gap-2.5 text-[11px] text-slate-200 cursor-pointer bg-void/70 p-2.5 rounded-xl border border-cyberCyan/20">
+              <input
+                type="checkbox"
+                checked={check2}
+                onChange={(e) => setCheck2(e.target.checked)}
+                className="mt-0.5 accent-cyberCyan w-4 h-4 shrink-0 cursor-pointer"
+              />
+              <span>Concordo com os termos de uso comunitário do Projeto Cidadão Sensor e do GADE em Mesquita - RJ.</span>
+            </label>
+            <button
+              disabled={!check1 || !check2}
+              onClick={() => {
+                setTermsAccepted(true);
+                try { localStorage.setItem("raru_cyber_terms", "1"); } catch (e) {}
+                showToast("Acesso liberado à Base Climática.");
+              }}
+              className={`cyber-button-solid w-full text-xs py-3.5 ${(!check1 || !check2) ? 'opacity-40 cursor-not-allowed' : ''}`}
+            >
+              ACEITAR E INICIAR OPERAÇÃO
+            </button>
+          </div>
+        </div>
+      )}
+
+      <header className="cyber-card p-3 flex flex-wrap items-center justify-between gap-2 border border-cyberCyan/50 shadow-xl mb-3">
+        <div className="flex items-center gap-2">
+          <div className="w-8 h-8 rounded-full overflow-hidden border border-cyberCyan/60 bg-void flex items-center justify-center shrink-0">
+            <SarahLiveSVGAvatar isSpeaking={isSpeaking} />
+          </div>
+          <div className="leading-tight">
+            <div className="font-display text-[11px] font-black text-white tracking-wider uppercase">
+              BASE CLIMÁTICA • 92 RJ
+            </div>
+            <div className="text-[9px] font-mono text-cyberCyan font-bold">
+              MESQUITA • {userName || "ALEXANDER"}
+            </div>
+          </div>
+        </div>
+
+        <div className="flex items-center gap-1.5 flex-wrap">
+          <button
+            onClick={toggleTheme}
+            className="cyber-button text-[9px] py-1.5 px-2.5 !min-h-[34px]"
+            title="Alternar tema"
+          >
+            {theme === "dark" ? "CLARO" : "ESCURO"}
+          </button>
+          <button
+            onClick={() => {
+              const nextSound = !soundEnabled;
+              setSoundEnabled(nextSound);
+              try { localStorage.setItem("raru_sound_enabled", String(nextSound)); } catch (e) {}
+              if (!nextSound && "speechSynthesis" in window) {
+                try { window.speechSynthesis.cancel(); } catch (e) {}
+              }
+              showToast(nextSound ? "Síntese de voz ativada." : "Síntese de voz silenciada.");
+            }}
+            className={`cyber-button text-[9px] py-1.5 px-2.5 !min-h-[34px] ${!soundEnabled ? '!border-cyberRose !text-cyberRose' : ''}`}
+          >
+            {soundEnabled ? "VOZ ON" : "MUDO"}
+          </button>
+          <button
+            onClick={() => setNameModalOpen(true)}
+            className="cyber-button text-[9px] py-1.5 px-2.5 !min-h-[34px]"
+          >
+            NOME
+          </button>
+        </div>
+      </header>
+
+      <main className="flex-1 w-full">
+        {activeTab === "dashboard" && (
+          <div className="space-y-3">
+            <CardIdentidadeVisualRARU
+              openShareFromApp={openShareFromApp}
+              openSarahChat={openSarahChat}
+              handleWhoAmIClick={() => setQuemSomosOpen(true)}
+              setActiveTab={setActiveTab}
+              toggleCommandHUD={toggleCommandHUD}
+              userName={userName}
+              onOpenNameModal={() => setNameModalOpen(true)}
+            />
+            <AutomatedObservatoryWidget customTickerText={customTickerText} />
+          </div>
+        )}
+
+        {activeTab === "radar" && (
+          <RadarMeteorologicoModule showToast={showToast} />
+        )}
+
+        {activeTab === "relatorio" && (
+          <VistoriaRARU_NEXUS
+            onBackToDashboard={() => setActiveTab("dashboard")}
+            showToast={showToast}
+            vozSelecionada={vozSelecionada}
+            userName={userName}
+          />
+        )}
+
+        {activeTab === "estacao" && (
+          <EstacaoSobrevivenciaModuleV12
+            showToast={showToast}
+            userName={userName}
+            soundEnabled={soundEnabled}
+            vozSelecionada={vozSelecionada}
+          />
+        )}
+
+        {activeTab === "balanca" && (
+          <ModuloCidadaoSensorModule
+            onGoToDashboard={() => setActiveTab("dashboard")}
+            showToast={showToast}
+          />
+        )}
+
+        {activeTab === "alquino" && (
+          <RedeAlquinoHardwareModule
+            onGoToDashboard={() => setActiveTab("dashboard")}
+            showToast={showToast}
+          />
+        )}
+
+        {activeTab === "radio" && (
+          <RadioTaticaModule showToast={showToast} />
+        )}
+
+        {activeTab === "galeria" && (
+          <PublicVideoGalleryModule
+            publicVideos={publicVideos}
+            localVideos={localVideos}
+            youtubeVideos={youtubeVideos}
+            onGoToDashboard={() => setActiveTab("dashboard")}
+          />
+        )}
+
+        {activeTab === "admin" && (
+          <AdminVaultModule
+            showToast={showToast}
+            onClose={() => setActiveTab("dashboard")}
+            localVideos={localVideos}
+            setLocalVideos={setLocalVideos}
+            youtubeVideos={youtubeVideos}
+            setYoutubeVideos={setYoutubeVideos}
+            publicVideos={publicVideos}
+            setPublicVideos={setPublicVideos}
+            vozSelecionada={vozSelecionada}
+            setVozSelecionada={setVozSelecionada}
+            customTickerText={customTickerText}
+            setCustomTickerText={setCustomTickerText}
+          />
+        )}
+      </main>
+
+      <SarahFabButton openSarahChat={openSarahChat} isSpeaking={isSpeaking} />
+
+      <SarahChatOverlay
+        isOpen={isChatOpen}
+        onClose={() => setIsChatOpen(false)}
+        isSpeaking={isSpeaking}
+        isProcessing={isProcessing}
+        messages={messages}
+        input={input}
+        setInput={setInput}
+        handleSendDirectCommand={handleSendDirectCommand}
+        toggleListening={toggleListening}
+        isListening={isListening}
+        userName={userName}
+        onOpenNameModal={() => setNameModalOpen(true)}
+      />
+
+      <QuemSomosModal
+        isOpen={quemSomosOpen}
+        onClose={() => setQuemSomosOpen(false)}
+        userName={userName}
+      />
+
+      <nav className="fixed bottom-0 left-0 right-0 z-40 bg-void/95 backdrop-blur-xl border-t border-cyberCyan/40 px-2 py-1.5 shadow-[0_-6px_24px_rgba(0,0,0,0.75)]">
+        <div className="max-w-[1400px] mx-auto flex items-center gap-1.5 overflow-x-auto pb-0.5">
+          {NAV_TABS.map((tab) => {
+            const isActive = activeTab === tab.id;
+            return (
+              <button
+                key={tab.id}
+                onClick={() => handleNavClick(tab.id)}
+                className={`shrink-0 flex flex-col items-center justify-center px-3 py-1.5 rounded-xl border transition-all cursor-pointer font-mono text-[9px] font-bold min-w-[64px] touch-manipulation ${
+                  isActive
+                    ? "bg-cyberCyan/20 border-cyberCyan text-cyberCyan shadow-[0_0_12px_rgba(0,242,254,0.3)]"
+                    : "bg-deepSpace/70 border-cyberCyan/20 text-slate-300 hover:border-cyberCyan/50"
+                }`}
+              >
+                {tab.iconComponent}
+                <span className="mt-1 uppercase tracking-tight">{tab.label}</span>
+              </button>
+            );
+          })}
+        </div>
+      </nav>
+    </div>
+  );
+}
+
+const rootElement = document.getElementById("root");
+if (rootElement && window.ReactDOM) {
+  ReactDOM.createRoot(rootElement).render(<App />);
+}
+</script>
+</body>
+</html>
             <div className="text-center space-y-1">
               <h2 className="font-display text-xs font-black text-white tracking-widest uppercase">Base Climática de Monitoramento Tático</h2>
               <p className="text-[9px] text-cyberCyan font-bold uppercase">TERMO DE RESPONSABILIDADE & LGPD</p>
