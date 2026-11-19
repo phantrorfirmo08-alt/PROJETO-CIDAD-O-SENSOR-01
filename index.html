@@ -1,0 +1,372 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>MINI RADIO NEXUS // BT AUDIO</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    * { box-sizing: border-box; user-select: none; -webkit-user-select: none; }
+    input, textarea, select { user-select: text !important; -webkit-user-select: text !important; }
+    body {
+      margin: 0; min-height: 100vh;
+      background: linear-gradient(180deg, #02040A 0%, #030712 100%);
+      color: #E2F1FF;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    }
+    .panel {
+      background: rgba(5, 11, 24, 0.94);
+      border: 1px solid rgba(0, 242, 254, 0.25);
+      box-shadow: 0 0 24px rgba(0, 242, 254, 0.08);
+    }
+    .btn {
+      background: rgba(0, 242, 254, 0.08);
+      border: 1px solid rgba(0, 242, 254, 0.35);
+      color: #E2F1FF;
+      cursor: pointer;
+      transition: 0.15s;
+    }
+    .btn:hover { border-color: #00F2FE; background: rgba(0, 242, 254, 0.18); }
+    .btn-on { border-color: #00FF9D; background: rgba(0, 255, 157, 0.16); color: #FFFFFF; }
+    .btn-alarm { border-color: #FF2E54; background: rgba(255, 46, 84, 0.25); color: #FFD6DE; }
+  </style>
+</head>
+<body class="p-3">
+  <div class="max-w-xl mx-auto space-y-3">
+    <header class="panel rounded-xl p-3 flex flex-wrap items-center justify-between gap-2">
+      <div class="flex items-center gap-2.5 min-w-0">
+        <svg class="w-5 h-5 text-cyan-300 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="12" cy="12" r="2.5"></circle>
+          <path d="M16.24 7.76a6 6 0 0 1 0 8.49"></path>
+          <path d="M7.76 16.24a6 6 0 0 1 0-8.49"></path>
+        </svg>
+        <div class="truncate">
+          <div class="text-xs font-bold tracking-wider text-cyan-300 truncate">MINI RADIO NEXUS // 5 SINTONIAS</div>
+          <div id="miniStatus" class="text-[10px] text-slate-400 truncate">SINALIZADOR: ATIVO // ROTA AUDIO PRONTA</div>
+        </div>
+      </div>
+
+      <div class="flex items-center gap-1.5 shrink-0">
+        <button id="btnBtAudio" class="btn px-2.5 py-1.5 rounded-lg text-[10px] font-bold flex items-center gap-1">
+          <svg class="w-3.5 h-3.5 text-cyan-300" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polyline points="6.5 6.5 17.5 17.5 12 23 12 1 17.5 6.5 6.5 17.5"></polyline>
+          </svg>
+          <span id="lblBtAudio">BT AUDIO</span>
+        </button>
+        <button id="btnFlag" class="btn btn-on px-2.5 py-1.5 rounded-lg text-[10px] font-bold">ROBO: ON</button>
+        <button id="btnSync" class="btn px-2.5 py-1.5 rounded-lg text-[10px] font-bold">BUSCAR</button>
+        <button id="btnAlarm" class="btn px-2.5 py-1.5 rounded-lg text-[10px] font-bold text-rose-300">ALARME</button>
+      </div>
+    </header>
+
+    <div id="alarmBar" class="hidden rounded-lg border border-rose-500 bg-rose-950/80 px-3 py-2 flex items-center justify-between text-[11px] text-rose-200">
+      <span>ALARME ATIVO // RADIO RECUADA AUTOMATICAMENTE</span>
+      <button id="btnReleaseAlarm" class="px-2 py-0.5 rounded bg-rose-500/30 border border-rose-400 text-[10px] font-bold text-white">LIBERAR</button>
+    </div>
+
+    <section class="panel rounded-xl p-3 space-y-3">
+      <div class="flex items-center justify-between gap-2 bg-[#02050D] border border-cyan-500/20 rounded-lg p-3">
+        <div class="min-w-0">
+          <div class="flex items-baseline gap-2">
+            <span id="rFreq" class="text-2xl font-black text-cyan-300">89.5</span>
+            <span class="text-[10px] text-emerald-300 font-bold">MHZ</span>
+            <span id="rStyle" class="text-[10px] px-1.5 py-0.5 rounded bg-cyan-500/15 text-cyan-200">SERTANEJO / PAGODE</span>
+          </div>
+          <div id="rTitle" class="text-xs font-bold text-white truncate mt-1">SERTANEJO & PAGODE</div>
+          <div id="rSub" class="text-[10px] text-slate-400 truncate">Saida geral de audio / Bluetooth ativo</div>
+        </div>
+
+        <div class="flex items-center gap-1.5 shrink-0">
+          <button id="btnPrev" class="btn p-2 rounded-lg" title="Anterior">
+            <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <polygon points="19 20 9 12 19 4 19 20"></polygon>
+              <line x1="5" y1="19" x2="5" y2="5"></line>
+            </svg>
+          </button>
+          <button id="btnPlay" class="btn btn-on px-3.5 py-2 rounded-lg text-xs font-bold flex items-center gap-1.5">
+            <svg id="svgPlay" class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <polygon points="5 3 19 12 5 21 5 3"></polygon>
+            </svg>
+            <svg id="svgPause" class="w-4 h-4 hidden" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <rect x="6" y="4" width="4" height="16"></rect>
+              <rect x="14" y="4" width="4" height="16"></rect>
+            </svg>
+            <span id="lblPlay">NO AR</span>
+          </button>
+          <button id="btnNext" class="btn p-2 rounded-lg" title="Proxima">
+            <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <polygon points="5 4 15 12 5 20 5 4"></polygon>
+              <line x1="19" y1="5" x2="19" y2="19"></line>
+            </svg>
+          </button>
+        </div>
+      </div>
+
+      <canvas id="miniSpec" class="w-full h-14 rounded-lg bg-[#02050D] border border-cyan-500/20 block"></canvas>
+
+      <div class="flex items-center gap-2">
+        <svg class="w-4 h-4 text-cyan-300 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
+          <path d="M15.54 8.46a5 5 0 0 1 0 7.07"></path>
+        </svg>
+        <input id="rVol" type="range" min="0" max="1" step="0.02" value="0.7" class="w-full accent-cyan-400" />
+        <span id="rVolTxt" class="text-[11px] text-cyan-300 font-bold w-9 text-right">70%</span>
+      </div>
+
+      <div id="stationList" class="grid grid-cols-1 sm:grid-cols-5 gap-1.5"></div>
+    </section>
+  </div>
+
+  <audio id="miniAudio" crossorigin="anonymous" preload="none"></audio>
+
+  <script>
+    document.addEventListener("contextmenu", (e) => { if (!["INPUT", "TEXTAREA"].includes(e.target.tagName)) e.preventDefault(); });
+    document.addEventListener("copy", (e) => { if (!["INPUT", "TEXTAREA"].includes(e.target.tagName)) e.preventDefault(); });
+
+    const PrototipoRadioConfig = {
+      ativo: true,
+      alimentadoPorRobo: true,
+      sinalizador: "RADIO_PROTOTIPO_ALVO_ROBO_V1",
+      workerUrl: "https://Sarah-envelope.phantrorfirmo08.workers.dev",
+      envelopeId: "sarah-envelope-01",
+      prioridadeAlarmeAtiva: false,
+      rotaAudioGeral: "BLUETOOTH_SISTEMA",
+      dispositivoBtNome: "",
+      filaProgramacao: [
+        { id: "s1", freq: "89.5", estilo: "SERTANEJO / PAGODE", estacao: "Estacao Sertanejo & Pagode", titulo: "SERTANEJO & PAGODE", sub: "Saida geral de audio / Bluetooth ativo", tag: "sertanejo pagode", url: "internal://s1" },
+        { id: "s2", freq: "93.1", estilo: "RADIO ESPERANCA E LOUVOR", estacao: "Esperanca e Louvor", titulo: "RADIO ESPERANCA E LOUVOR", sub: "Estacao Esperanca e Louvor // Gospel", tag: "gospel worship", url: "internal://s2" },
+        { id: "s3", freq: "97.7", estilo: "FLASHBACK 80S & 90S", estacao: "Estacao Flashback 80s & 90s", titulo: "FLASHBACK 80S & 90S", sub: "Antigas / Anos 80 e 90", tag: "80s 90s flashback", url: "internal://s3" },
+        { id: "s4", freq: "101.3", estilo: "CLASSICO & HIP HOP", estacao: "Estacao Classico & Hip Hop", titulo: "CLASSICO & HIP HOP", sub: "Classicos / Hip Hop", tag: "classical hip hop", url: "internal://s4" },
+        { id: "s5", freq: "105.9", estilo: "JORNALISMO", estacao: "Estacao Jornalismo & Noticias", titulo: "JORNALISMO & NOTICIAS", sub: "Noticias / Informacao", tag: "news journalism", url: "internal://s5" }
+      ]
+    };
+
+    const audio = document.getElementById("miniAudio");
+    const cvs = document.getElementById("miniSpec");
+    const ctx2d = cvs.getContext("2d");
+    let idxAtual = 0, tocando = false, audioCtx = null, analyser = null, gain = null, osc = null;
+
+    const setStatus = (msg) => { document.getElementById("miniStatus").textContent = msg; };
+
+    // ROTEAMENTO GERAL DE ÁUDIO PARA DISPOSITIVOS / BLUETOOTH
+    async function aplicarSaidaAudioEmTodos(elementoOuNo) {
+      if (elementoOuNo && typeof elementoOuNo.setSinkId === "function" && navigator.mediaDevices?.enumerateDevices) {
+        try {
+          const devices = await navigator.mediaDevices.enumerateDevices();
+          const btOut = devices.find((d) => d.kind === "audiooutput" && /bluetooth|bt|headset|buds|airpods|speaker/i.test(d.label));
+          if (btOut) await elementoOuNo.setSinkId(btOut.deviceId);
+        } catch (_) {}
+      }
+    }
+
+    async prepararBluetoothGeral() {
+      initAudio();
+      await aplicarSaidaAudioEmTodos(audio);
+
+      if (navigator.bluetooth && typeof navigator.bluetooth.requestDevice === "function") {
+        try {
+          const dev = await navigator.bluetooth.requestDevice({ acceptAllDevices: true });
+          PrototipoRadioConfig.dispositivoBtNome = dev.name || "DISPOSITIVO BT";
+          document.getElementById("btnBtAudio").classList.add("btn-on");
+          document.getElementById("lblBtAudio").textContent = `BT: ${PrototipoRadioConfig.dispositivoBtNome.slice(0, 10)}`;
+          setStatus(`BT VINCULADO: ${PrototipoRadioConfig.dispositivoBtNome} // ROTA ATIVA`);
+          return;
+        } catch (_) {}
+      }
+
+      document.getElementById("btnBtAudio").classList.add("btn-on");
+      document.getElementById("lblBtAudio").textContent = "BT ROTA ON";
+      setStatus("ROTA GERAL DE AUDIO PRONTA PARA BLUETOOTH DO APARELHO");
+    }
+
+    function sinalizarPrototipoRadio(habilitar = true) {
+      PrototipoRadioConfig.ativo = PrototipoRadioConfig.alimentadoPorRobo = Boolean(habilitar);
+      window.__SARAH_RADIO_SINALIZADOR__ = {
+        sinalizador: PrototipoRadioConfig.sinalizador,
+        prontoParaReceberProgramacao: PrototipoRadioConfig.ativo,
+        rotaAudioGeral: PrototipoRadioConfig.rotaAudioGeral,
+        atualizadoEm: new Date().toISOString()
+      };
+      const btn = document.getElementById("btnFlag");
+      btn.classList.toggle("btn-on", PrototipoRadioConfig.ativo);
+      btn.textContent = PrototipoRadioConfig.ativo ? "ROBO: ON" : "ROBO: OFF";
+      setStatus(PrototipoRadioConfig.ativo ? "SINALIZADOR: ATIVO // ROTA AUDIO PRONTA" : "SINALIZADOR: PAUSADO");
+      return window.__SARAH_RADIO_SINALIZADOR__;
+    }
+
+    function receberGradeDoRobo(itens = []) {
+      if (!PrototipoRadioConfig.ativo || !Array.isArray(itens) || !itens.length) return { aceito: false };
+      itens.slice(0, 5).forEach((item, i) => {
+        if (PrototipoRadioConfig.filaProgramacao[i] && item.url) {
+          PrototipoRadioConfig.filaProgramacao[i].url = item.url;
+          if (item.titulo) PrototipoRadioConfig.filaProgramacao[i].sub = `${PrototipoRadioConfig.filaProgramacao[i].estacao} // ${String(item.titulo).slice(0, 26)}`;
+        }
+      });
+      renderStations();
+      setStatus("GRADE ATUALIZADA PELO ROBO // BT AUDIO ATIVO");
+      return { aceito: true, total: PrototipoRadioConfig.filaProgramacao.length };
+    }
+
+    function initAudio() {
+      if (audioCtx) { if (audioCtx.state === "suspended") audioCtx.resume(); return; }
+      const Ctx = window.AudioContext || window.webkitAudioContext;
+      audioCtx = new Ctx({ latencyHint: "interactive" });
+      gain = audioCtx.createGain();
+      gain.gain.value = Number(document.getElementById("rVol").value);
+      analyser = audioCtx.createAnalyser();
+      analyser.fftSize = 64;
+      gain.connect(analyser);
+      analyser.connect(audioCtx.destination);
+      try { audioCtx.createMediaElementSource(audio).connect(gain); } catch (_) {}
+      aplicarSaidaAudioEmTodos(audio);
+    }
+
+    function startSynth(baseFreq = 90) {
+      stopSynth();
+      const o = audioCtx.createOscillator();
+      const g = audioCtx.createGain();
+      o.type = "triangle";
+      o.frequency.value = baseFreq;
+      g.gain.value = 0.08;
+      o.connect(g);
+      g.connect(gain);
+      o.start();
+      osc = o;
+    }
+
+    function stopSynth() {
+      if (osc) { try { osc.stop(); } catch (_) {} osc = null; }
+    }
+
+    function pararRadio() {
+      audio.pause();
+      stopSynth();
+      tocando = false;
+      document.getElementById("svgPlay").classList.remove("hidden");
+      document.getElementById("svgPause").classList.add("hidden");
+      document.getElementById("lblPlay").textContent = "NO AR";
+    }
+
+    async function tocar(i) {
+      if (PrototipoRadioConfig.prioridadeAlarmeAtiva) return;
+      const list = PrototipoRadioConfig.filaProgramacao;
+      idxAtual = (i + list.length) % list.length;
+      const item = list[idxAtual];
+      document.getElementById("rFreq").textContent = item.freq;
+      document.getElementById("rStyle").textContent = item.estilo;
+      document.getElementById("rTitle").textContent = item.titulo;
+      document.getElementById("rSub").textContent = item.sub;
+
+      initAudio();
+      await aplicarSaidaAudioEmTodos(audio);
+      stopSynth();
+      audio.pause();
+
+      if (item.url.startsWith("internal://")) {
+        startSynth(75 + idxAtual * 18);
+      } else {
+        audio.src = item.url;
+        try { await audio.play(); } catch (_) { startSynth(75 + idxAtual * 18); }
+      }
+      tocando = true;
+      document.getElementById("svgPlay").classList.add("hidden");
+      document.getElementById("svgPause").classList.remove("hidden");
+      document.getElementById("lblPlay").textContent = "PAUSA";
+      renderStations();
+    }
+
+    function acionarPrioridadeAlarme(ativar = true) {
+      PrototipoRadioConfig.prioridadeAlarmeAtiva = Boolean(ativar);
+      if (ativar) pararRadio();
+      document.getElementById("alarmBar").classList.toggle("hidden", !ativar);
+      document.getElementById("btnAlarm").classList.toggle("btn-alarm", ativar);
+      setStatus(ativar ? "ALARME ATIVO // PRIORIDADE MAXIMA" : "SINALIZADOR: ATIVO // ROTA AUDIO PRONTA");
+    }
+
+    async function buscarStreamsDoRobo() {
+      if (!PrototipoRadioConfig.ativo) return;
+      setStatus("BUSCANDO 5 SINTONIAS GRATUITAS...");
+      const updates = [];
+      for (let i = 0; i < PrototipoRadioConfig.filaProgramacao.length; i++) {
+        const s = PrototipoRadioConfig.filaProgramacao[i];
+        try {
+          const tag = encodeURIComponent(s.tag.split(" ")[0]);
+          const r = await fetch(`https://de1.api.radio-browser.info/json/stations/search?tag=${tag}&limit=1&hidebroken=true`);
+          if (r.ok) {
+            const arr = await r.json();
+            if (arr[0]?.url_resolved?.startsWith("https://")) {
+              updates.push({ url: arr[0].url_resolved, titulo: arr[0].name.trim() });
+              continue;
+            }
+          }
+        } catch (_) {}
+        updates.push({ url: s.url, titulo: s.sub });
+      }
+      receberGradeDoRobo(updates);
+    }
+
+    function renderStations() {
+      const box = document.getElementById("stationList");
+      box.innerHTML = "";
+      PrototipoRadioConfig.filaProgramacao.slice(0, 5).forEach((s, i) => {
+        const b = document.createElement("button");
+        b.className = `btn p-2 rounded-lg text-left ${i === idxAtual ? "btn-on" : ""}`;
+        b.innerHTML = `<div class="text-[10px] font-black text-cyan-300">${s.freq}</div><div class="text-[10px] font-bold truncate">${s.titulo}</div>`;
+        b.onclick = () => tocar(i);
+        box.appendChild(b);
+      });
+    }
+
+    function loopSpec() {
+      requestAnimationFrame(loopSpec);
+      cvs.width = cvs.clientWidth || 300;
+      cvs.height = cvs.clientHeight || 56;
+      ctx2d.clearRect(0, 0, cvs.width, cvs.height);
+      const bars = 28, gap = 2, bw = (cvs.width - gap * (bars - 1)) / bars;
+      const data = new Uint8Array(bars);
+      if (analyser && tocando) {
+        const raw = new Uint8Array(analyser.frequencyBinCount);
+        analyser.getByteFrequencyData(raw);
+        for (let i = 0; i < bars; i++) data[i] = raw[i] || 0;
+      } else {
+        const t = performance.now() * 0.003;
+        for (let i = 0; i < bars; i++) data[i] = tocando ? 35 + Math.abs(Math.sin(t + i * 0.4)) * 120 : 6;
+      }
+      for (let i = 0; i < bars; i++) {
+        const bh = Math.max(3, (data[i] / 255) * (cvs.height - 6));
+        ctx2d.fillStyle = "#00F2FE";
+        ctx2d.fillRect(i * (bw + gap), cvs.height - bh, bw, bh);
+      }
+    }
+
+    document.getElementById("btnBtAudio").onclick = prepararBluetoothGeral;
+    document.getElementById("btnPlay").onclick = () => (tocando ? pararRadio() : tocar(idxAtual));
+    document.getElementById("btnPrev").onclick = () => tocar(idxAtual - 1);
+    document.getElementById("btnNext").onclick = () => tocar(idxAtual + 1);
+    document.getElementById("btnFlag").onclick = () => sinalizarPrototipoRadio(!PrototipoRadioConfig.ativo);
+    document.getElementById("btnSync").onclick = buscarStreamsDoRobo;
+    document.getElementById("btnAlarm").onclick = () => acionarPrioridadeAlarme(!PrototipoRadioConfig.prioridadeAlarmeAtiva);
+    document.getElementById("btnReleaseAlarm").onclick = () => acionarPrioridadeAlarme(false);
+    document.getElementById("rVol").oninput = (e) => {
+      const v = Number(e.target.value);
+      audio.volume = v;
+      if (gain) gain.gain.value = v;
+      document.getElementById("rVolTxt").textContent = `${Math.round(v * 100)}%`;
+    };
+
+    window.RaruCyberRadioDeck = {
+      sinalizarPrototipoRadio,
+      receberGradeDoRobo,
+      buscarStreamsDoRobo,
+      acionarPrioridadeAlarme,
+      prepararBluetoothGeral,
+      aplicarSaidaAudioEmTodos,
+      tocar,
+      pararRadio
+    };
+    sinalizarPrototipoRadio(true);
+    renderStations();
+    loopSpec();
+  </script>
+</body>
+</html>
