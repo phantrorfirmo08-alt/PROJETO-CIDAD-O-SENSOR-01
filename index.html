@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>MINI RADIO NEXUS</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    * { box-sizing: border-box; user-select: none; -webkit-user-select: none; }
+    input, textarea, select { user-select: text !important; -webkit-user-select: text !important; }
+    body { margin: 0; min-height: 100vh; background: #02040A; color: #E2F1FF; font-family: monospace; }
+    .box { background: #050B18; border: 1px solid rgba(0, 242, 254, 0.3); }
+    .btn { background: rgba(0, 242, 254, 0.1); border: 1px solid rgba(0, 242, 254, 0.35); color: #E2F1FF; cursor: pointer; }
+    .on { border-color: #00FF9D; background: rgba(0, 255, 157, 0.18); color: #FFF; }
+    .warn { border-color: #FF2E54; background: rgba(255, 46, 84, 0.25); color: #FFD6DE; }
+  </style>
+</head>
+<body class="p-3">
+  <div class="max-w-lg mx-auto space-y-2.5">
+    <div class="box rounded-xl p-3 flex items-center justify-between gap-2">
+      <div class="flex items-center gap-2 min-w-0">
+        <svg class="w-5 h-5 text-cyan-300 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="12" cy="12" r="2.5"></circle>
+          <path d="M16.24 7.76a6 6 0 0 1 0 8.49"></path>
+          <path d="M7.76 16.24a6 6 0 0 1 0-8.49"></path>
+        </svg>
+        <div class="truncate">
+          <div class="text-xs font-bold text-cyan-300 truncate">MINI RADIO NEXUS // 5 SINTONIAS</div>
+          <div id="stTxt" class="text-[10px] text-slate-400 truncate">PRONTO // CLIQUE SINTONIZAR OU TOCAR</div>
+        </div>
+      </div>
+      <div class="flex gap-1.5 shrink-0">
+        <button id="bFlag" class="btn on px-2 py-1 rounded text-[10px] font-bold">ROBO: ON</button>
+        <button id="bSync" class="btn px-2 py-1 rounded text-[10px] font-bold">SINTONIZAR</button>
+        <button id="bAlm" class="btn px-2 py-1 rounded text-[10px] font-bold text-rose-300">ALARME</button>
+      </div>
+    </div>
+
+    <div id="almBanner" class="hidden rounded-lg border border-rose-500 bg-rose-950/80 px-3 py-2 flex items-center justify-between text-[11px] text-rose-200">
+      <span>ALARME ATIVO // RADIO PAUSADA</span>
+      <button id="bRel" class="px-2 py-0.5 rounded bg-rose-500/30 border border-rose-400 text-[10px] font-bold text-white">LIBERAR</button>
+    </div>
+
+    <div class="box rounded-xl p-3 space-y-3">
+      <div class="flex items-center justify-between gap-2 bg-[#02050D] border border-cyan-500/20 rounded-lg p-2.5">
+        <div class="min-w-0">
+          <div class="flex items-baseline gap-1.5">
+            <span id="dFreq" class="text-xl font-black text-cyan-300">89.5</span>
+            <span class="text-[10px] text-emerald-300 font-bold">MHZ</span>
+            <span id="dTag" class="text-[10px] text-cyan-200 truncate">SERTANEJO / PAGODE</span>
+          </div>
+          <div id="dNome" class="text-xs font-bold text-white truncate">SERTANEJO & PAGODE</div>
+          <div id="dEstacao" class="text-[10px] text-slate-400 truncate">Clique em SINTONIZAR para carregar estacoes</div>
+        </div>
+        <div class="flex items-center gap-1 shrink-0">
+          <button id="bPrev" class="btn p-2 rounded" title="Anterior">
+            <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="19 20 9 12 19 4 19 20"></polygon><line x1="5" y1="19" x2="5" y2="5"></line></svg>
+          </button>
+          <button id="bPlay" class="btn on px-3 py-2 rounded text-xs font-bold flex items-center gap-1">
+            <svg id="iPlay" class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
+            <svg id="iPause" class="w-4 h-4 hidden" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="6" y="4" width="4" height="16"></rect><rect x="14" y="4" width="4" height="16"></rect></svg>
+            <span id="tPlay">TOCAR</span>
+          </button>
+          <button id="bNext" class="btn p-2 rounded" title="Proxima">
+            <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 4 15 12 5 20 5 4"></polygon><line x1="19" y1="5" x2="19" y2="19"></line></svg>
+          </button>
+        </div>
+      </div>
+
+      <div class="flex items-center gap-2">
+        <svg class="w-4 h-4 text-cyan-300 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon></svg>
+        <input id="rVol" type="range" min="0" max="1" step="0.05" value="0.8" class="w-full accent-cyan-400" />
+        <span id="vTxt" class="text-[11px] text-cyan-300 font-bold w-9 text-right">80%</span>
+      </div>
+
+      <div id="grid5" class="grid grid-cols-1 sm:grid-cols-5 gap-1.5"></div>
+    </div>
+  </div>
+
+  <audio id="elAudio" playsinline preload="none"></audio>
+
+  <script>
+    document.addEventListener("contextmenu", (e) => { if (!["INPUT", "TEXTAREA"].includes(e.target.tagName)) e.preventDefault(); });
+    document.addEventListener("copy", (e) => { if (!["INPUT", "TEXTAREA"].includes(e.target.tagName)) e.preventDefault(); });
+
+    const PrototipoRadioConfig = {
+      ativo: true,
+      alimentadoPorRobo: true,
+      sinalizador: "RADIO_PROTOTIPO_ALVO_ROBO_V1",
+      prioridadeAlarmeAtiva: false,
+      filaProgramacao: [
+        { freq: "89.5", estilo: "SERTANEJO / PAGODE", titulo: "SERTANEJO & PAGODE", estacao: "", tags: ["sertanejo", "pagode", "brazil"], url: "", candidatos: [] },
+        { freq: "93.1", estilo: "ESPERANCA E LOUVOR", titulo: "RADIO ESPERANCA E LOUVOR", estacao: "Esperanca e Louvor", tags: ["gospel", "worship", "christian"], url: "", candidatos: [] },
+        { freq: "97.7", estilo: "FLASHBACK 80S & 90S", titulo: "FLASHBACK 80S & 90S", estacao: "", tags: ["80s", "90s", "oldies"], url: "", candidatos: [] },
+        { freq: "101.3", estilo: "CLASSICO & HIP HOP", titulo: "CLASSICO & HIP HOP", estacao: "", tags: ["hiphop", "classical", "rap"], url: "", candidatos: [] },
+        { freq: "105.9", estilo: "JORNALISMO", titulo: "JORNALISMO & NOTICIAS", estacao: "", tags: ["news", "talk", "journalism"], url: "", candidatos: [] }
+      ]
+    };
+
+    const elAudio = document.getElementById("elAudio");
+    let idx = 0, tocando = false, candIdx = 0;
+
+    const setSt = (m) => { document.getElementById("stTxt").textContent = m; };
+
+    function sinalizarPrototipoRadio(h = true) {
+      PrototipoRadioConfig.ativo = PrototipoRadioConfig.alimentadoPorRobo = Boolean(h);
+      window.__SARAH_RADIO_SINALIZADOR__ = {
+        sinalizador: PrototipoRadioConfig.sinalizador,
+        prontoParaReceberProgramacao: PrototipoRadioConfig.ativo,
+        atualizadoEm: new Date().toISOString()
+      };
+      const b = document.getElementById("bFlag");
+      b.classList.toggle("on", PrototipoRadioConfig.ativo);
+      b.textContent = PrototipoRadioConfig.ativo ? "ROBO: ON" : "ROBO: OFF";
+      setSt(PrototipoRadioConfig.ativo ? "SINALIZADOR ATIVO // ROBO PRONTO" : "SINALIZADOR DESLIGADO");
+    }
+
+    function receberGradeDoRobo(itens = []) {
+      if (!PrototipoRadioConfig.ativo || !Array.isArray(itens)) return { aceito: false };
+      itens.slice(0, 5).forEach((it, i) => {
+        const c = PrototipoRadioConfig.filaProgramacao[i];
+        if (!c || !it) return;
+        const urls = Array.isArray(it.candidatos) ? it.candidatos : (it.url ? [it.url] : []);
+        if (urls.length) {
+          c.candidatos = urls;
+          c.url = urls[0];
+        }
+        if (it.estacao || it.titulo) c.estacao = String(it.estacao || it.titulo).slice(0, 40);
+      });
+      render5();
+      setSt("SINTONIAS ATUALIZADAS PELO ROBO");
+      return { aceito: true };
+    }
+
+    function pararRadio() {
+      elAudio.pause();
+      elAudio.removeAttribute("src");
+      elAudio.load();
+      tocando = false;
+      document.getElementById("iPlay").classList.remove("hidden");
+      document.getElementById("iPause").classList.add("hidden");
+      document.getElementById("tPlay").textContent = "TOCAR";
+    }
+
+    async function buscarEstacoesCanal(canal) {
+      const encontrados = [];
+      for (const tag of canal.tags) {
+        try {
+          const r = await fetch(`https://de1.api.radio-browser.info/json/stations/search?tag=${encodeURIComponent(tag)}&limit=8&hidebroken=true`);
+          if (!r.ok) continue;
+          const lista = await r.json();
+          for (const st of lista) {
+            const u = st.url_resolved || st.url || "";
+            if (/^https?:\/\//i.test(u) && !encontrados.some((x) => x.url === u)) {
+              encontrados.push({ url: u, nome: (st.name || canal.estilo).trim() });
+            }
+          }
+          if (encontrados.length >= 4) break;
+        } catch (_) {}
+      }
+      if (encontrados.length) {
+        canal.candidatos = encontrados.map((x) => x.url);
+        canal.url = encontrados[0].url;
+        canal.estacao = encontrados[0].nome;
+        return true;
+      }
+      return false;
+    }
+
+    async function sintonizarTodas() {
+      if (!PrototipoRadioConfig.ativo) {
+        setSt("ROBO DESLIGADO // LIGUE ROBO: ON");
+        return;
+      }
+      setSt("BUSCANDO ESTACOES NAS 5 SINTONIAS...");
+      let okCount = 0;
+      for (const canal of PrototipoRadioConfig.filaProgramacao) {
+        if (await buscarEstacoesCanal(canal)) okCount++;
+      }
+      render5();
+      setSt(`${okCount} DE 5 SINTONIAS COM ESTACAO ENCONTRADA`);
+    }
+
+    function tentarCandidato(canal, pos) {
+      if (PrototipoRadioConfig.prioridadeAlarmeAtiva) return;
+      const lista = canal.candidatos && canal.candidatos.length ? canal.candidatos : (canal.url ? [canal.url] : []);
+      if (!lista.length || pos >= lista.length) {
+        tocando = false;
+        document.getElementById("iPlay").classList.remove("hidden");
+        document.getElementById("iPause").classList.add("hidden");
+        document.getElementById("tPlay").textContent = "TOCAR";
+        document.getElementById("dEstacao").textContent = "Stream indisponivel nesta rede/navegador";
+        setSt("FALHA NO STREAM // TENTE OUTRA SINTONIA");
+        return;
+      }
+
+      candIdx = pos;
+      const urlAtual = lista[pos];
+      elAudio.volume = Number(document.getElementById("rVol").value);
+      elAudio.src = urlAtual;
+      elAudio.load();
+      document.getElementById("dEstacao").textContent = `ESTACAO: ${canal.estacao || canal.titulo} (${pos + 1}/${lista.length})`;
+
+      elAudio.play().then(() => {
+        tocando = true;
+        document.getElementById("iPlay").classList.add("hidden");
+        document.getElementById("iPause").classList.remove("hidden");
+        document.getElementById("tPlay").textContent = "PAUSA";
+        setSt(`NO AR: ${canal.estacao || canal.titulo}`);
+      }).catch(() => {
+        tentarCandidato(canal, pos + 1);
+      });
+    }
+
+    async function tocarCanal(i) {
+      if (PrototipoRadioConfig.prioridadeAlarmeAtiva) return;
+      const list = PrototipoRadioConfig.filaProgramacao;
+      idx = (i + list.length) % list.length;
+      const item = list[idx];
+
+      document.getElementById("dFreq").textContent = item.freq;
+      document.getElementById("dTag").textContent = item.estilo;
+      document.getElementById("dNome").textContent = item.titulo;
+      document.getElementById("dEstacao").textContent = item.estacao || "Buscando estacao...";
+      render5();
+
+      if ((!item.candidatos || !item.candidatos.length) && !item.url && PrototipoRadioConfig.ativo) {
+        setSt(`SINTONIZANDO ${item.titulo}...`);
+        await buscarEstacoesCanal(item);
+        render5();
+      }
+
+      pararRadio();
+      tentarCandidato(item, 0);
+    }
+
+    elAudio.addEventListener("error", () => {
+      if (!tocando && !elAudio.src) return;
+      const canal = PrototipoRadioConfig.filaProgramacao[idx];
+      if (canal) tentarCandidato(canal, candIdx + 1);
+    });
+
+    function acionarPrioridadeAlarme(ativo = true) {
+      PrototipoRadioConfig.prioridadeAlarmeAtiva = Boolean(ativo);
+      if (ativo) pararRadio();
+      document.getElementById("almBanner").classList.toggle("hidden", !ativo);
+      document.getElementById("bAlm").classList.toggle("warn", ativo);
+      setSt(ativo ? "ALARME ATIVO // PRIORIDADE TOTAL" : "SINALIZADOR ATIVO // ROBO PRONTO");
+    }
+
+    function render5() {
+      const box = document.getElementById("grid5");
+      box.innerHTML = "";
+      PrototipoRadioConfig.filaProgramacao.forEach((s, i) => {
+        const btn = document.createElement("button");
+        btn.className = `btn p-2 rounded-lg text-left ${i === idx ? "on" : ""}`;
+        btn.innerHTML = `<div class="text-[10px] font-bold text-cyan-300">${s.freq}</div><div class="text-[10px] font-bold truncate">${s.titulo}</div><div class="text-[9px] text-slate-400 truncate">${s.estacao || "Clique p/ sintonizar"}</div>`;
+        btn.onclick = () => tocarCanal(i);
+        box.appendChild(btn);
+      });
+    }
+
+    document.getElementById("bPlay").onclick = () => (tocando ? pararRadio() : tocarCanal(idx));
+    document.getElementById("bPrev").onclick = () => tocarCanal(idx - 1);
+    document.getElementById("bNext").onclick = () => tocarCanal(idx + 1);
+    document.getElementById("bFlag").onclick = () => sinalizarPrototipoRadio(!PrototipoRadioConfig.ativo);
+    document.getElementById("bSync").onclick = sintonizarTodas;
+    document.getElementById("bAlm").onclick = () => acionarPrioridadeAlarme(!PrototipoRadioConfig.prioridadeAlarmeAtiva);
+    document.getElementById("bRel").onclick = () => acionarPrioridadeAlarme(false);
+    document.getElementById("rVol").oninput = (e) => {
+      const v = Number(e.target.value);
+      elAudio.volume = v;
+      document.getElementById("vTxt").textContent = `${Math.round(v * 100)}%`;
+    };
+
+    window.RaruCyberRadioDeck = { sinalizarPrototipoRadio, receberGradeDoRobo, sintonizarTodas, acionarPrioridadeAlarme, tocarCanal, pararRadio };
+    sinalizarPrototipoRadio(true);
+    render5();
+  </script>
+</body>
+</html>
