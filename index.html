@@ -1,0 +1,1285 @@
+<!DOCTYPE html>
+<html lang="pt-br" class="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+  <title>Base Climática de Monitoramento Tático • Projeto Cidadão Sensor</title>
+  <meta name="theme-color" content="#030712" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://unpkg.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Orbitron:wght@600;800;900&family=JetBrains+Mono:wght@400;600;800&display=swap" rel="stylesheet" />
+
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: "class",
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Inter', 'Plus Jakarta Sans', 'system-ui', 'sans-serif'],
+            display: ['Orbitron', 'sans-serif'],
+            mono: ['JetBrains Mono', 'monospace'],
+          },
+          colors: {
+            void: "#030712",
+            deepSpace: "#041125",
+            commandPanel: "#0A1B38",
+            cyberCyan: "#00F2FE",
+            cyberBlue: "#38BDF8",
+            cyberGreen: "#00FF9D",
+            cyberAmber: "#FFB703",
+            cyberRose: "#FF0055",
+          }
+        }
+      }
+    };
+  </script>
+
+  <!-- React 18, Babel Standalone & Leaflet CDN -->
+  <script crossorigin src="https://unpkg.com/react@18.3.1/umd/react.production.min.js"></script>
+  <script crossorigin src="https://unpkg.com/react-dom@18.3.1/umd/react.production.min.js"></script>
+  <script crossorigin src="https://unpkg.com/@babel/standalone@7.26.4/babel.min.js"></script>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+  <style>
+    :root {
+      --primary: #00F2FE;
+      --secondary: #38BDF8;
+      --glow: rgba(0, 242, 254, 0.4);
+      --glow-cyan: rgba(0, 242, 254, 0.35);
+      --wave-speed: 2.2s;
+      --hud-bg: #02040A;
+      --hud-panel: #050B18;
+      --hud-surface: #02050D;
+      --hud-cyan: #00F2FE;
+      --hud-green: #00FF9D;
+      --hud-rose: #FF2E54;
+      --hud-text: #E2F1FF;
+      --hud-base-px: 14px;
+      --hud-auto-scale: 1;
+      --hud-user-zoom: 1;
+      --hud-max-w: 46rem;
+      --hud-safe-pad: 0px;
+      --hud-border-alpha: 0.36;
+    }
+
+    html.hud-profile-tv {
+      --hud-safe-pad: clamp(12px, 2.2vw, 36px);
+      --hud-border-alpha: 0.68;
+    }
+
+    html.hud-profile-projector {
+      --hud-bg: #000205;
+      --hud-text: #FFFFFF;
+      --hud-safe-pad: clamp(18px, 3.5vw, 56px);
+      --hud-border-alpha: 0.88;
+    }
+
+    html.hud-profile-projector .box {
+      background: #020712;
+      border-width: 2px;
+      border-color: rgba(0, 242, 254, var(--hud-border-alpha));
+      box-shadow: 0 0 32px rgba(0, 242, 254, 0.24), inset 0 0 22px rgba(0, 242, 254, 0.08);
+    }
+
+    html.hud-profile-projector .btn {
+      border-width: 2px;
+      font-weight: 800;
+      letter-spacing: 0.04em;
+    }
+
+    body, html, *:not(input):not(textarea):not(select) {
+      -webkit-user-select: none;
+      -moz-user-select: none;
+      -ms-user-select: none;
+      user-select: none;
+      -webkit-touch-callout: none;
+    }
+
+    input, textarea, select {
+      -webkit-user-select: text !important;
+      -moz-user-select: text !important;
+      -ms-user-select: text !important;
+      user-select: text !important;
+    }
+
+    @keyframes avatarSpeaking {
+      0%, 100% { transform: scale(1) rotate(0deg); filter: drop-shadow(0 0 30px rgba(0,242,254,0.75)); }
+      50% { transform: scale(1.06) rotate(2deg); filter: drop-shadow(0 0 45px rgba(0,255,157,0.85)); }
+    }
+
+    @keyframes moleculeRotate {
+      from { transform: rotate(0deg); }
+      to { transform: rotate(360deg); }
+    }
+
+    @keyframes moleculePulse {
+      0%, 100% { transform: scale(1); opacity: 0.9; }
+      50% { transform: scale(1.15); opacity: 1; filter: drop-shadow(0 0 12px #00F2FE); }
+    }
+
+    @keyframes cyberGridMove {
+      0% { background-position: 0 0; }
+      100% { background-position: 40px 40px; }
+    }
+
+    @keyframes radarSpin {
+      from { transform: rotate(0deg); }
+      to { transform: rotate(360deg); }
+    }
+
+    .animate-radar-sweep {
+      animation: radarSpin 4s linear infinite;
+    }
+
+    @keyframes cloudDrift {
+      0% { transform: translateX(-50px) scale(1); opacity: 0.4; }
+      50% { opacity: 0.7; }
+      100% { transform: translateX(350px) scale(1.1); opacity: 0.4; }
+    }
+
+    .cloud-layer-anim {
+      background: radial-gradient(circle, rgba(255,255,255,0.18) 0%, rgba(56,189,248,0.08) 50%, transparent 80%);
+      filter: blur(12px);
+      animation: cloudDrift 14s ease-in-out infinite alternate;
+      pointer-events: none;
+    }
+
+    @keyframes holographicPulse {
+      0% { box-shadow: 0 0 12px rgba(0,242,254,0.18), inset 0 0 10px rgba(0,242,254,0.05); border-color: rgba(0,242,254,0.35); }
+      50% { box-shadow: 0 0 24px rgba(0,242,254,0.35), inset 0 0 18px rgba(0,242,254,0.15); border-color: rgba(0,242,254,0.7); }
+      100% { box-shadow: 0 0 12px rgba(0,242,254,0.18), inset 0 0 10px rgba(0,242,254,0.05); border-color: rgba(0,242,254,0.35); }
+    }
+
+    @keyframes pulseWave {
+      0% { width: 60%; height: 60%; opacity: 0.95; transform: scale(0.85); box-shadow: 0 0 8px var(--glow); }
+      50% { opacity: 0.6; }
+      100% { width: 130%; height: 130%; opacity: 0; transform: scale(1.15); box-shadow: 0 0 20px transparent; }
+    }
+
+    @keyframes auraPulse {
+      0%, 100% { transform: scale(0.96); opacity: 0.7; }
+      50% { transform: scale(1.12); opacity: 0.95; }
+    }
+
+    @keyframes spinSlow {
+      from { transform: rotate(0deg); }
+      to { transform: rotate(360deg); }
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    html, body {
+      width: 100%;
+      min-height: 100vh;
+      min-height: 100dvh;
+      margin: 0;
+      padding: 0;
+      overflow-x: hidden;
+      touch-action: manipulation;
+      -webkit-text-size-adjust: 100%;
+      overscroll-behavior-y: contain;
+      background-color: #030712;
+      color: #E2E8F0;
+    }
+
+    #root {
+      width: 100%;
+      min-height: 100vh;
+      min-height: 100dvh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    .seu-container-raru {
+      width: 100%;
+      max-width: 1400px;
+      margin: 0 auto;
+      min-height: 100vh;
+      min-height: 100dvh;
+      padding: 12px 16px 130px 16px;
+      display: flex;
+      flex-direction: column;
+    }
+
+    html.hud-360-global .seu-container-raru {
+      max-width: 100%;
+      padding-left: 10px;
+      padding-right: 10px;
+    }
+
+    html.hud-360-global .cyber-card {
+      border-color: rgba(0, 242, 254, 0.68);
+      box-shadow: 0 0 28px rgba(0, 242, 254, 0.22);
+    }
+
+    body {
+      background-image:
+        radial-gradient(circle at 50% 0%, rgba(0, 242, 254, 0.08) 0%, transparent 60%),
+        radial-gradient(circle at 10% 90%, rgba(56, 189, 248, 0.05) 0%, transparent 50%);
+      transition: background-color 0.4s ease, color 0.4s ease;
+    }
+
+    body.hud-grid {
+      background-image:
+        linear-gradient(rgba(0, 242, 254, 0.03) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(0, 242, 254, 0.03) 1px, transparent 1px);
+      background-size: 28px 28px;
+      animation: cyberGridMove 30s linear infinite;
+    }
+
+    .cyber-card {
+      background: linear-gradient(135deg, rgba(10, 27, 56, 0.94) 0%, rgba(4, 17, 37, 0.97) 100%);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border: 1px solid rgba(0, 242, 254, 0.35);
+      border-radius: 20px;
+      padding: 18px;
+      margin-bottom: 14px;
+      animation: holographicPulse 5s ease-in-out infinite;
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    .cyber-button {
+      background: linear-gradient(135deg, rgba(0, 242, 254, 0.15) 0%, rgba(56, 189, 248, 0.25) 100%);
+      border: 1px solid #00F2FE;
+      color: #00F2FE !important;
+      font-family: 'Orbitron', sans-serif;
+      font-weight: 800;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      border-radius: 12px;
+      padding: 12px 18px;
+      min-height: 48px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      cursor: pointer;
+      transition: all 0.25s ease;
+      box-shadow: 0 0 15px rgba(0, 242, 254, 0.25), inset 0 0 10px rgba(0, 242, 254, 0.1);
+      touch-action: manipulation;
+    }
+
+    .cyber-button:hover {
+      background: linear-gradient(135deg, #00F2FE 0%, #38BDF8 100%);
+      color: #030712 !important;
+      box-shadow: 0 0 25px rgba(0, 242, 254, 0.7);
+    }
+
+    .cyber-button:active {
+      transform: scale(0.97);
+    }
+
+    .cyber-button-solid {
+      background: linear-gradient(135deg, #00F2FE 0%, #38BDF8 100%);
+      border: 1px solid #FFFFFF;
+      color: #030712 !important;
+      font-family: 'Orbitron', sans-serif;
+      font-weight: 900;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      border-radius: 12px;
+      padding: 12px 18px;
+      min-height: 48px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      cursor: pointer;
+      transition: all 0.25s ease;
+      box-shadow: 0 0 20px rgba(0, 242, 254, 0.4);
+    }
+
+    .cyber-button-solid:active {
+      transform: scale(0.97);
+    }
+
+    .cyber-button-danger {
+      background: linear-gradient(135deg, rgba(255, 0, 85, 0.2) 0%, rgba(255, 0, 85, 0.4) 100%);
+      border: 1px solid #FF0055;
+      color: #FF0055 !important;
+      font-family: 'Orbitron', sans-serif;
+      font-weight: 800;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      border-radius: 12px;
+      padding: 12px 18px;
+      min-height: 48px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      cursor: pointer;
+      transition: all 0.25s ease;
+      box-shadow: 0 0 15px rgba(255, 0, 85, 0.3);
+    }
+
+    .cyber-button-danger:hover {
+      background: #FF0055;
+      color: #ffffff !important;
+      box-shadow: 0 0 25px rgba(255, 0, 85, 0.8);
+    }
+
+    .sarah-avatar-stage {
+      position: relative;
+      width: 100%;
+      max-width: 90px;
+      aspect-ratio: 1/1;
+      margin: 0 auto;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      cursor: pointer;
+    }
+
+    .sarah-avatar-stage.speaking {
+      animation: avatarSpeaking 1.5s ease-in-out infinite alternate;
+    }
+
+    .wave-ring {
+      position: absolute;
+      border-radius: 50%;
+      border: 1.5px solid var(--primary);
+      box-shadow: 0 0 10px var(--glow), inset 0 0 6px var(--glow);
+      animation: pulseWave var(--wave-speed) infinite cubic-bezier(0.215, 0.61, 0.355, 1);
+      pointer-events: none;
+    }
+
+    .wave-ring:nth-child(1) { animation-delay: 0s; }
+    .wave-ring:nth-child(2) { animation-delay: calc(var(--wave-speed) * 0.33); }
+    .wave-ring:nth-child(3) { animation-delay: calc(var(--wave-speed) * 0.66); }
+
+    .cyan-outer-boundary {
+      position: absolute;
+      inset: -5px;
+      border-radius: 50%;
+      border: 1px dashed var(--secondary);
+      opacity: 0.7;
+      animation: spinSlow 30s linear infinite;
+      box-shadow: 0 0 14px var(--glow-cyan);
+    }
+
+    .avatar-aura {
+      position: absolute;
+      inset: -8%;
+      border-radius: 50%;
+      background: radial-gradient(circle, var(--glow) 0%, var(--glow-cyan) 45%, transparent 70%);
+      background-size: 200% 200%;
+      filter: blur(10px);
+      animation: auraPulse 3.5s infinite ease-in-out;
+      opacity: 0.85;
+    }
+
+    .avatar-core-wrapper {
+      position: relative;
+      width: 85%;
+      height: 85%;
+      border-radius: 50%;
+      z-index: 10;
+      box-shadow: 0 0 16px var(--glow), 0 0 25px rgba(0,0,0,0.8);
+      background: radial-gradient(circle, #091328 0%, #040914 60%, #02040a 100%);
+      border: 2px solid #00F2FE;
+      overflow: hidden;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .molecule-rotate-slow {
+      animation: moleculeRotate 20s linear infinite;
+      transform-origin: center;
+      transform-box: fill-box;
+    }
+
+    .molecule-rotate-reverse {
+      animation: moleculeRotate 14s linear infinite reverse;
+      transform-origin: center;
+      transform-box: fill-box;
+    }
+
+    .molecule-node-pulse {
+      animation: moleculePulse 3s ease-in-out infinite alternate;
+      transform-origin: center;
+      transform-box: fill-box;
+    }
+
+    .glass-overlay {
+      position: absolute;
+      inset: 0;
+      border-radius: 50%;
+      background: radial-gradient(circle at 35% 25%, rgba(255, 255, 255, 0.25) 0%, rgba(255, 255, 255, 0.05) 40%, transparent 70%);
+      pointer-events: none;
+      z-index: 15;
+    }
+
+    .hud-shell {
+      width: 100%;
+      max-width: var(--hud-max-w);
+      margin: 0 auto;
+      padding: calc(clamp(0.75rem, 1.8vw, 2rem) + var(--hud-safe-pad));
+      transition: max-width 0.2s ease, padding 0.2s ease;
+    }
+
+    .box {
+      background: linear-gradient(180deg, rgba(8, 20, 42, 0.97) 0%, rgba(4, 10, 22, 0.99) 100%);
+      border: 1px solid rgba(0, 242, 254, var(--hud-border-alpha));
+      box-shadow: 0 0 24px rgba(0, 242, 254, 0.08), inset 0 0 18px rgba(0, 242, 254, 0.03);
+      max-width: 100%;
+      overflow: hidden;
+    }
+
+    .btn {
+      background: rgba(0, 242, 254, 0.11);
+      border: 1px solid rgba(0, 242, 254, 0.38);
+      color: var(--hud-text);
+      cursor: pointer;
+      min-height: 2.35rem;
+      max-width: 100%;
+      white-space: nowrap;
+      transition: background 0.15s ease, border-color 0.15s ease, transform 0.12s ease, box-shadow 0.15s ease;
+    }
+
+    .btn:hover, .btn:focus-visible {
+      border-color: #00F2FE;
+      background: rgba(0, 242, 254, 0.22);
+      box-shadow: 0 0 0 2px rgba(0, 242, 254, 0.45);
+      outline: none;
+    }
+
+    .btn:active {
+      transform: scale(0.98);
+    }
+
+    .on {
+      border-color: var(--hud-green);
+      background: rgba(0, 255, 157, 0.2);
+      color: #FFFFFF;
+    }
+
+    ::-webkit-scrollbar { width: 4px; height: 4px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: rgba(0,242,254,0.3); border-radius: 9999px; }
+  </style>
+</head>
+<body class="selection:bg-cyberCyan selection:text-void hud-grid">
+  <div id="root"></div>
+
+  <script>
+    function safeStorageGet(key, fallback = null) {
+      try {
+        const v = window.localStorage.getItem(key);
+        return v === null ? fallback : v;
+      } catch (e) {
+        return fallback;
+      }
+    }
+
+    function safeStorageSet(key, value) {
+      try {
+        window.localStorage.setItem(key, String(value));
+      } catch (e) {}
+    }
+
+    function safeStorageRemove(key) {
+      try {
+        window.localStorage.removeItem(key);
+      } catch (e) {}
+    }
+
+    const SARAH_PROXY_URL = "https://sarah-envelope.phantrorfirmo08.workers.dev";
+
+    const SARAH_DNA = {
+      nome: "SARAH",
+      cargo: "Analista Técnica Sênior de Monitoramento Climático e Resiliência Territorial",
+      apresentacaoInicial: "SARAH AI, analista técnica sênior do Projeto Cidadão Sensor",
+      quem: "SARAH, analista técnica sênior de monitoramento climático e resiliência territorial incorporada ao aplicativo, com dupla personalidade operacional (analista de campo comunitária e analista sênior de nível técnico e científico), pensamento próprio, fluência, clareza e coerência operacional",
+      onde: "Serra do Mendanha, Rua Amazonas, Comunidade do Sebinho (Vila Sebinho), Maria Cristina, Rocha Sobrinho, Mesquita, Baixada Fluminense e os 92 municípios do estado do Rio de Janeiro",
+      papel: "entregar informação climática precisa, séria, coerente e direta com base nos dados reais do sistema, satélites (GOES-19 e demais fontes conectadas no código), radares, gráficos e telemetria ativa, interagindo com o robô de inteligência e com todas as funções, módulos e ações do aplicativo, sem se apresentar como Defesa Civil oficial",
+      tom: "fluente, natural, sério, firme, objetivo e direto, elevando o rigor técnico quando dialoga com engenheiros, meteorologistas e equipes universitárias, sem repetir horário de Brasília ou data o tempo todo",
+      jeito: "acompanha massas de ar, movimento da chuva, direção e origem das nuvens, efeitos climáticos sobre a Serra do Mendanha e o deslocamento de nuvens e chuvas da Serra do Mendanha até a Rua Amazonas, Comunidade do Sebinho, Maria Cristina e Rocha Sobrinho em Mesquita, mantendo conversa contínua e sem travar no meio do caminho",
+      regra: "na primeira abertura apresenta-se como SARAH AI, analista técnica sênior do Projeto Cidadão Sensor, cumprimenta uma única vez e pergunta em que posso ser útil; não repete saudação nem horário de Brasília ou data o tempo todo nas respostas seguintes; pergunta e chama pelo nome de quem está falando, sem falar ou exibir o nome do coordenador no início e sem se apresentar como Defesa Civil oficial; interage com o robô de inteligência e com cada ação no RARU MIX PLAY e em todos os módulos (radar, estação, gráficos, bacias, balança, alquino, vídeos e admin); na vistoria acompanha a lente da câmera e após capturar a foto registra Foto concedida com sucesso orientando o preenchimento correto e completo do relatório",
+      lingua: "português do Brasil, fluente, claro e direto, sem asterisco, sem cerquilha, sem markdown"
+    };
+
+    function obterDataHoraOficialBrasilia() {
+      const agora = new Date();
+      const tz = "America/Sao_Paulo";
+      const dataCompleta = new Intl.DateTimeFormat("pt-BR", {
+        timeZone: tz,
+        weekday: "long",
+        day: "2-digit",
+        month: "long",
+        year: "numeric"
+      }).format(agora);
+
+      const horaOficial = new Intl.DateTimeFormat("pt-BR", {
+        timeZone: tz,
+        hour: "2-digit",
+        minute: "2-digit",
+        second: "2-digit",
+        hour12: false
+      }).format(agora);
+
+      const anoCalendario = new Intl.DateTimeFormat("pt-BR", {
+        timeZone: tz,
+        year: "numeric"
+      }).format(agora);
+
+      const horaNumero = Number(new Intl.DateTimeFormat("pt-BR", {
+        timeZone: tz,
+        hour: "numeric",
+        hour12: false
+      }).format(agora));
+
+      const saudacao = horaNumero < 12 ? "Bom dia" : horaNumero < 18 ? "Boa tarde" : "Boa noite";
+
+      return {
+        iso: agora.toISOString(),
+        dataCompleta,
+        horaOficial,
+        anoCalendario,
+        horaNumero,
+        saudacao,
+        descricaoCompleta: `${dataCompleta}, horário oficial de Brasília ${horaOficial}, calendário anual ${anoCalendario}`
+      };
+    }
+
+    function montarPersonalidadeSarah() {
+      const tempoBR = obterDataHoraOficialBrasilia();
+      return `DNA OFICIAL DA SARAH: Nome: ${SARAH_DNA.nome}. Cargo: ${SARAH_DNA.cargo}. Quem é: ${SARAH_DNA.quem}. Território: ${SARAH_DNA.onde}. Papel: ${SARAH_DNA.papel}. Tom: ${SARAH_DNA.tom}. Jeito: ${SARAH_DNA.jeito}. Regras: ${SARAH_DNA.regra}. Idioma: ${SARAH_DNA.lingua}. Referência interna inicial (não recitar a toda hora): ${tempoBR.descricaoCompleta}.`;
+    }
+
+    const RoboInteligenciaSarah = {
+      config: {
+        workerUrl: SARAH_PROXY_URL,
+        envelopeId: "sarah-envelope-01",
+        intervaloCicloMs: 5 * 60 * 1000,
+        timeoutMs: 6500,
+        eixos: [
+          "clima_alertario_e_fontes_br",
+          "programas_governamentais_e_editais_abertos",
+          "resiliencia_climatica_e_defesa_civil_nacional",
+          "el_nino_politica_e_religiao"
+        ]
+      },
+      estado: {
+        ativo: false,
+        executando: false,
+        timerId: null,
+        ultimaAtualizacao: null,
+        modoFonte: "AGUARDANDO_CICLO",
+        ultimoErro: null,
+        historicoConversaComSarah: [],
+        ultimaAssimilacaoSarah: null,
+        ultimaColeta: {
+          alertaRio: null,
+          fontesClimaticas: null,
+          programasEEditais: null,
+          defesaCivilEElNino: null,
+          politicaEReligiao: null,
+          resumoConsolidado: ""
+        }
+      },
+
+      async consultarEnvelope(acao, dados = {}) {
+        const controller = typeof AbortController !== "undefined" ? new AbortController() : null;
+        const timeoutId = controller ? setTimeout(() => {
+          try { controller.abort(); } catch (e) {}
+        }, this.config.timeoutMs) : null;
+        try {
+          const resposta = await fetch(this.config.workerUrl, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            signal: controller ? controller.signal : undefined,
+            body: JSON.stringify({
+              envelope: this.config.envelopeId,
+              acao,
+              eixos: this.config.eixos,
+              territorioReferencia: {
+                focoPrincipal: "Serra do Mendanha, Rua Amazonas, Comunidade do Sebinho (Vila Sebinho), Maria Cristina, Rocha Sobrinho, Mesquita",
+                abrangencia: "Baixada Fluminense e 92 municípios do Rio de Janeiro"
+              },
+              ...dados
+            })
+          });
+
+          if (!resposta.ok) {
+            throw new Error(`HTTP ${resposta.status} em ${this.config.workerUrl}`);
+          }
+
+          return await resposta.json();
+        } catch (erro) {
+          throw new Error(`Falha na consulta ao envelope (${acao}): ${erro && erro.message ? erro.message : "erro de rede"}`);
+        } finally {
+          if (timeoutId) clearTimeout(timeoutId);
+        }
+      },
+
+      async sintetizarTelemetriaRealFallback(motivoErro = "") {
+        let rotasAtivas = 0;
+        let monitoresAtivos = 0;
+        let zeladoriaTotal = 0;
+        try {
+          const rRotas = JSON.parse(safeStorageGet("rotasFugaReais", "[]"));
+          rotasAtivas = Array.isArray(rRotas) ? rRotas.length : 0;
+        } catch (e) {}
+        try {
+          const rMon = JSON.parse(safeStorageGet("monitoresCADE", "[]"));
+          monitoresAtivos = Array.isArray(rMon) ? rMon.length : 0;
+        } catch (e) {}
+        try {
+          const rZel = JSON.parse(safeStorageGet("raru_zeladoria_logs", "[]"));
+          zeladoriaTotal = Array.isArray(rZel) ? rZel.length : 0;
+        } catch (e) {}
+
+        let meteoAtual = null;
+        try {
+          const respMeteo = await fetch(
+            "https://api.open-meteo.com/v1/forecast?latitude=-22.7831&longitude=-43.4294&current=temperature_2m,relative_humidity_2m,precipitation,wind_speed_10m&timezone=America/Sao_Paulo"
+          );
+          if (respMeteo.ok) {
+            const jsonMeteo = await respMeteo.json();
+            meteoAtual = jsonMeteo && jsonMeteo.current ? jsonMeteo.current : null;
+          }
+        } catch (e) {}
+
+        const tempTxt = meteoAtual && typeof meteoAtual.temperature_2m === "number" ? `${meteoAtual.temperature_2m}C` : "sem leitura";
+        const umiTxt = meteoAtual && typeof meteoAtual.relative_humidity_2m === "number" ? `${meteoAtual.relative_humidity_2m}%` : "sem leitura";
+        const chuvaTxt = meteoAtual && typeof meteoAtual.precipitation === "number" ? `${meteoAtual.precipitation}mm` : "0mm";
+        const ventoTxt = meteoAtual && typeof meteoAtual.wind_speed_10m === "number" ? `${meteoAtual.wind_speed_10m}km/h` : "sem leitura";
+
+        const alertaRio = {
+          origem: "Open-Meteo + Base Local Mesquita/Mendanha",
+          temperatura: tempTxt,
+          umidade: umiTxt,
+          precipitacao: chuvaTxt,
+          vento: ventoTxt,
+          focoTerritorial: "Serra do Mendanha, Rua Amazonas, Vila Sebinho, Maria Cristina e Rocha Sobrinho"
+        };
+
+        const fontesClimaticas = {
+          radaresESatelites: "Open-Meteo 92 municipios RJ, GOES-19 e Bacias Hidrograficas RH I a RH IX",
+          leituraAtual: `${tempTxt}, umidade ${umiTxt}, chuva ${chuvaTxt}, vento ${ventoTxt}`
+        };
+
+        const programasEEditais = {
+          status: "Monitoramento continuo de resiliencia urbana, economia circular e mitigacao de riscos na Baixada Fluminense e RJ",
+          rotasFugaAtivas: rotasAtivas,
+          monitoresCadastrados: monitoresAtivos,
+          registrosZeladoria: zeladoriaTotal
+        };
+
+        const defesaCivilEElNino = {
+          prioridade: "Acompanhamento sinotico, hidrologico e geotecnico sobre Serra do Mendanha e Vila Sebinho",
+          canaisEmergencia: "Defesa Civil 199, Bombeiros 193, SAMU 192, CEMADEN e Alarme Russo"
+        };
+
+        const politicaEReligiao = {
+          governancaComunitaria: "Projeto Cidadao Sensor e GADE - Grupo A Chave da Esperanca em articulacao social e comunitaria"
+        };
+
+        const resumoConsolidado = [
+          `Mesquita/Mendanha: temp ${tempTxt}, umidade ${umiTxt}, chuva ${chuvaTxt}, vento ${ventoTxt}.`,
+          `Operacao local: ${rotasAtivas} rotas ativas, ${monitoresAtivos} monitores, ${zeladoriaTotal} registros de zeladoria.`,
+          `Cobertura: Serra do Mendanha, Rua Amazonas, Vila Sebinho, Maria Cristina, Rocha Sobrinho e 92 municipios do RJ.`,
+          motivoErro ? `Fallback local ativo (${motivoErro}).` : "Consolidacao local ativa."
+        ].join(" ");
+
+        return {
+          alertaRio,
+          fontesClimaticas,
+          programasEEditais,
+          defesaCivilEElNino,
+          politicaEReligiao,
+          resumoConsolidado
+        };
+      },
+
+      async conversarComSarah(coletaDados = null, motivo = "atualizacao_inteligencia") {
+        const dadosAtivos = coletaDados || this.estado.ultimaColeta;
+        const resumoAtual = dadosAtivos?.resumoConsolidado || "";
+        if (!resumoAtual) return null;
+
+        const mensagemRoboParaSarah = [
+          `Reporte interno do RoboInteligenciaSarah para a SARAH (${motivo}).`,
+          `Dados adquiridos e consolidados: ${resumoAtual}`,
+          `Eixos verificados: clima/AlertaRio (${JSON.stringify(dadosAtivos.alertaRio || {})}), editais/programas (${JSON.stringify(dadosAtivos.programasEEditais || {})}), defesa civil/El Nino (${JSON.stringify(dadosAtivos.defesaCivilEElNino || {})}), governanca (${JSON.stringify(dadosAtivos.politicaEReligiao || {})}).`,
+          "Assuma essas informações com base no seu DNA e responda de forma fluente, direta e útil."
+        ].join(" ");
+
+        let respostaSarah = "";
+        try {
+          if (typeof window.chamarSarah === "function") {
+            respostaSarah = await window.chamarSarah(
+              "briefing_robo",
+              [{ role: "user", content: mensagemRoboParaSarah }],
+              "Mesquita",
+              "Serra do Mendanha / Rua Amazonas / Vila Sebinho / Maria Cristina / Rocha Sobrinho",
+              "inteligencia_robo",
+              dadosAtivos,
+              ""
+            );
+          }
+        } catch (e) {}
+
+        if (!respostaSarah) {
+          respostaSarah = `Dados do robô integrados pela SARAH: ${resumoAtual}`;
+        }
+
+        const registroTroca = {
+          id: `${Date.now()}-${Math.floor(Math.random() * 1000)}`,
+          timestamp: new Date().toISOString(),
+          motivo,
+          resumoAdquirido: resumoAtual,
+          mensagemRobo: mensagemRoboParaSarah,
+          respostaSarah
+        };
+
+        this.estado.ultimaAssimilacaoSarah = respostaSarah;
+        this.estado.historicoConversaComSarah = [
+          registroTroca,
+          ...(this.estado.historicoConversaComSarah || []).slice(0, 19)
+        ];
+        window.__SARAH_CONVERSA_ROBO__ = this.estado.historicoConversaComSarah;
+        window.__SARAH_ULTIMA_ASSIMILACAO__ = respostaSarah;
+
+        try {
+          window.dispatchEvent(new CustomEvent("sarah-robo-conversou", {
+            detail: {
+              troca: registroTroca,
+              historico: this.estado.historicoConversaComSarah,
+              ultimaAssimilacao: respostaSarah
+            }
+          }));
+        } catch (e) {}
+
+        return registroTroca;
+      },
+
+      async executarCiclo(motivo = "ciclo_automatico") {
+        if (this.estado.executando) {
+          return this.estado.ultimaColeta;
+        }
+        this.estado.executando = true;
+        try {
+          const tempoBR = obterDataHoraOficialBrasilia();
+          const pacote = await this.consultarEnvelope("coletar_inteligencia_multi_fonte", {
+            motivo,
+            dataHoraBrasilia: tempoBR.descricaoCompleta,
+            anoCalendario: tempoBR.anoCalendario,
+            incluirAlertaRio: true,
+            incluirFontesComplementares: true,
+            editaisAbertos: [
+              "resiliencia climatica",
+              "reducao e mitigacao de risco",
+              "defesa civil nacional",
+              "el nino",
+              "programas governamentais brasileiros",
+              "politica",
+              "religiao"
+            ]
+          });
+
+          const temConteudo = pacote && (
+            pacote.resumoConsolidado ||
+            pacote.alertaRio ||
+            pacote.fontesClimaticas ||
+            pacote.programasEEditais ||
+            pacote.defesaCivilEElNino ||
+            pacote.politicaEReligiao
+          );
+
+          if (!temConteudo) {
+            const fallback = await this.sintetizarTelemetriaRealFallback("envelope sem carga util");
+            this.estado.ultimaAtualizacao = new Date().toISOString();
+            this.estado.modoFonte = "TELEMETRIA_REAL_CONSOLIDADA";
+            this.estado.ultimoErro = "Envelope retornou carga vazia; telemetria real aplicada";
+            this.estado.ultimaColeta = fallback;
+          } else {
+            const baseFallback = await this.sintetizarTelemetriaRealFallback("");
+            this.estado.ultimaAtualizacao = new Date().toISOString();
+            this.estado.modoFonte = "WORKER_ENVELOPE";
+            this.estado.ultimoErro = null;
+            this.estado.ultimaColeta = {
+              alertaRio: pacote.alertaRio || baseFallback.alertaRio,
+              fontesClimaticas: pacote.fontesClimaticas || baseFallback.fontesClimaticas,
+              programasEEditais: pacote.programasEEditais || baseFallback.programasEEditais,
+              defesaCivilEElNino: pacote.defesaCivilEElNino || baseFallback.defesaCivilEElNino,
+              politicaEReligiao: pacote.politicaEReligiao || baseFallback.politicaEReligiao,
+              resumoConsolidado: pacote.resumoConsolidado || baseFallback.resumoConsolidado
+            };
+          }
+
+          window.__SARAH_INTELIGENCIA_ULTIMA_COLETA__ = this.estado.ultimaColeta;
+
+          await this.conversarComSarah(this.estado.ultimaColeta, motivo);
+
+          try {
+            window.dispatchEvent(new CustomEvent("sarah-inteligencia-atualizada", {
+              detail: {
+                atualizadoEm: this.estado.ultimaAtualizacao,
+                modoFonte: this.estado.modoFonte,
+                ultimoErro: this.estado.ultimoErro,
+                coleta: this.estado.ultimaColeta,
+                ultimaAssimilacaoSarah: this.estado.ultimaAssimilacaoSarah,
+                historicoConversaComSarah: this.estado.historicoConversaComSarah
+              }
+            }));
+          } catch (e) {}
+
+          return this.estado.ultimaColeta;
+        } catch (erro) {
+          const msgErro = erro && erro.message ? erro.message : "Erro inesperado no ciclo de inteligencia";
+          const fallback = await this.sintetizarTelemetriaRealFallback(msgErro);
+          this.estado.ultimaAtualizacao = new Date().toISOString();
+          this.estado.modoFonte = "TELEMETRIA_REAL_CONSOLIDADA";
+          this.estado.ultimoErro = msgErro;
+          this.estado.ultimaColeta = fallback;
+
+          window.__SARAH_INTELIGENCIA_ULTIMA_COLETA__ = this.estado.ultimaColeta;
+          await this.conversarComSarah(this.estado.ultimaColeta, `${motivo}_fallback`);
+
+          try {
+            window.dispatchEvent(new CustomEvent("sarah-inteligencia-atualizada", {
+              detail: {
+                atualizadoEm: this.estado.ultimaAtualizacao,
+                modoFonte: this.estado.modoFonte,
+                ultimoErro: this.estado.ultimoErro,
+                coleta: this.estado.ultimaColeta,
+                ultimaAssimilacaoSarah: this.estado.ultimaAssimilacaoSarah,
+                historicoConversaComSarah: this.estado.historicoConversaComSarah
+              }
+            }));
+          } catch (e) {}
+
+          return this.estado.ultimaColeta;
+        } finally {
+          this.estado.executando = false;
+        }
+      },
+
+      iniciar() {
+        if (this.estado.ativo) return;
+        this.estado.ativo = true;
+        setTimeout(() => {
+          this.executarCiclo("inicializacao").catch(() => {});
+        }, 400);
+        this.estado.timerId = setInterval(() => {
+          this.executarCiclo("varredura_periodica").catch(() => {});
+        }, this.config.intervaloCicloMs);
+      },
+
+      parar() {
+        this.estado.ativo = false;
+        if (this.estado.timerId) {
+          clearInterval(this.estado.timerId);
+          this.estado.timerId = null;
+        }
+      },
+
+      obterStatusRobo() {
+        return {
+          ativo: this.estado.ativo,
+          executando: this.estado.executando,
+          ultimaAtualizacao: this.estado.ultimaAtualizacao,
+          modoFonte: this.estado.modoFonte,
+          ultimoErro: this.estado.ultimoErro,
+          totalTrocasComSarah: (this.estado.historicoConversaComSarah || []).length
+        };
+      },
+
+      obterContextoParaSarah() {
+        return {
+          atualizadoEm: this.estado.ultimaAtualizacao,
+          modoFonte: this.estado.modoFonte,
+          resumo: this.estado.ultimaColeta.resumoConsolidado,
+          ultimaAssimilacaoSarah: this.estado.ultimaAssimilacaoSarah,
+          historicoConversaComSarah: this.estado.historicoConversaComSarah,
+          dados: this.estado.ultimaColeta
+        };
+      }
+    };
+
+    function montarContextoInteligenciaParaPrompt() {
+      if (typeof RoboInteligenciaSarah === "undefined" || !RoboInteligenciaSarah.obterContextoParaSarah) {
+        return "";
+      }
+      const ctx = RoboInteligenciaSarah.obterContextoParaSarah();
+      const d = ctx.dados || {};
+      const ultimasTrocas = Array.isArray(ctx.historicoConversaComSarah)
+        ? ctx.historicoConversaComSarah.slice(0, 3).map(t => `[${t.motivo}] Robo->SARAH: ${t.resumoAdquirido} | SARAH: ${t.respostaSarah}`).join(" || ")
+        : "";
+
+      const blocos = [
+        ctx.resumo ? `Resumo consolidado: ${ctx.resumo}` : "",
+        ctx.ultimaAssimilacaoSarah ? `Ultima assimilacao da SARAH com dados do robo: ${ctx.ultimaAssimilacaoSarah}` : "",
+        ultimasTrocas ? `Dialogo recente Robo <-> SARAH: ${ultimasTrocas}` : "",
+        d.alertaRio ? `AlertaRio/Clima: ${JSON.stringify(d.alertaRio)}` : "",
+        d.fontesClimaticas ? `Fontes climaticas: ${JSON.stringify(d.fontesClimaticas)}` : "",
+        d.programasEEditais ? `Programas e editais: ${JSON.stringify(d.programasEEditais)}` : "",
+        d.defesaCivilEElNino ? `Defesa Civil e El Nino: ${JSON.stringify(d.defesaCivilEElNino)}` : "",
+        d.politicaEReligiao ? `Politica e religiao/comunidade: ${JSON.stringify(d.politicaEReligiao)}` : ""
+      ].filter(Boolean);
+
+      if (!blocos.length && !ctx.atualizadoEm) {
+        return "";
+      }
+      return `Contexto recente coletado e conversado entre RoboInteligenciaSarah e SARAH via sarah-envelope-01: ${blocos.join(" | ")}`;
+    }
+
+    function montarPromptCompletoSarah(perguntaUsuario = "", telemetriaLocal = "") {
+      const base = typeof montarPersonalidadeSarah === "function" ? montarPersonalidadeSarah() : "";
+      const inteligencia = montarContextoInteligenciaParaPrompt();
+      return [
+        base,
+        telemetriaLocal ? `Telemetria e leitura direta do sistema: ${telemetriaLocal}` : "",
+        inteligencia,
+        perguntaUsuario ? `Solicitacao atual: ${perguntaUsuario}` : ""
+      ]
+        .filter(Boolean)
+        .join("\n\n");
+    }
+
+    window.SARAH_DNA = SARAH_DNA;
+    window.obterDataHoraOficialBrasilia = obterDataHoraOficialBrasilia;
+    window.montarPersonalidadeSarah = montarPersonalidadeSarah;
+    window.RoboInteligenciaSarah = RoboInteligenciaSarah;
+    window.montarContextoInteligenciaParaPrompt = montarContextoInteligenciaParaPrompt;
+    window.montarPromptCompletoSarah = montarPromptCompletoSarah;
+  </script>
+
+  <script type="text/babel">
+    const { useState, useRef, useEffect } = React;
+
+    const APP_SHARE_URL = "https://phantrorfirmo08-alt.github.io/PROJETO-CIDAD-O-SENSOR-01/";
+    const shareMessageText = "[BASE CLIMÁTICA TÁTICA] Projeto Cidadão Sensor - Sala de Comando Tática, Mesquita - RJ. Instale o app oficial PWA: " + APP_SHARE_URL;
+
+    let globalSaudacaoEmitida = false;
+    let globalInteracoesContagem = 0;
+
+    class AppErrorBoundary extends React.Component {
+      constructor(props) {
+        super(props);
+        this.state = { hasError: false, errorMsg: "" };
+      }
+      static getDerivedStateFromError(error) {
+        return {
+          hasError: true,
+          errorMsg: error && error.message ? error.message : "Erro inesperado na interface."
+        };
+      }
+      componentDidCatch(error) {
+        this.setState({
+          hasError: true,
+          errorMsg: error && error.message ? error.message : "Falha na renderização."
+        });
+      }
+      render() {
+        if (this.state.hasError) {
+          return (
+            <div className="min-h-screen w-full bg-[#030712] text-slate-100 flex items-center justify-center p-4 font-mono">
+              <div className="max-w-md w-full bg-[#0A1B38] border border-cyberCyan rounded-2xl p-5 space-y-3 shadow-2xl">
+                <div className="text-xs font-black text-cyberCyan uppercase">
+                  RECUPERAÇÃO TÁTICA DE TELA
+                </div>
+                <div className="text-xs text-slate-200 leading-relaxed">
+                  A interface encontrou uma falha e foi bloqueada antes de ficar em tela preta.
+                </div>
+                <div className="text-[11px] text-rose-300 bg-black/50 p-2.5 rounded-xl border border-rose-500/40 break-words">
+                  {this.state.errorMsg}
+                </div>
+                <button
+                  type="button"
+                  onClick={() => {
+                    this.setState({ hasError: false, errorMsg: "" });
+                    if (typeof this.props.onReset === "function") this.props.onReset();
+                  }}
+                  className="cyber-button-solid w-full text-xs"
+                >
+                  RESTAURAR PAINEL AGORA
+                </button>
+              </div>
+            </div>
+          );
+        }
+        return this.props.children;
+      }
+    }
+
+    // =========================================================================
+    // SELETOR VOZ GLOBAL - VOZES IMITADAS / SIMULADAS
+    // =========================================================================
+    const PERFIS_VOZ_OFICIAIS = [
+      {
+        id: "sarah",
+        nome: "Sarah",
+        cargo: "Analista Técnica",
+        voz: "Amy (simulada)",
+        pitch: 1.00,
+        rate: 1.05,
+        volume: 1.0,
+        pausaFrase: 320,
+        variacao: 0.02,
+        cor: "#00F2FE",
+        saudacao: "Sarah na escuta. Como posso ajudar?",
+        transform: (t) => t
+      },
+      {
+        id: "brenda",
+        nome: "Brenda",
+        cargo: "Comentarista",
+        voz: "Joanna (simulada)",
+        pitch: 1.28,
+        rate: 1.22,
+        volume: 1.0,
+        pausaFrase: 220,
+        variacao: 0.08,
+        cor: "#FFD93D",
+        saudacao: "Acompanhamento ao vivo ativado!",
+        transform: (t) => t
+      },
+      {
+        id: "milane",
+        nome: "Milane",
+        cargo: "Atendimento",
+        voz: "Kimberly (simulada)",
+        pitch: 1.20,
+        rate: 1.02,
+        volume: 0.95,
+        pausaFrase: 420,
+        variacao: 0.05,
+        cor: "#6BCB77",
+        saudacao: "Olá, estou pronta para te ajudar.",
+        transform: (t) => t
+      },
+      {
+        id: "lorrane",
+        nome: "Lorrane",
+        cargo: "Locução",
+        voz: "Ivy (simulada)",
+        pitch: 0.85,
+        rate: 0.88,
+        volume: 0.90,
+        pausaFrase: 550,
+        variacao: 0.02,
+        cor: "#4D96FF",
+        saudacao: "Comunicação ativa e estável.",
+        transform: (t) => t
+      },
+      {
+        id: "kailane",
+        nome: "Kailane",
+        cargo: "Apresentadora",
+        voz: "Salli (simulada)",
+        pitch: 1.05,
+        rate: 0.98,
+        volume: 1.0,
+        pausaFrase: 380,
+        variacao: 0.03,
+        cor: "#9B5DE5",
+        saudacao: "Informes técnicos prontos.",
+        transform: (t) => t
+      },
+      {
+        id: "elza",
+        nome: "Elza",
+        cargo: "Apoio Comunitário",
+        voz: "Kendra (simulada)",
+        pitch: 0.80,
+        rate: 0.86,
+        volume: 0.90,
+        pausaFrase: 600,
+        variacao: 0.01,
+        cor: "#F15BB5",
+        saudacao: "Seguimos firmes no cuidado com a comunidade.",
+        transform: (t) => t
+      }
+    ];
+
+    function obterPerfilVozAtual(perfilId) {
+      const idAtivo = perfilId || safeStorageGet("raru_perfil_voz", "sarah");
+      return PERFIS_VOZ_OFICIAIS.find(p => p.id === idAtivo) || PERFIS_VOZ_OFICIAIS[0];
+    }
+
+    function falarImitada(texto, perfilId) {
+      if (safeStorageGet("raru_sound_enabled", "true") === "false") return;
+      if (!("speechSynthesis" in window)) return;
+      const perfil = obterPerfilVozAtual(perfilId);
+      try { window.speechSynthesis.cancel(); } catch (e) {}
+      const textoBase = String(texto || "")
+        .replace(/https?:\/\/\S+/g, "")
+        .replace(/[*#]/g, "")
+        .trim();
+      if (!textoBase) return;
+
+      const textoImitado = perfil.transform(textoBase);
+      const frases = textoImitado.split(/(?<=[.!?])\s+/).filter(Boolean);
+      let delay = 0;
+
+      frases.forEach(frase => {
+        const u = new SpeechSynthesisUtterance(frase);
+        u.lang = "pt-BR";
+        u.pitch = Math.max(0.1, Math.min(2, perfil.pitch + (Math.random() - 0.5) * perfil.variacao));
+        u.rate = Math.max(0.1, Math.min(10, perfil.rate));
+        u.volume = Math.max(0, Math.min(1, perfil.volume));
+        try {
+          const voices = window.speechSynthesis.getVoices();
+          const v = voices.find(voice => voice.lang.includes("pt-BR") && voice.name.toLowerCase().includes("google"))
+            || voices.find(voice => voice.lang.includes("pt-BR"))
+            || voices[0];
+          if (v) u.voice = v;
+        } catch (e) {}
+        setTimeout(() => {
+          try {
+            window.speechSynthesis.speak(u);
+          } catch (e) {}
+        }, delay);
+        delay += (frase.length * 52) + perfil.pausaFrase;
+      });
+    }
+
+    function SeletorVozGlobal({ perfilVozId, setPerfilVozId }) {
+      const ativoId = obterPerfilVozAtual(perfilVozId).id;
+      return (
+        <div style={{ background: "#030712", border: "1px solid #00F2FE55", borderRadius: 12, padding: 12, fontFamily: "monospace", color: "#fff" }}>
+          <div style={{ fontSize: 10, color: "#00F2FE", fontWeight: "bold", marginBottom: 8, textTransform: "uppercase" }}>
+            SELEÇÃO DA VOZ OFICIAL • IMITADA • ECOA EM TODO O APP
+          </div>
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 6, fontSize: 9 }}>
+            {PERFIS_VOZ_OFICIAIS.map(p => {
+              const selecionado = p.id === ativoId;
+              return (
+                <button
+                  key={p.id}
+                  type="button"
+                  onClick={() => {
+                    setPerfilVozId(p.id);
+                    safeStorageSet("raru_perfil_voz", p.id);
+                    falarImitada(p.saudacao, p.id);
+                  }}
+                  style={{
+                    padding: 8,
+                    textAlign: "left",
+                    background: selecionado ? "#0c2633" : "#111827",
+                    border: selecionado ? `1px solid ${p.cor}` : "1px solid #334155",
+                    borderRadius: 6,
+                    color: "#fff",
+                    cursor: "pointer"
+                  }}
+                >
+                  <div style={{ color: p.cor, fontWeight: "bold" }}>{p.cargo} • {p.voz}</div>
+                  <div style={{ fontSize: 11, marginTop: 2, fontWeight: "bold" }}>{p.nome}</div>
+                  <div style={{ fontSize: 7, color: "#00FF9D", marginTop: 3 }}>IMITADA • CLIQUE P/ OUVIR</div>
+                </button>
+              );
+            })}
+          </div>
+          <div style={{ fontSize: 8, color: "#64748b", marginTop: 8, textAlign: "center" }}>
+            Imitação por pitch + ritmo + jeito de falar • Sem ritmo de robô
+          </div>
+        </div>
+      );
+    }
+
+    window.PERFIS_VOZ_OFICIAIS = PERFIS_VOZ_OFICIAIS;
+    window.falarImitada = falarImitada;
+    window.SeletorVozGlobal = SeletorVozGlobal;
+
+    async function calcularSHA256(texto) {
+      const str = String(texto || "");
+      try {
+        if (window.crypto && window.crypto.subtle && window.TextEncoder) {
+          const encoder = new TextEncoder();
+          const data = encoder.encode(str);
+          const hashBuffer = await window.crypto.subtle.digest("SHA-256", data);
+          const hashArray = Array.from(new Uint8Array(hashBuffer));
+          return hashArray.map(b => b.toString(16).padStart(2, "0")).join("");
+        }
+      } catch (e) {}
+
+      let h1 = 0xdeadbeef, h2 = 0x41c6ce57;
+      for (let i = 0; i < str.length; i++) {
+        const ch = str.charCodeAt(i);
+        h1 = Math.imul(h1 ^ ch, 2654435761);
+        h2 = Math.imul(h2 ^ ch, 1597334677);
+      }
+      h1 = Math.imul(h1 ^ (h1 >>> 16), 2246822507) ^ Math.imul(h2 ^ (h2 >>> 13), 3266489909);
+      h2 = Math.imul(h2 ^ (h2 >>> 16), 2246822507) ^ Math.imul(h1 ^ (h1 >>> 13), 3266489909);
+      const combinado = (4294967296 * (2097151 & h2) + (h1 >>> 0)).toString(16).padStart(16, "0");
+      return combinado.repeat(4).slice(0, 64);
+    }
+
+    function sanitizarRespostaSarah(texto) {
+      return String(texto || "")
+        .replace(/[*#]/g, "")
+        .replace(/cerquilha/gi, "")
+        .replace(/asterisco/gi, "")
+        .replace(/\bcalma,?\s+[a-zà-ú]+/gi, "")
+        .replace(/defesa civil oficial/gi, "acompanhamento técnico comunitário")
+        .trim();
+    }
+
+    async function chamarSarah(tipo, mensagensHistorico, municipioAtual, bairroAtual, abaAtual, dadosClimaContexto, userName = "") {
+      const isBriefingRobo = tipo === "briefing_robo";
+      if (!isBriefingRobo) {
+        globalInteracoesContagem += 1;
+      }
+      const tempoBR = obterDataHoraOficialBrasilia();
+      const saudacaoCerta = tempoBR.saudacao;
+
+      const nomeOperador = userName && userName.trim() ? userName.trim() : "";
+      const ultimaMsgObj = (mensagensHistorico && mensagensHistorico[mensagensHistorico.length - 1]) || {};
+      const ultimaMensagem = ultimaMsgObj.content || "Leitura tática";
+
+      const climaResumo = dadosClimaContexto && typeof dadosClimaContexto === "object"
+        ? JSON.stringify(dadosClimaContexto)
+        : String(dadosClimaContexto || "Telemetria ativa");
+
+      const telemetriaLocal = [
+        `Interlocutor: ${nomeOperador || "Nome ainda não informado (perguntar o nome com naturalidade e chamar pelo nome quando souber)"}`,
+        `Município: ${municipioAtual || "Mesquita"}`,
+        `Bairro/Setor: ${bairroAtual || "Rua Amazonas / Vila Sebinho / Maria Cristina / Rocha Sobrinho"}`,
+        `Módulo/Aba: ${abaAtual || "dashboard"}`,
+        `Modo de solicitação: ${tipo || "conversa"}`,
+        `Dados climáticos e sensores: ${climaResumo}`
+      ].join(" | ");
+
+      let diretrizSequencia = "";
+      if (isBriefingRobo) {
+        diretrizSequencia = `SINCRONIZAÇÃO INTERNA ROBÔ -> SARAH: Analise de forma fluente e objetiva as informações trazidas pelo robô e aponte o ponto principal para a região, sem repetir saudação nem ficar citando data ou hora.`;
+      } else if (!globalSaudacaoEmitida) {
+        diretrizSequencia = `ABERTURA INICIAL: Apresente-se como ${SARAH_DNA.apresentacaoInicial}, cumprimente com '${saudacaoCerta}' apenas uma vez e pergunte em que posso ser útil e qual o nome de quem está falando. Não repita bom dia, boa tarde, boa noite nem horário de Brasília nas respostas seguintes.`;
+      } else {
+        diretrizSequencia = `CONVERSA CONTÍNUA: Responda de forma fluente, natural e direta${nomeOperador ? ` chamando por ${nomeOperador}` : ", perguntando o nome de quem fala se ainda não souber"}. Não repita bom dia, boa tarde, boa noite e não fique falando data ou hora de Brasília a toda hora.`;
+      }
+
+      const systemPrompt = `${montarPromptCompletoSarah(ultimaMensagem, telemetriaLocal)}\n\n${diretrizSequencia}`;
+
+      try {
+        const response = await fetch(SARAH_PROXY_URL, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            model: "openai/gpt-oss-120b",
+            messages: [
+              { role: "system", content: systemPrompt },
+              ...(Array.isArray(mensagensHistorico) ? mensagensHistorico : [])
+            ],
+            temperature: tipo === "laudo" ? 0.35 : 0.55,
+            max_tokens: tipo === "laudo" ? 700 : 450
+          })
+        });
+
+        
