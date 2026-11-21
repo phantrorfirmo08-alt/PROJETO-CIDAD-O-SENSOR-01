@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
+
+    <!-- ===== SEGURANÇA: CSP, sem MIME-sniffing, sem referer vazado ===== -->
+    <meta http-equiv="Content-Security-Policy" content="
+        default-src 'none';
+        script-src 'self' 'unsafe-inline' https://unpkg.com;
+        style-src 'self' 'unsafe-inline' https://unpkg.com;
+        img-src 'self' data: blob: https://*.tile.openstreetmap.org https://gibs.earthdata.nasa.gov https://*.rainviewer.com;
+        connect-src 'self' https://api.rainviewer.com https://api.open-meteo.com https://geocoding-api.open-meteo.com;
+        font-src 'none';
+        object-src 'none';
+        base-uri 'none';
+        form-action 'none';
+        frame-ancestors 'self'" />
+    <meta http-equiv="X-Content-Type-Options" content="nosniff" />
+    <meta name="referrer" content="no-referrer" />
+    <meta name="robots" content="noindex" />
+
+    <title>Monitor Profissional — GOES-19 + RainViewer</title>
+
+    <!-- ===== SEGURANÇA: SRI (integridade) nas libs do CDN ===== -->
+    <!-- Leaflet CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+          integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
+          crossorigin="" />
+    
+    <!-- Estilos Básicos -->
+    <style>
+        body { margin: 0; padding: 0; font-family: sans-serif; background: #0f172a; color: #e2e8f0; }
+        #map { height: 100vh; width: 100%; }
+        .info-panel {
+            position: absolute; top: 10px; right: 10px; z-index: 1000;
+            background: rgba(15, 23, 42, 0.9); padding: 15px; border-radius: 8px;
+            border: 1px solid #334155; min-width: 200px;
+        }
+        h3 { margin-top: 0; font-size: 14px; color: #10b981; }
+        .metric { font-size: 12px; margin: 5px 0; display: flex; justify-content: space-between; }
+    </style>
+</head>
+<body>
+
+    <div id="map"></div>
+
+    <div class="info-panel">
+        <h3>Dados Meteorológicos</h3>
+        <div class="metric"><span>Temperatura:</span> <strong id="temp">--°C</strong></div>
+        <div class="metric"><span>Umidade:</span> <strong id="humidity">--%</strong></div>
+        <div class="metric"><span>Vento:</span> <strong id="wind">-- km/h</strong></div>
+        <div class="metric"><span>Radar:</span> <strong id="radar-status">Carregando...</strong></div>
+    </div>
+
+    <!-- Leaflet JS -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+            integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
+            crossorigin=""></script>
+
+    <script>
+        // Inicializa o mapa focado no Brasil
+        const map = L.map('map').setView([-15.79, -47.88], 5); // Brasília
+
+        // Camada Base (OpenStreetMap)
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            maxZoom: 19,
+            attribution: '&copy; OpenStreetMap contributors'
+        }).addTo(map);
+
+        // Função para adicionar Radar de Chuva (RainViewer)
+        async function loadRadar() {
+            try {
+                const response = await fetch('https://api.rainviewer.com/public/weather-maps.json');
+                const data = await response.json();
+                
+                if (data && data.radar && data.radar.past.length > 0) {
+                    const lastFrame = data.radar.past[data.radar.past.length - 1];
+                    const radarUrl = `${data.host}${lastFrame.path}/256/{z}/{x}/{y}/2/1_1.png`;
+                    
+                    L.tileLayer(radarUrl, {
+                        opacity: 0.7,
+                        crossOrigin: true
+                    }).addTo(map);
+                    
+                    document.getElementById('radar-status').textContent = "Ativo";
+                } else {
+                    document.getElementById('radar-status').textContent = "Indisponível";
+                }
+            } catch (error) {
+                console.error("Erro ao carregar radar:", error);
+                document.getElementById('radar-status').textContent = "Erro";
+            }
+        }
+
+        // Função para buscar dados atuais (Open-Meteo)
+        async function loadWeatherData(lat, lon) {
+            try {
+                const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current_weather=true&hourly=relative_humidity_2m`;
+                const response = await fetch(url);
+                const data = await response.json();
+                
+                if (data.current_weather) {
+                    document.getElementById('temp').textContent = `${Math.round(data.current_weather.temperature)}°C`;
+                    document.getElementById('wind').textContent = `${Math.round(data.current_weather.windspeed)} km/h`;
+                    
+                    // Tenta pegar umidade (pode variar conforme a API retorna array ou objeto)
+                    if (data.hourly && data.hourly.relative_humidity_2m) {
+                         // Simplificação: pega o primeiro valor disponível
+                         document.getElementById('humidity').textContent = `${data.hourly.relative_humidity_2m[0]}%`;
+                    }
+                }
+            } catch (error) {
+                console.error("Erro ao carregar clima:", error);
+            }
+        }
+
+        // Carrega dados iniciais e radar
+        loadRadar();
+        loadWeatherData(-15.79, -47.88);
+
+        // Atualiza dados ao mover o mapa
+        map.on('moveend', () => {
+            const center = map.getCenter();
+            loadWeatherData(center.lat, center.lng);
+        });
+    </script>
+</body>
+</html>
