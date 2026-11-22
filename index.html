@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
+<title>RARU MAPA · Profissional · Sala 24h</title>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<style>
+*{box-sizing:border-box}html,body{margin:0;padding:0;width:100%;height:100%;overflow:hidden;background:#070b14;font-family:Inter,system-ui,sans-serif;color:#fff}
+#map{position:absolute;inset:0;width:100%;height:100%;z-index:1;background:#e6f0f8}
+#ventoCanvas{position:absolute;inset:0;width:100%;height:100%;z-index:400;pointer-events:none}
+.leaflet-container{background:#e6f0f8!important;font-family:Inter,system-ui,sans-serif!important}
+.hud{position:absolute;inset:0;z-index:500;pointer-events:none;display:flex;flex-direction:column;justify-content:space-between;padding:10px;gap:8px}
+.hud-inter{pointer-events:auto}
+.glass{background:rgba(8,13,24,.92);backdrop-filter:blur(12px);border:1px solid rgba(148,163,184,.25);box-shadow:0 12px 30px rgba(2,6,23,.58)}
+.hidden-panel{opacity:0;transform:translateY(-6px);pointer-events:none!important;visibility:hidden}
+.collapsible{transition:opacity .18s,transform .18s}
+.painel{width:360px;max-width:calc(100vw - 20px);max-height:58vh;overflow-y:auto;border-radius:16px;padding:12px}
+.painel::-webkit-scrollbar{width:6px}.painel::-webkit-scrollbar-thumb{background:#475569;border-radius:999px}
+.btn{cursor:pointer;border:0;border-radius:999px;padding:9px 13px;font-weight:800;font-size:12px}
+.btn-sky{background:#0284c7;color:#fff}.btn-white{background:#fff;color:#111}.btn-dark{background:#1e293b;color:#fff}.btn-green{background:#16a34a;color:#fff}.btn-red{background:#dc2626;color:#fff}
+.chip{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:12px;font-size:12px;font-weight:700}
+.select92{width:100%;padding:10px 12px;border-radius:12px;background:#0f172a;border:1px solid #334155;color:#fff;font-size:13px;font-weight:700;margin-top:8px}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+.toggle{display:flex;align-items:center;gap:8px;background:#0f172a;border:1px solid #334155;border-radius:10px;padding:8px;font-size:11px;cursor:pointer}
+.toggle input{accent-color:#0ea5e9}
+/* SARAH ROBO FUTURISTA */
+.sarah-robot{width:64px;height:64px;flex:0 0 64px;position:relative}
+.sarah-robot .head{position:absolute;top:0;left:6px;width:52px;height:44px;background:linear-gradient(180deg,#e2e8f0,#94a3b8);border-radius:16px;border:2px solid #0ea5e9;box-shadow:0 0 18px rgba(14,165,233,.8),inset 0 -6px 10px rgba(0,0,0,.25)}
+.sarah-robot .eye{position:absolute;top:16px;width:12px;height:12px;border-radius:50%;background:#06b6d4;box-shadow:0 0 10px #06b6d4,0 0 18px #22d3ee;animation:blink 3.2s infinite}
+.sarah-robot .eye.left{left:10px}.sarah-robot .eye.right{left:30px}
+.sarah-robot .mouth{position:absolute;top:32px;left:16px;width:20px;height:3px;background:#0f172a;border-radius:999px}
+.sarah-robot .ant{position:absolute;top:-8px;left:28px;width:2px;height:10px;background:#0ea5e9}
+.sarah-robot .ant::after{content:"";position:absolute;top:-6px;left:-4px;width:10px;height:10px;border-radius:50%;background:#22d3ee;box-shadow:0 0 12px #22d3ee}
+.sarah-robot .body{position:absolute;bottom:0;left:14px;width:36px;height:14px;background:linear-gradient(180deg,#38bdf8,#0369a1);border-radius:8px 8px 4px 4px}
+@keyframes blink{0%,92%,100%{transform:scaleY(1)}94%{transform:scaleY(.1)}96%{transform:scaleY(1)}}
+@keyframes floatRobot{0%,100%{transform:translateY(0)}50%{transform:translateY(-3px)}}
+.float-robot{animation:floatRobot 2.8s ease-in-out infinite}
+.sarah-orb{width:10px;height:10px;border-radius:50%;background:#22c55e;box-shadow:0 0 10px #22c55e}
+.sarah-orb.red{background:#ef4444;box-shadow:0 0 10px #ef4444}
+.sarah-orb.yellow{background:#eab308;box-shadow:0 0 10px #eab308}
+#sarahDrawer{position:fixed;right:12px;bottom:76px;width:min(430px,calc(100vw - 24px));max-height:78vh;z-index:700;display:none;flex-direction:column;border-radius:18px;overflow:hidden;background:rgba(8,13,24,.97);border:1px solid rgba(56,189,248,.5);box-shadow:0 20px 45px rgba(0,0,0,.8)}
+#sarahDrawer.open{display:flex}
+@media(max-width:700px){.painel{width:100%}}
+</style>
+</head>
+<body>
+<div id="map"></div>
+<canvas id="ventoCanvas"></canvas>
+
+<div class="hud">
+<div class="flex flex-col gap-2">
+<div class="flex flex-wrap items-center justify-between gap-2">
+<div class="glass hud-inter collapsible rounded-2xl px-3 py-2 flex flex-wrap items-center gap-3">
+<div><b class="text-sm">RARU MAPA · Profissional · Sala 24h</b><div id="activeCoords" class="text-[11px] text-slate-300">Mesquita · Rocha Sobrinho (-22.7828, -43.4314) · Centralizado · Rio de Janeiro todo</div></div>
+<select id="select92" onchange="focus92(this.value)" class="select92" style="width:260px;margin:0"></select>
+<button class="btn btn-sky" onclick="focus92('mesquita')">Rocha Sobrinho</button>
+</div>
+<div class="flex gap-2 hud-inter">
+<button class="btn btn-dark glass" onclick="toggleSafeFullscreen()">Tela Cheia</button>
+<button class="btn btn-dark glass" onclick="toggleControls()"><span id="toggleLabel">Ocultar Controles</span></button>
+</div>
+</div>
+<div class="glass hud-inter collapsible rounded-xl px-3 py-2 flex flex-wrap justify-between gap-2 text-[11px]"><div class="flex gap-2 items-center"><span id="pill" class="px-2 py-1 rounded-full bg-amber-500/20 text-amber-200 font-bold">VERIFICANDO TELEMETRIA</span><span id="teleDetail">Consultando Open-Meteo, RainViewer e NASA GIBS...</span></div><button class="btn btn-dark" onclick="fetchLive(true)">Atualizar</button></div>
+</div>
+
+<div class="flex justify-between items-end gap-2">
+<div class="glass hud-inter collapsible painel">
+<div class="flex justify-between items-center"><b>Camadas Profissionais</b><button class="btn btn-red" onclick="toggleControls()">X Fechar</button></div>
+<div class="mt-2 text-[11px] text-slate-400">Opacidade: <span id="opLabel" class="text-sky-300 font-bold">82%</span></div>
+<input type="range" min="25" max="100" value="82" oninput="setOp(this.value)" class="w-full accent-sky-400" />
+<div class="grid2 mt-2 text-xs">
+<label class="toggle"><input type="checkbox" checked onchange="toggleLayer('clouds',this.checked)"> Nuvens GOES-19</label>
+<label class="toggle"><input type="checkbox" checked onchange="toggleLayer('precip',this.checked)"> Precipitacao</label>
+<label class="toggle"><input type="checkbox" checked onchange="toggleLayer('wind',this.checked)"> Vento 10m / 850hPa</label>
+<label class="toggle"><input type="checkbox" checked onchange="toggleLayer('temp',this.checked)"> Temperatura</label>
+<label class="toggle"><input type="checkbox" checked onchange="toggleLayer('raio',this.checked)"> Raio / CAPE</label>
+<label class="toggle"><input type="checkbox" checked onchange="toggleLayer('basins',this.checked)"> Bacias / Rios</label>
+</div>
+<div class="mt-3">
+<div class="text-[11px] font-bold uppercase text-slate-400">92 Municipios do RJ - Clique para monitorar</div>
+<select id="select92b" onchange="focus92(this.value)" class="select92"></select>
+<div id="municipioInfo" class="mt-2 p-2 rounded-xl bg-slate-950 border border-slate-800 text-[11px] leading-relaxed">Mesquita · Rocha Sobrinho: Polo central da Sala 24h. Bacias: Rio Sarapui, Rio Dona Eugenia, Serra do Mendanha.</div>
+</div>
+<div class="grid grid-cols-3 gap-1.5 mt-3 text-center">
+<div class="p-2 rounded-xl bg-slate-900 border border-slate-800"><div class="text-[10px] text-slate-400">Temp</div><div id="hudTemp" class="font-extrabold text-amber-300">29.4 C</div></div>
+<div class="p-2 rounded-xl bg-slate-900 border border-slate-800"><div class="text-[10px] text-slate-400">Chuva</div><div id="hudRain" class="font-extrabold text-sky-300">1.8 mm/h</div></div>
+<div class="p-2 rounded-xl bg-slate-900 border border-slate-800"><div class="text-[10px] text-slate-400">Vento</div><div id="hudWind" class="font-extrabold text-emerald-300">14 km/h</div></div>
+</div>
+<div class="flex gap-2 mt-3"><button class="btn btn-white flex-1" onclick="togglePlay()">Pausar</button><button class="btn btn-dark flex-1" onclick="setMode('past')">Passado</button><button class="btn btn-dark flex-1" onclick="setMode('nowcast')">Previsao</button></div>
+<button class="btn btn-green w-full mt-3" onclick="toggleControls()">Voltar para o mapa</button>
+</div>
+<button class="btn btn-sky hud-inter px-4 py-3 flex items-center gap-2" onclick="toggleSarah()"><span class="sarah-robot float-robot" style="width:28px;height:28px;transform:scale(.55);margin:-6px"><span class="head"><span class="eye left"></span><span class="eye right"></span><span class="mouth"></span><span class="ant"></span></span><span class="body"></span></span> SARAH 24h - Robo Futurista</button>
+</div>
+
+<div class="glass hud-inter collapsible rounded-2xl px-3 py-2 flex flex-wrap justify-between gap-2 items-center">
+<div class="flex gap-2 items-center"><span id="frameLabel" class="text-xs font-bold">Janela 24h · +00h00</span></div>
+<input type="range" min="0" max="11" value="0" oninput="scrub(this.value)" class="flex-1 min-w-[120px] accent-sky-400" />
+<div class="flex gap-1"><button class="btn btn-sky" onclick="setSpeed('normal')">Normal</button><button class="btn btn-dark" onclick="setSpeed('media')">Media</button><button class="btn btn-dark" onclick="setSpeed('rapida')">Rapida</button></div>
+</div>
+</div>
+
+<aside id="sarahDrawer">
+<div class="p-3 bg-slate-900 border-b border-slate-800 flex gap-3 items-center">
+<div class="sarah-robot float-robot"><span class="ant"></span><span class="head"><span class="eye left"></span><span class="eye right"></span><span class="mouth"></span></span><span class="body"></span></div>
+<div class="flex-1"><div class="font-extrabold text-sky-300 text-sm">SARAH · Robo Futurista · Supervisora 24h</div><div id="liveConn" class="text-[10px] text-slate-400">Verificando conexao... Olhos ativos, sensores ligados.</div><div class="text-[10px] text-cyan-300 mt-0.5">Eu sou a SARAH, robo futurista da Sala 24h. Eu vigio Mesquita, Baixada e os 92 municipios.</div></div>
+<button class="btn btn-dark" onclick="toggleSarah()">X</button>
+</div>
+<div class="p-2.5 bg-slate-950 border-b border-slate-800 flex flex-wrap gap-1.5">
+<button class="btn btn-sky" onclick="toggleVoice()">Falar com SARAH</button>
+<button class="btn btn-dark" onclick="speakLast()">Ouvir SARAH</button>
+<button class="btn btn-dark" onclick="stopSpeech()">Parar Voz</button>
+<span id="voiceBadge" class="text-[10px] text-slate-300 px-2 py-1">Voz: Verificando...</span>
+</div>
+<div class="p-2.5 flex flex-wrap gap-1.5 bg-slate-950/60">
+<button class="btn btn-dark" onclick="askSarah('clima')">Clima agora</button>
+<button class="btn btn-dark" onclick="askSarah('bacias')">Bacias RJ</button>
+<button class="btn btn-dark" onclick="askSarah('fontes')">Fontes e Satelite</button>
+<button class="btn btn-dark" onclick="askSarah('alertas')">Alertas</button>
+</div>
+<div id="sarahMsgs" class="flex-1 overflow-y-auto p-3 space-y-2 text-xs">
+<div class="p-3 rounded-2xl bg-slate-800 border border-slate-700"><b class="text-emerald-300">SARAH · ROBO FUTURISTA</b><div class="mt-1">Ola, eu sou a SARAH. Robo futurista da Sala 24h. Estou centralizada em Mesquita, Rocha Sobrinho, vigiando a Baixada Fluminense e os 92 municipios do Rio. Use os 92 municipios no seletor, toque em mim para falar, ou pergunte sobre chuva, bacias, alertas e fontes.</div></div>
+</div>
+<form onsubmit="sendSarah(event)" class="p-2.5 bg-slate-900 border-t border-slate-800 flex gap-2"><input id="sarahInput" placeholder="Pergunte para a SARAH robo..." class="flex-1 px-3 py-2 rounded-xl bg-slate-950 border border-slate-700 text-xs" /><button class="btn btn-sky">Enviar</button></form>
+</aside>
+
+<script src="https://cdn.tailwindcss.com"></script>
+<script>
+// 92 MUNICIPIOS DO RJ - nome, lat, lon, zoom
+const MUNICIPIOS=[
+{id:'angra',name:'Angra dos Reis',lat:-23.0067,lon:-44.3181,zoom:11},
+{id:'aperibe',name:'Aperibe',lat:-21.6228,lon:-42.1028,zoom:12},
+{id:'araruama',name:'Araruama',lat:-22.8728,lon:-42.3436,zoom:11},
+{id:'areal',name:'Areal',lat:-22.2308,lon:-43.1047,zoom:12},
+{id:'buzios',name:'Armacao dos Buzios',lat:-22.7469,lon:-41.8817,zoom:12},
+{id:'arraial',name:'Arraial do Cabo',lat:-22.9661,lon:-42.0278,zoom:12},
+{id:'barra_pirai',name:'Barra do Pirai',lat:-22.4708,lon:-43.8264,zoom:11},
+{id:'barra_mansa',name:'Barra Mansa',lat:-22.5442,lon:-44.1714,zoom:11},
+{id:'belford',name:'Belford Roxo',lat:-22.7642,lon:-43.3994,zoom:12.5},
+{id:'bom_jardim',name:'Bom Jardim',lat:-22.1519,lon:-42.4208,zoom:11},
+{id:'bom_jesus',name:'Bom Jesus do Itabapoana',lat:-21.1336,lon:-41.6819,zoom:11},
+{id:'cabo_frio',name:'Cabo Frio',lat:-22.8783,lon:-42.0197,zoom:11.5},
+{id:'cachoeiras',name:'Cachoeiras de Macacu',lat:-22.4628,lon:-42.6528,zoom:11},
+{id:'cambuci',name:'Cambuci',lat:-21.575,lon:-41.9119,zoom:11},
+{id:'campos',name:'Campos dos Goytacazes',lat:-21.7622,lon:-41.3181,zoom:10.5},
+{id:'cantagalo',name:'Cantagalo',lat:-21.9828,lon:-42.3689,zoom:11},
+{id:'carapebus',name:'Carapebus',lat:-22.1858,lon:-41.6619,zoom:11},
+{id:'cardoso',name:'Cardoso Moreira',lat:-21.4869,lon:-41.2197,zoom:11},
+{id:'carmo',name:'Carmo',lat:-21.9336,lon:-42.6083,zoom:11},
+{id:'casimiro',name:'Casimiro de Abreu',lat:-22.4828,lon:-42.2039,zoom:11},
+{id:'levy',name:'Comendador Levy Gasparian',lat:-22.0278,lon:-43.2,zoom:12},
+{id:'conceicao',name:'Conceicao de Macabu',lat:-22.0836,lon:-41.8669,zoom:11},
+{id:'cordeiro',name:'Cordeiro',lat:-22.0289,lon:-42.3619,zoom:12},
+{id:'duas_barras',name:'Duas Barras',lat:-22.05,lon:-42.5208,zoom:11},
+{id:'duque',name:'Duque de Caxias',lat:-22.7856,lon:-43.3117,zoom:12},
+{id:'frontin',name:'Engenheiro Paulo de Frontin',lat:-22.55,lon:-43.6764,zoom:12},
+{id:'guapimirim',name:'Guapimirim',lat:-22.5328,lon:-42.9836,zoom:11},
+{id:'iguaba',name:'Iguaba Grande',lat:-22.8408,lon:-42.2308,zoom:12},
+{id:'itaborai',name:'Itaborai',lat:-22.7447,lon:-42.8619,zoom:11},
+{id:'itaguai',name:'Itaguai',lat:-22.8619,lon:-43.7797,zoom:11},
+{id:'italva',name:'Italva',lat:-21.4236,lon:-41.6931,zoom:11},
+{id:'itaocara',name:'Itaocara',lat:-21.6786,lon:-42.0789,zoom:11},
+{id:'itaperuna',name:'Itaperuna',lat:-21.2058,lon:-41.8889,zoom:11},
+{id:'itatiaia',name:'Itatiaia',lat:-22.4958,lon:-44.5639,zoom:11},
+{id:'japeri',name:'Japeri',lat:-22.6425,lon:-43.6536,zoom:12},
+{id:'laje',name:'Laje do Muriae',lat:-21.2069,lon:-42.1236,zoom:11},
+{id:'macae',name:'Macae',lat:-22.3708,lon:-41.7869,zoom:11},
+{id:'macuco',name:'Macuco',lat:-21.9836,lon:-42.2539,zoom:12},
+{id:'mage',name:'Mage',lat:-22.6561,lon:-43.0406,zoom:11},
+{id:'mangaratiba',name:'Mangaratiba',lat:-22.9608,lon:-44.0408,zoom:11},
+{id:'marica',name:'Marica',lat:-22.9197,lon:-42.8186,zoom:11},
+{id:'mendes',name:'Mendes',lat:-22.5236,lon:-43.7336,zoom:12},
+{id:'mesquita',name:'Mesquita · Rocha Sobrinho - CENTRAL',lat:-22.7828,lon:-43.4314,zoom:12.6},
+{id:'miguel',name:'Miguel Pereira',lat:-22.4569,lon:-43.4681,zoom:11},
+{id:'miracema',name:'Miracema',lat:-21.4119,lon:-42.1969,zoom:11},
+{id:'natividade',name:'Natividade',lat:-21.0408,lon:-41.975,zoom:11},
+{id:'nilopolis',name:'Nilopolis',lat:-22.8083,lon:-43.4147,zoom:12.8},
+{id:'niteroi',name:'Niteroi',lat:-22.8832,lon:-43.1034,zoom:12},
+{id:'nova_friburgo',name:'Nova Friburgo',lat:-22.2819,lon:-42.5311,zoom:11},
+{id:'nova_iguacu',name:'Nova Iguacu',lat:-22.7592,lon:-43.4511,zoom:12.2},
+{id:'paracambi',name:'Paracambi',lat:-22.6083,lon:-43.7097,zoom:12},
+{id:'paraiba_sul',name:'Paraiba do Sul',lat:-22.1619,lon:-43.2958,zoom:11},
+{id:'paraty',name:'Paraty',lat:-23.2228,lon:-44.7178,zoom:11},
+{id:'paty',name:'Paty do Alferes',lat:-22.4286,lon:-43.425,zoom:11},
+{id:'petropolis',name:'Petropolis',lat:-22.505,lon:-43.1786,zoom:11.5},
+{id:'pinheiral',name:'Pinheiral',lat:-22.5147,lon:-44.0036,zoom:12},
+{id:'pirai',name:'Pirai',lat:-22.6278,lon:-43.8986,zoom:11},
+{id:'porciuncula',name:'Porciuncula',lat:-20.9628,lon:-42.0419,zoom:11},
+{id:'porto_real',name:'Porto Real',lat:-22.4158,lon:-44.2897,zoom:12},
+{id:'quatis',name:'Quatis',lat:-22.4028,lon:-44.1958,zoom:11},
+{id:'queimados',name:'Queimados',lat:-22.7147,lon:-43.5553,zoom:12},
+{id:'quissama',name:'Quissama',lat:-22.1086,lon:-41.4719,zoom:11},
+{id:'resende',name:'Resende',lat:-22.4686,lon:-44.4469,zoom:11},
+{id:'rio_bonito',name:'Rio Bonito',lat:-22.7086,lon:-42.6286,zoom:11},
+{id:'rio_claro',name:'Rio Claro',lat:-22.7228,lon:-44.1361,zoom:11},
+{id:'rio_flores',name:'Rio das Flores',lat:-22.17,lon:-43.5836,zoom:11},
+{id:'rio_ostras',name:'Rio das Ostras',lat:-22.5269,lon:-41.945,zoom:11},
+{id:'rio',name:'Rio de Janeiro',lat:-22.9068,lon:-43.1729,zoom:11},
+{id:'santa_maria',name:'Santa Maria Madalena',lat:-21.9569,lon:-42.0069,zoom:11},
+{id:'santo_antonio',name:'Santo Antonio de Padua',lat:-21.5369,lon:-42.1808,zoom:11},
+{id:'sao_fidelis',name:'Sao Fidelis',lat:-21.6469,lon:-41.7519,zoom:11},
+{id:'sao_francisco',name:'Sao Francisco de Itabapoana',lat:-21.4708,lon:-41.1097,zoom:11},
+{id:'sao_goncalo',name:'Sao Goncalo',lat:-22.8269,lon:-43.0539,zoom:11.5},
+{id:'sao_joao_barra',name:'Sao Joao da Barra',lat:-21.6408,lon:-41.0519,zoom:11},
+{id:'sao_joao_meriti',name:'Sao Joao de Meriti',lat:-22.8047,lon:-43.3722,zoom:12.7},
+{id:'sao_jose_uba',name:'Sao Jose de Uba',lat:-21.3628,lon:-41.9569,zoom:11},
+{id:'sao_jose_vale',name:'Sao Jose do Vale do Rio Preto',lat:-22.1519,lon:-42.9236,zoom:11},
+{id:'sao_pedro',name:'Sao Pedro da Aldeia',lat:-22.8397,lon:-42.1028,zoom:11},
+{id:'sao_sebastiao',name:'Sao Sebastiao do Alto',lat:-21.9569,lon:-42.1361,zoom:11},
+{id:'sapucaia',name:'Sapucaia',lat:-21.9969,lon:-42.9181,zoom:11},
+{id:'saquarema',name:'Saquarema',lat:-22.9208,lon:-42.51,zoom:11},
+{id:'seropedica',name:'Seropedica',lat:-22.7408,lon:-43.7086,zoom:11},
+{id:'silva_jardim',name:'Silva Jardim',lat:-22.6547,lon:-42.3861,zoom:11},
+{id:'sumidouro',name:'Sumidouro',lat:-22.05,lon:-42.6764,zoom:11},
+{id:'tangua',name:'Tangua',lat:-22.7319,lon:-42.7181,zoom:11},
+{id:'teresopolis',name:'Teresopolis',lat:-22.4119,lon:-42.9836,zoom:11},
+{id:'trajano',name:'Trajano de Moraes',lat:-22.0658,lon:-42.0669,zoom:11},
+{id:'tres_rios',name:'Tres Rios',lat:-22.1169,lon:-43.2086,zoom:11},
+{id:'valenca',name:'Valenca',lat:-22.2458,lon:-43.7008,zoom:11},
+{id:'varre_sai',name:'Varre-Sai',lat:-20.9286,lon:-41.8669,zoom:11},
+{id:'vassouras',name:'Vassouras',lat:-22.4058,lon:-43.6669,zoom:11},
+{id:'volta',name:'Volta Redonda',lat:-22.5231,lon:-44.1042,zoom:11.4}
+];
+const state={lat:-22.7828,lon:-43.4314,zoom:12.6,op:.82,playing:true,mode:'past',speed:'normal',frame:0,voice:true,currentId:'mesquita',layers:{clouds:true,precip:true,wind:true,temp:true,raio:true,basins:true},tele:{temp:29.4,rain:1.8,wind:14,gust:24,dir:115,hum:74,press:1012,cloud:58,cape:420,code:61,fallback:true}};
+let map,marker,layerGoes,layerRain,layerTemp,layerRaio,radarData,quadros=[],qIdx=0,timer=null,lastSarah='';
+const canvas=document.getElementById('ventoCanvas');const ctx=canvas.getContext('2d');let parts=[];
+function buildSelects(){const opts=MUNICIPIOS.map(m=>'<option value="'+m.id+'"'+(m.id==='mesquita'?' selected':'')+'>'+m.name+'</option>').join('');document.getElementById('select92').innerHTML='<option value="">Selecione os 92 municipios do RJ...</option>'+opts;document.getElementById('select92b').innerHTML=opts;}
+buildSelects();
+function initMap(){
+map=L.map('map',{zoomControl:true}).setView([state.lat,state.lon],8);
+// MAPA PROFISSIONAL - base clara com letras grandes e visiveis
+L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19,attribution:'© OpenStreetMap - RARU Profissional'}).addTo(map);
+// Camada de rotulos extra para letras ficarem mais visiveis
+L.tileLayer('https://{s}.basemaps.cartocdn.com/light_only_labels/{z}/{x}/{y}{r}.png',{maxZoom:19,subdomains:'abcd',pane:'tooltipPane',opacity:.95}).addTo(map);
+marker=L.marker([state.lat,state.lon]).addTo(map).bindPopup('<b>Mesquita · Rocha Sobrinho</b><br>Sala 24h · Central').openPopup();
+layerTemp=L.circle([state.lat,state.lon],{radius:22000,color:'transparent',fillColor:'#22c55e',fillOpacity:.14}).addTo(map);
+layerRaio=L.layerGroup().addTo(map);
+layerGoes=L.tileLayer('https://gibs.earthdata.nasa.gov/wmts/epsg3857/best/GOES-East_ABI_Band13_Clean_Infrared/default/2026-01-01/4km/{z}/{y}/{x}.png',{opacity:.42,maxZoom:9,minZoom:3,zIndex:5}).addTo(map);
+layerRain=L.tileLayer('',{opacity:0,zIndex:10}).addTo(map);
+}
+initMap();
+function resize(){canvas.width=innerWidth;canvas.height=innerHeight;}addEventListener('resize',resize);resize();
+for(let i=0;i<110;i++)parts.push({x:Math.random()*innerWidth,y:Math.random()*innerHeight,len:18+Math.random()*28,s:.8+Math.random()*1.2});
+(function vento(){requestAnimationFrame(vento);ctx.clearRect(0,0,canvas.width,canvas.height);if(!state.layers.wind)return;const rad=(state.tele.dir-90)*Math.PI/180;parts.forEach(p=>{const sp=p.s*(.6+state.tele.wind/16);const x2=p.x+Math.cos(rad)*p.len*.35*sp;const y2=p.y+Math.sin(rad)*p.len*.35*sp;ctx.strokeStyle='rgba(255,255,255,.95)';ctx.lineWidth=2.6;ctx.lineCap='round';ctx.beginPath();ctx.moveTo(p.x,p.y);ctx.lineTo(x2,y2);ctx.stroke();ctx.strokeStyle='rgba(56,189,248,.55)';ctx.lineWidth=1.2;ctx.beginPath();ctx.moveTo(p.x,p.y);ctx.lineTo(x2,y2);ctx.stroke();p.x=x2;p.y=y2;if(p.x<-40||p.x>canvas.width+40||p.y<-40||p.y>canvas.height+40){p.x=Math.random()*canvas.width;p.y=Math.random()*canvas.height;}});})();
+function focus92(id){const m=MUNICIPIOS.find(x=>x.id===id);if(!m)return;state.currentId=id;state.lat=m.lat;state.lon=m.lon;state.zoom=m.zoom;map.flyTo([m.lat,m.lon],m.zoom,{duration:1.1});marker.setLatLng([m.lat,m.lon]).setPopupContent('<b>'+m.name+'</b><br>Monitorado pela SARAH 24h').openPopup();document.getElementById('activeCoords').textContent=m.name+' ('+m.lat.toFixed(4)+', '+m.lon.toFixed(4)+') · Centralizado em Mesquita · Rio de Janeiro todo';document.getElementById('municipioInfo').textContent=m.name+' - Monitorado agora pela SARAH robo futurista. Temp '+state.tele.temp.toFixed(1)+' C, Chuva '+state.tele.rain.toFixed(1)+' mm/h, Vento '+Math.round(state.tele.wind)+' km/h. '+(m.id==='mesquita'?'Polo central: Rocha Sobrinho, Rio Sarapui, Rio Dona Eugenia, Serra do Mendanha.':'Bacia e clima sincronizados com a Sala 24h de Mesquita.');document.getElementById('select92').value=id;document.getElementById('select92b').value=id;fetchLive(false);if(layerTemp)layerTemp.setLatLng([m.lat,m.lon]);}
+function toggleControls(){const vis=document.querySelectorAll('.collapsible');const now=vis[0].classList.contains('hidden-panel');vis.forEach(el=>el.classList.toggle('hidden-panel',!now));document.getElementById('toggleLabel').textContent=now?'Ocultar Controles':'Mostrar Controles';}
+function toggleSafeFullscreen(){if(document.fullscreenElement)document.exitFullscreen();else document.documentElement.requestFullscreen&&document.documentElement.requestFullscreen();}
+function setOp(v){state.op=v/100;document.getElementById('opLabel').textContent=v+'%';if(layerGoes)layerGoes.setOpacity(.42*state.op+.1);if(layerRain&&quadros.length)layerRain.setOpacity(.75*state.op);}
+function toggleLayer(k,on){state.layers[k]=on;if(k==='clouds'){if(on)map.addLayer(layerGoes);else map.removeLayer(layerGoes);}if(k==='precip'){if(layerRain)layerRain.setOpacity(on&&quadros.length?.75*state.op:0);}if(k==='temp'){if(on)map.addLayer(layerTemp);else map.removeLayer(layerTemp);}if(k==='basins'){renderBasins();}if(k==='raio'){updateRaio();}}
+function renderBasins(){}
+function togglePlay(){state.playing=!state.playing;event.target.textContent=state.playing?'Pausar':'Tocar';if(state.playing)startAnim();else clearInterval(timer);}
+function setMode(m){state.mode=m;applyFrames();}
+function setSpeed(s){state.speed=s;startAnim();}
+function scrub(v){state.frame=+v;document.getElementById('frameLabel').textContent='Janela 24h · +'+String(state.frame*2).padStart(2,'0')+'h00';}
+function startAnim(){clearInterval(timer);const d=state.speed==='rapida'?600:state.speed==='media'?1200:2200;timer=setInterval(()=>{if(!state.playing)return;state.frame=(state.frame+1)%12;scrub(state.frame);showFrame(state.frame);},d);}
+async function fetchJSON(u){const c=new AbortController();setTimeout(()=>c.abort(),12000);const r=await fetch(u,{signal:c.signal});if(!r.ok)throw new Error();return r.json();}
+async function fetchLive(manual){try{const d=await fetchJSON('https://api.open-meteo.com/v1/forecast?latitude='+state.lat+'&longitude='+state.lon+'&current=temperature_2m,relative_humidity_2m,precipitation,weather_code,pressure_msl,cloud_cover,wind_speed_10m,wind_direction_10m,wind_gusts_10m&hourly=cape&forecast_days=1');const cur=d.current;state.tele.temp=cur.temperature_2m;state.tele.hum=cur.relative_humidity_2m;state.tele.rain=cur.precipitation;state.tele.wind=cur.wind_speed_10m;state.tele.gust=cur.wind_gusts_10m;state.tele.dir=cur.wind_direction_10m;state.tele.press=cur.pressure_msl;state.tele.cloud=cur.cloud_cover;state.tele.code=cur.weather_code;state.tele.cape=(d.hourly.cape&&d.hourly.cape[0])||420;state.tele.fallback=false;document.getElementById('pill').textContent='TELEMETRIA AO VIVO';document.getElementById('pill').className='px-2 py-1 rounded-full bg-emerald-500/20 text-emerald-200 font-bold';document.getElementById('teleDetail').textContent='Open-Meteo OK · RainViewer OK · NASA GIBS GOES-East ativo · '+new Date().toLocaleTimeString('pt-BR');document.getElementById('liveConn').textContent='Conectado - Open-Meteo + RainViewer - Olhos ativos';}catch(e){document.getElementById('pill').textContent='MODO REFERENCIA';document.getElementById('pill').className='px-2 py-1 rounded-full bg-amber-500/20 text-amber-200 font-bold';document.getElementById('teleDetail').textContent='Sem resposta externa agora - usando referencia local';}
+  document.getElementById('hudTemp').textContent=state.tele.temp.toFixed(1)+' C';document.getElementById('hudRain').textContent=state.tele.rain.toFixed(1)+' mm/h';document.getElementById('hudWind').textContent=Math.round(state.tele.wind)+' km/h';
+  updateRaio();updateTempColor();
+}
+function updateTempColor(){const t=state.tele.temp;const col=t<18?'#38bdf8':t<24?'#22c55e':t<28?'#eab308':t<32?'#f97316':'#ef4444';if(layerTemp)layerTemp.setStyle({fillColor:col});}
+function updateRaio(){layerRaio.clearLayers();if(!state.layers.raio)return;if([95,96,99].includes(state.tele.code)){for(let i=0;i<3;i++){const el=L.divIcon({className:'',html:'<div style="width:14px;height:14px;border-radius:50%;background:#facc15;box-shadow:0 0 18px #facc15"></div>',iconSize:[14,14]});L.marker([state.lat+(Math.random()-.5)*.3,state.lon+(Math.random()-.5)*.3],{icon:el}).addTo(layerRaio);}}}
+async function fetchRadar(){try{const d=await fetchJSON('https://api.rainviewer.com/public/weather-maps.json');radarData=d;applyFrames();}catch(e){setTimeout(fetchRadar,30000);}}
+function applyFrames(){if(!radarData)return;quadros=state.mode==='past'?radarData.radar.past:radarData.radar.nowcast;showFrame(quadros.length-1);startAnim();}
+function showFrame(i){if(!quadros.length||!state.layers.precip)return;i=((i%quadros.length)+quadros.length)%quadros.length;const q=quadros[i];layerRain.setUrl(radarData.host+q.path+'/512/{z}/{x}/{y}/2/1_1.png');layerRain.setOpacity(.75*state.op);}
+// SARAH ROBO FUTURISTA - VOZ
+let rec=null,speaking=false;
+function toggleSarah(){document.getElementById('sarahDrawer').classList.toggle('open');}
+function addMsg(who,txt){const box=document.getElementById('sarahMsgs');const d=document.createElement('div');d.className='p-3 rounded-2xl bg-slate-800 border border-slate-700';d.innerHTML='<b class="'+(who==='SARAH'?'text-emerald-300':'text-sky-300')+'">'+who+' · ROBO FUTURISTA</b><div class="mt-1">'+txt+'</div>';box.appendChild(d);box.scrollTop=box.scrollHeight;}
+function speak(txt){lastSarah=txt;if(!state.voice)return;try{window.speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(txt);u.lang='pt-BR';u.rate=1.04;const vs=window.speechSynthesis.getVoices();const pt=vs.find(v=>v.lang&&v.lang.toLowerCase().startsWith('pt'));if(pt)u.voice=pt;window.speechSynthesis.speak(u);document.getElementById('voiceBadge').textContent='Voz: Falando agora - Robo SARAH';}catch(e){}}
+function speakLast(){if(lastSarah)speak(lastSarah);else speak('Eu sou a SARAH, robo futurista da Sala 24h em Mesquita.');}
+function stopSpeech(){try{window.speechSynthesis.cancel();}catch(e){}document.getElementById('voiceBadge').textContent='Voz: Parada';}
+function toggleVoice(){const SR=window.SpeechRecognition||window.webkitSpeechRecognition;if(!SR){addMsg('SARAH','Microfone nao disponivel neste navegador, digite abaixo.');return;}if(rec){try{rec.stop();}catch(e){}rec=null;return;}rec=new SR();rec.lang='pt-BR';rec.interimResults=false;rec.onstart=()=>{document.getElementById('voiceBadge').textContent='Voz: Ouvindo voce...';};rec.onresult=(e)=>{const t=e.results[0][0].transcript;askSarah(t);};rec.onend=()=>{rec=null;document.getElementById('voiceBadge').textContent='Voz: Pronta';};rec.start();}
+function sendSarah(e){e.preventDefault();const v=document.getElementById('sarahInput').value.trim();if(!v)return;document.getElementById('sarahInput').value='';askSarah(v);}
+function askSarah(q){const low=String(q).toLowerCase();const cur=MUNICIPIOS.find(m=>m.id===state.currentId)||MUNICIPIOS[41];addMsg('VOCE',q);let resp='';
+if(low.includes('bacia')||low==='bacias'){resp='Bacias RJ monitoradas: Rio Sarapui passa por Rocha Sobrinho e segue para Sao Bento, Rio Dona Eugenia cruza Mesquita, Serra do Mendanha desce para Sao Bento. Em '+cur.name+' agora: Temp '+state.tele.temp.toFixed(1)+' C, Chuva '+state.tele.rain.toFixed(1)+' mm/h, Vento '+Math.round(state.tele.wind)+' km/h, CAPE '+Math.round(state.tele.cape)+' J/kg.';}
+else if(low.includes('fonte')||low==='fontes'){resp='Fontes ativas, verificadas: Base OpenStreetMap + rotulos Carto, Satelite NASA GIBS GOES-East, Radar RainViewer, Modelo Open-Meteo. Eu sou a SARAH robo futurista, estou vigiando os 92 municipios.';}
+else if(low.includes('alerta')||low==='alertas'){resp='Alertas em '+cur.name+': CAPE '+Math.round(state.tele.cape)+' J/kg, Rajada '+Math.round(state.tele.gust)+' km/h, Chuva '+state.tele.rain.toFixed(1)+' mm/h, Nuvem '+state.tele.cloud+'%. '+(state.tele.cape>800?'CAPE alto, risco de tempestade com raio.':state.tele.rain>5?'Chuva forte, risco de alagamento.':'Sem alerta severo agora, mas eu continuo vigiando 24h.');}
+else if(low.includes('clima')||low==='clima'||low.includes('mesquita')||low.includes('rocha')){resp='Clima agora em '+cur.name+': Temp '+state.tele.temp.toFixed(1)+' C, Umidade '+state.tele.hum+'%, Chuva '+state.tele.rain.toFixed(1)+' mm/h, Vento '+Math.round(state.tele.wind)+' km/h direcao '+Math.round(state.tele.dir)+' graus, Pressao '+Math.round(state.tele.press)+' hPa, Nuvem '+state.tele.cloud+'%. Eu sou a SARAH, robo futurista, centralizada em Mesquita, Rocha Sobrinho.';}
+else{resp='Eu sou a SARAH, robo futurista da Sala 24h. Em '+cur.name+' agora: Temp '+state.tele.temp.toFixed(1)+' C, Chuva '+state.tele.rain.toFixed(1)+' mm/h, Vento '+Math.round(state.tele.wind)+' km/h. Pergunte: Clima agora, Bacias RJ, Fontes e Satelite, ou Alertas. Use o seletor com os 92 municipios para monitorar qualquer cidade do Rio.';}
+addMsg('SARAH',resp);speak(resp);}
+fetchLive(false);fetchRadar();startAnim();setInterval(()=>fetchLive(false),5*60*1000);
+</script>
+</body>
+</html>
