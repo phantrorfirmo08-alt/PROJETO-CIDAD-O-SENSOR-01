@@ -1,0 +1,1173 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+<title>Mapa Raru • Mesquita & Rio de Janeiro • Telemetria & Sarah AI</title>
+<meta name="theme-color" content="#030712" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://unpkg.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@600;800;900&family=JetBrains+Mono:wght@400;600;700;800&family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<style>
+  :root {
+    --bg-void: #030712;
+    --bg-deep: #041125;
+    --bg-panel: #0A1B38;
+    --cyan: #00F2FE;
+    --blue: #38BDF8;
+    --green: #00FF9D;
+    --amber: #FFB703;
+    --rose: #FF0055;
+    --text-main: #E2E8F0;
+    --text-muted: #94A3B8;
+  }
+
+  * {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  html, body, #app {
+    width: 100%;
+    height: 100%;
+    min-height: 100dvh;
+    background: var(--bg-void);
+    color: var(--text-main);
+    font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
+    overflow: hidden;
+    -webkit-user-select: none;
+    user-select: none;
+  }
+
+  input, textarea, select {
+    -webkit-user-select: text;
+    user-select: text;
+  }
+
+  .font-display { font-family: 'Orbitron', sans-serif; }
+  .font-mono { font-family: 'JetBrains Mono', monospace; }
+
+  #map {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 1;
+    background: #020817;
+  }
+
+  .leaflet-container {
+    background: #020817 !important;
+    font-family: 'JetBrains Mono', monospace !important;
+  }
+
+  .leaflet-tile-pane.hud-dark-tiles {
+    filter: brightness(0.72) contrast(1.18) saturate(0.85) hue-rotate(175deg) invert(1);
+  }
+
+  .hud-topbar {
+    position: fixed;
+    top: 10px;
+    left: 10px;
+    right: 10px;
+    z-index: 500;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    pointer-events: none;
+  }
+
+  .hud-pill {
+    pointer-events: auto;
+    background: rgba(4, 17, 37, 0.9);
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+    border: 1px solid rgba(0, 242, 254, 0.42);
+    border-radius: 14px;
+    padding: 8px 12px;
+    box-shadow: 0 0 20px rgba(0, 242, 254, 0.16);
+  }
+
+  .hud-btn {
+    pointer-events: auto;
+    background: rgba(10, 27, 56, 0.92);
+    border: 1px solid rgba(0, 242, 254, 0.45);
+    color: var(--cyan);
+    font-family: 'Orbitron', sans-serif;
+    font-size: 10px;
+    font-weight: 800;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    padding: 8px 11px;
+    border-radius: 11px;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    transition: all 0.2s ease;
+    white-space: nowrap;
+  }
+
+  .hud-btn:hover, .hud-btn.active {
+    background: var(--cyan);
+    color: var(--bg-void);
+    box-shadow: 0 0 18px rgba(0, 242, 254, 0.55);
+  }
+
+  .hud-btn.green.active, .hud-btn.green:hover {
+    background: var(--green);
+    border-color: var(--green);
+    color: var(--bg-void);
+    box-shadow: 0 0 18px rgba(0, 255, 157, 0.5);
+  }
+
+  .hud-btn.rose.active {
+    background: var(--rose);
+    border-color: var(--rose);
+    color: #fff;
+  }
+
+  .hud-drawer {
+    position: fixed;
+    top: 64px;
+    right: 10px;
+    bottom: 12px;
+    width: min(390px, calc(100vw - 20px));
+    z-index: 500;
+    background: rgba(4, 17, 37, 0.94);
+    backdrop-filter: blur(18px);
+    -webkit-backdrop-filter: blur(18px);
+    border: 1px solid rgba(0, 242, 254, 0.45);
+    border-radius: 18px;
+    box-shadow: 0 10px 35px rgba(0, 0, 0, 0.7), 0 0 24px rgba(0, 242, 254, 0.14);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    transition: transform 0.25s ease, opacity 0.25s ease;
+  }
+
+  .hud-drawer.collapsed {
+    transform: translateX(calc(100% + 24px));
+    opacity: 0;
+    pointer-events: none;
+  }
+
+  .drawer-tabs {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 4px;
+    padding: 8px;
+    background: rgba(3, 7, 18, 0.85);
+    border-bottom: 1px solid rgba(0, 242, 254, 0.22);
+  }
+
+  .drawer-tab {
+    background: transparent;
+    border: 1px solid transparent;
+    color: var(--text-muted);
+    font-family: 'Orbitron', sans-serif;
+    font-size: 9px;
+    font-weight: 800;
+    padding: 7px 4px;
+    border-radius: 9px;
+    cursor: pointer;
+    text-transform: uppercase;
+  }
+
+  .drawer-tab.active {
+    color: var(--cyan);
+    background: rgba(0, 242, 254, 0.14);
+    border-color: rgba(0, 242, 254, 0.45);
+  }
+
+  .drawer-body {
+    flex: 1;
+    overflow-y: auto;
+    padding: 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .stat-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 8px;
+  }
+
+  .stat-box {
+    background: rgba(3, 7, 18, 0.82);
+    border: 1px solid rgba(0, 242, 254, 0.25);
+    border-radius: 12px;
+    padding: 9px 10px;
+  }
+
+  .stat-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 9px;
+    color: var(--text-muted);
+    text-transform: uppercase;
+  }
+
+  .stat-val {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 14px;
+    font-weight: 800;
+    color: var(--cyan);
+    margin-top: 2px;
+  }
+
+  .list-item {
+    background: rgba(10, 27, 56, 0.72);
+    border: 1px solid rgba(0, 242, 254, 0.22);
+    border-radius: 12px;
+    padding: 9px 10px;
+    cursor: pointer;
+    transition: border-color 0.2s ease, background 0.2s ease;
+  }
+
+  .list-item:hover, .list-item.selected {
+    border-color: var(--cyan);
+    background: rgba(0, 242, 254, 0.12);
+  }
+
+  .input-dark {
+    width: 100%;
+    background: rgba(3, 7, 18, 0.92);
+    border: 1px solid rgba(0, 242, 254, 0.35);
+    color: #fff;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    padding: 9px 10px;
+    border-radius: 10px;
+    outline: none;
+  }
+
+  .input-dark:focus {
+    border-color: var(--cyan);
+    box-shadow: 0 0 10px rgba(0, 242, 254, 0.25);
+  }
+
+  .sarah-chat-box {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    max-height: 270px;
+    overflow-y: auto;
+    background: rgba(3, 7, 18, 0.78);
+    border: 1px solid rgba(0, 242, 254, 0.24);
+    border-radius: 12px;
+    padding: 10px;
+  }
+
+  .msg-bubble {
+    padding: 8px 10px;
+    border-radius: 10px;
+    font-size: 11px;
+    line-height: 1.45;
+    max-width: 92%;
+    word-break: break-word;
+  }
+
+  .msg-sarah {
+    align-self: flex-start;
+    background: rgba(10, 27, 56, 0.95);
+    border: 1px solid rgba(0, 242, 254, 0.38);
+    color: #E2E8F0;
+  }
+
+  .msg-user {
+    align-self: flex-end;
+    background: linear-gradient(135deg, #00F2FE, #38BDF8);
+    color: #030712;
+    font-weight: 700;
+  }
+
+  .toast-bar {
+    position: fixed;
+    bottom: 16px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 800;
+    background: rgba(4, 17, 37, 0.96);
+    border: 1px solid var(--cyan);
+    color: var(--cyan);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    font-weight: 700;
+    padding: 8px 14px;
+    border-radius: 999px;
+    box-shadow: 0 0 20px rgba(0, 242, 254, 0.35);
+    display: none;
+    max-width: 92vw;
+    text-align: center;
+  }
+
+  .raru-pin {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    border: 2px solid #ffffff;
+    font-family: 'JetBrains Mono', monospace;
+    font-weight: 800;
+    color: #030712;
+    box-shadow: 0 0 14px currentColor;
+  }
+
+  @media (max-width: 640px) {
+    .hud-drawer {
+      top: auto;
+      left: 8px;
+      right: 8px;
+      bottom: 8px;
+      width: auto;
+      height: 58dvh;
+    }
+    .hud-drawer.collapsed {
+      transform: translateY(calc(100% + 20px));
+    }
+  }
+</style>
+</head>
+<body>
+<div id="app">
+  <div id="map"></div>
+
+  <!-- Barra Superior Tática -->
+  <div class="hud-topbar">
+    <div class="hud-pill" style="display:flex; align-items:center; gap:9px; min-width:0;">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#00F2FE" stroke-width="2.2">
+        <circle cx="12" cy="12" r="9" />
+        <path d="M12 3v18M3 12h18" />
+        <circle cx="12" cy="12" r="3" fill="#00FF9D" stroke="none" />
+      </svg>
+      <div style="min-width:0;">
+        <div class="font-display" style="font-size:11px; font-weight:900; color:#fff; letter-spacing:0.06em; white-space:nowrap;">
+          MAPA RARU <span style="color:#00F2FE;">• MESQUITA & RJ</span>
+        </div>
+        <div id="topTelemetryStatus" class="font-mono" style="font-size:9px; color:#00FF9D; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">
+          Sincronizando telemetria pública...
+        </div>
+      </div>
+    </div>
+
+    <div style="display:flex; align-items:center; gap:6px; flex-wrap:wrap; justify-content:flex-end;">
+      <button type="button" id="btnCenterMesquita" class="hud-btn" title="Centralizar em Mesquita">Mesquita</button>
+      <button type="button" id="btnMyGps" class="hud-btn green" title="Usar minha localização GPS">GPS</button>
+      <button type="button" id="btnToggleDrawer" class="hud-btn active" title="Abrir ou ocultar painel">Painel</button>
+    </div>
+  </div>
+
+  <!-- Painel Lateral / Inferior -->
+  <aside id="hudDrawer" class="hud-drawer">
+    <div class="drawer-tabs">
+      <button type="button" class="drawer-tab active" data-tab="radar">Radar</button>
+      <button type="button" class="drawer-tab" data-tab="camadas">Camadas</button>
+      <button type="button" class="drawer-tab" data-tab="rotas">Abrigos</button>
+      <button type="button" class="drawer-tab" data-tab="sarah">Sarah AI</button>
+    </div>
+
+    <div id="drawerBody" class="drawer-body"></div>
+  </aside>
+
+  <div id="toastBar" class="toast-bar"></div>
+</div>
+
+<script>
+(() => {
+  const SARAH_ENDPOINT = "https://sarah-envelope.phantrorfirmo08.workers.dev";
+  const MESQUITA_CENTER = [-22.7828, -43.4314];
+
+  // Pontos focados em Mesquita, Baixada Fluminense e principais polos do RJ
+  const PONTOS_MONITORADOS = [
+    { id: "msq-centro", nome: "Mesquita - Centro", tipo: "Polo Principal", lat: -22.7828, lon: -43.4314, detalhe: "Nó-Mãe Mesquita • Baixada Fluminense" },
+    { id: "msq-rocha", nome: "Rocha Sobrinho / Sebinho", tipo: "Setor Comunitário", lat: -22.7695, lon: -43.4368, detalhe: "Rua Amazonas • Rio Sarapuí • Comunidade do Sebinho" },
+    { id: "msq-edson", nome: "Edson Passos", tipo: "Setor Urbano", lat: -22.7752, lon: -43.4485, detalhe: "Eixo ferroviário e drenagem urbana - Mesquita" },
+    { id: "msq-juscelino", nome: "Juscelino / Chatuba", tipo: "Setor Comunitário", lat: -22.7895, lon: -43.4422, detalhe: "Monitoramento de chuva e escoamento - Mesquita" },
+    { id: "nig-centro", nome: "Nova Iguaçu", tipo: "Município RJ", lat: -22.7592, lon: -43.4511, detalhe: "Eixo Rio Iguaçu e Serra" },
+    { id: "caxias-sao-bento", nome: "Duque de Caxias (São Bento)", tipo: "Município RJ", lat: -22.7350, lon: -43.3180, detalhe: "Baixada Fluminense • Monitoramento hídrico" },
+    { id: "nil-centro", nome: "Nilópolis", tipo: "Município RJ", lat: -22.8086, lon: -43.4147, detalhe: "Divisa sul com Mesquita" },
+    { id: "rio-centro", nome: "Rio de Janeiro", tipo: "Capital RJ", lat: -22.9068, lon: -43.1729, detalhe: "Baía de Guanabara e Maciços" },
+    { id: "nit-centro", nome: "Niterói", tipo: "Município RJ", lat: -22.8832, lon: -43.1034, detalhe: "Região Metropolitana Leste" },
+    { id: "pet-centro", nome: "Petrópolis", tipo: "Serra RJ", lat: -22.5050, lon: -43.1786, detalhe: "Região Serrana • Encostas e rios" }
+  ];
+
+  // Rotas / vetores simulados de movimentação de chuva e vento a partir de cada ponto
+  const VETORES_MOVIMENTO = [
+    { origem: [-22.74, -43.52], destino: [-22.7828, -43.4314], label: "Fluxo NW -> Mesquita" },
+    { origem: [-22.68, -43.48], destino: [-22.7695, -43.4368], label: "Convergência Rocha Sobrinho" },
+    { origem: [-22.83, -43.35], destino: [-22.7828, -43.4314], label: "Brisa / Umidade Baixada" },
+    { origem: [-22.62, -43.33], destino: [-22.7350, -43.3180], label: "Eixo Caxias / Sarapuí" }
+  ];
+
+  const state = {
+    tab: "radar",
+    selectedPointId: "msq-centro",
+    weatherById: {},
+    rainViewerFrames: [],
+    rainFrameIdx: 0,
+    rainPlaying: true,
+    layers: {
+      darkTiles: true,
+      points: true,
+      rainRadar: true,
+      movement: true,
+      shelters: true,
+      measure: false
+    },
+    measurePoints: [],
+    measureDistanceKm: 0,
+    userName: (() => {
+      try { return localStorage.getItem("raru_user_name") || ""; } catch (e) { return ""; }
+    })(),
+    sarahMessages: [],
+    sarahLoading: false,
+    voiceEnabled: (() => {
+      try { return localStorage.getItem("raru_sound_enabled") !== "false"; } catch (e) { return true; }
+    })()
+  };
+
+  let toastTimer = null;
+  function showToast(msg) {
+    const el = document.getElementById("toastBar");
+    if (!el) return;
+    el.textContent = msg;
+    el.style.display = "block";
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => { el.style.display = "none"; }, 3200);
+  }
+
+  function limparFala(txt) {
+    return String(txt || "")
+      .replace(/[*#`_~]/g, "")
+      .replace(/([\u2700-\u27BF]|[\uE000-\uF8FF]|\uD83C[\uDC00-\uDFFF]|\uD83D[\uDC00-\uDFFF]|\u2011-\u26FF|\uD83E[\uDD00-\uDDFF])/g, "")
+      .replace(/\s+/g, " ")
+      .trim();
+  }
+
+  function falarTexto(texto) {
+    if (!state.voiceEnabled || !("speechSynthesis" in window)) return;
+    const limpo = limparFala(texto);
+    if (!limpo) return;
+    try {
+      window.speechSynthesis.cancel();
+      const u = new SpeechSynthesisUtterance(limpo);
+      u.lang = "pt-BR";
+      u.rate = 1.02;
+      const voices = window.speechSynthesis.getVoices() || [];
+      const pt = voices.find(v => (v.lang || "").toLowerCase().includes("pt"));
+      if (pt) u.voice = pt;
+      window.speechSynthesis.speak(u);
+    } catch (e) {}
+  }
+
+  // Inicialização do Mapa Leaflet
+  const map = L.map("map", {
+    center: MESQUITA_CENTER,
+    zoom: 12,
+    zoomControl: false,
+    preferCanvas: true
+  });
+
+  L.control.zoom({ position: "bottomleft" }).addTo(map);
+
+  const osmLayer = L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+    attribution: "&copy; OpenStreetMap",
+    maxZoom: 19
+  }).addTo(map);
+
+  function applyTileTheme() {
+    const pane = map.getPane("tilePane");
+    if (!pane) return;
+    if (state.layers.darkTiles) pane.classList.add("hud-dark-tiles");
+    else pane.classList.remove("hud-dark-tiles");
+  }
+  applyTileTheme();
+
+  const pointsGroup = L.layerGroup().addTo(map);
+  const movementGroup = L.layerGroup().addTo(map);
+  const sheltersGroup = L.layerGroup().addTo(map);
+  const measureGroup = L.layerGroup().addTo(map);
+  let rainRadarLayer = null;
+
+  function corPorRiscoChuva(prob, chuvaMm) {
+    if (prob >= 70 || chuvaMm >= 5) return "#FF0055";
+    if (prob >= 40 || chuvaMm >= 1) return "#FFB703";
+    if (prob >= 20) return "#38BDF8";
+    return "#00FF9D";
+  }
+
+  function getSelectedPoint() {
+    return PONTOS_MONITORADOS.find(p => p.id === state.selectedPointId) || PONTOS_MONITORADOS[0];
+  }
+
+  function getSelectedWeather() {
+    const pt = getSelectedPoint();
+    return state.weatherById[pt.id] || null;
+  }
+
+  function renderPointMarkers() {
+    pointsGroup.clearLayers();
+    if (!state.layers.points) return;
+
+    PONTOS_MONITORADOS.forEach(pt => {
+      const w = state.weatherById[pt.id];
+      const prob = w ? (w.probChuva ?? 0) : 0;
+      const chuva = w ? (w.chuvaMm ?? 0) : 0;
+      const cor = corPorRiscoChuva(prob, chuva);
+      const isSel = pt.id === state.selectedPointId;
+      const size = isSel ? 28 : 20;
+
+      const icon = L.divIcon({
+        className: "",
+        iconSize: [size, size],
+        iconAnchor: [size / 2, size / 2],
+        html: `<div class="raru-pin" style="width:${size}px;height:${size}px;background:${cor};color:#030712;font-size:${isSel ? 10 : 8}px;${isSel ? 'outline:3px solid #00F2FE;' : ''}">${w ? Math.round(w.temp) + '°' : '•'}</div>`
+      });
+
+      const marker = L.marker([pt.lat, pt.lon], { icon }).addTo(pointsGroup);
+      marker.bindPopup(`
+        <div style="font-family:'JetBrains Mono',monospace;font-size:11px;color:#0f172a;min-width:170px;">
+          <b>${pt.nome}</b><br/>
+          <span>${pt.detalhe}</span><br/>
+          <hr style="margin:5px 0;border:0;border-top:1px solid #cbd5e1;"/>
+          ${w
+            ? `Temp: <b>${w.temp}°C</b> | Umid: <b>${w.umidade}%</b><br/>Chuva: <b>${w.chuvaMm} mm</b> (${w.probChuva}%)<br/>Vento: <b>${w.vento} km/h</b>`
+            : `Carregando telemetria...`
+          }
+        </div>
+      `);
+
+      marker.on("click", () => {
+        state.selectedPointId = pt.id;
+        renderPointMarkers();
+        renderMovementVectors();
+        renderDrawer();
+      });
+    });
+  }
+
+  function renderMovementVectors() {
+    movementGroup.clearLayers();
+    if (!state.layers.movement) return;
+
+    const sel = getSelectedPoint();
+    const w = state.weatherById[sel.id];
+    const corVetor = w ? corPorRiscoChuva(w.probChuva, w.chuvaMm) : "#00F2FE";
+
+    VETORES_MOVIMENTO.forEach(v => {
+      L.polyline([v.origem, v.destino], {
+        color: corVetor,
+        weight: 2.5,
+        opacity: 0.78,
+        dashArray: "6, 8"
+      }).addTo(movementGroup);
+
+      L.circleMarker(v.destino, {
+        radius: 4,
+        color: "#00F2FE",
+        fillColor: corVetor,
+        fillOpacity: 0.9
+      }).addTo(movementGroup);
+    });
+
+    if (w) {
+      const raioMetros = Math.max(1200, Math.min(9000, (w.probChuva || 15) * 100 + (w.vento || 5) * 120));
+      L.circle([sel.lat, sel.lon], {
+        radius: raioMetros,
+        color: corVetor,
+        fillColor: corVetor,
+        fillOpacity: 0.12,
+        weight: 1.5
+      }).addTo(movementGroup);
+    }
+  }
+
+  function renderSheltersFromStorage() {
+    sheltersGroup.clearLayers();
+    if (!state.layers.shelters) return;
+
+    let rotas = [];
+    try {
+      rotas = JSON.parse(localStorage.getItem("rotasFugaReais") || "[]");
+    } catch (e) {
+      rotas = [];
+    }
+
+    rotas.forEach((r, idx) => {
+      const lat = typeof r.lat === "number" ? r.lat : (MESQUITA_CENTER[0] + ((idx % 3) - 1) * 0.008);
+      const lon = typeof r.lon === "number" ? r.lon : (MESQUITA_CENTER[1] + ((idx % 2) === 0 ? 0.009 : -0.009));
+
+      const icon = L.divIcon({
+        className: "",
+        iconSize: [22, 22],
+        iconAnchor: [11, 11],
+        html: `<div class="raru-pin" style="width:22px;height:22px;background:#00FF9D;font-size:9px;">A${idx + 1}</div>`
+      });
+
+      L.marker([lat, lon], { icon })
+        .addTo(sheltersGroup)
+        .bindPopup(`<div style="font-family:'JetBrains Mono',monospace;font-size:11px;color:#0f172a;"><b>${r.tipo || "Abrigo"}: ${r.nome || "Ponto"}</b><br/>${r.endereco || ""}<br/>${r.info || ""}</div>`);
+    });
+  }
+
+  function updateRainViewerLayer() {
+    if (rainRadarLayer) {
+      map.removeLayer(rainRadarLayer);
+      rainRadarLayer = null;
+    }
+    if (!state.layers.rainRadar || !state.rainViewerFrames.length) return;
+    const frame = state.rainViewerFrames[state.rainFrameIdx];
+    if (!frame) return;
+
+    rainRadarLayer = L.tileLayer(`https://tilecache.rainviewer.com${frame.path}/256/{z}/{x}/{y}/2/1_1.png`, {
+      opacity: 0.58,
+      zIndex: 250
+    }).addTo(map);
+  }
+
+  async function fetchRainViewerFrames() {
+    try {
+      const res = await fetch("https://api.rainviewer.com/public/weather-maps.json");
+      const data = await res.json();
+      const frames = data?.radar?.past || [];
+      if (frames.length) {
+        state.rainViewerFrames = frames.slice(-6);
+        state.rainFrameIdx = state.rainViewerFrames.length - 1;
+        updateRainViewerLayer();
+      }
+    } catch (e) {}
+  }
+
+  setInterval(() => {
+    if (state.rainPlaying && state.layers.rainRadar && state.rainViewerFrames.length > 1) {
+      state.rainFrameIdx = (state.rainFrameIdx + 1) % state.rainViewerFrames.length;
+      updateRainViewerLayer();
+      if (state.tab === "radar") renderDrawer();
+    }
+  }, 1400);
+
+  async function fetchOpenMeteoAllPoints() {
+    try {
+      const lats = PONTOS_MONITORADOS.map(p => p.lat).join(",");
+      const lons = PONTOS_MONITORADOS.map(p => p.lon).join(",");
+      const url = `https://api.open-meteo.com/v1/forecast?latitude=${lats}&longitude=${lons}&current=temperature_2m,relative_humidity_2m,precipitation,wind_speed_10m,wind_gusts_10m&hourly=precipitation_probability&timezone=America%2FSao_Paulo&forecast_days=1`;
+      const res = await fetch(url);
+      const raw = await res.json();
+      const arr = Array.isArray(raw) ? raw : [raw];
+      const horaIdx = new Date().getHours();
+
+      arr.forEach((item, idx) => {
+        const pt = PONTOS_MONITORADOS[idx];
+        if (!pt || !item?.current) return;
+        state.weatherById[pt.id] = {
+          temp: item.current.temperature_2m,
+          umidade: item.current.relative_humidity_2m,
+          chuvaMm: item.current.precipitation ?? 0,
+          probChuva: item.hourly?.precipitation_probability?.[horaIdx] ?? 0,
+          vento: item.current.wind_speed_10m ?? 0,
+          rajada: item.current.wind_gusts_10m ?? 0
+        };
+      });
+
+      const msq = state.weatherById["msq-centro"];
+      const topEl = document.getElementById("topTelemetryStatus");
+      if (topEl && msq) {
+        topEl.textContent = `Mesquita ${msq.temp}°C • Chuva ${msq.chuvaMm}mm (${msq.probChuva}%) • Vento ${msq.vento}km/h`;
+      }
+
+      renderPointMarkers();
+      renderMovementVectors();
+      renderDrawer();
+    } catch (e) {
+      const topEl = document.getElementById("topTelemetryStatus");
+      if (topEl) topEl.textContent = "Falha temporária na API climática • Tentando novamente";
+    }
+  }
+
+  // Medição de distância no mapa
+  function calcDistanceKm(a, b) {
+    const R = 6371;
+    const dLat = ((b.lat - a.lat) * Math.PI) / 180;
+    const dLon = ((b.lng - a.lng) * Math.PI) / 180;
+    const x =
+      Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+      Math.cos((a.lat * Math.PI) / 180) *
+        Math.cos((b.lat * Math.PI) / 180) *
+        Math.sin(dLon / 2) *
+        Math.sin(dLon / 2);
+    return R * 2 * Math.atan2(Math.sqrt(x), Math.sqrt(1 - x));
+  }
+
+  function renderMeasureLayer() {
+    measureGroup.clearLayers();
+    if (!state.measurePoints.length) {
+      state.measureDistanceKm = 0;
+      return;
+    }
+    let total = 0;
+    state.measurePoints.forEach((latlng, i) => {
+      L.circleMarker(latlng, {
+        radius: 5,
+        color: "#00FF9D",
+        fillColor: "#00FF9D",
+        fillOpacity: 1
+      }).addTo(measureGroup);
+      if (i > 0) total += calcDistanceKm(state.measurePoints[i - 1], latlng);
+    });
+    if (state.measurePoints.length > 1) {
+      L.polyline(state.measurePoints, { color: "#00FF9D", weight: 3 }).addTo(measureGroup);
+    }
+    state.measureDistanceKm = total;
+  }
+
+  map.on("click", (e) => {
+    if (!state.layers.measure) return;
+    state.measurePoints.push(e.latlng);
+    renderMeasureLayer();
+    renderDrawer();
+    showToast(`Ponto adicionado • Distância: ${state.measureDistanceKm.toFixed(2)} km`);
+  });
+
+  // Integração com a Sarah AI
+  async function perguntarSarah(pergunta) {
+    const texto = String(pergunta || "").trim();
+    if (!texto) return;
+
+    if (!state.userName) {
+      const informado = prompt("Como a Sarah deve chamar você durante o monitoramento?");
+      if (informado && informado.trim()) {
+        state.userName = informado.trim();
+        try { localStorage.setItem("raru_user_name", state.userName); } catch (e) {}
+      }
+    }
+
+    state.sarahMessages.push({ sender: "user", text: texto });
+    state.sarahLoading = true;
+    renderDrawer();
+
+    const pt = getSelectedPoint();
+    const w = getSelectedWeather();
+    const contexto = `Ponto ativo: ${pt.nome} (${pt.detalhe}). Clima atual: ${w ? `${w.temp}°C, chuva ${w.chuvaMm}mm, probabilidade ${w.probChuva}%, vento ${w.vento}km/h` : "sem leitura"}. Operador: ${state.userName || "não informado"}.`;
+
+    const historico = state.sarahMessages.slice(-8).map(m => ({
+      role: m.sender === "user" ? "user" : "assistant",
+      content: m.text
+    }));
+
+    let resposta = "";
+    try {
+      const r = await fetch(SARAH_ENDPOINT, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          model: "openai/gpt-oss-120b",
+          messages: [
+            {
+              role: "system",
+              content: `Você é a SARAH, parceira de campo tática no Mapa Raru (foco em Mesquita e Rio de Janeiro). Responda em português do Brasil, direto ao ponto, calmo e prático, sem asteriscos ou emojis. ${contexto}`
+            },
+            ...historico
+          ],
+          temperature: 0.45,
+          max_tokens: 320
+        })
+      });
+      const data = await r.json();
+      const msg = data?.choices?.[0]?.message;
+      resposta = limparFala(msg?.content || msg?.reasoning_content || "");
+    } catch (e) {
+      resposta = "";
+    }
+
+    if (!resposta) {
+      resposta = w
+        ? `Em ${pt.nome}, temos ${w.temp}°C, chuva de ${w.chuvaMm}mm com ${w.probChuva}% de chance e vento de ${w.vento}km/h. Acompanhando o fluxo na região.`
+        : `Estou monitorando ${pt.nome} no Mapa Raru. Assim que a telemetria atualizar, te mostro os índices.`;
+    }
+
+    state.sarahMessages.push({ sender: "sarah", text: resposta });
+    state.sarahLoading = false;
+    renderDrawer();
+    falarTexto(resposta);
+  }
+
+  // Renderização do Painel
+  function renderDrawer() {
+    const body = document.getElementById("drawerBody");
+    if (!body) return;
+
+    document.querySelectorAll(".drawer-tab").forEach(btn => {
+      btn.classList.toggle("active", btn.dataset.tab === state.tab);
+    });
+
+    const sel = getSelectedPoint();
+    const w = getSelectedWeather();
+
+    if (state.tab === "radar") {
+      const frameInfo = state.rainViewerFrames[state.rainFrameIdx]
+        ? new Date(state.rainViewerFrames[state.rainFrameIdx].time * 1000).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })
+        : "Tempo real";
+
+      body.innerHTML = `
+        <div class="stat-box">
+          <div style="display:flex;justify-content:space-between;align-items:center;gap:6px;">
+            <div>
+              <div class="font-display" style="font-size:12px;font-weight:800;color:#fff;">${sel.nome}</div>
+              <div style="font-size:10px;color:#94A3B8;margin-top:2px;">${sel.detalhe}</div>
+            </div>
+            <button type="button" id="btnAskSarahPoint" class="hud-btn">Falar c/ Sarah</button>
+          </div>
+        </div>
+
+        <div class="stat-grid">
+          <div class="stat-box">
+            <div class="stat-label">Temperatura</div>
+            <div class="stat-val">${w ? w.temp + "°C" : "--"}</div>
+          </div>
+          <div class="stat-box">
+            <div class="stat-label">Chuva / Prob.</div>
+            <div class="stat-val" style="color:${w && w.probChuva >= 40 ? '#FF0055' : '#00FF9D'}">${w ? `${w.chuvaMm}mm (${w.probChuva}%)` : "--"}</div>
+          </div>
+          <div class="stat-box">
+            <div class="stat-label">Vento / Rajada</div>
+            <div class="stat-val" style="color:#38BDF8">${w ? `${w.vento} / ${w.rajada} km/h` : "--"}</div>
+          </div>
+          <div class="stat-box">
+            <div class="stat-label">Umidade</div>
+            <div class="stat-val" style="color:#FFB703">${w ? w.umidade + "%" : "--"}</div>
+          </div>
+        </div>
+
+        <div class="stat-box" style="display:flex;align-items:center;justify-content:space-between;gap:8px;">
+          <div style="font-size:10px;font-family:'JetBrains Mono',monospace;color:#CBD5E1;">
+            Radar Chuva: <b style="color:#00F2FE;">${frameInfo}</b>
+          </div>
+          <div style="display:flex;gap:6px;">
+            <button type="button" id="btnToggleRainAnim" class="hud-btn ${state.rainPlaying ? 'active' : ''}">${state.rainPlaying ? 'Pausar' : 'Animar'}</button>
+            <button type="button" id="btnRefreshAll" class="hud-btn">Atualizar</button>
+          </div>
+        </div>
+
+        <div class="stat-label" style="margin-top:2px;">Pontos em Mesquita e Região (toque para focar)</div>
+        <div style="display:flex;flex-direction:column;gap:6px;">
+          ${PONTOS_MONITORADOS.map(p => {
+            const pw = state.weatherById[p.id];
+            const isSel = p.id === state.selectedPointId;
+            return `
+              <div class="list-item ${isSel ? 'selected' : ''}" data-point-id="${p.id}">
+                <div style="display:flex;justify-content:space-between;align-items:center;">
+                  <span style="font-size:11px;font-weight:700;color:#fff;">${p.nome}</span>
+                  <span class="font-mono" style="font-size:10px;font-weight:800;color:#00F2FE;">${pw ? `${pw.temp}°C • ${pw.probChuva}%` : "..."}</span>
+                </div>
+                <div style="font-size:10px;color:#94A3B8;margin-top:2px;">${p.tipo} • Chuva: ${pw ? pw.chuvaMm + "mm" : "--"} • Vento: ${pw ? pw.vento + "km/h" : "--"}</div>
+              </div>
+            `;
+          }).join("")}
+        </div>
+      `;
+
+      body.querySelectorAll("[data-point-id]").forEach(el => {
+        el.addEventListener("click", () => {
+          const id = el.dataset.pointId;
+          state.selectedPointId = id;
+          const pt = getSelectedPoint();
+          map.setView([pt.lat, pt.lon], 13, { animate: true });
+          renderPointMarkers();
+          renderMovementVectors();
+          renderDrawer();
+        });
+      });
+
+      const btnAsk = document.getElementById("btnAskSarahPoint");
+      if (btnAsk) {
+        btnAsk.addEventListener("click", () => {
+          state.tab = "sarah";
+          renderDrawer();
+          perguntarSarah(`Analise agora o clima, chuva e movimentação em ${sel.nome}.`);
+        });
+      }
+
+      const btnAnim = document.getElementById("btnToggleRainAnim");
+      if (btnAnim) {
+        btnAnim.addEventListener("click", () => {
+          state.rainPlaying = !state.rainPlaying;
+          renderDrawer();
+        });
+      }
+
+      const btnRef = document.getElementById("btnRefreshAll");
+      if (btnRef) {
+        btnRef.addEventListener("click", () => {
+          showToast("Atualizando telemetria e radar...");
+          fetchOpenMeteoAllPoints();
+          fetchRainViewerFrames();
+        });
+      }
+    } else if (state.tab === "camadas") {
+      body.innerHTML = `
+        <div class="stat-label">Camadas do Mapa Raru</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;">
+          <button type="button" class="hud-btn ${state.layers.darkTiles ? 'active' : ''}" data-layer="darkTiles">Visual Dark</button>
+          <button type="button" class="hud-btn ${state.layers.rainRadar ? 'active' : ''}" data-layer="rainRadar">Radar Chuva</button>
+          <button type="button" class="hud-btn ${state.layers.movement ? 'active' : ''}" data-layer="movement">Movimentação</button>
+          <button type="button" class="hud-btn ${state.layers.points ? 'active' : ''}" data-layer="points">Sensores / Locais</button>
+          <button type="button" class="hud-btn green ${state.layers.shelters ? 'active' : ''}" data-layer="shelters">Abrigos / Rotas</button>
+          <button type="button" class="hud-btn green ${state.layers.measure ? 'active' : ''}" data-layer="measure">Medir Distância</button>
+        </div>
+
+        <div class="stat-box" style="margin-top:4px;">
+          <div class="stat-label">Régua de Distância no Mapa</div>
+          <div class="stat-val" style="color:#00FF9D;">${state.measureDistanceKm.toFixed(2)} km</div>
+          <div style="font-size:10px;color:#94A3B8;margin-top:4px;">
+            ${state.layers.measure ? "Toque no mapa para marcar pontos do trajeto." : "Ative 'Medir Distância' e toque no mapa."}
+          </div>
+          <button type="button" id="btnClearMeasure" class="hud-btn rose" style="margin-top:8px;">Limpar Medição</button>
+        </div>
+
+        <div class="stat-box">
+          <div class="stat-label">Focar Coordenada (Lat / Lon)</div>
+          <div style="display:flex;gap:6px;margin-top:6px;">
+            <input id="coordLatInput" class="input-dark" placeholder="-22.7828" value="${sel.lat}" />
+            <input id="coordLonInput" class="input-dark" placeholder="-43.4314" value="${sel.lon}" />
+            <button type="button" id="btnGoCoord" class="hud-btn">Ir</button>
+          </div>
+        </div>
+      `;
+
+      body.querySelectorAll("[data-layer]").forEach(btn => {
+        btn.addEventListener("click", () => {
+          const key = btn.dataset.layer;
+          state.layers[key] = !state.layers[key];
+          if (key === "darkTiles") applyTileTheme();
+          if (key === "rainRadar") updateRainViewerLayer();
+          if (key === "points") renderPointMarkers();
+          if (key === "movement") renderMovementVectors();
+          if (key === "shelters") renderSheltersFromStorage();
+          if (key === "measure" && state.layers.measure) {
+            showToast("Modo medição ativo: toque no mapa.");
+          }
+          renderDrawer();
+        });
+      });
+
+      const btnClearM = document.getElementById("btnClearMeasure");
+      if (btnClearM) {
+        btnClearM.addEventListener("click", () => {
+          state.measurePoints = [];
+          renderMeasureLayer();
+          renderDrawer();
+        });
+      }
+
+      const btnGoC = document.getElementById("btnGoCoord");
+      if (btnGoC) {
+        btnGoC.addEventListener("click", () => {
+          const lat = parseFloat(document.getElementById("coordLatInput").value);
+          const lon = parseFloat(document.getElementById("coordLonInput").value);
+          if (Number.isFinite(lat) && Number.isFinite(lon)) {
+            map.setView([lat, lon], 14, { animate: true });
+            showToast(`Foco em ${lat.toFixed(4)}, ${lon.toFixed(4)}`);
+          } else {
+            showToast("Coordenadas inválidas.");
+          }
+        });
+      }
+    } else if (state.tab === "rotas") {
+      let rotas = [];
+      try {
+        rotas = JSON.parse(localStorage.getItem("rotasFugaReais") || "[]");
+      } catch (e) {
+        rotas = [];
+      }
+
+      body.innerHTML = `
+        <div class="stat-label">Adicionar Ponto de Apoio / Rota no Mapa</div>
+        <div class="stat-box" style="display:flex;flex-direction:column;gap:7px;">
+          <input id="shelterNameInput" class="input-dark" placeholder="Nome do abrigo / ponto seguro" />
+          <input id="shelterAddrInput" class="input-dark" placeholder="Endereço ou referência em Mesquita / RJ" />
+          <button type="button" id="btnAddShelter" class="hud-btn green">Salvar no Mapa Raru</button>
+        </div>
+
+        <div class="stat-label">Pontos Cadastrados (${rotas.length})</div>
+        ${rotas.length === 0
+          ? `<div class="stat-box" style="font-size:11px;color:#94A3B8;">Nenhum abrigo salvo ainda. Cadastre acima ou importe do painel GADE.</div>`
+          : rotas.map((r, i) => `
+            <div class="list-item" data-shelter-idx="${i}">
+              <div style="font-size:11px;font-weight:800;color:#00FF9D;">${r.tipo || "Ponto Seguro"} • ${r.nome || "Ponto"}</div>
+              <div style="font-size:10px;color:#CBD5E1;margin-top:2px;">${r.endereco || ""}</div>
+              ${r.info ? `<div style="font-size:10px;color:#94A3B8;margin-top:2px;">${r.info}</div>` : ""}
+            </div>
+          `).join("")
+        }
+      `;
+
+      const btnAdd = document.getElementById("btnAddShelter");
+      if (btnAdd) {
+        btnAdd.addEventListener("click", () => {
+          const nome = document.getElementById("shelterNameInput").value.trim();
+          const endereco = document.getElementById("shelterAddrInput").value.trim();
+          if (!nome || !endereco) {
+            showToast("Informe nome e endereço.");
+            return;
+          }
+          const c = map.getCenter();
+          const nova = {
+            tipo: "Ponto de Apoio",
+            nome,
+            endereco,
+            info: "Adicionado via Mapa Raru",
+            lat: c.lat,
+            lon: c.lng
+          };
+          const lista = [...rotas, nova];
+          try { localStorage.setItem("rotasFugaReais", JSON.stringify(lista)); } catch (e) {}
+          renderSheltersFromStorage();
+          renderDrawer();
+          showToast("Ponto salvo no mapa.");
+        });
+      }
+
+      body.querySelectorAll("[data-shelter-idx]").forEach(el => {
+        el.addEventListener("click", () => {
+          const idx = parseInt(el.dataset.shelterIdx, 10);
+          const item = rotas[idx];
+          if (item && typeof item.lat === "number" && typeof item.lon === "number") {
+            map.setView([item.lat, item.lon], 15, { animate: true });
+          } else {
+            map.setView(MESQUITA_CENTER, 13, { animate: true });
+          }
+        });
+      });
+    } else if (state.tab === "sarah") {
+      if (!state.sarahMessages.length) {
+        const prefix = state.userName ? `${state.userName}, ` : "";
+        state.sarahMessages.push({
+          sender: "sarah",
+          text: `${prefix}estou conectada no Mapa Raru de Mesquita e Rio de Janeiro. Pergunte sobre chuva, vento, movimentação ou pontos monitorados.`
+        });
+      }
+
+      body.innerHTML = `
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:6px;">
+          <span class="font-mono" style="font-size:10px;color:#00FF9D;">
+            Operador: <b>${state.userName || "Não definido"}</b>
+          </span>
+          <div style="display:flex;gap:6px;">
+            <button type="button" id="btnToggleVoice" class="hud-btn ${state.voiceEnabled ? 'active' : ''}">${state.voiceEnabled ? 'Voz ON' : 'Voz OFF'}</button>
+            <button type="button" id="btnSetUserName" class="hud-btn">Nome</button>
+          </div>
+        </div>
+
+        <div id="sarahChatList" class="sarah-chat-box">
+          ${state.sarahMessages.map(m => `
+            <div class="msg-bubble ${m.sender === "user" ? "msg-user" : "msg-sarah"}">${m.text}</div>
+          `).join("")}
+          ${state.sarahLoading ? `<div class="msg-bubble msg-sarah">Sarah analisando telemetria...</div>` : ""}
+        </div>
+
+        <form id="sarahForm" style="display:flex;gap:6px;">
+          <input id="sarahInput" class="input-dark" placeholder="Pergunte à Sarah sobre Mesquita, chuva, vento..." />
+          <button type="submit" class="hud-btn active">Enviar</button>
+        </form>
+      `;
+
+      const chatList = document.getElementById("sarahChatList");
+      if (chatList) chatList.scrollTop = chatList.scrollHeight;
+
+      document.getElementById("btnToggleVoice")?.addEventListener("click", () => {
+        state.voiceEnabled = !state.voiceEnabled;
+        try { localStorage.setItem("raru_sound_enabled", String(state.voiceEnabled)); } catch (e) {}
+        renderDrawer();
+      });
+
+      document.getElementById("btnSetUserName")?.addEventListener("click", () => {
+        const novo = prompt("Digite o nome para a Sarah chamar:", state.userName || "");
+        if (novo !== null) {
+          state.userName = novo.trim();
+          try { localStorage.setItem("raru_user_name", state.userName); } catch (e) {}
+          renderDrawer();
+        }
+      });
+
+      document.getElementById("sarahForm")?.addEventListener("submit", (e) => {
+        e.preventDefault();
+        const inp = document.getElementById("sarahInput");
+        if (inp && inp.value.trim()) {
+          const val = inp.value.trim();
+          inp.value = "";
+          perguntarSarah(val);
+        }
+      });
+    }
+  }
+
+  // Eventos globais da interface
+  document.querySelectorAll(".drawer-tab").forEach(btn => {
+    btn.addEventListener("click", () => {
+      state.tab = btn.dataset.tab;
+      renderDrawer();
+    });
+  });
+
+  document.getElementById("btnToggleDrawer").addEventListener("click", () => {
+    const drawer = document.getElementById("hudDrawer");
+    const btn = document.getElementById("btnToggleDrawer");
+    const collapsed = drawer.classList.toggle("collapsed");
+    btn.classList.toggle("active", !collapsed);
+  });
+
+  document.getElementById("btnCenterMesquita").addEventListener("click", () => {
+    state.selectedPointId = "msq-centro";
+    map.setView(MESQUITA_CENTER, 13, { animate: true });
+    renderPointMarkers();
+    renderMovementVectors();
+    renderDrawer();
+    showToast("Centralizado em Mesquita - RJ");
+  });
+
+  document.getElementById("btnMyGps").addEventListener("click", () => {
+    if (!navigator.geolocation) {
+      showToast("GPS indisponível no navegador.");
+      return;
+    }
+    showToast("Buscando localização GPS...");
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        const lat = pos.coords.latitude;
+        const lon = pos.coords.longitude;
+        map.setView([lat, lon], 15, { animate: true });
+        L.circleMarker([lat, lon], {
+          radius: 7,
+          color: "#00FF9D",
+          fillColor: "#00FF9D",
+          fillOpacity: 0.9
+        }).addTo(map).bindPopup("Sua posição GPS atual").openPopup();
+        showToast("GPS localizado no mapa.");
+      },
+      () => showToast("Não foi possível obter o GPS."),
+      { enableHighAccuracy: true, timeout: 8000 }
+    );
+  });
+
+  document.addEventListener("contextmenu", (e) => e.preventDefault());
+
+  // Carga inicial
+  renderPointMarkers();
+  renderMovementVectors();
+  renderSheltersFromStorage();
+  renderDrawer();
+  fetchOpenMeteoAllPoints();
+  fetchRainViewerFrames();
+  setInterval(fetchOpenMeteoAllPoints, 300000);
+  setInterval(fetchRainViewerFrames, 300000);
+})();
+</script>
+</body>
+</html>
