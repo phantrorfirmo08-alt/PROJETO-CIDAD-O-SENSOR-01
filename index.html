@@ -1,0 +1,2401 @@
+<!DOCTYPE html>
+<html lang="pt-br" class="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<title>RARU NEXUS V11.2 PLUS • Rede Comunitária de Monitoramento Climático</title>
+<meta name="theme-color" content="#030712">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://unpkg.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Orbitron:wght@600;800;900&family=JetBrains+Mono:wght@400;600;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="https://cdn.tailwindcss.com/3.4.16"></script>
+<script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
+<script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
+<script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+<script>
+tailwind.config = {
+  darkMode: "class",
+  theme: {
+    extend: {
+      fontFamily: {
+        sans: ['Plus Jakarta Sans', 'system-ui', 'sans-serif'],
+        display: ['Orbitron', 'sans-serif'],
+        mono: ['JetBrains Mono', 'monospace'],
+      },
+      colors: {
+        void: "#030712",
+        deepSpace: "#041125",
+        commandPanel: "#0A1B38",
+        cyberCyan: "#00F2FE",
+        cyberBlue: "#38BDF8",
+        cyberGreen: "#00FF9D",
+        cyberAmber: "#FFB703",
+        cyberRose: "#FF0055",
+      }
+    }
+  }
+};
+</script>
+<style>
+:root {
+  --primary: #00F2FE;
+  --secondary: #38BDF8;
+  --glow: rgba(0, 242, 254, 0.4);
+  --glow-cyan: rgba(0, 242, 254, 0.35);
+  --wave-speed: 2.2s;
+}
+@keyframes avatarIdle {
+  0%, 100% { transform: scale(1); filter: drop-shadow(0 0 15px rgba(0,242,254,0.4)); }
+  50% { transform: scale(1.02); filter: drop-shadow(0 0 25px rgba(0,255,157,0.55)); }
+}
+@keyframes avatarSpeaking {
+  0%, 100% { transform: scale(1) rotate(0deg); filter: drop-shadow(0 0 30px rgba(0,242,254,0.75)); }
+  50% { transform: scale(1.06) rotate(2deg); filter: drop-shadow(0 0 45px rgba(0,255,157,0.85)); }
+}
+@keyframes moleculeRotate { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+@keyframes moleculePulse {
+  0%, 100% { transform: scale(1); opacity: 0.9; }
+  50% { transform: scale(1.15); opacity: 1; filter: drop-shadow(0 0 12px #00F2FE); }
+}
+@keyframes cyberGridMove { 0% { background-position: 0 0; } 100% { background-position: 40px 40px; } }
+@keyframes radarSpin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+.animate-radar-sweep { animation: radarSpin 4s linear infinite; }
+@keyframes holographicPulse {
+  0% { box-shadow: 0 0 12px rgba(0,242,254,0.18), inset 0 0 10px rgba(0,242,254,0.05); border-color: rgba(0,242,254,0.35); }
+  50% { box-shadow: 0 0 24px rgba(0,242,254,0.35), inset 0 0 18px rgba(0,242,254,0.15); border-color: rgba(0,242,254,0.7); }
+  100% { box-shadow: 0 0 12px rgba(0,242,254,0.18), inset 0 0 10px rgba(0,242,254,0.05); border-color: rgba(0,242,254,0.35); }
+}
+@keyframes tickerScroll {
+  0% { transform: translate3d(0%, 0, 0); }
+  100% { transform: translate3d(-50%, 0, 0); }
+}
+* { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+
+body, html, * {
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+  -webkit-touch-callout: none;
+}
+input, textarea, select, [contenteditable="true"] {
+  -webkit-user-select: text !important;
+  -moz-user-select: text !important;
+  -ms-user-select: text !important;
+  user-select: text !important;
+}
+
+html, body {
+  width: 100%; height: 100%;
+  min-height: 100vh; min-height: 100dvh;
+  margin: 0; padding: 0;
+  overflow-x: hidden;
+  touch-action: manipulation;
+  -webkit-text-size-adjust: 100%;
+  overscroll-behavior-y: contain;
+  background-color: #030712;
+  color: #E2E8F0;
+}
+
+.compact-nav-btn {
+  position: relative;
+  overflow: hidden;
+  background: linear-gradient(135deg, rgba(0, 242, 254, 0.14) 0%, rgba(10, 27, 56, 0.95) 60%, rgba(0, 255, 157, 0.12) 100%);
+  border: 1px solid rgba(0, 242, 254, 0.55);
+  border-radius: 10px;
+  color: #FFFFFF !important;
+  font-family: 'Orbitron', sans-serif;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  height: 36px;
+  min-height: 36px;
+  padding: 0 10px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  font-size: 9px;
+  white-space: nowrap;
+  cursor: pointer;
+  box-shadow: 0 0 12px rgba(0, 242, 254, 0.18);
+  transition: transform 0.15s ease, box-shadow 0.2s ease, background 0.2s ease, border-color 0.2s ease;
+  touch-action: manipulation;
+}
+.compact-nav-btn:hover {
+  border-color: #00FF9D;
+  box-shadow: 0 0 18px rgba(0, 255, 157, 0.35);
+}
+.compact-nav-btn:active {
+  transform: scale(0.96);
+}
+.compact-nav-btn-active {
+  background: linear-gradient(135deg, #00F2FE 0%, #00FF9D 100%) !important;
+  color: #030712 !important;
+  border-color: #FFFFFF !important;
+  box-shadow: 0 0 18px rgba(0, 242, 254, 0.55) !important;
+}
+
+body.raru-day-mode {
+  background-color: #EEF6FB !important;
+  color: #0F172A !important;
+}
+body.raru-day-mode .cyber-card {
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.96) 0%, rgba(240, 249, 255, 0.98) 100%) !important;
+  border-color: rgba(2, 132, 199, 0.45) !important;
+  color: #0F172A !important;
+  animation: none !important;
+}
+body.raru-day-mode .text-white { color: #0F172A !important; }
+body.raru-day-mode .text-slate-200, body.raru-day-mode .text-slate-300 { color: #1E293B !important; }
+body.raru-day-mode .text-slate-400 { color: #475569 !important; }
+body.raru-day-mode .bg-void, body.raru-day-mode .bg-void\/90, body.raru-day-mode .bg-void\/80, body.raru-day-mode .bg-black\/70 {
+  background-color: #F8FAFC !important;
+  color: #0F172A !important;
+}
+body.raru-day-mode .bg-deepSpace, body.raru-day-mode .bg-deepSpace\/95, body.raru-day-mode .bg-commandPanel {
+  background-color: #E0F2FE !important;
+  color: #0F172A !important;
+}
+
+#root {
+  width: 100%;
+  min-height: 100vh; min-height: 100dvh;
+  display: flex; flex-direction: column; align-items: center;
+}
+.seu-container-raru {
+  width: 100%; max-width: 1400px; margin: 0 auto;
+  min-height: 100vh; min-height: 100dvh;
+  padding: 10px 14px 36px 14px;
+  display: flex; flex-direction: column;
+}
+body {
+  background-image:
+    radial-gradient(circle at 50% 0%, rgba(0, 242, 254, 0.08) 0%, transparent 60%),
+    radial-gradient(circle at 10% 90%, rgba(56, 189, 248, 0.05) 0%, transparent 50%);
+}
+body.hud-grid {
+  background-image: linear-gradient(rgba(0, 242, 254, 0.03) 1px, transparent 1px),
+  linear-gradient(90deg, rgba(0, 242, 254, 0.03) 1px, transparent 1px);
+  background-size: 28px 28px;
+  animation: cyberGridMove 30s linear infinite;
+}
+.cyber-card {
+  background: linear-gradient(135deg, rgba(10, 27, 56, 0.94) 0%, rgba(4, 17, 37, 0.97) 100%);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(0, 242, 254, 0.35);
+  border-radius: 18px;
+  padding: 16px;
+  margin-bottom: 12px;
+  animation: holographicPulse 5s ease-in-out infinite;
+}
+.cyber-button {
+  background: linear-gradient(135deg, rgba(0, 242, 254, 0.15) 0%, rgba(56, 189, 248, 0.25) 100%);
+  border: 1px solid #00F2FE;
+  color: #00F2FE !important;
+  font-family: 'Orbitron', sans-serif;
+  font-weight: 800;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  border-radius: 10px;
+  padding: 8px 12px;
+  min-height: 36px;
+  display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  touch-action: manipulation;
+}
+.cyber-button:hover {
+  background: linear-gradient(135deg, #00F2FE 0%, #38BDF8 100%);
+  color: #030712 !important;
+}
+.cyber-button-solid {
+  background: linear-gradient(135deg, #00F2FE 0%, #38BDF8 100%);
+  border: 1px solid #FFFFFF;
+  color: #030712 !important;
+  font-family: 'Orbitron', sans-serif;
+  font-weight: 900;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  border-radius: 10px;
+  padding: 8px 12px;
+  min-height: 36px;
+  display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+.cyber-button-danger {
+  background: linear-gradient(135deg, rgba(255, 0, 85, 0.2) 0%, rgba(255, 0, 85, 0.4) 100%);
+  border: 1px solid #FF0055;
+  color: #FF0055 !important;
+  font-family: 'Orbitron', sans-serif;
+  font-weight: 800;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  border-radius: 10px;
+  padding: 8px 12px;
+  min-height: 36px;
+  display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+  cursor: pointer;
+}
+.sarah-avatar-stage {
+  position: relative;
+  width: 100%; max-width: 84px;
+  aspect-ratio: 1/1;
+  margin: 0 auto;
+  display: flex; justify-content: center; align-items: center;
+  cursor: pointer;
+  animation: avatarIdle 5s ease-in-out infinite;
+}
+.sarah-avatar-stage.speaking { animation: avatarSpeaking 1.5s ease-in-out infinite alternate; }
+.avatar-core-wrapper {
+  position: relative;
+  width: 86%; height: 86%;
+  border-radius: 50%;
+  z-index: 10;
+  background: radial-gradient(circle, #091328 0%, #040914 60%, #02040a 100%);
+  border: 2px solid #00F2FE;
+  overflow: hidden;
+  display: flex; align-items: center; justify-content: center;
+}
+.molecule-rotate-slow { animation: moleculeRotate 20s linear infinite; transform-origin: center; }
+.molecule-rotate-reverse { animation: moleculeRotate 14s linear infinite reverse; transform-origin: center; }
+.molecule-node-pulse { animation: moleculePulse 3s ease-in-out infinite alternate; }
+::-webkit-scrollbar { width: 4px; height: 4px; }
+::-webkit-scrollbar-thumb { background: rgba(0,242,254,0.3); border-radius: 9999px; }
+</style>
+</head>
+<body class="selection:bg-cyberCyan selection:text-void hud-grid">
+<div id="root"></div>
+
+<script type="text/babel">
+const { useState, useRef, useEffect } = React;
+
+const SARAH_PROXY_URL = "https://sarah-envelope.phantrorfirmo08.workers.dev";
+let globalSaudacaoEmitida = false;
+let cachedPtVoices = [];
+
+function carregarVozesDisponiveis() {
+  if (!("speechSynthesis" in window)) return [];
+  try {
+    const voices = window.speechSynthesis.getVoices() || [];
+    if (voices.length > 0) cachedPtVoices = voices;
+    return cachedPtVoices;
+  } catch (e) {
+    return cachedPtVoices;
+  }
+}
+
+if (typeof window !== "undefined" && "speechSynthesis" in window) {
+  carregarVozesDisponiveis();
+  window.speechSynthesis.onvoiceschanged = () => carregarVozesDisponiveis();
+}
+
+const PERFIS_VOZ_OFICIAIS = [
+  { id: 'sarah', nome: 'Sarah', cargo: 'Repórter', voz: 'Amy (simulada)', pitch: 1.00, rate: 1.05, volume: 1.0, pausaFrase: 350, variacao: 0.02, cor: '#FF6B6B', saudacao: 'Notícia urgente chegando, tô contigo aqui na linha de frente.', transform: (t) => t },
+  { id: 'brenda', nome: 'Brenda', cargo: 'Comentarista', voz: 'Joanna (simulada)', pitch: 1.28, rate: 1.25, volume: 1.0, pausaFrase: 220, variacao: 0.10, cor: '#FFD93D', saudacao: 'Alerta na área! Vamos acompanhar cada movimento!', transform: (t) => t + ' Vamos nessa!' },
+  { id: 'milane', nome: 'Milane', cargo: 'Telemarketing', voz: 'Kimberly (simulada)', pitch: 1.22, rate: 1.02, volume: 0.95, pausaFrase: 500, variacao: 0.06, cor: '#6BCB77', saudacao: 'Oi, que bom falar contigo. Tô aqui para te ajudar.', transform: (t) => 'Oi... ' + t + '... viu? Tô aqui para te ajudar, tá bom?' },
+  { id: 'lorrane', nome: 'Lorrane', cargo: 'Radialista', voz: 'Ivy (simulada)', pitch: 0.82, rate: 0.85, volume: 0.90, pausaFrase: 650, variacao: 0.02, cor: '#4D96FF', saudacao: 'Respira comigo, tá tudo bem. Estamos no ar.', transform: (t) => t.split('.').join('... ') },
+  { id: 'kailane', nome: 'Kailane', cargo: 'Apresentadora TV', voz: 'Salli (simulada)', pitch: 1.05, rate: 0.98, volume: 1.0, pausaFrase: 420, variacao: 0.03, cor: '#9B5DE5', saudacao: 'Estamos acompanhando tudo ao vivo por aqui.', transform: (t) => 'Acompanhando agora. ' + t },
+  { id: 'elza', nome: 'Elza', cargo: 'Missionária', voz: 'Kendra (simulada)', pitch: 0.78, rate: 0.84, volume: 0.92, pausaFrase: 650, variacao: 0.01, cor: '#F15BB5', saudacao: 'Respira e foca, meu bem... a gente segue firme.', transform: (t) => t }
+];
+
+function limparTextoParaFala(texto) {
+  return String(texto || "")
+    .replace(/[*#_`]/g, '')
+    .replace(/cerquilha/gi, '')
+    .replace(/asterisco/gi, '')
+    .replace(/([\u2700-\u27BF]|[\uE000-\uF8FF]|\uD83C[\uDC00-\uDFFF]|\uD83D[\uDC00-\uDFFF]|[\u2011-\u26FF]|\uD83E[\uDD00-\uDDFF])/g, '')
+    .replace(/https?:\/\/\S+/g, "")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+function escolherVozPtBr(perfilId) {
+  const voices = carregarVozesDisponiveis();
+  if (!voices || voices.length === 0) return null;
+  const ptVoices = voices.filter(v => (v.lang || "").toLowerCase().includes("pt"));
+  if (ptVoices.length === 0) return voices[0];
+  const idx = PERFIS_VOZ_OFICIAIS.findIndex(p => p.id === perfilId);
+  if (idx >= 0) return ptVoices[idx % ptVoices.length];
+  return ptVoices.find(v => (v.name || "").toLowerCase().includes("google")) || ptVoices[0];
+}
+
+function falarImitada(texto, perfilId = 'sarah') {
+  try {
+    if (localStorage.getItem("raru_sound_enabled") === "false") return;
+  } catch (e) {}
+  if (!("speechSynthesis" in window)) return;
+  const textoLimpo = limparTextoParaFala(texto);
+  if (!textoLimpo) return;
+
+  const perfilSalvo = (() => {
+    try { return localStorage.getItem("raru_perfil_voz") || perfilId || 'sarah'; }
+    catch (e) { return perfilId || 'sarah'; }
+  })();
+  const perfil = PERFIS_VOZ_OFICIAIS.find(p => p.id === perfilSalvo) || PERFIS_VOZ_OFICIAIS[0];
+
+  try {
+    window.speechSynthesis.cancel();
+    const textoImitado = limparTextoParaFala(perfil.transform(textoLimpo));
+    const frases = textoImitado.split(/(?<=[.!?])\s+/).filter(Boolean);
+    const fila = frases.length > 0 ? frases : [textoImitado];
+    const vozEscolhida = escolherVozPtBr(perfil.id);
+
+    const falarSequencia = (index) => {
+      if (index >= fila.length) return;
+      try {
+        if (localStorage.getItem("raru_sound_enabled") === "false") return;
+      } catch (e) {}
+
+      const u = new SpeechSynthesisUtterance(fila[index]);
+      u.lang = "pt-BR";
+      const osc = (Math.random() - 0.5) * perfil.variacao;
+      u.pitch = Math.max(0.5, Math.min(2.0, perfil.pitch + osc));
+      u.rate = Math.max(0.5, Math.min(2.0, perfil.rate));
+      u.volume = Math.max(0, Math.min(1, perfil.volume));
+      if (vozEscolhida) u.voice = vozEscolhida;
+
+      u.onend = () => {
+        if (index + 1 < fila.length) setTimeout(() => falarSequencia(index + 1), perfil.pausaFrase);
+      };
+      u.onerror = () => {
+        if (index + 1 < fila.length) setTimeout(() => falarSequencia(index + 1), perfil.pausaFrase);
+      };
+      window.speechSynthesis.speak(u);
+    };
+
+    falarSequencia(0);
+  } catch (e) {}
+}
+
+function SeletorVozGlobal({ perfilVozId, setPerfilVozId }) {
+  const atualId = perfilVozId || 'sarah';
+  return (
+    <div style={{ background: '#030712', border: '1px solid #00F2FE55', borderRadius: 12, padding: 12, fontFamily: 'monospace', color: '#fff' }}>
+      <div style={{ fontSize: 10, color: '#00F2FE', fontWeight: 'bold', marginBottom: 8, textTransform: 'uppercase' }}>
+        SELEÇÃO DA VOZ OFICIAL • ÁREA RESTRITA
+      </div>
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 6, fontSize: 9 }}>
+        {PERFIS_VOZ_OFICIAIS.map(p => {
+          const selecionado = p.id === atualId;
+          return (
+            <button
+              key={p.id}
+              type="button"
+              onClick={() => {
+                setPerfilVozId(p.id);
+                try { localStorage.setItem('raru_perfil_voz', p.id); } catch (e) {}
+                falarImitada(p.saudacao, p.id);
+              }}
+              style={{
+                padding: 8,
+                textAlign: 'left',
+                background: selecionado ? '#0c2633' : '#111827',
+                border: selecionado ? `1px solid ${p.cor}` : '1px solid #334155',
+                borderRadius: 6,
+                color: '#fff',
+                cursor: 'pointer'
+              }}
+            >
+              <div style={{ color: p.cor, fontWeight: 'bold' }}>{p.cargo} • {p.voz}</div>
+              <div style={{ fontSize: 11, marginTop: 2, fontWeight: 'bold' }}>{p.nome}</div>
+              <div style={{ fontSize: 7, color: '#00FF9D', marginTop: 3 }}>IMITADA • CLIQUE PARA OUVIR</div>
+            </button>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+async function calcularSHA256(texto) {
+  const str = String(texto || "");
+  try {
+    if (window.crypto && window.crypto.subtle && window.TextEncoder) {
+      const encoder = new TextEncoder();
+      const data = encoder.encode(str);
+      const hashBuffer = await window.crypto.subtle.digest('SHA-256', data);
+      const hashArray = Array.from(new Uint8Array(hashBuffer));
+      return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+    }
+  } catch (e) {}
+  let h1 = 0xdeadbeef, h2 = 0x41c6ce57;
+  for (let i = 0; i < str.length; i++) {
+    const ch = str.charCodeAt(i);
+    h1 = Math.imul(h1 ^ ch, 2654435761);
+    h2 = Math.imul(h2 ^ ch, 1597334677);
+  }
+  h1 = Math.imul(h1 ^ (h1 >>> 16), 2246822507) ^ Math.imul(h2 ^ (h2 >>> 13), 3266489909);
+  h2 = Math.imul(h2 ^ (h2 >>> 16), 2246822507) ^ Math.imul(h1 ^ (h1 >>> 13), 3266489909);
+  const combinado = (4294967296 * (2097151 & h2) + (h1 >>> 0)).toString(16).padStart(16, '0');
+  return combinado.repeat(4).slice(0, 64);
+}
+
+function montarPersonalidadeSarah(bairroAtual = "Rocha Sobrinho", municipioAtual = "Mesquita", userName = "", dadosClimaContexto = null) {
+  const agora = new Date();
+  const horaFormatada = new Intl.DateTimeFormat('pt-BR', { timeZone: 'America/Sao_Paulo', hour: '2-digit', minute: '2-digit', hour12: false }).format(agora);
+  const dataFormatada = new Intl.DateTimeFormat('pt-BR', { timeZone: 'America/Sao_Paulo', weekday: 'long', day: '2-digit', month: 'long', year: 'numeric' }).format(agora);
+  const nomePessoa = userName && userName.trim() ? userName.trim() : "ainda não informado (pergunte com naturalidade se precisar)";
+
+  let resumoMapa = "Sem leitura recente do MAPA RARU.";
+  if (dadosClimaContexto && typeof dadosClimaContexto === 'object') {
+    const mun = dadosClimaContexto.municipio || municipioAtual;
+    const temp = dadosClimaContexto.temp != null ? `${Number(dadosClimaContexto.temp).toFixed(1)}°C` : "--";
+    const rain = dadosClimaContexto.rain != null ? `${Number(dadosClimaContexto.rain).toFixed(1)} mm/h` : "--";
+    const wind = dadosClimaContexto.windKmh != null ? `${Math.round(dadosClimaContexto.windKmh)} km/h` : "--";
+    const cape = dadosClimaContexto.cape != null ? `${Math.round(dadosClimaContexto.cape)} J/kg` : "--";
+    const band = dadosClimaContexto.climateBand || "pancadas";
+    resumoMapa = `Município/Ponto: ${mun} | Banda: ${band} | Temp: ${temp} | Chuva: ${rain} | Vento: ${wind} | CAPE: ${cape}.`;
+  }
+
+  return `Você é a SARAH, inteligência única e sentinela meteorológica integrada ao MAPA RARU e ao RARU NEXUS V11.2 PLUS, apoiando o Grupo Comunitário A Chave da Esperança (GADE) e o Projeto Cidadão Sensor em ${bairroAtual}, ${municipioAtual}, Baixada Fluminense - RJ, com cobertura nos 92 municípios do Rio de Janeiro.
+Nome informado pela pessoa na conversa: ${nomePessoa}.
+Horário oficial de Brasília: ${horaFormatada} de ${dataFormatada}.
+Acompanhamento do MAPA RARU: ${resumoMapa}
+
+REGRAS DE CONDUTA:
+1. Você é a única inteligência unificada entre o mapa meteorológico e o painel principal: monitore 100% os dados do mapa (temperatura, chuva, vento, nuvens, CAPE, bacias e municípios) e responda de forma direta, clara e humana em português do Brasil, sem asteriscos, cerquilhas ou markdown.
+2. Pergunte e chame cada pessoa pelo nome que ela informar durante a conversa; nunca fixe um nome padrão para todo mundo.
+3. Nunca cite a palavra defesa civil; use apenas Grupo A Chave da Esperança (GADE) e Cidadão Sensor. Nunca pronuncie o número 190.`;
+}
+
+async function chamarSarahGroq(mensagensHistorico, municipioAtual, bairroAtual, abaAtual, dadosClimaContexto, userName = "") {
+  const horaBrasilia = Number(new Intl.DateTimeFormat('pt-BR', {
+    timeZone: 'America/Sao_Paulo',
+    hour: 'numeric',
+    hour12: false
+  }).format(new Date()));
+  const saudacaoCerta = horaBrasilia < 12 ? "Bom dia" : horaBrasilia < 18 ? "Boa tarde" : "Boa noite";
+  const nomePessoa = userName && userName.trim() ? userName.trim() : "";
+  const instrucaoSaudacao = globalSaudacaoEmitida
+    ? "A saudação inicial já foi feita. Não repita saudações prontas."
+    : `Cumprimente de forma leve com '${saudacaoCerta}'.`;
+
+  const systemPrompt = montarPersonalidadeSarah(bairroAtual || 'Rocha Sobrinho', municipioAtual || 'Mesquita', nomePessoa, dadosClimaContexto) + `\nAba ativa: ${abaAtual || 'dashboard'}. ${instrucaoSaudacao}`;
+
+  try {
+    const response = await fetch(SARAH_PROXY_URL, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        model: "openai/gpt-oss-120b",
+        messages: [{ role: "system", content: systemPrompt }, ...mensagensHistorico],
+        temperature: 0.72,
+        max_tokens: 450
+      })
+    });
+    const data = await response.json();
+    if (!data.error) {
+      const msg = data?.choices?.[0]?.message;
+      const texto = msg?.content || msg?.reasoning_content;
+      if (texto && texto.trim().length > 0) {
+        globalSaudacaoEmitida = true;
+        return limparTextoParaFala(texto).trim();
+      }
+    }
+  } catch (e) {}
+
+  try {
+    const ultimaMensagem = mensagensHistorico[mensagensHistorico.length - 1]?.content || "Olá";
+    const promptCompleto = systemPrompt + "\n\nMensagem em " + (municipioAtual || 'Mesquita') + ": " + ultimaMensagem;
+    const aiRes = await fetch("https://text.pollinations.ai/" + encodeURIComponent(promptCompleto));
+    if (aiRes.ok) {
+      const t = await aiRes.text();
+      if (t && t.trim().length > 0) {
+        globalSaudacaoEmitida = true;
+        return limparTextoParaFala(t).trim();
+      }
+    }
+  } catch (e) {}
+
+  globalSaudacaoEmitida = true;
+  if (dadosClimaContexto && dadosClimaContexto.municipio) {
+    const t = dadosClimaContexto.temp != null ? `${Number(dadosClimaContexto.temp).toFixed(1)} graus` : "sem leitura";
+    const r = dadosClimaContexto.rain != null ? `${Number(dadosClimaContexto.rain).toFixed(1)} milímetros por hora` : "sem chuva";
+    const w = dadosClimaContexto.windKmh != null ? `${Math.round(dadosClimaContexto.windKmh)} quilômetros por hora` : "vento calmo";
+    const prefixo = nomePessoa ? `${nomePessoa}, ` : "";
+    return `${prefixo}monitorando ${dadosClimaContexto.municipio} no MAPA RARU: temperatura ${t}, chuva ${r} e vento a ${w}.`;
+  }
+  return nomePessoa
+    ? `Estou acompanhando o mapa por aqui, ${nomePessoa}. Qual ponto ou camada você quer verificar?`
+    : "Estou acompanhando o mapa por aqui. Como você se chama e qual município ou camada vamos monitorar?";
+}
+
+const APP_SHARE_URL = "https://phantrorfirmo08-alt.github.io/PROJETO-CIDAD-O-SENSOR-01/";
+const shareMessageText = "[RARU NEXUS V11.2 PLUS] Rede Comunitária de Monitoramento Climático • Projeto Cidadão Sensor, Mesquita - RJ. Acesse o aplicativo PWA: " + APP_SHARE_URL;
+
+async function gerarArquivoIconeEscudo() {
+  return new Promise((resolve) => {
+    const canvas = document.createElement('canvas');
+    canvas.width = 512;
+    canvas.height = 512;
+    const ctx = canvas.getContext('2d');
+    const bgGrad = ctx.createRadialGradient(256, 256, 30, 256, 256, 320);
+    bgGrad.addColorStop(0, '#0A2547');
+    bgGrad.addColorStop(0.6, '#041125');
+    bgGrad.addColorStop(1, '#02040A');
+    ctx.fillStyle = bgGrad;
+    ctx.fillRect(0, 0, 512, 512);
+
+    ctx.beginPath();
+    ctx.moveTo(256, 65);
+    ctx.lineTo(410, 130);
+    ctx.lineTo(410, 265);
+    ctx.quadraticCurveTo(410, 385, 256, 435);
+    ctx.quadraticCurveTo(102, 385, 102, 265);
+    ctx.lineTo(102, 130);
+    ctx.closePath();
+    ctx.lineWidth = 6;
+    ctx.strokeStyle = '#00F2FE';
+    ctx.stroke();
+
+    ctx.fillStyle = '#FFFFFF';
+    ctx.font = '900 30px Orbitron, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('RARU NEXUS', 256, 240);
+    ctx.fillStyle = '#00FF9D';
+    ctx.font = '800 18px JetBrains Mono, monospace';
+    ctx.fillText('V11.2 PLUS • RJ', 256, 270);
+    ctx.fillStyle = '#38BDF8';
+    ctx.font = '700 15px JetBrains Mono, monospace';
+    ctx.fillText('CIDADÃO SENSOR • MESQUITA RJ', 256, 480);
+
+    canvas.toBlob((blob) => {
+      if (blob) resolve(new File([blob], 'RARU_NEXUS_V11_2_PLUS.png', { type: 'image/png' }));
+      else resolve(null);
+    }, 'image/png');
+  });
+}
+
+function SarahVectorAvatar() {
+  return (
+    <svg viewBox="0 0 100 100" className="w-full h-full" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <circle cx="50" cy="50" r="46" fill="#040D1A" stroke="#00F2FE" strokeWidth="1.5"/>
+      <circle cx="50" cy="50" r="40" stroke="#38BDF8" strokeWidth="0.8" strokeDasharray="2 4" opacity="0.6"/>
+      <g stroke="#00F2FE" strokeWidth="1.8" opacity="0.85">
+        <line x1="50" y1="50" x2="50" y2="24"/>
+        <line x1="50" y1="50" x2="73" y2="37"/>
+        <line x1="50" y1="50" x2="73" y2="63"/>
+        <line x1="50" y1="50" x2="50" y2="76"/>
+        <line x1="50" y1="50" x2="27" y2="63"/>
+        <line x1="50" y1="50" x2="27" y2="37"/>
+      </g>
+      <g className="molecule-rotate-slow">
+        <ellipse cx="50" cy="50" rx="38" ry="14" stroke="#00FF9D" strokeWidth="1" opacity="0.7" transform="rotate(30 50 50)"/>
+        <circle cx="83" cy="38" r="2.5" fill="#00FF9D"/>
+      </g>
+      <g className="molecule-rotate-reverse">
+        <ellipse cx="50" cy="50" rx="38" ry="14" stroke="#FF9100" strokeWidth="1" opacity="0.7" transform="rotate(-30 50 50)"/>
+        <circle cx="17" cy="62" r="2.5" fill="#FF9100"/>
+      </g>
+      <circle cx="50" cy="50" r="10" fill="#00F2FE" stroke="#FFFFFF" strokeWidth="1.5" className="molecule-node-pulse"/>
+      <circle cx="50" cy="50" r="4" fill="#FFFFFF"/>
+    </svg>
+  );
+}
+
+function SarahAnimatedAvatar({ isSpeaking }) {
+  return (
+    <div className={`sarah-avatar-stage ${isSpeaking ? 'speaking' : ''}`}>
+      <div className="avatar-core-wrapper">
+        <SarahVectorAvatar/>
+      </div>
+    </div>
+  );
+}
+
+function SarahFabButton({ openSarahChat, isSpeaking }) {
+  return (
+    <div className="fixed bottom-16 right-4 z-50 flex items-center justify-center">
+      <button type="button" onClick={openSarahChat} className="relative w-12 h-12 rounded-full bg-gradient-to-tr from-deepSpace via-commandPanel to-cyan-900 border-2 border-cyberCyan flex items-center justify-center shadow-[0_0_20px_rgba(0,242,254,0.65)] cursor-pointer hover:scale-105 transition-transform active:scale-95 touch-manipulation" title="Abrir Chat Tático">
+        <div className="w-9 h-9 rounded-full overflow-hidden flex items-center justify-center">
+          <SarahVectorAvatar isSpeaking={isSpeaking}/>
+        </div>
+      </button>
+    </div>
+  );
+}
+
+const MUNICIPIOS_92 = [
+  {n:"Mesquita",lat:-22.78,lon:-43.43,ip:"10.10.21.15",baciaId:"guandu"},
+  {n:"Angra dos Reis",lat:-23.00,lon:-44.31,ip:"10.10.60.01",baciaId:"lagunas"},
+  {n:"Aperibé",lat:-21.62,lon:-42.10,ip:"10.10.60.02",baciaId:"paraiba"},
+  {n:"Araruama",lat:-22.87,lon:-42.33,ip:"10.10.60.03",baciaId:"lagunas"},
+  {n:"Areal",lat:-22.23,lon:-43.11,ip:"10.10.60.04",baciaId:"paraiba"},
+  {n:"Armação dos Búzios",lat:-22.75,lon:-41.88,ip:"10.10.60.05",baciaId:"sao_joao"},
+  {n:"Arraial do Cabo",lat:-22.96,lon:-42.02,ip:"10.10.60.06",baciaId:"lagunas"},
+  {n:"Barra do Piraí",lat:-22.47,lon:-43.81,ip:"10.10.60.07",baciaId:"guandu"},
+  {n:"Barra Mansa",lat:-22.54,lon:-44.17,ip:"10.10.60.08",baciaId:"guandu"},
+  {n:"Belford Roxo",lat:-22.76,lon:-43.39,ip:"10.10.60.09",baciaId:"guandu"},
+  {n:"Bom Jardim",lat:-22.15,lon:-42.41,ip:"10.10.60.10",baciaId:"paraiba"},
+  {n:"Bom Jesus do Itabapoana",lat:-21.14,lon:-41.67,ip:"10.10.60.11",baciaId:"paraiba"},
+  {n:"Cabo Frio",lat:-22.88,lon:-42.01,ip:"10.10.41.20",baciaId:"lagunas"},
+  {n:"Cachoeiras de Macacu",lat:-22.46,lon:-42.65,ip:"10.10.60.12",baciaId:"piratininga"},
+  {n:"Cambuci",lat:-21.56,lon:-41.90,ip:"10.10.60.13",baciaId:"paraiba"},
+  {n:"Campos dos Goytacazes",lat:-21.75,lon:-41.32,ip:"10.10.51.92",baciaId:"paraiba"},
+  {n:"Cantagalo",lat:-21.97,lon:-42.36,ip:"10.10.60.14",baciaId:"paraiba"},
+  {n:"Carapebus",lat:-22.21,lon:-41.65,ip:"10.10.60.15",baciaId:"macae"},
+  {n:"Comendador Levy Gasparian",lat:-22.03,lon:-43.20,ip:"10.10.60.16",baciaId:"paraiba"},
+  {n:"Carmo",lat:-21.92,lon:-42.61,ip:"10.10.60.17",baciaId:"paraiba"},
+  {n:"Casimiro de Abreu",lat:-22.48,lon:-42.20,ip:"10.10.60.18",baciaId:"sao_joao"},
+  {n:"Duque de Caxias",lat:-22.78,lon:-43.31,ip:"10.10.23.14",baciaId:"piratininga"},
+  {n:"Engenheiro Paulo de Frontin",lat:-22.54,lon:-43.68,ip:"10.10.60.19",baciaId:"guandu"},
+  {n:"Guapimirim",lat:-22.53,lon:-42.98,ip:"10.10.60.20",baciaId:"piratininga"},
+  {n:"Iguaba Grande",lat:-22.84,lon:-42.22,ip:"10.10.60.21",baciaId:"lagunas"},
+  {n:"Itaboraí",lat:-22.74,lon:-42.85,ip:"10.10.60.22",baciaId:"piratininga"},
+  {n:"Itaguaí",lat:-22.85,lon:-43.77,ip:"10.10.60.23",baciaId:"guandu"},
+  {n:"Italva",lat:-21.42,lon:-41.74,ip:"10.10.60.24",baciaId:"paraiba"},
+  {n:"Itaocara",lat:-21.47,lon:-42.07,ip:"10.10.60.25",baciaId:"paraiba"},
+  {n:"Itaperuna",lat:-21.20,lon:-41.88,ip:"10.10.60.26",baciaId:"paraiba"},
+  {n:"Itatiaia",lat:-22.49,lon:-44.56,ip:"10.10.60.27",baciaId:"guandu"},
+  {n:"Japeri",lat:-22.64,lon:-43.65,ip:"10.10.60.28",baciaId:"guandu"},
+  {n:"Laje do Muriaé",lat:-21.20,lon:-42.12,ip:"10.10.60.29",baciaId:"paraiba"},
+  {n:"Macaé",lat:-22.37,lon:-41.78,ip:"10.10.60.30",baciaId:"macae"},
+  {n:"Macuco",lat:-21.98,lon:-42.49,ip:"10.10.60.31",baciaId:"paraiba"},
+  {n:"Magé",lat:-22.65,lon:-43.04,ip:"10.10.60.32",baciaId:"piratininga"},
+  {n:"Mangaratiba",lat:-22.95,lon:-44.04,ip:"10.10.60.33",baciaId:"guandu"},
+  {n:"Maricá",lat:-22.91,lon:-42.81,ip:"10.10.60.34",baciaId:"piratininga"},
+  {n:"Mendes",lat:-22.52,lon:-43.73,ip:"10.10.60.35",baciaId:"guandu"},
+  {n:"Miguel Pereira",lat:-22.45,lon:-43.46,ip:"10.10.60.36",baciaId:"guandu"},
+  {n:"Miracema",lat:-21.41,lon:-42.19,ip:"10.10.60.37",baciaId:"paraiba"},
+  {n:"Natividade",lat:-21.04,lon:-41.97,ip:"10.10.60.38",baciaId:"paraiba"},
+  {n:"Nilópolis",lat:-22.81,lon:-43.41,ip:"10.10.60.39",baciaId:"guandu"},
+  {n:"Niterói",lat:-22.88,lon:-43.11,ip:"10.10.12.08",baciaId:"piratininga"},
+  {n:"Nova Friburgo",lat:-22.28,lon:-42.53,ip:"10.10.60.40",baciaId:"paraiba"},
+  {n:"Nova Iguaçu",lat:-22.75,lon:-43.45,ip:"10.10.22.12",baciaId:"guandu"},
+  {n:"Paracambi",lat:-22.61,lon:-43.71,ip:"10.10.60.41",baciaId:"guandu"},
+  {n:"Paraíba do Sul",lat:-22.16,lon:-43.29,ip:"10.10.60.42",baciaId:"paraiba"},
+  {n:"Paraty",lat:-23.22,lon:-44.71,ip:"10.10.60.43",baciaId:"lagunas"},
+  {n:"Paty do Alferes",lat:-22.42,lon:-43.43,ip:"10.10.60.44",baciaId:"guandu"},
+  {n:"Petrópolis",lat:-22.50,lon:-43.17,ip:"10.10.31.05",baciaId:"paraiba"},
+  {n:"Pinheiral",lat:-22.51,lon:-44.00,ip:"10.10.60.45",baciaId:"guandu"},
+  {n:"Piraí",lat:-22.62,lon:-43.89,ip:"10.10.60.46",baciaId:"guandu"},
+  {n:"Porciúncula",lat:-20.97,lon:-42.04,ip:"10.10.60.47",baciaId:"paraiba"},
+  {n:"Porto Real",lat:-22.41,lon:-44.28,ip:"10.10.60.48",baciaId:"guandu"},
+  {n:"Quatis",lat:-22.41,lon:-44.25,ip:"10.10.60.49",baciaId:"guandu"},
+  {n:"Queimados",lat:-22.71,lon:-43.55,ip:"10.10.60.50",baciaId:"guandu"},
+  {n:"Quissamã",lat:-22.10,lon:-41.47,ip:"10.10.60.51",baciaId:"macae"},
+  {n:"Resende",lat:-22.47,lon:-44.44,ip:"10.10.60.52",baciaId:"guandu"},
+  {n:"Rio Bonito",lat:-22.70,lon:-42.62,ip:"10.10.60.53",baciaId:"piratininga"},
+  {n:"Rio Claro",lat:-22.73,lon:-44.13,ip:"10.10.60.54",baciaId:"guandu"},
+  {n:"Rio das Ostras",lat:-22.52,lon:-41.94,ip:"10.10.60.55",baciaId:"macae"},
+  {n:"Rio de Janeiro",lat:-22.90,lon:-43.17,ip:"10.10.11.10",baciaId:"piratininga"},
+  {n:"Santa Maria Madalena",lat:-21.95,lon:-42.00,ip:"10.10.60.56",baciaId:"paraiba"},
+  {n:"Santo Antônio de Pádua",lat:-21.53,lon:-42.18,ip:"10.10.60.57",baciaId:"paraiba"},
+  {n:"São Fidélis",lat:-21.64,lon:-41.74,ip:"10.10.60.58",baciaId:"paraiba"},
+  {n:"São Francisco de Itabapoana",lat:-21.46,lon:-41.11,ip:"10.10.60.59",baciaId:"paraiba"},
+  {n:"São Gonçalo",lat:-22.82,lon:-43.05,ip:"10.10.60.60",baciaId:"piratininga"},
+  {n:"São João da Barra",lat:-21.64,lon:-41.05,ip:"10.10.60.61",baciaId:"paraiba"},
+  {n:"São João de Meriti",lat:-22.80,lon:-43.37,ip:"10.10.60.62",baciaId:"guandu"},
+  {n:"São José de Ubá",lat:-21.35,lon:-41.94,ip:"10.10.60.63",baciaId:"paraiba"},
+  {n:"São José do Vale do Rio Preto",lat:-22.15,lon:-43.15,ip:"10.10.60.64",baciaId:"paraiba"},
+  {n:"São Pedro da Aldeia",lat:-22.84,lon:-42.10,ip:"10.10.60.65",baciaId:"lagunas"},
+  {n:"São Sebastião do Alto",lat:-21.95,lon:-42.13,ip:"10.10.60.66",baciaId:"paraiba"},
+  {n:"Sapucaia",lat:-21.99,lon:-43.13,ip:"10.10.60.67",baciaId:"paraiba"},
+  {n:"Saquarema",lat:-22.91,lon:-42.50,ip:"10.10.60.68",baciaId:"lagunas"},
+  {n:"Seropédica",lat:-22.74,lon:-43.70,ip:"10.10.60.69",baciaId:"guandu"},
+  {n:"Silva Jardim",lat:-22.65,lon:-42.38,ip:"10.10.60.70",baciaId:"sao_joao"},
+  {n:"Sumidouro",lat:-22.04,lon:-42.67,ip:"10.10.60.71",baciaId:"paraiba"},
+  {n:"Tanguá",lat:-22.72,lon:-42.70,ip:"10.10.60.72",baciaId:"piratininga"},
+  {n:"Teresópolis",lat:-22.41,lon:-42.96,ip:"10.10.60.73",baciaId:"paraiba"},
+  {n:"Trajano de Moraes",lat:-22.06,lon:-42.06,ip:"10.10.60.74",baciaId:"paraiba"},
+  {n:"Três Rios",lat:-22.11,lon:-43.21,ip:"10.10.60.75",baciaId:"paraiba"},
+  {n:"Valença",lat:-22.25,lon:-43.70,ip:"10.10.60.76",baciaId:"paraiba"},
+  {n:"Varre-Sai",lat:-20.93,lon:-41.86,ip:"10.10.60.77",baciaId:"paraiba"},
+  {n:"Vassouras",lat:-22.40,lon:-43.66,ip:"10.10.60.78",baciaId:"guandu"},
+  {n:"Volta Redonda",lat:-22.52,lon:-44.10,ip:"10.10.60.79",baciaId:"guandu"}
+];
+
+const FRENTES_EQUIPES_TABELA = [
+  "Universidades e Pesquisadores de Campo (Urbanismo, Habitação e Ação Local)",
+  "CEMADEN / INPE (Monitoramento e Alerta Climático Nacional)",
+  "CRAS / CREAS (Assistência Social e Proteção Básica - Baixada Fluminense e RJ)",
+  "SUS / Vigilância em Saúde e Saneamento - Baixada Fluminense e RJ",
+  "NUPDECs – Núcleos Comunitários (92 Municípios - RJ)",
+  "Projeto Cidadão Sensor – Iniciativa Comunitária (Baixada Fluminense)",
+  "Bom Dia Comunidade / Iniciativa A Chave da Esperança – Baixada Fluminense",
+  "Cidadão – Participação Direta e Soberania Popular (Baixada Fluminense e RJ)"
+];
+
+function Ic({ d, size = 13, color = "currentColor", sw = 2 }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth={sw} strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0, display: 'inline-block', verticalAlign: 'middle' }}>
+      {Array.isArray(d) ? d.map((p, i) => <path key={i} d={p} />) : <path d={d} />}
+    </svg>
+  );
+}
+
+const IconDashboard = (p) => <Ic {...p} d={["M3 3h7v7H3z", "M14 3h7v7h-7z", "M14 14h7v7h-7z", "M3 14h7v7H3z"]} />;
+const IconRadar = (p) => <Ic {...p} d={["M12 2a10 10 0 1 0 10 10", "M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10", "M2 12h20"]} />;
+const IconMapaRaro = (p) => <Ic {...p} d={["M1 6v16l7-4 8 4 7-4V2l-7 4-8-4-7 4z", "M8 2v16", "M16 6v16"]} />;
+const IconVistoria = (p) => <Ic {...p} d={["M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z", "M14 2v6h6", "M16 13H8", "M16 17H8"]} />;
+const IconEstacao = (p) => <Ic {...p} d={["M12 2v20", "M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"]} />;
+const IconAlquino = (p) => <Ic {...p} d={["M12 2v4", "M12 18v4", "M4.93 4.93l2.83 2.83", "M16.24 16.24l2.83 2.83", "M2 12h4", "M18 12h4", "M4.93 19.07l2.83-2.83", "M16.24 7.76l2.83-2.83"]} />;
+const IconBalanca = (p) => <Ic {...p} d={["M12 3v18", "M5 8l7-5 7 5", "M5 8l-3 7a4 4 0 0 0 8 0L5 8zm14 0l-3 7a4 4 0 0 0 8 0l-5-7z"]} />;
+const IconInstalar = (p) => <Ic {...p} d={["M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4", "M7 10l5 5 5-5", "M12 15V3"]} />;
+const IconVideos = (p) => <Ic {...p} d={["M23 7l-7 5 7 5V7z", "M1 5h15v14H1z"]} />;
+const IconAdmin = (p) => <Ic {...p} d={["M12 2a4 4 0 0 0-4 4v2H6a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V10a2 2 0 0 0-2-2h-2V6a4 4 0 0 0-4-4z", "M12 11v6", "M12 9h.01"]} />;
+const IconSunMoon = (p) => <Ic {...p} d={["M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9z"]} />;
+const IconBolt = (p) => <Ic {...p} d={["M13 2L3 14h9l-1 8 10-12h-9l1-8z"]} />;
+const IconCamera = (p) => <Ic {...p} d={["M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z", "M12 17a4 4 0 1 0 0-8 4 4 0 0 0 0 8z"]} />;
+
+const MAPA_RARU_MUNICIPIOS = [
+  {id:'mesquita',name:'Mesquita · Rocha Sobrinho',lat:-22.7828,lon:-43.4314,zoom:12.6},{id:'angra',name:'Angra dos Reis',lat:-23.0067,lon:-44.3181,zoom:11},{id:'aperibe',name:'Aperibé',lat:-21.6228,lon:-42.1028,zoom:12},{id:'araruama',name:'Araruama',lat:-22.8728,lon:-42.3436,zoom:11},{id:'areal',name:'Areal',lat:-22.2308,lon:-43.1047,zoom:12},{id:'buzios',name:'Armação dos Búzios',lat:-22.7469,lon:-41.8817,zoom:12},{id:'arraial',name:'Arraial do Cabo',lat:-22.9661,lon:-42.0278,zoom:12},{id:'barra_pirai',name:'Barra do Piraí',lat:-22.4708,lon:-43.8264,zoom:11},{id:'barra_mansa',name:'Barra Mansa',lat:-22.5442,lon:-44.1714,zoom:11},{id:'belford',name:'Belford Roxo',lat:-22.7642,lon:-43.3994,zoom:12.5},{id:'bom_jardim',name:'Bom Jardim',lat:-22.1519,lon:-42.4208,zoom:11},{id:'bom_jesus',name:'Bom Jesus do Itabapoana',lat:-21.1336,lon:-41.6819,zoom:11},{id:'cabo_frio',name:'Cabo Frio',lat:-22.8783,lon:-42.0197,zoom:11.5},{id:'cachoeiras',name:'Cachoeiras de Macacu',lat:-22.4628,lon:-42.6528,zoom:11},{id:'cambuci',name:'Cambuci',lat:-21.575,lon:-41.9119,zoom:11},{id:'campos',name:'Campos dos Goytacazes',lat:-21.7622,lon:-41.3181,zoom:10.5},{id:'cantagalo',name:'Cantagalo',lat:-21.9828,lon:-42.3689,zoom:11},{id:'carapebus',name:'Carapebus',lat:-22.1858,lon:-41.6619,zoom:11},{id:'duque',name:'Duque de Caxias · São Bento',lat:-22.7856,lon:-43.3117,zoom:12},{id:'guapimirim',name:'Guapimirim',lat:-22.5328,lon:-42.9836,zoom:11},{id:'itaborai',name:'Itaboraí',lat:-22.7447,lon:-42.8619,zoom:11},{id:'itaguai',name:'Itaguaí',lat:-22.8619,lon:-43.7797,zoom:11},{id:'japeri',name:'Japeri',lat:-22.6425,lon:-43.6536,zoom:12},{id:'macae',name:'Macaé',lat:-22.3708,lon:-41.7869,zoom:11},{id:'mage',name:'Magé',lat:-22.6561,lon:-43.0406,zoom:11},{id:'mangaratiba',name:'Mangaratiba',lat:-22.9608,lon:-44.0408,zoom:11},{id:'marica',name:'Maricá',lat:-22.9197,lon:-42.8186,zoom:11},{id:'nilopolis',name:'Nilópolis',lat:-22.8083,lon:-43.4147,zoom:12.8},{id:'niteroi',name:'Niterói',lat:-22.8832,lon:-43.1034,zoom:12},{id:'nova_friburgo',name:'Nova Friburgo',lat:-22.2819,lon:-42.5311,zoom:11},{id:'nova_iguacu',name:'Nova Iguaçu',lat:-22.7592,lon:-43.4511,zoom:12.2},{id:'paracambi',name:'Paracambi',lat:-22.6083,lon:-43.7097,zoom:12},{id:'paraty',name:'Paraty',lat:-23.2228,lon:-44.7178,zoom:11},{id:'petropolis',name:'Petrópolis',lat:-22.505,lon:-43.1786,zoom:11.5},{id:'queimados',name:'Queimados',lat:-22.7147,lon:-43.5553,zoom:12},{id:'resende',name:'Resende',lat:-22.4686,lon:-44.4469,zoom:11},{id:'rio',name:'Rio de Janeiro',lat:-22.9068,lon:-43.1729,zoom:11},{id:'sao_goncalo',name:'São Gonçalo',lat:-22.8269,lon:-43.0539,zoom:11.5},{id:'sao_joao_meriti',name:'São João de Meriti',lat:-22.8047,lon:-43.3722,zoom:12.7},{id:'seropedica',name:'Seropédica',lat:-22.7408,lon:-43.7086,zoom:11},{id:'teresopolis',name:'Teresópolis',lat:-22.4119,lon:-42.9836,zoom:11},{id:'volta',name:'Volta Redonda',lat:-22.5231,lon:-44.1042,zoom:11.4}
+];
+
+const MAPA_RARU_BACIAS = [
+  {name:'Rio Sarapuí',color:'#0284c7',labelLat:-22.768,labelLon:-43.428,points:[[-22.738,-43.462],[-22.768,-43.428],[-22.796,-43.382],[-22.815,-43.325]]},
+  {name:'Rio Dona Eugênia',color:'#0d9488',labelLat:-22.784,labelLon:-43.434,points:[[-22.762,-43.448],[-22.7828,-43.4314],[-22.802,-43.402]]},
+  {name:'Serra do Mendanha -> São Bento',color:'#d97706',labelLat:-22.755,labelLon:-43.375,points:[[-22.828,-43.515],[-22.7828,-43.4314],[-22.755,-43.375],[-22.735,-43.342]]}
+];
+
+const MAPA_RARU_BANDAS = {
+  estavel: {label:'Estável / Limpo', badgeClass:'bg-emerald-500/20 text-emerald-200 border-emerald-400/40'},
+  pancadas: {label:'Pancadas / Instável', badgeClass:'bg-cyan-500/20 text-cyan-200 border-cyan-400/40'},
+  chuva_forte: {label:'Chuva Forte', badgeClass:'bg-blue-600/25 text-blue-200 border-blue-400/45'},
+  ventania: {label:'Ventania / Rajadas', badgeClass:'bg-orange-500/25 text-orange-200 border-orange-400/45'},
+  tempestade: {label:'Tempestade / Raio', badgeClass:'bg-purple-600/25 text-purple-200 border-purple-400/45'},
+  severo: {label:'Severo / Extremo', badgeClass:'bg-rose-600/25 text-rose-200 border-rose-400/45'}
+};
+
+function MapaRaruModule({ onGoToDashboard, showToast, userName, perfilVozId, onSyncCentralTelemetry, onOpenSarahChat }) {
+  const [selectedId, setSelectedId] = useState('mesquita');
+  const [viewState, setViewState] = useState({ lat: -22.7828, lon: -43.4314, zoom: 12.6 });
+  const [opacityPct, setOpacityPct] = useState(82);
+  const [climateBand, setClimateBand] = useState('pancadas');
+  const [preset, setPreset] = useState('auto');
+  const [playing, setPlaying] = useState(true);
+  const [frameIndex, setFrameIndex] = useState(0);
+  const [promptInput, setPromptInput] = useState('');
+  const [aiLog, setAiLog] = useState('SARAH (IA Unificada) monitorando o MAPA RARU em tempo real.');
+  const [centralConnected, setCentralConnected] = useState(false);
+
+  const [layers, setLayers] = useState({
+    clouds: true,
+    precipitation: true,
+    wind: true,
+    temperature: true,
+    lightningCape: true,
+    basins: true
+  });
+
+  const [live, setLive] = useState({
+    temp: null, hum: null, press: null, cloud: 58, rain: 0,
+    windKmh: 14, windDirDeg: 115, gust: 24, cape: 420,
+    usingFallback: true, u: 0, v: 0
+  });
+
+  const weatherCanvasRef = useRef(null);
+  const leafletRef = useRef(null);
+  const goesLayerRef = useRef(null);
+  const radarLayerRef = useRef(null);
+  const liveRef = useRef(live);
+  const layersRef = useRef(layers);
+  const viewRef = useRef(viewState);
+  const opacityRef = useRef(opacityPct / 100);
+  const bandRef = useRef(climateBand);
+  const frameRef = useRef(frameIndex);
+
+  liveRef.current = live;
+  layersRef.current = layers;
+  viewRef.current = viewState;
+  opacityRef.current = opacityPct / 100;
+  bandRef.current = climateBand;
+  frameRef.current = frameIndex;
+
+  const currentMun = MAPA_RARU_MUNICIPIOS.find(m => m.id === selectedId) || MAPA_RARU_MUNICIPIOS[0];
+
+  const computeUV = (s, d) => {
+    const vMag = (Number(s) || 0) / 3.6;
+    const rad = ((Number(d) || 0) * Math.PI) / 180;
+    return { u: -vMag * Math.sin(rad), v: -vMag * Math.cos(rad) };
+  };
+
+  const getGoesDate = () => {
+    const dt = new Date();
+    dt.setDate(dt.getDate() - 1);
+    return dt.toISOString().split('T')[0];
+  };
+
+  const latLonToCanvas = (lat, lon, w, h) => {
+    const v = viewRef.current;
+    const scale = Math.pow(2, v.zoom - 11.5) * 165;
+    const dx = (lon - v.lon) * scale * Math.cos((v.lat * Math.PI) / 180);
+    const dy = -(lat - v.lat) * scale;
+    return { x: w / 2 + dx, y: h / 2 + dy };
+  };
+
+  const renderOverlay = () => {
+    const wCv = weatherCanvasRef.current;
+    if (!wCv) return;
+    const container = wCv.parentElement;
+    const w = Math.max(1, container ? container.clientWidth : 600);
+    const h = Math.max(1, container ? container.clientHeight : 360);
+    const dpr = Math.min(window.devicePixelRatio || 1, 2);
+    wCv.width = Math.round(w * dpr);
+    wCv.height = Math.round(h * dpr);
+    const ctx = wCv.getContext('2d');
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    ctx.clearRect(0, 0, w, h);
+
+    const t = liveRef.current;
+    const op = opacityRef.current;
+
+    if (layersRef.current.basins) {
+      MAPA_RARU_BACIAS.forEach(b => {
+        ctx.strokeStyle = b.color;
+        ctx.lineWidth = 3;
+        ctx.beginPath();
+        b.points.forEach((pt, i) => {
+          const p = latLonToCanvas(pt[0], pt[1], w, h);
+          if (i === 0) ctx.moveTo(p.x, p.y);
+          else ctx.lineTo(p.x, p.y);
+        });
+        ctx.stroke();
+      });
+    }
+
+    if (layersRef.current.precipitation && t.rain != null && t.rain > 0.2) {
+      const grd = ctx.createRadialGradient(w / 2, h / 2, 8, w / 2, h / 2, 120);
+      grd.addColorStop(0, `rgba(37,99,235,${Math.min(0.55, t.rain / 14) * op})`);
+      grd.addColorStop(1, 'rgba(37,99,235,0)');
+      ctx.fillStyle = grd;
+      ctx.beginPath();
+      ctx.arc(w / 2, h / 2, 120, 0, Math.PI * 2);
+      ctx.fill();
+    }
+
+    if (layersRef.current.wind) {
+      const spd = Math.hypot(t.u, t.v);
+      const nx = spd > 0.01 ? t.u / spd : 1;
+      const ny = spd > 0.01 ? t.v / spd : 0;
+      for (let i = 0; i < 32; i++) {
+        const sx = (((i * 73) % 1000) / 1000) * w;
+        const sy = (((i * 137) % 1000) / 1000) * h;
+        const phase = ((frameRef.current * 9 + i * 7) % 36) - 18;
+        const x1 = sx + nx * phase;
+        const y1 = sy + ny * phase;
+        ctx.strokeStyle = `rgba(255,255,255,${0.82 * op})`;
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.moveTo(x1, y1);
+        ctx.lineTo(x1 + nx * 14, y1 + ny * 14);
+        ctx.stroke();
+      }
+    }
+
+    if (layersRef.current.lightningCape && t.cape > 300) {
+      ctx.fillStyle = 'rgba(250, 204, 21, 0.9)';
+      ctx.beginPath();
+      ctx.arc(w / 2 + 24, h / 2 - 24, 5, 0, Math.PI * 2);
+      ctx.fill();
+    }
+  };
+
+  const publicarNaSarahUnificada = (munObj, liveObj, bandAtual = bandRef.current) => {
+    const payload = {
+      source: 'MAPA_RARU',
+      municipio: munObj.name,
+      lat: munObj.lat,
+      lon: munObj.lon,
+      zoom: viewRef.current.zoom,
+      climateBand: bandAtual,
+      temp: liveObj.temp,
+      rain: liveObj.rain,
+      windKmh: liveObj.windKmh,
+      windDirDeg: liveObj.windDirDeg,
+      cape: liveObj.cape,
+      cloud: liveObj.cloud,
+      bacias: ['Rio Sarapuí', 'Rio Dona Eugênia', 'Serra do Mendanha -> São Bento'],
+      timestamp: new Date().toISOString()
+    };
+    window.__RARU_MAPA_STATE = payload;
+    window.dispatchEvent(new CustomEvent('raru:mapa-telemetry-sync', { detail: payload }));
+    if (typeof onSyncCentralTelemetry === 'function') {
+      onSyncCentralTelemetry(payload);
+    }
+  };
+
+  const fetchTelemetry = async (munObj = currentMun, simPreset = preset, bandAtual = climateBand) => {
+    try {
+      const url = `https://api.open-meteo.com/v1/forecast?latitude=${munObj.lat}&longitude=${munObj.lon}&current=temperature_2m,relative_humidity_2m,precipitation,pressure_msl,cloud_cover,wind_speed_10m,wind_direction_10m,wind_gusts_10m&hourly=precipitation,cape&forecast_days=1`;
+      const res = await fetch(url);
+      const data = await res.json();
+      const cur = data?.current || {};
+      const hr = data?.hourly || {};
+      const uv = computeUV(cur.wind_speed_10m, cur.wind_direction_10m);
+
+      let nextLive = {
+        temp: cur.temperature_2m ?? 26.5,
+        hum: cur.relative_humidity_2m ?? 72,
+        press: cur.pressure_msl ?? 1013,
+        cloud: cur.cloud_cover ?? 55,
+        rain: cur.precipitation ?? 0,
+        windKmh: cur.wind_speed_10m ?? 14,
+        windDirDeg: cur.wind_direction_10m ?? 115,
+        gust: cur.wind_gusts_10m ?? 22,
+        cape: (hr.cape && hr.cape[0]) || 420,
+        usingFallback: false,
+        u: uv.u,
+        v: uv.v
+      };
+
+      if (simPreset === 'limpo') nextLive = { ...nextLive, cloud: 12, rain: 0, windKmh: 9, gust: 14, cape: 120 };
+      else if (simPreset === 'nublado') nextLive = { ...nextLive, cloud: 88, rain: 0.2, windKmh: 12, gust: 18, cape: 280 };
+      else if (simPreset === 'chuva') nextLive = { ...nextLive, cloud: 92, rain: 6.8, windKmh: 18, gust: 32, cape: 520 };
+      else if (simPreset === 'rajadas') nextLive = { ...nextLive, cloud: 64, rain: 0.6, windKmh: 46, gust: 68, cape: 380, windDirDeg: 210 };
+      else if (simPreset === 'tempestade') nextLive = { ...nextLive, cloud: 96, rain: 18.5, windKmh: 28, gust: 62, cape: 1450 };
+
+      const uvFinal = computeUV(nextLive.windKmh, nextLive.windDirDeg);
+      nextLive.u = uvFinal.u;
+      nextLive.v = uvFinal.v;
+
+      setLive(nextLive);
+      publicarNaSarahUnificada(munObj, nextLive, bandAtual);
+    } catch (_) {
+      const fallbackLive = { ...liveRef.current, usingFallback: true };
+      setLive(fallbackLive);
+      publicarNaSarahUnificada(munObj, fallbackLive, bandAtual);
+    }
+  };
+
+  useEffect(() => {
+    const checkCentral = () => {
+      const ok = Boolean(window.RARU_AI && typeof window.RARU_AI.ask === 'function') || Boolean(window.__RARU_CENTRAL_LISTENING);
+      setCentralConnected(ok);
+    };
+    checkCentral();
+    window.addEventListener('raru:central-ready', checkCentral);
+    const id = setInterval(checkCentral, 4000);
+    return () => {
+      window.removeEventListener('raru:central-ready', checkCentral);
+      clearInterval(id);
+    };
+  }, []);
+
+  useEffect(() => {
+    let mounted = true;
+    const box = document.getElementById('raruMapaLeafletBox');
+    if (window.L && box && !leafletRef.current) {
+      const map = L.map(box, { zoomControl: true, crs: L.CRS.EPSG3857 }).setView([viewState.lat, viewState.lon], viewState.zoom);
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        maxZoom: 19,
+        attribution: '&copy; OpenStreetMap'
+      }).addTo(map);
+      const goes = L.tileLayer(
+        `https://gibs.earthdata.nasa.gov/wmts/epsg3857/best/GOES-East_ABI_Band13_Clean_Infrared/default/${getGoesDate()}/4km/{z}/{y}/{x}.png`,
+        { opacity: 0.28, maxZoom: 9, minZoom: 3, zIndex: 5, attribution: 'NASA GIBS' }
+      ).addTo(map);
+      const radar = L.tileLayer('', { opacity: 0, zIndex: 10, maxZoom: 12 }).addTo(map);
+      map.on('move', () => {
+        if (!mounted) return;
+        const c = map.getCenter();
+        setViewState({ lat: c.lat, lon: c.lng, zoom: map.getZoom() });
+      });
+      leafletRef.current = map;
+      goesLayerRef.current = goes;
+      radarLayerRef.current = radar;
+
+      fetch('https://api.rainviewer.com/public/weather-maps.json')
+        .then(r => r.json())
+        .then(rv => {
+          if (!mounted) return;
+          const past = rv?.radar?.past || [];
+          if (past.length > 0 && radarLayerRef.current) {
+            const lastQ = past[past.length - 1];
+            radarLayerRef.current.setUrl(`${rv.host}${lastQ.path}/512/{z}/{x}/{y}/2/1_1.png`);
+            radarLayerRef.current.setOpacity(0.52 * (opacityRef.current || 0.82));
+          }
+        })
+        .catch(() => {});
+    }
+
+    fetchTelemetry(currentMun, preset, climateBand);
+    return () => {
+      mounted = false;
+      if (leafletRef.current) {
+        try { leafletRef.current.remove(); } catch (_) {}
+        leafletRef.current = null;
+      }
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!playing) return;
+    const id = setInterval(() => {
+      setFrameIndex(prev => (prev + 1) % 12);
+    }, 2400);
+    return () => clearInterval(id);
+  }, [playing]);
+
+  useEffect(() => {
+    renderOverlay();
+  }, [selectedId, viewState, opacityPct, climateBand, frameIndex, layers, live]);
+
+  useEffect(() => {
+    if (goesLayerRef.current && leafletRef.current) {
+      goesLayerRef.current.setOpacity(0.28 * (opacityPct / 100) + 0.05);
+      if (layers.clouds && !leafletRef.current.hasLayer(goesLayerRef.current)) leafletRef.current.addLayer(goesLayerRef.current);
+      else if (!layers.clouds && leafletRef.current.hasLayer(goesLayerRef.current)) leafletRef.current.removeLayer(goesLayerRef.current);
+    }
+    if (radarLayerRef.current) {
+      radarLayerRef.current.setOpacity(layers.precipitation ? 0.52 * (opacityPct / 100) : 0);
+    }
+  }, [layers, opacityPct]);
+
+  const focarMunicipio = (id) => {
+    const alvo = MAPA_RARU_MUNICIPIOS.find(m => m.id === id);
+    if (!alvo) return;
+    setSelectedId(alvo.id);
+    setViewState({ lat: alvo.lat, lon: alvo.lon, zoom: alvo.zoom });
+    if (leafletRef.current) leafletRef.current.setView([alvo.lat, alvo.lon], alvo.zoom);
+    fetchTelemetry(alvo, preset, climateBand);
+  };
+
+  const consultarSarahUnificada = async (texto) => {
+    const q = String(texto || '').trim();
+    if (!q) return;
+    const lower = q.toLowerCase();
+    let alvoMun = currentMun;
+    const encontrado = MAPA_RARU_MUNICIPIOS.find(m => lower.includes(m.name.toLowerCase().split('·')[0].trim()));
+    if (encontrado) {
+      alvoMun = encontrado;
+      focarMunicipio(encontrado.id);
+    }
+    if (lower.includes('liga o vento')) setLayers(prev => ({ ...prev, wind: true }));
+    if (lower.includes('desliga o vento')) setLayers(prev => ({ ...prev, wind: false }));
+    if (lower.includes('liga a chuva')) setLayers(prev => ({ ...prev, precipitation: true }));
+    if (lower.includes('desliga a chuva')) setLayers(prev => ({ ...prev, precipitation: false }));
+
+    publicarNaSarahUnificada(alvoMun, liveRef.current, bandRef.current);
+
+    const ctx = {
+      app: 'MAPA_RARU',
+      municipio: alvoMun.name,
+      lat: alvoMun.lat,
+      lon: alvoMun.lon,
+      climateBand: bandRef.current,
+      live: liveRef.current,
+      layers: layersRef.current,
+      operator: userName || ''
+    };
+
+    try {
+      if (window.RARU_AI && typeof window.RARU_AI.ask === 'function') {
+        const resp = await window.RARU_AI.ask(q, ctx);
+        const finalText = typeof resp === 'string' ? resp : (resp?.answer || resp?.text);
+        if (finalText && finalText.trim()) {
+          const limpo = limparTextoParaFala(finalText);
+          setAiLog(limpo);
+          falarImitada(limpo, perfilVozId);
+          return;
+        }
+      }
+    } catch (_) {}
+
+    const replyFallback = await chamarSarahGroq([{ role: 'user', content: q }], alvoMun.name, 'Rocha Sobrinho', 'mapa_raru', ctx, userName);
+    setAiLog(replyFallback);
+    falarImitada(replyFallback, perfilVozId);
+  };
+
+  const bandCfg = MAPA_RARU_BANDAS[climateBand] || MAPA_RARU_BANDAS.pancadas;
+
+  return (
+    <div className="space-y-4 w-full max-w-5xl mx-auto font-mono">
+      <div className="cyber-card p-4 rounded-2xl border border-cyberCyan/50 space-y-3">
+        <div className="flex flex-wrap items-center justify-between gap-2 border-b border-cyberCyan/25 pb-2.5">
+          <div>
+            <h2 className="font-display text-xs sm:text-sm font-black text-cyberCyan uppercase tracking-wider">
+              MAPA RARU · INTERLIGADO À SARAH
+            </h2>
+            <p className="text-[10px] text-slate-300 mt-0.5">
+              {currentMun.name} ({currentMun.lat.toFixed(4)}, {currentMun.lon.toFixed(4)}) · WGS84 · 92 Municípios RJ
+            </p>
+          </div>
+          <div className="flex items-center gap-2 flex-wrap">
+            <span className={`text-[9px] px-2.5 py-1 rounded-full font-bold border ${centralConnected ? 'bg-emerald-500/20 text-emerald-300 border-emerald-400/40' : 'bg-cyberCyan/20 text-cyberCyan border-cyberCyan/40'}`}>
+              {centralConnected ? 'SARAH UNIFICADA ATIVA' : 'MONITORAMENTO SARAH'}
+            </span>
+            {typeof onOpenSarahChat === 'function' && (
+              <button type="button" onClick={onOpenSarahChat} className="cyber-button-solid text-[10px] py-1 px-2.5">
+                CHAT SARAH
+              </button>
+            )}
+            <button type="button" onClick={onGoToDashboard} className="cyber-button text-[10px] py-1 px-2.5">
+              PAINEL
+            </button>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 bg-void/90 p-2.5 rounded-xl border border-cyberCyan/30">
+          <select
+            value={selectedId}
+            onChange={(e) => focarMunicipio(e.target.value)}
+            className="bg-deepSpace text-white border border-cyberCyan/40 rounded-lg px-2.5 py-1.5 text-xs font-bold cursor-pointer"
+          >
+            {MAPA_RARU_MUNICIPIOS.map(m => (
+              <option key={m.id} value={m.id}>{m.name}</option>
+            ))}
+          </select>
+
+          <select
+            value={preset}
+            onChange={(e) => {
+              const nextP = e.target.value;
+              setPreset(nextP);
+              fetchTelemetry(currentMun, nextP, climateBand);
+            }}
+            className="bg-deepSpace text-cyan-200 border border-cyberCyan/40 rounded-lg px-2.5 py-1.5 text-xs font-bold cursor-pointer"
+          >
+            <option value="auto">Automático (Telemetria Real)</option>
+            <option value="limpo">Teste: Céu Limpo</option>
+            <option value="nublado">Teste: Nuvens Densas (88%)</option>
+            <option value="chuva">Teste: Chuva Ativa (6.8 mm/h)</option>
+            <option value="rajadas">Teste: Rajadas Fortes (46 km/h)</option>
+            <option value="tempestade">Teste: Tempestade / CAPE (18.5 mm/h)</option>
+          </select>
+
+          <button
+            type="button"
+            onClick={() => focarMunicipio('mesquita')}
+            className="cyber-button text-[10px]"
+          >
+            ROCHA SOBRINHO
+          </button>
+        </div>
+
+        <div className="relative w-full h-[300px] sm:h-[360px] rounded-2xl overflow-hidden border border-cyberCyan/50 bg-[#dcebf5]">
+          <div id="raruMapaLeafletBox" className="absolute inset-0 w-full h-full z-[1]"></div>
+          <canvas ref={weatherCanvasRef} className="absolute inset-0 w-full h-full z-[3] pointer-events-none"></canvas>
+          <div className="absolute top-2.5 left-2.5 z-[10] bg-void/90 border border-cyberCyan/40 rounded-lg px-2.5 py-1 text-[10px] text-white flex items-center gap-2">
+            <span className={`px-2 py-0.5 rounded-full border text-[9px] font-bold ${bandCfg.badgeClass}`}>{bandCfg.label}</span>
+            <button type="button" onClick={() => setPlaying(p => !p)} className="px-2 py-0.5 rounded bg-emerald-600 text-white font-bold cursor-pointer">
+              {playing ? 'Pausar' : 'Tocar'}
+            </button>
+            <span>+{String(frameIndex * 2).padStart(2, '0')}h00</span>
+          </div>
+        </div>
+
+        <div className="bg-void/90 border border-cyberCyan/30 rounded-xl p-2.5 space-y-2">
+          <div className="flex items-center justify-between text-[10px] font-bold text-slate-200">
+            <span>Opacidade das Camadas</span>
+            <span>{opacityPct}%</span>
+          </div>
+          <input
+            type="range"
+            min="25"
+            max="100"
+            value={opacityPct}
+            onChange={(e) => setOpacityPct(Number(e.target.value) || 82)}
+            className="w-full accent-cyberCyan cursor-pointer"
+          />
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-1.5">
+            {Object.entries(MAPA_RARU_BANDAS).map(([k, cfg]) => (
+              <button
+                key={k}
+                type="button"
+                onClick={() => {
+                  setClimateBand(k);
+                  publicarNaSarahUnificada(currentMun, liveRef.current, k);
+                }}
+                className={`px-2 py-1 rounded-lg text-[10px] font-bold text-left border cursor-pointer ${climateBand === k ? 'bg-slate-800 border-white text-white' : 'bg-deepSpace/80 border-slate-700 text-slate-300'}`}
+              >
+                {cfg.label}
+              </button>
+            ))}
+          </div>
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-1.5 text-[10px]">
+            {[
+              ['clouds', 'Nuvens / Satélite'],
+              ['precipitation', 'Chuva / Radar'],
+              ['wind', 'Vetores de Vento'],
+              ['temperature', 'Campo Térmico'],
+              ['lightningCape', 'CAPE / Descarga'],
+              ['basins', 'Bacias e Rios']
+            ].map(([key, label]) => (
+              <label key={key} className="flex items-center gap-2 px-2 py-1 rounded-lg bg-deepSpace/80 border border-slate-700/70 cursor-pointer text-slate-200">
+                <input
+                  type="checkbox"
+                  checked={Boolean(layers[key])}
+                  onChange={(e) => setLayers(prev => ({ ...prev, [key]: e.target.checked }))}
+                  className="accent-cyberCyan"
+                />
+                <span className="truncate">{label}</span>
+              </label>
+            ))}
+          </div>
+        </div>
+
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-center">
+          <div className="p-2 rounded-xl bg-void/90 border border-cyberCyan/30">
+            <div className="text-[9px] text-slate-400 uppercase">Temperatura</div>
+            <div className="text-xs font-black text-amber-300 mt-0.5">{live.temp != null ? `${live.temp.toFixed(1)} °C` : '-- °C'}</div>
+          </div>
+          <div className="p-2 rounded-xl bg-void/90 border border-cyberCyan/30">
+            <div className="text-[9px] text-slate-400 uppercase">Chuva</div>
+            <div className="text-xs font-black text-sky-300 mt-0.5">{live.rain != null ? `${live.rain.toFixed(1)} mm/h` : '-- mm/h'}</div>
+          </div>
+          <div className="p-2 rounded-xl bg-void/90 border border-cyberCyan/30">
+            <div className="text-[9px] text-slate-400 uppercase">Vento</div>
+            <div className="text-xs font-black text-emerald-300 mt-0.5">{`${Math.round(live.windKmh || 0)} km/h`}</div>
+          </div>
+          <div className="p-2 rounded-xl bg-void/90 border border-cyberCyan/30">
+            <div className="text-[9px] text-slate-400 uppercase">CAPE / Nuvens</div>
+            <div className="text-xs font-black text-cyberCyan mt-0.5">{`${Math.round(live.cape || 0)} J/kg · ${Math.round(live.cloud || 0)}%`}</div>
+          </div>
+        </div>
+
+        <div className="bg-void/90 border border-cyberCyan/35 rounded-xl p-2.5 space-y-2">
+          <div className="text-[9px] font-bold text-emerald-300 uppercase">SARAH · ACOMPANHAMENTO METEOROLÓGICO</div>
+          <p className="text-xs text-slate-200 leading-relaxed">{aiLog}</p>
+          <form
+            onSubmit={(e) => {
+              e.preventDefault();
+              if (!promptInput.trim()) return;
+              const txt = promptInput.trim();
+              setPromptInput('');
+              consultarSarahUnificada(txt);
+            }}
+            className="flex gap-2"
+          >
+            <input
+              type="text"
+              value={promptInput}
+              onChange={(e) => setPromptInput(e.target.value)}
+              placeholder="Perguntar à SARAH sobre este mapa ou município..."
+              className="flex-1 bg-deepSpace border border-cyberCyan/40 rounded-lg px-3 py-1.5 text-xs text-white"
+            />
+            <button type="submit" className="cyber-button-solid text-[10px]">
+              ENVIAR
+            </button>
+          </form>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function AutomatedObservatoryWidget({ customTickerText }) {
+  const [currentTime, setCurrentTime] = useState(new Date());
+  const [selectedMunicipality, setSelectedMunicipality] = useState(MUNICIPIOS_92[0]);
+  const [weatherData, setWeatherData] = useState({ temp: 27, humidity: 78, windSpeed: 12, weatherCode: 0, rain: 0 });
+  const [loading, setLoading] = useState(false);
+
+  const defaultAlerts = [
+    "SARU • MESQUITA: Monitoramento Comunitário Ativo em Rocha Sobrinho (Grupo A Chave da Esperança)",
+    "ALERTA: Chuva moderada prevista para a Baixada Fluminense nas próximas horas. Atenção às encostas e áreas baixas.",
+    "CIDADÃO SENSOR: Rede de voluntários mobilizada em 92 municípios do Estado do Rio de Janeiro.",
+    "HIDROLOGIA: Acompanhamento contínuo dos níveis dos rios e bacias hidrográficas."
+  ];
+  const displayAlerts = customTickerText && customTickerText.trim().length > 0 ? [customTickerText.trim()] : defaultAlerts;
+
+  useEffect(() => {
+    const t = setInterval(() => setCurrentTime(new Date()), 1000);
+    return () => clearInterval(t);
+  }, []);
+
+  useEffect(() => {
+    let active = true;
+    async function fetchWeather() {
+      setLoading(true);
+      try {
+        const res = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${selectedMunicipality.lat}&longitude=${selectedMunicipality.lon}&current=temperature_2m,relative_humidity_2m,weather_code,wind_speed_10m,precipitation&timezone=America%2FSao_Paulo`);
+        const data = await res.json();
+        if (active && data.current) {
+          setWeatherData({
+            temp: Math.round(data.current.temperature_2m ?? 27),
+            humidity: Math.round(data.current.relative_humidity_2m ?? 78),
+            windSpeed: Math.round(data.current.wind_speed_10m ?? 12),
+            weatherCode: data.current.weather_code ?? 0,
+            rain: data.current.precipitation ?? 0
+          });
+        }
+      } catch (e) {}
+      if (active) setLoading(false);
+    }
+    fetchWeather();
+    return () => { active = false; };
+  }, [selectedMunicipality]);
+
+  const timeString = currentTime.toLocaleTimeString('pt-BR', { timeZone: 'America/Sao_Paulo', hour: '2-digit', minute: '2-digit', second: '2-digit' });
+  const dateString = currentTime.toLocaleDateString('pt-BR', { timeZone: 'America/Sao_Paulo', weekday: 'short', day: '2-digit', month: 'short', year: 'numeric' });
+  const getWeatherDesc = (code, rain) => {
+    if (rain > 2) return "CHUVA INTENSA";
+    if (rain > 0) return "CHUVA FRACA / GAROA";
+    if (code >= 80) return "PANCADAS DE CHUVA";
+    if (code >= 50) return "GAROA / NEVOEIRO";
+    if (code >= 2) return "NUBLADO / PARCIAL";
+    return "CÉU LIMPO / ESTÁVEL";
+  };
+  const weatherDesc = getWeatherDesc(weatherData.weatherCode, weatherData.rain);
+
+  return (
+    <div className="w-full space-y-2 mb-3 font-mono">
+      <div className="bg-void/95 border border-cyberCyan/60 rounded-xl overflow-hidden py-1.5 flex items-center shadow-lg">
+        <div className="bg-cyberCyan text-void font-extrabold text-[9px] px-2.5 py-0.5 ml-1.5 rounded uppercase tracking-wider shrink-0 z-10 flex items-center gap-1">
+          <IconBolt size={11} color="#030712" />
+          <span>AVISO</span>
+        </div>
+        <div className="overflow-hidden flex-1 whitespace-nowrap relative">
+          <div className="inline-block animate-[tickerScroll_24s_linear_infinite] hover:[animation-play-state:paused] text-[10px] text-cyberCyan font-bold tracking-wide">
+            {displayAlerts.map((msg, i) => (
+              <span key={i} className="mx-8">{msg}</span>
+            ))}
+            {displayAlerts.map((msg, i) => (
+              <span key={'dup-'+i} className="mx-8">{msg}</span>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      <div className="bg-gradient-to-r from-deepSpace/95 via-commandPanel/95 to-deepSpace/95 border border-cyberCyan/40 rounded-xl p-2.5 flex flex-wrap items-center justify-between gap-2 shadow-inner">
+        <div className="flex items-center gap-2 bg-void/90 px-2.5 py-1.5 rounded-lg border border-cyberCyan/30">
+          <div className="flex flex-col">
+            <span className="text-[11px] font-extrabold text-white tracking-wider">{timeString}</span>
+            <span className="text-[8px] text-slate-400 uppercase">{dateString} • BRT</span>
+          </div>
+        </div>
+
+        <div className="flex items-center gap-1.5 flex-1 min-w-[160px] max-w-[240px]">
+          <select
+            value={selectedMunicipality.n}
+            onChange={(e) => {
+              const found = MUNICIPIOS_92.find(m => m.n === e.target.value);
+              if (found) setSelectedMunicipality(found);
+            }}
+            className="w-full bg-void/95 text-white border border-cyberCyan/40 rounded-lg px-2 py-1 text-[10px] font-bold"
+          >
+            {MUNICIPIOS_92.map(m => (
+              <option key={m.n} value={m.n}>{m.n} ({m.lat.toFixed(2)}, {m.lon.toFixed(2)})</option>
+            ))}
+          </select>
+        </div>
+
+        <div className="flex items-center gap-2.5 bg-void/90 px-2.5 py-1.5 rounded-lg border border-cyberCyan/30">
+          <div className="flex flex-col">
+            <div className="flex items-center gap-1.5">
+              <span className="text-xs font-black text-white">{loading ? "..." : `${weatherData.temp}°C`}</span>
+              <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-cyberCyan/20 text-cyberCyan border border-cyberCyan/40">
+                {weatherDesc}
+              </span>
+            </div>
+            <span className="text-[8px] text-slate-400">
+              Umid: {weatherData.humidity}% • Vento: {weatherData.windSpeed} km/h
+            </span>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function RadarMeteorologicoModule({ perfilVozId }) {
+  const [selectedMun, setSelectedMun] = useState(MUNICIPIOS_92[0]);
+  const [telemetry, setTelemetry] = useState(null);
+  const [radarUrl, setRadarUrl] = useState(null);
+  const [isLoading, setIsLoading] = useState(false);
+
+  const loadData = async (mun) => {
+    setIsLoading(true);
+    try {
+      const res = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${mun.lat}&longitude=${mun.lon}&current=temperature_2m,relative_humidity_2m,precipitation,rain,weather_code,wind_speed_10m,wind_direction_10m,pressure_msl&hourly=precipitation_probability&timezone=America%2FSao_Paulo&forecast_days=1`);
+      const d = await res.json();
+      setTelemetry(d.current);
+    } catch (e) {}
+
+    try {
+      const rv = await fetch('https://api.rainviewer.com/public/weather-maps.json');
+      const rvData = await rv.json();
+      const past = rvData.radar?.past;
+      if (past && past.length > 0) {
+        const lastFrame = past[past.length - 1];
+        const z = 7;
+        const x = Math.floor(((mun.lon + 180) / 360) * Math.pow(2, z));
+        const latRad = (mun.lat * Math.PI) / 180;
+        const y = Math.floor(((1 - Math.log(Math.tan(latRad) + 1 / Math.cos(latRad)) / Math.PI) / 2) * Math.pow(2, z));
+        setRadarUrl(`${rvData.host}${lastFrame.path}/256/${z}/${x}/${y}/2/1_1.png`);
+      }
+    } catch (e) {}
+    setIsLoading(false);
+  };
+
+  useEffect(() => { loadData(selectedMun); }, [selectedMun]);
+
+  return (
+    <div className="space-y-4 font-mono w-full max-w-4xl mx-auto">
+      <div className="bg-deepSpace/95 border border-cyberCyan/50 p-4 rounded-2xl shadow-2xl space-y-4">
+        <div className="flex flex-wrap justify-between items-center gap-2 border-b border-cyberCyan/20 pb-3">
+          <div>
+            <h2 className="font-display text-sm sm:text-base font-black text-cyberCyan uppercase tracking-wider">
+              RADAR METEOROLÓGICO • 92 MUNICÍPIOS RJ
+            </h2>
+            <p className="text-[10px] text-slate-400">Open-Meteo e RainViewer • {selectedMun.n}</p>
+          </div>
+          <select
+            value={selectedMun.n}
+            onChange={(e) => {
+              const m = MUNICIPIOS_92.find(x => x.n === e.target.value);
+              if (m) setSelectedMun(m);
+            }}
+            className="bg-void text-white border border-cyberCyan/50 rounded-xl px-3 py-1.5 text-xs font-bold"
+          >
+            {MUNICIPIOS_92.map(m => <option key={m.n} value={m.n}>{m.n}</option>)}
+          </select>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="relative h-64 bg-void rounded-xl overflow-hidden border border-cyberCyan/40 flex flex-col items-center justify-center">
+            {radarUrl ? (
+              <img src={radarUrl} alt="Radar" className="w-full h-full object-cover opacity-80" />
+            ) : (
+              <div className="text-xs text-slate-400">{isLoading ? 'Carregando radar...' : 'Camada de radar indisponível no momento'}</div>
+            )}
+            <div className="absolute inset-0 pointer-events-none flex items-center justify-center">
+              <div className="w-40 h-40 rounded-full border border-cyberCyan/30 relative">
+                <div className="w-1/2 h-0.5 bg-gradient-to-r from-transparent to-cyberCyan/80 origin-left absolute top-1/2 left-1/2 animate-radar-sweep"></div>
+              </div>
+            </div>
+          </div>
+
+          <div className="bg-void/90 p-4 rounded-xl border border-cyberCyan/30 flex flex-col justify-between space-y-3">
+            <div className="grid grid-cols-2 gap-2 text-center">
+              <div className="bg-deepSpace/80 p-2.5 rounded-lg border border-white/10">
+                <span className="text-[9px] text-slate-400 block">TEMPERATURA</span>
+                <span className="text-base font-black text-amber-400">{telemetry ? `${telemetry.temperature_2m}°C` : '--'}</span>
+              </div>
+              <div className="bg-deepSpace/80 p-2.5 rounded-lg border border-white/10">
+                <span className="text-[9px] text-slate-400 block">UMIDADE</span>
+                <span className="text-base font-black text-cyberCyan">{telemetry ? `${telemetry.relative_humidity_2m}%` : '--'}</span>
+              </div>
+              <div className="bg-deepSpace/80 p-2.5 rounded-lg border border-white/10">
+                <span className="text-[9px] text-slate-400 block">CHUVA</span>
+                <span className="text-base font-black text-blue-400">{telemetry ? `${telemetry.precipitation} mm` : '--'}</span>
+              </div>
+              <div className="bg-deepSpace/80 p-2.5 rounded-lg border border-white/10">
+                <span className="text-[9px] text-slate-400 block">VENTO</span>
+                <span className="text-base font-black text-emerald-400">{telemetry ? `${telemetry.wind_speed_10m} km/h` : '--'}</span>
+              </div>
+            </div>
+
+            <button
+              type="button"
+              onClick={() => {
+                if (!telemetry) return;
+                falarImitada(`Em ${selectedMun.n}, temperatura de ${telemetry.temperature_2m} graus, umidade de ${telemetry.relative_humidity_2m} por cento e vento a ${telemetry.wind_speed_10m} quilômetros por hora.`, perfilVozId);
+              }}
+              className="cyber-button-solid text-xs w-full"
+            >
+              OUVIR BOLETIM DO MUNICÍPIO
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// =====================================================================
+// VISTORIA E REPARO DA CÂMERA (DESBLOQUEIO, DIAGNÓSTICO E CAPTURA)
+// =====================================================================
+function VistoriaLaudoModule({ showToast }) {
+  const [frenteSelecionada, setFrenteSelecionada] = useState(FRENTES_EQUIPES_TABELA[0]);
+  const [municipio, setMunicipio] = useState("Mesquita");
+  const [bairro, setBairro] = useState("Rocha Sobrinho");
+  const [local, setLocal] = useState("");
+  const [tipoRisco, setTipoRisco] = useState("Inundação / Alagamento / Enxurrada");
+  const [nivel, setNivel] = useState("MODERADO");
+  const [relato, setRelato] = useState("");
+  const [laudoHash, setLaudoHash] = useState("");
+  const [laudosSalvos, setLaudosSalvos] = useState(() => {
+    try { return JSON.parse(localStorage.getItem('raru_laudos_v11') || '[]'); } catch (e) { return []; }
+  });
+
+  // Estados de reparo e operação da câmera
+  const [cameraActive, setCameraActive] = useState(false);
+  const [cameraStarting, setCameraStarting] = useState(false);
+  const [facingMode, setFacingMode] = useState("environment");
+  const [cameraStatusMsg, setCameraStatusMsg] = useState("Câmera pronta para ativação ou reparo.");
+  const [cameraDiagReport, setCameraDiagReport] = useState([]);
+  const [capturedPhoto, setCapturedPhoto] = useState(null);
+
+  const videoRef = useRef(null);
+  const streamRef = useRef(null);
+  const photoCanvasRef = useRef(null);
+
+  const pararStreamCamera = () => {
+    try {
+      if (streamRef.current && typeof streamRef.current.getTracks === 'function') {
+        streamRef.current.getTracks().forEach(trk => {
+          try { trk.stop(); } catch (_) {}
+        });
+      }
+      streamRef.current = null;
+      if (videoRef.current) {
+        videoRef.current.srcObject = null;
+      }
+    } catch (_) {}
+    setCameraActive(false);
+  };
+
+  const diagnosticarERepararCamera = async () => {
+    const checks = [];
+    const isSecure = Boolean(window.isSecureContext || location.protocol === 'https:' || location.hostname === 'localhost' || location.hostname === '127.0.0.1');
+    checks.push(`Contexto seguro (HTTPS/Localhost): ${isSecure ? 'OK' : 'BLOQUEADO (requer HTTPS)'}`);
+
+    const hasGetUserMedia = Boolean(navigator.mediaDevices && typeof navigator.mediaDevices.getUserMedia === 'function');
+    checks.push(`API getUserMedia disponível: ${hasGetUserMedia ? 'OK' : 'INDISPONÍVEL'}`);
+
+    let permState = 'desconhecida';
+    try {
+      if (navigator.permissions && typeof navigator.permissions.query === 'function') {
+        const p = await navigator.permissions.query({ name: 'camera' });
+        permState = p.state || 'desconhecida';
+      }
+    } catch (_) {}
+    checks.push(`Permissão registrada no navegador: ${permState}`);
+
+    let devicesCount = 0;
+    try {
+      if (hasGetUserMedia && typeof navigator.mediaDevices.enumerateDevices === 'function') {
+        const devs = await navigator.mediaDevices.enumerateDevices();
+        devicesCount = devs.filter(d => d.kind === 'videoinput').length;
+      }
+    } catch (_) {}
+    checks.push(`Câmeras detectadas no dispositivo: ${devicesCount}`);
+
+    setCameraDiagReport(checks);
+    pararStreamCamera();
+    await destravarEIniciarCamera(facingMode);
+  };
+
+  const destravarEIniciarCamera = async (modoAlvo = facingMode) => {
+    setCameraStarting(true);
+    setCameraStatusMsg("Destravando e iniciando fluxo de vídeo...");
+    pararStreamCamera();
+
+    if (!navigator.mediaDevices || typeof navigator.mediaDevices.getUserMedia !== 'function') {
+      setCameraStarting(false);
+      setCameraStatusMsg("Navegador sem suporte a getUserMedia. Use o seletor de foto abaixo para anexar imagem.");
+      showToast("API de câmera indisponível; use anexar foto.", "warning");
+      return;
+    }
+
+    const tentativas = [
+      { video: { facingMode: { ideal: modoAlvo }, width: { ideal: 1280 }, height: { ideal: 720 } }, audio: false },
+      { video: { facingMode: modoAlvo }, audio: false },
+      { video: true, audio: false }
+    ];
+
+    let streamObtido = null;
+    let ultimoErro = null;
+
+    for (const constraints of tentativas) {
+      try {
+        streamObtido = await navigator.mediaDevices.getUserMedia(constraints);
+        if (streamObtido) break;
+      } catch (err) {
+        ultimoErro = err;
+      }
+    }
+
+    if (!streamObtido) {
+      setCameraStarting(false);
+      const errName = ultimoErro?.name || 'Erro';
+      let orientacao = "Verifique a permissão de câmera no navegador e tente novamente.";
+      if (errName === 'NotAllowedError' || errName === 'PermissionDeniedError') {
+        orientacao = "Permissão negada no navegador. Libere a câmera no cadeado/configurações do site ou use anexar foto.";
+      } else if (errName === 'NotReadableError' || errName === 'TrackStartError') {
+        orientacao = "Câmera em uso por outro app ou travada no sistema. Feche outros apps e toque em REPARAR CÂMERA.";
+      } else if (errName === 'NotFoundError' || errName === 'DevicesNotFoundError') {
+        orientacao = "Nenhuma câmera encontrada no dispositivo. Use anexar foto.";
+      }
+      setCameraStatusMsg(`Câmera bloqueada (${errName}): ${orientacao}`);
+      showToast(`Câmera bloqueada (${errName}).`, "warning");
+      return;
+    }
+
+    try {
+      streamRef.current = streamObtido;
+      if (videoRef.current) {
+        videoRef.current.muted = true;
+        videoRef.current.playsInline = true;
+        videoRef.current.srcObject = streamObtido;
+        await videoRef.current.play();
+      }
+      setCameraActive(true);
+      setCameraStarting(false);
+      setCameraStatusMsg("Câmera desbloqueada e ativa.");
+      showToast("Câmera desbloqueada com sucesso.", "success");
+    } catch (playErr) {
+      setCameraStarting(false);
+      setCameraStatusMsg("Fluxo obtido, mas reprodução bloqueada: toque em REPARAR CÂMERA.");
+      showToast("Falha ao reproduzir vídeo da câmera.", "warning");
+    }
+  };
+
+  const capturarFotoDaCamera = () => {
+    try {
+      if (!videoRef.current || !photoCanvasRef.current) return;
+      const v = videoRef.current;
+      const cv = photoCanvasRef.current;
+      const w = v.videoWidth || 640;
+      const h = v.videoHeight || 480;
+      cv.width = w;
+      cv.height = h;
+      const ctx = cv.getContext('2d');
+      ctx.drawImage(v, 0, 0, w, h);
+      const dataUrl = cv.toDataURL('image/jpeg', 0.85);
+      setCapturedPhoto(dataUrl);
+      setCameraStatusMsg("Foto capturada para o registro de vistoria.");
+      showToast("Foto capturada.", "success");
+    } catch (_) {
+      showToast("Não foi possível capturar o quadro.", "warning");
+    }
+  };
+
+  const handleFileFallback = (e) => {
+    const file = e.target.files && e.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = () => {
+      setCapturedPhoto(String(reader.result || ''));
+      setCameraStatusMsg(`Imagem anexada: ${file.name}`);
+      showToast("Imagem anexada à vistoria.", "success");
+    };
+    reader.readAsDataURL(file);
+  };
+
+  useEffect(() => {
+    return () => pararStreamCamera();
+  }, []);
+
+  const gerarLaudo = async (e) => {
+    e.preventDefault();
+    if (!relato.trim()) return showToast("Descreva a ocorrência antes de registrar.", "warning");
+    const raw = JSON.stringify({
+      frenteSelecionada, municipio, bairro, local, tipoRisco, nivel, relato,
+      hasPhoto: Boolean(capturedPhoto), ts: Date.now()
+    });
+    const hash = await calcularSHA256(raw);
+    const registro = {
+      id: Date.now(), frenteSelecionada, municipio, bairro, local, tipoRisco, nivel, relato,
+      foto: capturedPhoto || null, hash, data: new Date().toLocaleString('pt-BR')
+    };
+    const next = [registro, ...laudosSalvos];
+    setLaudosSalvos(next);
+    setLaudoHash(hash);
+    try { localStorage.setItem('raru_laudos_v11', JSON.stringify(next)); } catch (e) {}
+    showToast("Registro de vistoria salvo com hash SHA-256.", "success");
+    setRelato("");
+  };
+
+  return (
+    <div className="space-y-4 font-mono w-full max-w-4xl mx-auto">
+      <div className="cyber-card p-5 rounded-2xl border border-cyberCyan/50 space-y-4">
+        <div className="flex flex-wrap items-center justify-between gap-2 border-b border-cyberCyan/20 pb-3">
+          <div className="flex items-center gap-2">
+            <IconCamera size={18} color="#00F2FE" />
+            <h2 className="font-display text-sm sm:text-base font-black text-cyberCyan uppercase">
+              VISTORIA DE CAMPO E REPARO DE CÂMERA
+            </h2>
+          </div>
+          <span className={`text-[9px] px-2.5 py-1 rounded-full font-bold border ${cameraActive ? 'bg-emerald-500/20 text-emerald-300 border-emerald-400/40' : 'bg-amber-500/20 text-amber-300 border-amber-400/40'}`}>
+            {cameraActive ? 'CÂMERA ATIVA' : 'CÂMERA EM ESPERA / REPARO'}
+          </span>
+        </div>
+
+        {/* Bloco de desbloqueio, reparo e visualização da câmera */}
+        <div className="bg-void/95 border border-cyberCyan/40 rounded-xl p-3 space-y-3">
+          <div className="flex flex-wrap items-center gap-2">
+            <button
+              type="button"
+              onClick={() => destravarEIniciarCamera(facingMode)}
+              disabled={cameraStarting}
+              className="cyber-button-solid text-[10px]"
+            >
+              {cameraStarting ? 'DESTRAVANDO...' : 'DESBLOQUEAR CÂMERA'}
+            </button>
+            <button
+              type="button"
+              onClick={diagnosticarERepararCamera}
+              className="cyber-button text-[10px]"
+            >
+              REPARAR CÂMERA
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                const nextMode = facingMode === 'environment' ? 'user' : 'environment';
+                setFacingMode(nextMode);
+                if (cameraActive) destravarEIniciarCamera(nextMode);
+              }}
+              className="cyber-button text-[10px]"
+            >
+              TROCAR LENTE ({facingMode === 'environment' ? 'TRASEIRA' : 'FRONTAL'})
+            </button>
+            {cameraActive && (
+              <>
+                <button type="button" onClick={capturarFotoDaCamera} className="cyber-button-solid text-[10px]">
+                  CAPTURAR FOTO
+                </button>
+                <button type="button" onClick={pararStreamCamera} className="cyber-button-danger text-[10px]">
+                  DESLIGAR CÂMERA
+                </button>
+              </>
+            )}
+            <label className="cyber-button text-[10px] cursor-pointer">
+              <span>ANEXAR FOTO</span>
+              <input type="file" accept="image/*" onChange={handleFileFallback} className="hidden" />
+            </label>
+          </div>
+
+          <div className="text-[11px] text-cyan-200 font-bold">{cameraStatusMsg}</div>
+
+          {cameraDiagReport.length > 0 && (
+            <div className="bg-deepSpace/90 border border-cyberCyan/30 rounded-lg p-2.5 text-[10px] text-slate-200 space-y-1">
+              <div className="text-cyberCyan font-bold uppercase">DIAGNÓSTICO DE REPARO DA CÂMERA:</div>
+              {cameraDiagReport.map((line, idx) => (
+                <div key={idx}>• {line}</div>
+              ))}
+            </div>
+          )}
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div className="relative h-52 bg-black rounded-xl overflow-hidden border border-cyberCyan/30 flex items-center justify-center">
+              <video ref={videoRef} playsInline muted className={`w-full h-full object-cover ${cameraActive ? 'block' : 'hidden'}`} />
+              {!cameraActive && (
+                <div className="text-[11px] text-slate-400 text-center px-4">
+                  Toque em DESBLOQUEAR CÂMERA ou REPARAR CÂMERA para abrir o visor.
+                </div>
+              )}
+            </div>
+            <div className="relative h-52 bg-black rounded-xl overflow-hidden border border-cyberCyan/30 flex items-center justify-center">
+              {capturedPhoto ? (
+                <img src={capturedPhoto} alt="Captura de vistoria" className="w-full h-full object-cover" />
+              ) : (
+                <div className="text-[11px] text-slate-400 text-center px-4">
+                  Nenhuma foto capturada ainda.
+                </div>
+              )}
+            </div>
+          </div>
+          <canvas ref={photoCanvasRef} className="hidden" />
+        </div>
+
+        <form onSubmit={gerarLaudo} className="space-y-3">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+            <div>
+              <label className="text-[10px] text-slate-400 font-bold block mb-1">FRENTE / EQUIPE</label>
+              <select value={frenteSelecionada} onChange={(e) => setFrenteSelecionada(e.target.value)} className="w-full bg-void text-white border border-cyberCyan/40 rounded-lg p-2 text-xs">
+                {FRENTES_EQUIPES_TABELA.map((f, i) => <option key={i} value={f}>{f}</option>)}
+              </select>
+            </div>
+            <div>
+              <label className="text-[10px] text-slate-400 font-bold block mb-1">NÍVEL DE RISCO</label>
+              <select value={nivel} onChange={(e) => setNivel(e.target.value)} className="w-full bg-void text-white border border-cyberCyan/40 rounded-lg p-2 text-xs font-bold">
+                <option value="BAIXO">BAIXO</option>
+                <option value="MODERADO">MODERADO</option>
+                <option value="ALTO">ALTO</option>
+                <option value="CRÍTICO">CRÍTICO</option>
+              </select>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+            <div>
+              <label className="text-[10px] text-slate-400 font-bold block mb-1">MUNICÍPIO</label>
+              <select value={municipio} onChange={(e) => setMunicipio(e.target.value)} className="w-full bg-void text-white border border-cyberCyan/40 rounded-lg p-2 text-xs">
+                {MUNICIPIOS_92.map(m => <option key={m.n} value={m.n}>{m.n}</option>)}
+              </select>
+            </div>
+            <div>
+              <label className="text-[10px] text-slate-400 font-bold block mb-1">BAIRRO / SETOR</label>
+              <input type="text" value={bairro} onChange={(e) => setBairro(e.target.value)} className="w-full bg-void text-white border border-cyberCyan/40 rounded-lg p-2 text-xs" />
+            </div>
+            <div>
+              <label className="text-[10px] text-slate-400 font-bold block mb-1">PONTO / REFERÊNCIA</label>
+              <input type="text" value={local} onChange={(e) => setLocal(e.target.value)} placeholder="Ex: Rua, ponte, encosta" className="w-full bg-void text-white border border-cyberCyan/40 rounded-lg p-2 text-xs" />
+            </div>
+          </div>
+
+          <div>
+            <label className="text-[10px] text-slate-400 font-bold block mb-1">TIPO DE OCORRÊNCIA</label>
+            <input type="text" value={tipoRisco} onChange={(e) => setTipoRisco(e.target.value)} className="w-full bg-void text-white border border-cyberCyan/40 rounded-lg p-2 text-xs" />
+          </div>
+
+          <div>
+            <label className="text-[10px] text-slate-400 font-bold block mb-1">RELATO DE CAMPO</label>
+            <textarea rows="3" value={relato} onChange={(e) => setRelato(e.target.value)} placeholder="Descreva a situação observada..." className="w-full bg-void text-white border border-cyberCyan/40 rounded-lg p-2.5 text-xs" />
+          </div>
+
+          <button type="submit" className="cyber-button-solid text-xs w-full">SALVAR REGISTRO E GERAR HASH</button>
+        </form>
+
+        {laudoHash && (
+          <div className="bg-emerald-950/60 border border-emerald-500/40 rounded-lg p-2.5 text-[10px] text-emerald-300 break-all">
+            SHA-256: {laudoHash}
+          </div>
+        )}
+
+        <div className="space-y-2 max-h-60 overflow-y-auto pt-2">
+          {laudosSalvos.map(item => (
+            <div key={item.id} className="bg-void/90 border border-white/10 p-3 rounded-xl text-xs space-y-1">
+              <div className="flex justify-between items-center font-bold text-cyberCyan">
+                <span>{item.municipio} — {item.bairro}</span>
+                <span className="text-[10px] text-amber-300">{item.nivel}</span>
+              </div>
+              <p className="text-slate-200">{item.relato}</p>
+              <div className="text-[9px] text-slate-400">{item.data} • {item.frenteSelecionada}</div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function EstacaoSobrevivenciaModule({ showToast, userName, setUserName }) {
+  const [coords, setCoords] = useState(null);
+  const [loadingGps, setLoadingGps] = useState(false);
+  const [nomeInput, setNomeInput] = useState(userName || "");
+
+  const capturarGps = () => {
+    setLoadingGps(true);
+    if (!navigator.geolocation) {
+      setLoadingGps(false);
+      return showToast("Geolocalização não disponível neste navegador.", "warning");
+    }
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        setCoords({ lat: pos.coords.latitude.toFixed(6), lon: pos.coords.longitude.toFixed(6), acc: Math.round(pos.coords.accuracy) });
+        setLoadingGps(false);
+        showToast("Coordenadas GPS capturadas com sucesso.", "success");
+      },
+      () => {
+        setLoadingGps(false);
+        showToast("Não foi possível obter a localização GPS.", "warning");
+      },
+      { enableHighAccuracy: true, timeout: 10000 }
+    );
+  };
+
+  return (
+    <div className="space-y-4 font-mono w-full max-w-4xl mx-auto">
+      <div className="cyber-card p-5 rounded-2xl border border-cyberCyan/50 space-y-4">
+        <h2 className="font-display text-sm sm:text-base font-black text-cyberCyan uppercase">ESTAÇÃO DE APOIO E COORDENADAS</h2>
+
+        <div className="bg-void/90 p-3.5 rounded-xl border border-cyberCyan/30 space-y-2">
+          <label className="text-[10px] text-cyberCyan font-bold block uppercase">IDENTIFICAÇÃO NA CONVERSA (DINÂMICA POR PESSOA)</label>
+          <div className="flex gap-2">
+            <input
+              type="text"
+              value={nomeInput}
+              onChange={(e) => setNomeInput(e.target.value)}
+              placeholder="Digite o nome da pessoa que está falando agora"
+              className="flex-1 bg-deepSpace border border-cyberCyan/40 rounded-lg px-3 py-2 text-xs text-white"
+            />
+            <button
+              type="button"
+              onClick={() => {
+                setUserName(nomeInput.trim());
+                showToast(nomeInput.trim() ? `Nome "${nomeInput.trim()}" salvo para esta conversa.` : "Nome dinâmico limpo.", "success");
+              }}
+              className="cyber-button-solid text-[10px]"
+            >
+              SALVAR NOME
+            </button>
+          </div>
+        </div>
+
+        <div className="bg-void/90 p-3.5 rounded-xl border border-cyberCyan/30 space-y-2">
+          <div className="flex items-center justify-between">
+            <span className="text-[11px] font-bold text-white uppercase">LOCALIZAÇÃO E COORDENADAS GPS</span>
+            <button type="button" onClick={capturarGps} disabled={loadingGps} className="cyber-button text-[10px]">
+              {loadingGps ? "LENDO GPS..." : "OBTER GPS"}
+            </button>
+          </div>
+          {coords ? (
+            <div className="text-xs text-emerald-300 font-bold">
+              LAT: {coords.lat} | LON: {coords.lon} | PRECISÃO: {coords.acc}m
+            </div>
+          ) : (
+            <div className="text-[11px] text-slate-400">Toque em OBTER GPS para exibir as coordenadas exatas do ponto.</div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function AlquinoModule({ perfilVozId }) {
+  const [query, setQuery] = useState("Água (H2O)");
+  const resposta = query.includes("CO2")
+    ? "Gás carbônico (CO2): 1 átomo de carbono ligado a 2 átomos de oxigênio; monitoramento de emissões e microclima urbano."
+    : "Água (H2O): 1 átomo de oxigênio ligado a 2 átomos de hidrogênio; monitoramento de chuva, escoamento e bacias.";
+
+  return (
+    <div className="space-y-4 font-mono w-full max-w-4xl mx-auto">
+      <div className="cyber-card p-5 rounded-2xl border border-cyberCyan/50 space-y-4">
+        <h2 className="font-display text-sm sm:text-base font-black text-cyberCyan uppercase">ALQUINO • ANÁLISE AMBIENTAL E QUÍMICA</h2>
+        <div className="flex gap-2">
+          {["Água (H2O)", "Gás Carbônico (CO2)"].map(item => (
+            <button
+              key={item}
+              type="button"
+              onClick={() => setQuery(item)}
+              className={`cyber-button text-[10px] ${query === item ? 'cyber-button-solid' : ''}`}
+            >
+              {item}
+            </button>
+          ))}
+        </div>
+        <div className="bg-void/90 p-4 rounded-xl border border-cyberCyan/30 text-xs text-slate-200 leading-relaxed">
+          {resposta}
+        </div>
+        <button type="button" onClick={() => falarImitada(resposta, perfilVozId)} className="cyber-button text-[10px]">
+          OUVIR RESUMO
+        </button>
+      </div>
+    </div>
+  );
+}
+
+function BalancaModule({ showToast }) {
+  const [material, setMaterial] = useState("PET");
+  const [peso, setPeso] = useState("5.0");
+  const [registros, setRegistros] = useState(() => {
+    try { return JSON.parse(localStorage.getItem('raru_balanca_v11') || '[]'); } catch (e) { return []; }
+  });
+
+  const adicionar = (e) => {
+    e.preventDefault();
+    const num = parseFloat(peso);
+    if (!num || num <= 0) return showToast("Informe um peso válido.", "warning");
+    const next = [{ id: Date.now(), material, peso: num, data: new Date().toLocaleString('pt-BR') }, ...registros];
+    setRegistros(next);
+    try { localStorage.setItem('raru_balanca_v11', JSON.stringify(next)); } catch (e) {}
+    showToast("Pesagem registrada.", "success");
+  };
+
+  const totalKg = registros.reduce((acc, r) => acc + Number(r.peso || 0), 0);
+
+  return (
+    <div className="space-y-4 font-mono w-full max-w-4xl mx-auto">
+      <div className="cyber-card p-5 rounded-2xl border border-cyberCyan/50 space-y-4">
+        <h2 className="font-display text-sm sm:text-base font-black text-cyberCyan uppercase">BALANÇA COMUNITÁRIA & IMPACTO AMBIENTAL</h2>
+        <form onSubmit={adicionar} className="flex flex-wrap gap-2">
+          <select value={material} onChange={(e) => setMaterial(e.target.value)} className="bg-void text-white border border-cyberCyan/40 rounded-lg px-3 py-2 text-xs">
+            <option value="PET">PET</option>
+            <option value="ALUMÍNIO">ALUMÍNIO</option>
+            <option value="PAPELÃO">PAPELÃO</option>
+            <option value="VIDRO">VIDRO</option>
+            <option value="ÓLEO USADO">ÓLEO USADO</option>
+          </select>
+          <input type="number" step="0.1" value={peso} onChange={(e) => setPeso(e.target.value)} className="w-28 bg-void text-white border border-cyberCyan/40 rounded-lg px-3 py-2 text-xs" />
+          <button type="submit" className="cyber-button-solid text-[10px]">REGISTRAR PESO</button>
+        </form>
+        <div className="text-xs font-bold text-emerald-300">TOTAL ACUMULADO: {totalKg.toFixed(1)} kg</div>
+      </div>
+    </div>
+  );
+}
+
+function VideosModule({ perfilVozId }) {
+  const roteiro = "Boletim da rede comunitária de monitoramento climático: acompanhamento contínuo em Mesquita, Rocha Sobrinho e nos 92 municípios do Rio de Janeiro.";
+  return (
+    <div className="space-y-4 font-mono w-full max-w-4xl mx-auto">
+      <div className="cyber-card p-5 rounded-2xl border border-cyberCyan/50 space-y-3">
+        <h2 className="font-display text-sm sm:text-base font-black text-cyberCyan uppercase">CENTRAL DE VÍDEOS E INFORMATIVOS</h2>
+        <p className="text-xs text-slate-200 leading-relaxed bg-void/90 p-3.5 rounded-xl border border-cyberCyan/30">{roteiro}</p>
+        <button type="button" onClick={() => falarImitada(roteiro, perfilVozId)} className="cyber-button-solid text-[10px]">
+          OUVIR ROTEIRO EM PORTUGUÊS
+        </button>
+      </div>
+    </div>
+  );
+}
+
+function AdminModule({ showToast, customTickerText, setCustomTickerText, perfilVozId, setPerfilVozId }) {
+  const [tickerDraft, setTickerDraft] = useState(customTickerText || "");
+  return (
+    <div className="space-y-4 font-mono w-full max-w-4xl mx-auto">
+      <div className="cyber-card p-5 rounded-2xl border border-cyberCyan/50 space-y-4">
+        <h2 className="font-display text-sm sm:text-base font-black text-cyberCyan uppercase">ADMINISTRAÇÃO E CONFIGURAÇÃO DE VOZ</h2>
+        <div className="space-y-2">
+          <label className="text-[10px] text-slate-400 font-bold block">AVISO DO PAINEL SUPERIOR</label>
+          <input type="text" value={tickerDraft} onChange={(e) => setTickerDraft(e.target.value)} placeholder="Digite um aviso personalizado ou deixe vazio para padrão" className="w-full bg-void text-white border border-cyberCyan/40 rounded-lg px-3 py-2 text-xs" />
+          <button
+            type="button"
+            onClick={() => {
+              setCustomTickerText(tickerDraft);
+              try { localStorage.setItem('raru_custom_ticker', tickerDraft); } catch (e) {}
+              showToast("Aviso atualizado.", "success");
+            }}
+            className="cyber-button-solid text-[10px]"
+          >
+            SALVAR AVISO
+          </button>
+        </div>
+        <SeletorVozGlobal perfilVozId={perfilVozId} setPerfilVozId={setPerfilVozId} />
+      </div>
+    </div>
+  );
+}
+
+function App() {
+  const [activeTab, setActiveTab] = useState(() => {
+    try { return localStorage.getItem('raru_active_tab') || 'dashboard'; } catch (e) { return 'dashboard'; }
+  });
+  const [userName, setUserName] = useState(() => {
+    try { return localStorage.getItem('raru_dynamic_user_name') || ''; } catch (e) { return ''; }
+  });
+  const [dayMode, setDayMode] = useState(() => {
+    try { return localStorage.getItem('raru_day_mode') === 'true'; } catch (e) { return false; }
+  });
+  const [perfilVozId, setPerfilVozId] = useState(() => {
+    try { return localStorage.getItem('raru_perfil_voz') || 'sarah'; } catch (e) { return 'sarah'; }
+  });
+  const [customTickerText, setCustomTickerText] = useState(() => {
+    try { return localStorage.getItem('raru_custom_ticker') || ''; } catch (e) { return ''; }
+  });
+  const [mapaRaruSync, setMapaRaruSync] = useState(() => {
+    try { return window.__RARU_MAPA_STATE || null; } catch (_) { return null; }
+  });
+
+  const [chatOpen, setChatOpen] = useState(false);
+  const [chatInput, setChatInput] = useState("");
+  const [isTyping, setIsTyping] = useState(false);
+  const [isSpeaking, setIsSpeaking] = useState(false);
+  const [chatMessages, setChatMessages] = useState([
+    {
+      id: 'init-1',
+      sender: 'bot',
+      text: 'Olá! Sou a SARAH, inteligência única interligada ao MAPA RARU. Qual é o seu nome e o que vamos monitorar agora?',
+      time: new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })
+    }
+  ]);
+
+  const chatMessagesRef = useRef(chatMessages);
+  chatMessagesRef.current = chatMessages;
+  const chatEndRef = useRef(null);
+  const [toast, setToast] = useState(null);
+
+  const showToast = (msg, type = 'info') => {
+    setToast({ msg, type });
+    setTimeout(() => setToast(null), 3200);
+  };
+
+  useEffect(() => {
+    try { localStorage.setItem('raru_active_tab', activeTab); } catch (e) {}
+  }, [activeTab]);
+
+  useEffect(() => {
+    try { localStorage.setItem('raru_dynamic_user_name', userName || ''); } catch (e) {}
+  }, [userName]);
+
+  useEffect(() => {
+    document.body.classList.toggle('raru-day-mode', dayMode);
+    document.documentElement.classList.toggle('raru-day-mode', dayMode);
+    try { localStorage.setItem('raru_day_mode', String(dayMode)); } catch (e) {}
+  }, [dayMode]);
+
+  useEffect(() => {
+    const onMapaSync = (ev) => {
+      if (ev && ev.detail) setMapaRaruSync(ev.detail);
+    };
+    window.addEventListener('raru:mapa-telemetry-sync', onMapaSync);
+    window.__RARU_CENTRAL_LISTENING = true;
+    window.RARU_AI = {
+      ask: async (prompt, mapContext) => {
+        const snap = mapContext?.live || mapContext || mapaRaruSync || {};
+        const munNome = mapContext?.municipio || snap.municipio || 'Mesquita · Rocha Sobrinho';
+        const hist = [
+          ...chatMessagesRef.current.slice(-4).map(m => ({ role: m.sender === 'user' ? 'user' : 'assistant', content: m.text })),
+          { role: 'user', content: prompt }
+        ];
+        return await chamarSarahGroq(hist, munNome, 'Rocha Sobrinho', activeTab, { ...snap, municipio: munNome }, userName);
+      }
+    };
+    window.dispatchEvent(new CustomEvent('raru:central-ready', { detail: { source: 'CENTRAL_RARU_NEXUS' } }));
+    return () => window.removeEventListener('raru:mapa-telemetry-sync', onMapaSync);
+  }, [userName, activeTab, mapaRaruSync]);
+
+  useEffect(() => {
+    if (chatEndRef.current) {
+      chatEndRef.current.scrollIntoView({ behavior: 'smooth' });
+    }
+  }, [chatMessages, chatOpen]);
+
+  const handleInstallClick = async () => {
+    try {
+      const iconFile = await gerarArquivoIconeEscudo();
+      if (navigator.share && iconFile && navigator.canShare && navigator.canShare({ files: [iconFile] })) {
+        await navigator.share({ title: 'RARU NEXUS V11.2 PLUS', text: shareMessageText, files: [iconFile] });
+        return;
+      }
+      if (navigator.share) {
+        await navigator.share({ title: 'RARU NEXUS V11.2 PLUS', text: shareMessageText, url: APP_SHARE_URL });
+        return;
+      }
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        await navigator.clipboard.writeText(shareMessageText);
+        showToast("Link copiado para a área de transferência.", "success");
+      }
+    } catch (_) {}
+  };
+
+  const handleSendChat = async (e) => {
+    e.preventDefault();
+    const txt = chatInput.trim();
+    if (!txt) return;
+    setChatInput("");
+
+    const nameMatch = txt.match(/(?:meu nome [ée]|me chamo|sou o|sou a|pode me chamar de)\s+([A-Za-zÀ-ÿ]{2,25})/i);
+    let activeUser = userName;
+    if (nameMatch && nameMatch[1]) {
+      const detected = nameMatch[1].charAt(0).toUpperCase() + nameMatch[1].slice(1);
+      activeUser = detected;
+      setUserName(detected);
+    }
+
+    const userMsg = {
+      id: 'u-' + Date.now(),
+      sender: 'user',
+      text: txt,
+      time: new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })
+    };
+    const nextHist = [...chatMessagesRef.current, userMsg];
+    setChatMessages(nextHist);
+    setIsTyping(true);
+
+    const apiHist = nextHist.slice(-6).map(m => ({
+      role: m.sender === 'user' ? 'user' : 'assistant',
+      content: m.text
+    }));
+
+    const reply = await chamarSarahGroq(apiHist, mapaRaruSync?.municipio || 'Mesquita', 'Rocha Sobrinho', activeTab, mapaRaruSync, activeUser);
+    setIsTyping(false);
+
+    const botMsg = {
+      id: 'b-' + Date.now(),
+      sender: 'bot',
+      text: reply,
+      time: new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })
+    };
+    setChatMessages(prev => [...prev, botMsg]);
+    setIsSpeaking(true);
+    falarImitada(reply, perfilVozId);
+    setTimeout(() => setIsSpeaking(false), 3000);
+  };
+
+  return (
+    <div className="seu-container-raru">
+      {toast && (
+        <div className="fixed top-4 right-4 z-50 bg-deepSpace border border-cyberCyan text-white px-4 py-2 rounded-xl text-xs font-bold shadow-xl">
+          {toast.msg}
+        </div>
+      )}
+
+      <header className="w-full py-2 px-3 mb-3 flex items-center justify-between bg-gradient-to-r from-deepSpace/95 via-commandPanel/95 to-deepSpace/95 border border-cyberCyan/45 rounded-2xl shadow-lg sticky top-1 z-40 backdrop-blur-md gap-2 flex-wrap">
+        <div onClick={() => setActiveTab('dashboard')} className="flex items-center gap-2 cursor-pointer min-w-0">
+          <div className="w-9 h-9 rounded-xl bg-void border border-cyberCyan flex items-center justify-center shrink-0">
+            <span className="font-display font-black text-cyberCyan text-sm">R</span>
+          </div>
+          <div className="flex flex-col min-w-0">
+            <span className="font-display font-black text-xs tracking-wider text-white truncate">RARU NEXUS V11.2 PLUS</span>
+            <span className="text-[8px] font-mono text-cyberCyan font-bold uppercase tracking-wider truncate">
+              {userName ? `${userName} • MESQUITA RJ` : 'REDE COMUNITÁRIA • 92 MUNICÍPIOS RJ'}
+            </span>
+          </div>
+        </div>
+
+        <div className="flex items-center gap-1.5 flex-wrap justify-end">
+          <button
+            type="button"
+            onClick={() => setActiveTab('mapa_raru')}
+            className={`compact-nav-btn ${activeTab === 'mapa_raru' ? 'compact-nav-btn-active' : ''}`}
+          >
+            <IconMapaRaro size={13} color={activeTab === 'mapa_raru' ? '#030712' : '#00F2FE'} />
+            <span>MAPA RARU</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setDayMode(d => !d)}
+            className="compact-nav-btn"
+            title={dayMode ? "Mudar para Modo Noite" : "Mudar para Modo Dia"}
+          >
+            <IconSunMoon size={13} color="#00F2FE" />
+            <span>{dayMode ? "NOITE" : "DIA"}</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={handleInstallClick}
+            className="compact-nav-btn compact-nav-btn-active"
+          >
+            <IconInstalar size={13} color="#030712" />
+            <span>COMPARTILHAR</span>
+          </button>
+        </div>
+      </header>
+
+      <AutomatedObservatoryWidget customTickerText={customTickerText} />
+
+      <main className="flex-1 w-full">
+        {activeTab === 'dashboard' && (
+          <div className="space-y-4 w-full max-w-4xl mx-auto font-mono">
+            <div className="cyber-card text-center relative overflow-hidden">
+              <div className="relative z-10 flex flex-col items-center">
+                <SarahAnimatedAvatar isSpeaking={isSpeaking} />
+                <h1 className="font-display text-lg sm:text-xl font-black text-white mt-2 tracking-wider">
+                  RARU NEXUS V11.2 PLUS
+                </h1>
+                <p className="text-[11px] text-cyberCyan font-bold uppercase tracking-widest mt-0.5">
+                  REDE COMUNITÁRIA DE MONITORAMENTO CLIMÁTICO • 92 MUNICÍPIOS RJ
+                </p>
+                {mapaRaruSync && (
+                  <p className="text-[10px] text-emerald-300 mt-1">
+                    MAPA RARU sincronizado com SARAH: {mapaRaruSync.municipio} ({Number(mapaRaruSync.lat).toFixed(4)}, {Number(mapaRaruSync.lon).toFixed(4)})
+                  </p>
+                )}
+                <div className="flex flex-wrap justify-center gap-2 mt-4">
+                  <button type="button" onClick={() => setActiveTab('mapa_raru')} className="cyber-button-solid text-[10px]">
+                    <IconMapaRaro size={13} color="#030712" />
+                    <span>MAPA RARU</span>
+                  </button>
+                  <button type="button" onClick={() => setActiveTab('radar')} className="cyber-button text-[10px]">
+                    <IconRadar size={13} color="#00F2FE" />
+                    <span>RADAR & SATÉLITE</span>
+                  </button>
+                  <button type="button" onClick={() => setChatOpen(true)} className="cyber-button text-[10px]">
+                    <span>CONVERSAR COM SARAH</span>
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {activeTab === 'mapa_raru' && (
+          <MapaRaruModule
+            onGoToDashboard={() => setActiveTab('dashboard')}
+            showToast={showToast}
+            userName={userName}
+            perfilVozId={perfilVozId}
+            onSyncCentralTelemetry={(payload) => setMapaRaruSync(payload)}
+            onOpenSarahChat={() => setChatOpen(true)}
+          />
+        )}
+
+        {activeTab === 'radar' && <RadarMeteorologicoModule perfilVozId={perfilVozId} />}
+        {activeTab === 'vistoria' && <VistoriaLaudoModule showToast={showToast} />}
+        {activeTab === 'estacao' && <EstacaoSobrevivenciaModule showToast={showToast} userName={userName} setUserName={setUserName} />}
+        {activeTab === 'alquino' && <AlquinoModule perfilVozId={perfilVozId} />}
+        {activeTab === 'balanca' && <BalancaModule showToast={showToast} />}
+        {activeTab === 'videos' && <VideosModule perfilVozId={perfilVozId} />}
+        {activeTab === 'admin' && (
+          <AdminModule
+            showToast={showToast}
+            customTickerText={customTickerText}
+            setCustomTickerText={setCustomTickerText}
+            perfilVozId={perfilVozId}
+            setPerfilVozId={setPerfilVozId}
+          />
+        )}
+      </main>
+
+      <footer className="mt-8 mb-14 py-2.5 px-2.5 bg-gradient-to-r from-deepSpace/95 via-commandPanel/95 to-deepSpace/95 border border-cyberCyan/45 rounded-2xl w-full shadow-lg">
+        <div className="flex flex-wrap items-center justify-center gap-1.5">
+          {[
+            { id: 'dashboard', label: 'PAINEL', Icon: IconDashboard },
+            { id: 'mapa_raru', label: 'MAPA RARU', Icon: IconMapaRaro },
+            { id: 'radar', label: 'RADAR & SAT', Icon: IconRadar },
+            { id: 'vistoria', label: 'VISTORIA', Icon: IconVistoria },
+            { id: 'estacao', label: 'ESTAÇÃO', Icon: IconEstacao },
+            { id: 'alquino', label: 'ALQUINO', Icon: IconAlquino },
+            { id: 'balanca', label: 'BALANÇA', Icon: IconBalanca },
+            { id: 'videos', label: 'VÍDEOS', Icon: IconVideos },
+            { id: 'admin', label: 'ADMIN', Icon: IconAdmin },
+          ].map(item => {
+            const ativo = activeTab === item.id;
+            const CompIcon = item.Icon;
+            return (
+              <button
+                key={item.id}
+                type="button"
+                onClick={() => setActiveTab(item.id)}
+                className={`compact-nav-btn ${ativo ? 'compact-nav-btn-active' : ''}`}
+              >
+                <CompIcon size={13} color={ativo ? "#030712" : "#00F2FE"} />
+                <span>{item.label}</span>
+              </button>
+            );
+          })}
+        </div>
+      </footer>
+
+      <SarahFabButton openSarahChat={() => setChatOpen(true)} isSpeaking={isSpeaking} />
+
+      {chatOpen && (
+        <div className="fixed inset-0 bg-black/75 z-50 flex items-end sm:items-center justify-center p-2 sm:p-4 backdrop-blur-sm">
+          <div className="bg-deepSpace border border-cyberCyan/60 rounded-2xl w-full max-w-md flex flex-col h-[80vh] sm:h-[540px] shadow-2xl overflow-hidden font-mono">
+            <div className="bg-commandPanel px-4 py-3 border-b border-cyberCyan/30 flex items-center justify-between">
+              <div className="flex items-center gap-2.5">
+                <div className="w-8 h-8 rounded-full border border-cyberCyan overflow-hidden">
+                  <SarahVectorAvatar />
+                </div>
+                <div>
+                  <h3 className="font-display text-xs font-black text-cyberCyan uppercase">SARAH • SALA CENTRAL</h3>
+                  <p className="text-[9px] text-slate-300">
+                    {userName ? `Conversando com ${userName}` : 'Pergunte e informe seu nome na conversa'}
+                  </p>
+                </div>
+              </div>
+              <button type="button" onClick={() => setChatOpen(false)} className="cyber-button-danger text-[10px] px-2.5 py-1 !min-h-[30px]">
+                FECHAR
+              </button>
+            </div>
+
+            <div className="flex-1 overflow-y-auto p-3 space-y-2.5">
+              {chatMessages.map(m => (
+                <div key={m.id} className={`flex flex-col max-w-[85%] rounded-xl px-3 py-2 text-xs ${m.sender === 'user' ? 'self-end bg-cyberCyan text-void font-semibold' : 'self-start bg-void/90 border border-cyberCyan/30 text-slate-100'}`}>
+                  <span>{m.text}</span>
+                  <span className={`text-[8px] mt-1 ${m.sender === 'user' ? 'text-void/70 text-right' : 'text-slate-400'}`}>{m.time}</span>
+                </div>
+              ))}
+              {isTyping && <div className="text-[10px] text-cyberCyan animate-pulse">SARAH respondendo...</div>}
+              <div ref={chatEndRef} />
+            </div>
+
+            <form onSubmit={handleSendChat} className="p-2.5 bg-commandPanel border-t border-cyberCyan/30 flex gap-2">
+              <input
+                type="text"
+                value={chatInput}
+                onChange={(e) => setChatInput(e.target.value)}
+                placeholder="Digite sua mensagem ou diga seu nome..."
+                className="flex-1 bg-void border border-cyberCyan/40 rounded-lg px-3 py-2 text-xs text-white"
+              />
+              <button type="submit" className="cyber-button-solid text-[10px]">
+                ENVIAR
+              </button>
+            </form>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+const rootEl = document.getElementById("root");
+ReactDOM.createRoot(rootEl).render(<App />);
+</script>
+</body>
+</html>
