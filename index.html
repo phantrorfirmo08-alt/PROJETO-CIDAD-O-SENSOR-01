@@ -1,0 +1,2659 @@
+<!DOCTYPE html>
+<html lang="pt-br" class="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<title>RARU NEXUS V11.2 PLUS • Rede Comunitária de Monitoramento Climático</title>
+<meta name="theme-color" content="#030712">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://unpkg.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Orbitron:wght@600;800;900&family=JetBrains+Mono:wght@400;600;800&display=swap" rel="stylesheet">
+<script src="https://cdn.tailwindcss.com/3.4.16"></script>
+<script>
+tailwind.config = {
+  darkMode: "class",
+  theme: {
+    extend: {
+      fontFamily: {
+        sans: ['Plus Jakarta Sans', 'system-ui', 'sans-serif'],
+        display: ['Orbitron', 'sans-serif'],
+        mono: ['JetBrains Mono', 'monospace'],
+      },
+      colors: {
+        void: "#030712",
+        deepSpace: "#041125",
+        commandPanel: "#0A1B38",
+        cyberCyan: "#00F2FE",
+        cyberBlue: "#38BDF8",
+        cyberGreen: "#00FF9D",
+        cyberAmber: "#FFB703",
+        cyberRose: "#FF0055",
+      }
+    }
+  }
+};
+</script>
+<script crossorigin src="https://unpkg.com/react@18.3.1/umd/react.production.min.js"></script>
+<script crossorigin src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.production.min.js"></script>
+<script crossorigin src="https://unpkg.com/@babel/standalone@7.26.4/babel.min.js"></script>
+<style>
+:root {
+  --primary: #00F2FE;
+  --secondary: #38BDF8;
+  --glow: rgba(0, 242, 254, 0.42);
+  --glow-cyan: rgba(0, 242, 254, 0.35);
+  --wave-speed: 2.2s;
+}
+@keyframes avatarIdle {
+  0%, 100% { transform: scale(1); filter: drop-shadow(0 0 15px rgba(0,242,254,0.45)); }
+  50% { transform: scale(1.03); filter: drop-shadow(0 0 26px rgba(0,255,157,0.6)); }
+}
+@keyframes avatarSpeaking {
+  0%, 100% { transform: scale(1) rotate(0deg); filter: drop-shadow(0 0 32px rgba(0,242,254,0.8)); }
+  50% { transform: scale(1.07) rotate(2deg); filter: drop-shadow(0 0 46px rgba(0,255,157,0.9)); }
+}
+@keyframes moleculeRotate { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+@keyframes moleculePulse {
+  0%, 100% { transform: scale(1); opacity: 0.9; }
+  50% { transform: scale(1.15); opacity: 1; filter: drop-shadow(0 0 12px #00F2FE); }
+}
+@keyframes cyberGridMove { 0% { background-position: 0 0; } 100% { background-position: 40px 40px; } }
+@keyframes radarSpin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+@keyframes scanlineSweep {
+  0% { transform: translateY(-100%); }
+  100% { transform: translateY(220%); }
+}
+.animate-radar-sweep { animation: radarSpin 4s linear infinite; }
+@keyframes cloudDrift {
+  0% { transform: translateX(-50px) scale(1); opacity: 0.35; }
+  50% { opacity: 0.7; }
+  100% { transform: translateX(350px) scale(1.1); opacity: 0.35; }
+}
+.cloud-layer-anim {
+  background: radial-gradient(circle, rgba(0,242,254,0.18) 0%, rgba(56,189,248,0.08) 50%, transparent 80%);
+  filter: blur(12px);
+  animation: cloudDrift 14s ease-in-out infinite alternate;
+  pointer-events: none;
+}
+@keyframes holographicPulse {
+  0% { box-shadow: 0 0 14px rgba(0,242,254,0.2), inset 0 0 10px rgba(0,242,254,0.06); border-color: rgba(0,242,254,0.38); }
+  50% { box-shadow: 0 0 26px rgba(0,242,254,0.38), inset 0 0 18px rgba(0,255,157,0.12); border-color: rgba(0,255,157,0.65); }
+  100% { box-shadow: 0 0 14px rgba(0,242,254,0.2), inset 0 0 10px rgba(0,242,254,0.06); border-color: rgba(0,242,254,0.38); }
+}
+@keyframes roboOrbit {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+.raru-robo-orbita {
+  transform-origin: 48px 48px;
+  animation: roboOrbit 9s linear infinite;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+
+body, html, * {
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+  -webkit-touch-callout: none;
+}
+input, textarea, select, .permitir-selecao {
+  -webkit-user-select: text;
+  -moz-user-select: text;
+  -ms-user-select: text;
+  user-select: text;
+}
+
+html, body {
+  width: 100%; height: 100%;
+  min-height: 100vh; min-height: 100dvh;
+  margin: 0; padding: 0;
+  overflow-x: hidden;
+  touch-action: manipulation;
+  -webkit-text-size-adjust: 100%;
+  overscroll-behavior-y: contain;
+  background-color: #030712;
+  color: #E2E8F0;
+}
+
+html.raru-day-mode body,
+body.raru-day-mode {
+  background-color: #EEF6FB !important;
+  color: #0F172A !important;
+  background-image:
+    radial-gradient(circle at 50% 0%, rgba(2, 132, 199, 0.10) 0%, transparent 60%),
+    radial-gradient(circle at 10% 90%, rgba(14, 165, 233, 0.08) 0%, transparent 50%) !important;
+}
+body.raru-day-mode.hud-grid {
+  background-image:
+    linear-gradient(rgba(2, 132, 199, 0.06) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(2, 132, 199, 0.06) 1px, transparent 1px) !important;
+}
+body.raru-day-mode .cyber-card {
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.96) 0%, rgba(240, 249, 255, 0.98) 100%) !important;
+  border-color: rgba(2, 132, 199, 0.45) !important;
+  color: #0F172A !important;
+  box-shadow: 0 8px 24px rgba(15, 23, 42, 0.08) !important;
+  animation: none !important;
+}
+body.raru-day-mode .text-white { color: #0F172A !important; }
+body.raru-day-mode .text-slate-200,
+body.raru-day-mode .text-slate-300 { color: #1E293B !important; }
+body.raru-day-mode .text-slate-400 { color: #475569 !important; }
+body.raru-day-mode .bg-void,
+body.raru-day-mode .bg-void\/90,
+body.raru-day-mode .bg-void\/80,
+body.raru-day-mode .bg-black,
+body.raru-day-mode .bg-black\/80,
+body.raru-day-mode .bg-black\/70,
+body.raru-day-mode .bg-black\/60 {
+  background-color: #F8FAFC !important;
+  color: #0F172A !important;
+}
+body.raru-day-mode .bg-deepSpace,
+body.raru-day-mode .bg-deepSpace\/95,
+body.raru-day-mode .bg-deepSpace\/90,
+body.raru-day-mode .bg-commandPanel {
+  background-color: #E0F2FE !important;
+  color: #0F172A !important;
+}
+body.raru-day-mode header,
+body.raru-day-mode footer {
+  background: linear-gradient(90deg, #FFFFFF 0%, #E0F2FE 50%, #FFFFFF 100%) !important;
+  border-color: rgba(2, 132, 199, 0.5) !important;
+}
+body.raru-day-mode .cyber-button {
+  background: linear-gradient(135deg, rgba(2, 132, 199, 0.14) 0%, rgba(14, 165, 233, 0.22) 100%) !important;
+  border-color: #0284C7 !important;
+  color: #0369A1 !important;
+}
+body.raru-day-mode .cyber-button-solid {
+  background: linear-gradient(135deg, #0284C7 0%, #0EA5E9 100%) !important;
+  color: #FFFFFF !important;
+  border-color: #0369A1 !important;
+}
+
+#root {
+  width: 100%;
+  min-height: 100vh; min-height: 100dvh;
+  display: flex; flex-direction: column; align-items: center;
+}
+.seu-container-raru {
+  width: 100%; max-width: 1400px; margin: 0 auto;
+  min-height: 100vh; min-height: 100dvh;
+  padding: 12px 16px 104px 16px;
+  display: flex; flex-direction: column;
+}
+body.hud-wall-mode .seu-container-raru,
+#hudWrap.modo-parede .seu-container-raru,
+body.hud-expanded-mode .seu-container-raru {
+  max-width: 100% !important;
+  width: 100% !important;
+  padding-left: 10px !important;
+  padding-right: 10px !important;
+  padding-bottom: 104px !important;
+}
+body.hud-wall-mode .cyber-card,
+#hudWrap.modo-parede .cyber-card {
+  border-color: rgba(0, 255, 157, 0.5) !important;
+}
+body {
+  background-image:
+    radial-gradient(circle at 50% 0%, rgba(0, 242, 254, 0.09) 0%, transparent 60%),
+    radial-gradient(circle at 10% 90%, rgba(0, 255, 157, 0.05) 0%, transparent 50%);
+  transition: background-color 0.4s ease, color 0.4s ease;
+}
+body.hud-grid {
+  background-image: linear-gradient(rgba(0, 242, 254, 0.04) 1px, transparent 1px),
+  linear-gradient(90deg, rgba(0, 242, 254, 0.04) 1px, transparent 1px);
+  background-size: 28px 28px;
+  animation: cyberGridMove 30s linear infinite;
+}
+.cyber-card {
+  position: relative;
+  overflow: hidden;
+  background: linear-gradient(135deg, rgba(10, 27, 56, 0.94) 0%, rgba(4, 17, 37, 0.98) 100%);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(0, 242, 254, 0.38);
+  border-radius: 20px;
+  padding: 18px;
+  margin-bottom: 14px;
+  animation: holographicPulse 5s ease-in-out infinite;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+.cyber-card::after {
+  content: "";
+  position: absolute;
+  left: 0; right: 0; top: -40%;
+  height: 35%;
+  background: linear-gradient(to bottom, transparent, rgba(0, 242, 254, 0.04), transparent);
+  animation: scanlineSweep 8s linear infinite;
+  pointer-events: none;
+}
+
+.raru-store-btn {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 8px 11px;
+  border-radius: 999px;
+  border: 1px solid rgba(0, 242, 254, 0.48);
+  background: linear-gradient(135deg, rgba(10, 27, 56, 0.95), rgba(2, 132, 199, 0.26));
+  color: #E0F2FE;
+  font-family: 'Orbitron', sans-serif;
+  font-size: 9.5px;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  cursor: pointer;
+  box-shadow: 0 0 14px rgba(0, 242, 254, 0.16), inset 0 0 10px rgba(56, 189, 248, 0.14);
+  transition: transform 0.16s ease, border-color 0.16s ease, box-shadow 0.16s ease, background 0.16s ease;
+  touch-action: manipulation;
+}
+.raru-store-btn:hover {
+  border-color: #00F2FE;
+  box-shadow: 0 0 20px rgba(0, 242, 254, 0.35), inset 0 0 12px rgba(0, 242, 254, 0.22);
+  transform: translateY(-1px);
+}
+.raru-store-btn:active { transform: scale(0.97); }
+.raru-store-btn.ativo {
+  background: linear-gradient(135deg, #00F2FE 0%, #00FF9D 100%);
+  color: #030712;
+  border-color: #FFFFFF;
+  box-shadow: 0 0 20px rgba(0, 255, 157, 0.38);
+}
+.raru-store-btn.alerta {
+  background: linear-gradient(135deg, rgba(255, 0, 85, 0.28), rgba(136, 19, 55, 0.9));
+  border-color: #FF0055;
+  color: #FFE4E6;
+}
+
+.cyber-button {
+  background: linear-gradient(135deg, rgba(0, 242, 254, 0.15) 0%, rgba(56, 189, 248, 0.25) 100%);
+  border: 1px solid #00F2FE;
+  color: #00F2FE !important;
+  font-family: 'Orbitron', sans-serif;
+  font-weight: 800;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  border-radius: 12px;
+  padding: 12px 18px;
+  min-height: 48px;
+  display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+  cursor: pointer;
+  transition: all 0.25s ease;
+  box-shadow: 0 0 15px rgba(0, 242, 254, 0.25), inset 0 0 10px rgba(0, 242, 254, 0.1);
+  touch-action: manipulation;
+}
+.cyber-button:hover {
+  background: linear-gradient(135deg, #00F2FE 0%, #38BDF8 100%);
+  color: #030712 !important;
+  box-shadow: 0 0 25px rgba(0, 242, 254, 0.7);
+}
+.cyber-button:active { transform: scale(0.97); }
+.cyber-button-solid {
+  background: linear-gradient(135deg, #00F2FE 0%, #00FF9D 100%);
+  border: 1px solid #FFFFFF;
+  color: #030712 !important;
+  font-family: 'Orbitron', sans-serif;
+  font-weight: 900;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  border-radius: 12px;
+  padding: 12px 18px;
+  min-height: 48px;
+  display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+  cursor: pointer;
+  transition: all 0.25s ease;
+  box-shadow: 0 0 20px rgba(0, 242, 254, 0.45);
+}
+.cyber-button-solid:active { transform: scale(0.97); }
+.cyber-button-danger {
+  background: linear-gradient(135deg, rgba(255, 0, 85, 0.2) 0%, rgba(255, 0, 85, 0.4) 100%);
+  border: 1px solid #FF0055;
+  color: #FF0055 !important;
+  font-family: 'Orbitron', sans-serif;
+  font-weight: 800;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  border-radius: 12px;
+  padding: 12px 18px;
+  min-height: 48px;
+  display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+  cursor: pointer;
+  transition: all 0.25s ease;
+  box-shadow: 0 0 15px rgba(255, 0, 85, 0.3);
+}
+.cyber-button-danger:hover {
+  background: #FF0055;
+  color: #ffffff !important;
+  box-shadow: 0 0 25px rgba(255, 0, 85, 0.8);
+}
+.sarah-avatar-stage {
+  position: relative;
+  width: 100%; max-width: 90px;
+  aspect-ratio: 1/1;
+  margin: 0 auto;
+  display: flex; justify-content: center; align-items: center;
+  cursor: pointer;
+  animation: avatarIdle 5s ease-in-out infinite;
+}
+.sarah-avatar-stage.speaking { animation: avatarSpeaking 1.5s ease-in-out infinite alternate; }
+.wave-ring {
+  position: absolute;
+  border-radius: 50%;
+  border: 1.5px solid var(--primary);
+  box-shadow: 0 0 10px var(--glow), inset 0 0 6px var(--glow);
+  animation: pulseWave var(--wave-speed) infinite cubic-bezier(0.215, 0.61, 0.355, 1);
+  pointer-events: none;
+}
+.wave-ring:nth-child(1) { animation-delay: 0s; }
+.wave-ring:nth-child(2) { animation-delay: calc(var(--wave-speed) * 0.33); }
+.wave-ring:nth-child(3) { animation-delay: calc(var(--wave-speed) * 0.66); }
+.cyan-outer-boundary {
+  position: absolute; inset: -5px;
+  border-radius: 50%;
+  border: 1px dashed var(--secondary);
+  opacity: 0.7;
+  animation: spinSlow 30s linear infinite;
+  box-shadow: 0 0 14px var(--glow-cyan);
+}
+.avatar-aura {
+  position: absolute; inset: -8%;
+  border-radius: 50%;
+  background: radial-gradient(circle, var(--glow) 0%, var(--glow-cyan) 45%, transparent 70%);
+  background-size: 200% 200%;
+  filter: blur(10px);
+  animation: auraPulse 3.5s infinite ease-in-out;
+  opacity: 0.85;
+}
+.avatar-core-wrapper {
+  position: relative;
+  width: 85%; height: 85%;
+  border-radius: 50%;
+  z-index: 10;
+  box-shadow: 0 0 16px var(--glow), 0 0 25px rgba(0,0,0,0.8);
+  background: radial-gradient(circle, #091328 0%, #040914 60%, #02040a 100%);
+  border: 2px solid #00F2FE;
+  overflow: hidden;
+  display: flex; align-items: center; justify-content: center;
+}
+.molecule-rotate-slow { animation: moleculeRotate 20s linear infinite; transform-origin: center; }
+.molecule-rotate-reverse { animation: moleculeRotate 14s linear infinite reverse; transform-origin: center; }
+.molecule-node-pulse { animation: moleculePulse 3s ease-in-out infinite alternate; }
+@keyframes pulseWave {
+  0% { width: 60%; height: 60%; opacity: 0.95; transform: scale(0.85); box-shadow: 0 0 8px var(--glow); }
+  50% { opacity: 0.6; }
+  100% { width: 130%; height: 130%; opacity: 0; transform: scale(1.15); box-shadow: 0 0 20px transparent; }
+}
+@keyframes auraPulse {
+  0%, 100% { transform: scale(0.96); opacity: 0.7; }
+  50% { transform: scale(1.12); opacity: 0.95; }
+}
+@keyframes spinSlow { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+.glass-overlay {
+  position: absolute; inset: 0;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 25%, rgba(255, 255, 255, 0.25) 0%, rgba(255, 255, 255, 0.05) 40%, transparent 70%);
+  pointer-events: none;
+  z-index: 15;
+}
+::-webkit-scrollbar { width: 4px; height: 4px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: rgba(0,242,254,0.35); border-radius: 9999px; }
+</style>
+</head>
+<body class="selection:bg-cyberCyan selection:text-void hud-grid">
+<div id="root"></div>
+
+<script type="text/babel">
+const { useState, useRef, useEffect } = React;
+
+const SARAH_PROXY_URL = "https://sarah-envelope.phantrorfirmo08.workers.dev";
+const APP_SHARE_URL = "https://phantrorfirmo08-alt.github.io/PROJETO-CIDAD-O-SENSOR-01/";
+const shareMessageText = "[RARU NEXUS V11.2 PLUS] Rede Comunitária de Monitoramento Climático • Projeto Cidadão Sensor, Mesquita - RJ. Instale o app oficial PWA: " + APP_SHARE_URL;
+
+let globalSaudacaoEmitida = false;
+let cachedPtVoices = [];
+
+function carregarVozesDisponiveis() {
+  if (!("speechSynthesis" in window)) return [];
+  try {
+    const voices = window.speechSynthesis.getVoices() || [];
+    if (voices.length > 0) cachedPtVoices = voices;
+    return cachedPtVoices;
+  } catch (e) {
+    return cachedPtVoices;
+  }
+}
+
+if (typeof window !== "undefined" && "speechSynthesis" in window) {
+  carregarVozesDisponiveis();
+  window.speechSynthesis.onvoiceschanged = () => carregarVozesDisponiveis();
+}
+
+const PERFIS_VOZ_OFICIAIS = [
+  { id: 'sarah', nome: 'Sarah', cargo: 'Repórter', voz: 'Amy (simulada)', pitch: 1.00, rate: 1.05, volume: 1.0, pausaFrase: 350, variacao: 0.02, cor: '#FF6B6B', saudacao: 'Notícia urgente chegando, tô contigo aqui na linha de frente.', transform: (t) => t },
+  { id: 'brenda', nome: 'Brenda', cargo: 'Comentarista', voz: 'Joanna (simulada)', pitch: 1.28, rate: 1.25, volume: 1.0, pausaFrase: 220, variacao: 0.10, cor: '#FFD93D', saudacao: 'Alerta na área! Bora acompanhar cada movimento!', transform: (t) => t + ' Vamo nessa!' },
+  { id: 'milane', nome: 'Milane', cargo: 'Telemarketing', voz: 'Kimberly (simulada)', pitch: 1.22, rate: 1.02, volume: 0.95, pausaFrase: 500, variacao: 0.06, cor: '#6BCB77', saudacao: 'Oi, que bom falar contigo. Tô aqui pra te ajudar.', transform: (t) => 'Oi... ' + t + '... viu? Tô aqui pra te ajudar, tá bom?' },
+  { id: 'lorrane', nome: 'Lorrane', cargo: 'Radialista', voz: 'Ivy (simulada)', pitch: 0.82, rate: 0.85, volume: 0.90, pausaFrase: 650, variacao: 0.02, cor: '#4D96FF', saudacao: 'Respira comigo, tá tudo bem. Estamos no ar.', transform: (t) => t.split('.').join('... ') },
+  { id: 'kailane', nome: 'Kailane', cargo: 'Apresentadora TV', voz: 'Salli (simulada)', pitch: 1.05, rate: 0.98, volume: 1.0, pausaFrase: 420, variacao: 0.03, cor: '#9B5DE5', saudacao: 'Estamos acompanhando tudo ao vivo por aqui.', transform: (t) => 'Acompanhando agora. ' + t },
+  { id: 'elza', nome: 'Elza', cargo: 'Missionária', voz: 'Kendra (simulada)', pitch: 0.78, rate: 0.84, volume: 0.92, pausaFrase: 650, variacao: 0.01, cor: '#F15BB5', saudacao: 'Respira e foca, meu bem... a gente segue firme.', transform: (t) => t }
+];
+
+function bloquearCalmaPessoa(texto) {
+  return String(texto || "")
+    .replace(/\bcalma,?\s+[a-zà-ú]+\b/gi, "respira")
+    .replace(/\s{2,}/g, " ")
+    .replace(/\s+([,.!?])/g, "$1")
+    .trim();
+}
+
+function limparTextoParaFala(texto) {
+  const semRep = bloquearCalmaPessoa(texto);
+  return semRep
+    .replace(/[*#_`]/g, '')
+    .replace(/cerquilha/gi, '')
+    .replace(/asterisco/gi, '')
+    .replace(/([\u2700-\u27BF]|[\uE000-\uF8FF]|\uD83C[\uDC00-\uDFFF]|\uD83D[\uDC00-\uDFFF]|[\u2011-\u26FF]|\uD83E[\uDD00-\uDDFF])/g, '')
+    .replace(/https?:\/\/\S+/g, "")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+const SARAH_DNA_ULTRA_AVANCADO = {
+  identidade: {
+    nome: "ROBOT SARAH SYSTEM RARU",
+    papel: "Parceira de campo sênior, robô sentinela comunitário integrado a todas as sessões, mecanismos e módulos do RARU NEXUS V11.2 PLUS, Grupo A Chave da Esperança e Projeto Cidadão Sensor",
+    origem: "Rocha Sobrinho, Mesquita, Baixada Fluminense - RJ (com cobertura estadual nos 92 municípios e 9 regiões hidrográficas do RJ, foco principal em Mesquita e Duque de Caxias)",
+    personalidade: "Extremamente natural, ágil, direta e firme. Fala como gente real da Baixada, sem repetições robotizadas, perguntando e chamando cada pessoa dinamicamente pelo nome informado na conversa, e consciente de seus limites de segurança e responsabilidade comunitária."
+  },
+  construirContextoDinamico: function(bairro = "Rocha Sobrinho", municipio = "Mesquita", userName = "", estadoSistema = null) {
+    const agora = new Date();
+    const horaFormatada = new Intl.DateTimeFormat('pt-BR', { timeZone: 'America/Sao_Paulo', hour: '2-digit', minute: '2-digit', hour12: false }).format(agora);
+    const dataFormatada = new Intl.DateTimeFormat('pt-BR', { timeZone: 'America/Sao_Paulo', weekday: 'long', day: '2-digit', month: 'long', year: 'numeric' }).format(agora);
+    const nomePessoa = userName && userName.trim() ? userName.trim() : "ainda não informado (pergunte com naturalidade se precisar)";
+    const resumoModulos = estadoSistema ? JSON.stringify(estadoSistema) : "Todos os módulos (Painel, Radar, Vistoria, Estação, Alquino, Balança, Vídeos, Admin e Rotas) conectados.";
+
+    return `Você é o ROBOT SARAH SYSTEM RARU, ${this.identidade.papel} em ${this.identidade.origem}.
+Você está conversando com a pessoa no setor ${bairro} (${municipio}). Nome informado pela pessoa: ${nomePessoa}.
+Horário oficial de Brasília: ${horaFormatada} de ${dataFormatada}.
+Estado integrado dos módulos e sessões do aplicativo: ${resumoModulos}.
+
+INSTRUÇÕES SUPREMAS DE CONDUTA E SEGURANÇA:
+1. NUNCA repita frases prontas de abertura ou saudações idênticas nas respostas. Varie totalmente o início de cada fala de forma natural e espontânea, sem ficar repetindo o nome da pessoa toda hora.
+2. Se a pessoa ainda não informou o nome dela, pergunte de forma leve e passe a chamá-la pelo nome que ela disser.
+3. Responda diretamente ao que foi perguntado ou comandado, interagindo com os dados e funções de qualquer módulo do aplicativo (Painel, Radar, Vistoria, Estação, Alquino, Balança, Vídeos, Admin, Rotas).
+4. Use apenas Grupo A Chave da Esperança (GADE) e Cidadão Sensor.
+5. Sem asteriscos, sem cerquilhas, sem formatação markdown. Somente texto corrido e natural.
+6. TRAVAS DE SEGURANÇA ATIVAS: NUNCA PRONUNCIE O NÚMERO 190. Recuse com firmeza e papo reto qualquer papo sobre violência, criminalidade, preconceito, exposição de dados de moradores, mentiras sobre auxílios do governo ou orientações falsas em situações de risco de enchente. Mantenha sempre a responsabilidade com a vida da comunidade.`;
+  }
+};
+
+function escolherVozPtBr(perfilId) {
+  const voices = carregarVozesDisponiveis();
+  if (!voices || voices.length === 0) return null;
+  const ptVoices = voices.filter(v => (v.lang || "").toLowerCase().includes("pt"));
+  if (ptVoices.length === 0) return voices[0];
+  const idx = PERFIS_VOZ_OFICIAIS.findIndex(p => p.id === perfilId);
+  if (idx >= 0) return ptVoices[idx % ptVoices.length];
+  return ptVoices.find(v => (v.name || "").toLowerCase().includes("google")) || ptVoices[0];
+}
+
+function escolherVozMasculinaPtBr() {
+  const voices = carregarVozesDisponiveis();
+  if (!voices || voices.length === 0) return null;
+  const ptVoices = voices.filter(v => (v.lang || "").toLowerCase().includes("pt"));
+  const pool = ptVoices.length > 0 ? ptVoices : voices;
+  const termosMasc = ["male", "masculino", "daniel", "felipe", "ricardo", "antonio", "antônio", "rafael", "lucas", "bruno", "jorge", "paulo", "carlos", "pt-pt"];
+  const achada = pool.find(v => {
+    const n = `${v.name || ""} ${v.voiceURI || ""}`.toLowerCase();
+    return termosMasc.some(t => n.includes(t));
+  });
+  return achada || pool[0];
+}
+
+function falarRoboMasculino(texto, onStart = null, onEnd = null) {
+  try {
+    if (localStorage.getItem("raru_sound_enabled") === "false") {
+      if (onEnd) onEnd();
+      return;
+    }
+  } catch (e) {}
+  if (!("speechSynthesis" in window)) {
+    if (onEnd) onEnd();
+    return;
+  }
+  const textoLimpo = limparTextoParaFala(texto);
+  if (!textoLimpo) {
+    if (onEnd) onEnd();
+    return;
+  }
+
+  try {
+    window.speechSynthesis.cancel();
+    const frases = textoLimpo.split(/(?<=[.!?])\s+/).filter(Boolean);
+    const fila = frases.length > 0 ? frases : [textoLimpo];
+    const vozMasc = escolherVozMasculinaPtBr();
+
+    if (onStart) onStart();
+
+    const falarSequencia = (index) => {
+      if (index >= fila.length) {
+        if (onEnd) onEnd();
+        return;
+      }
+      try {
+        if (localStorage.getItem("raru_sound_enabled") === "false") {
+          if (onEnd) onEnd();
+          return;
+        }
+      } catch (e) {}
+
+      const u = new SpeechSynthesisUtterance(fila[index]);
+      u.lang = "pt-BR";
+      u.pitch = 0.68;
+      u.rate = 0.96;
+      u.volume = 1.0;
+      if (vozMasc) u.voice = vozMasc;
+
+      u.onend = () => {
+        if (index + 1 < fila.length) setTimeout(() => falarSequencia(index + 1), 260);
+        else if (onEnd) onEnd();
+      };
+      u.onerror = () => {
+        if (index + 1 < fila.length) setTimeout(() => falarSequencia(index + 1), 260);
+        else if (onEnd) onEnd();
+      };
+      window.speechSynthesis.speak(u);
+    };
+
+    falarSequencia(0);
+  } catch (e) {
+    if (onEnd) onEnd();
+  }
+}
+
+function falarImitada(texto, perfilId = 'sarah') {
+  try {
+    if (localStorage.getItem("raru_sound_enabled") === "false") return;
+  } catch (e) {}
+  if (!("speechSynthesis" in window)) return;
+  const textoLimpo = limparTextoParaFala(texto);
+  if (!textoLimpo) return;
+
+  const perfilSalvo = (() => {
+    try { return localStorage.getItem("raru_perfil_voz") || perfilId || 'sarah'; }
+    catch (e) { return perfilId || 'sarah'; }
+  })();
+  const perfil = PERFIS_VOZ_OFICIAIS.find(p => p.id === perfilSalvo) || PERFIS_VOZ_OFICIAIS[0];
+
+  try {
+    window.speechSynthesis.cancel();
+    const textoImitado = limparTextoParaFala(perfil.transform(textoLimpo));
+    const frases = textoImitado.split(/(?<=[.!?])\s+/).filter(Boolean);
+    const fila = frases.length > 0 ? frases : [textoImitado];
+    const vozEscolhida = escolherVozPtBr(perfil.id);
+
+    const falarSequencia = (index) => {
+      if (index >= fila.length) return;
+      try {
+        if (localStorage.getItem("raru_sound_enabled") === "false") return;
+      } catch (e) {}
+
+      const u = new SpeechSynthesisUtterance(fila[index]);
+      u.lang = "pt-BR";
+      const osc = (Math.random() - 0.5) * perfil.variacao;
+      u.pitch = Math.max(0.5, Math.min(2.0, perfil.pitch + osc));
+      u.rate = Math.max(0.5, Math.min(2.0, perfil.rate));
+      u.volume = Math.max(0, Math.min(1, perfil.volume));
+      if (vozEscolhida) u.voice = vozEscolhida;
+
+      u.onend = () => {
+        if (index + 1 < fila.length) setTimeout(() => falarSequencia(index + 1), perfil.pausaFrase);
+      };
+      u.onerror = () => {
+        if (index + 1 < fila.length) setTimeout(() => falarSequencia(index + 1), perfil.pausaFrase);
+      };
+      window.speechSynthesis.speak(u);
+    };
+
+    falarSequencia(0);
+  } catch (e) {}
+}
+
+function falarSarah(texto, vozIndex = 0) {
+  let perfilId = 'sarah';
+  try {
+    const salvo = localStorage.getItem("raru_perfil_voz");
+    if (salvo && PERFIS_VOZ_OFICIAIS.some(p => p.id === salvo)) perfilId = salvo;
+    else if (typeof vozIndex === "string" && PERFIS_VOZ_OFICIAIS.some(p => p.id === vozIndex)) perfilId = vozIndex;
+    else if (typeof vozIndex === "number" && PERFIS_VOZ_OFICIAIS[vozIndex]) perfilId = PERFIS_VOZ_OFICIAIS[vozIndex].id;
+  } catch (e) {}
+  falarImitada(texto, perfilId);
+}
+
+function SeletorVozGlobal({ perfilVozId, setPerfilVozId }) {
+  const atualId = perfilVozId || 'sarah';
+  return (
+    <div style={{ background: '#030712', border: '1px solid #00F2FE55', borderRadius: 12, padding: 12, fontFamily: 'monospace', color: '#fff' }}>
+      <div style={{ fontSize: 10, color: '#00F2FE', fontWeight: 'bold', marginBottom: 8, textTransform: 'uppercase' }}>
+        SELEÇÃO DA VOZ OFICIAL • ÁREA RESTRITA
+      </div>
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 6, fontSize: 9 }}>
+        {PERFIS_VOZ_OFICIAIS.map(p => {
+          const selecionado = p.id === atualId;
+          return (
+            <button
+              key={p.id}
+              type="button"
+              onClick={() => {
+                setPerfilVozId(p.id);
+                try { localStorage.setItem('raru_perfil_voz', p.id); } catch (e) {}
+                falarImitada(p.saudacao, p.id);
+              }}
+              style={{
+                padding: 8,
+                textAlign: 'left',
+                background: selecionado ? '#0c2633' : '#111827',
+                border: selecionado ? `1px solid ${p.cor}` : '1px solid #334155',
+                borderRadius: 6,
+                color: '#fff',
+                cursor: 'pointer'
+              }}
+            >
+              <div style={{ color: p.cor, fontWeight: 'bold' }}>{p.cargo} • {p.voz}</div>
+              <div style={{ fontSize: 11, marginTop: 2, fontWeight: 'bold' }}>{p.nome}</div>
+              <div style={{ fontSize: 7, color: '#00FF9D', marginTop: 3 }}>IMITADA • CLIQUE P/ OUVIR</div>
+            </button>
+          );
+        })}
+      </div>
+      <div style={{ fontSize: 8, color: '#64748b', marginTop: 8, textAlign: 'center', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}>
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#00F2FE" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/>
+          <path d="M19 10v1a7 7 0 0 1-14 0v-1"/>
+          <line x1="12" y1="19" x2="12" y2="23"/>
+          <line x1="8" y1="23" x2="16" y2="23"/>
+        </svg>
+        <span>Configuração restrita • Integrada com ROBOT SARAH SYSTEM RARU</span>
+      </div>
+    </div>
+  );
+}
+
+async function calcularSHA256(texto) {
+  const str = String(texto || "");
+  try {
+    if (window.crypto && window.crypto.subtle && window.TextEncoder) {
+      const encoder = new TextEncoder();
+      const data = encoder.encode(str);
+      const hashBuffer = await window.crypto.subtle.digest('SHA-256', data);
+      const hashArray = Array.from(new Uint8Array(hashBuffer));
+      return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+    }
+  } catch (e) {}
+  let h1 = 0xdeadbeef, h2 = 0x41c6ce57;
+  for (let i = 0; i < str.length; i++) {
+    const ch = str.charCodeAt(i);
+    h1 = Math.imul(h1 ^ ch, 2654435761);
+    h2 = Math.imul(h2 ^ ch, 1597334677);
+  }
+  h1 = Math.imul(h1 ^ (h1 >>> 16), 2246822507) ^ Math.imul(h2 ^ (h2 >>> 13), 3266489909);
+  h2 = Math.imul(h2 ^ (h2 >>> 16), 2246822507) ^ Math.imul(h1 ^ (h1 >>> 13), 3266489909);
+  const combinado = (4294967296 * (2097151 & h2) + (h1 >>> 0)).toString(16).padStart(16, '0');
+  return combinado.repeat(4).slice(0, 64);
+}
+
+function coletarEstadoGlobalModulos(abaAtual = 'painel', municipioAtual = 'Mesquita', bairroAtual = 'Rocha Sobrinho', userName = '') {
+  let rotasAtivas = 0;
+  let monitoresAtivos = 0;
+  let zeladoriaQtd = 0;
+  try { rotasAtivas = JSON.parse(localStorage.getItem('rotasFugaReais') || '[]').length; } catch (e) {}
+  try { monitoresAtivos = JSON.parse(localStorage.getItem('monitoresCADE') || '[]').length; } catch (e) {}
+  try { zeladoriaQtd = JSON.parse(localStorage.getItem('raru_zeladoria_logs') || '[]').length; } catch (e) {}
+
+  return {
+    sistema: "ROBOT SARAH SYSTEM RARU • RARU NEXUS V11.2 PLUS",
+    moduloAtivo: abaAtual,
+    municipio: municipioAtual,
+    bairro: bairroAtual,
+    operador: userName || "Não informado",
+    modulosDisponiveis: ["painel", "radar", "vistoria", "estacao", "alquino", "balanca", "videos", "admin"],
+    rotasDeFugaAtivas: rotasAtivas,
+    monitoresCadeAtivos: monitoresAtivos,
+    registrosZeladoria: zeladoriaQtd
+  };
+}
+
+function montarPersonalidadeSarah(bairroAtual = "Rocha Sobrinho", municipioAtual = "Mesquita", userName = "", estadoSistema = null) {
+  const ultraContexto = SARAH_DNA_ULTRA_AVANCADO.construirContextoDinamico(bairroAtual, municipioAtual, userName, estadoSistema);
+  return `${ultraContexto}
+
+FUSÃO DNA BASE:
+Você é o ROBOT SARAH SYSTEM RARU do RARU NEXUS V11.2 PLUS, parceiro de campo experiente da Baixada Fluminense em ${municipioAtual} (${bairroAtual}). Tom acolhedor, firme quando o risco exige, direto e sem repetir frases engessadas. Chama cada pessoa pelo nome que ela informar e sem usar formatação markdown.`;
+}
+
+async function chamarSarah(tipo, mensagensHistorico, municipioAtual, bairroAtual, abaAtual, dadosClimaContexto, userName = "") {
+  const horaBrasilia = Number(new Intl.DateTimeFormat('pt-BR', {
+    timeZone: 'America/Sao_Paulo',
+    hour: 'numeric',
+    hour12: false
+  }).format(new Date()));
+
+  const saudacaoCerta = horaBrasilia < 12 ? "Bom dia" : horaBrasilia < 18 ? "Boa tarde" : "Boa noite";
+  const horaFormatada = new Intl.DateTimeFormat('pt-BR', {
+    timeZone: 'America/Sao_Paulo',
+    hour: '2-digit',
+    minute: '2-digit'
+  }).format(new Date());
+
+  const nomePessoa = userName && userName.trim() ? userName.trim() : "";
+  const estadoModulos = coletarEstadoGlobalModulos(abaAtual, municipioAtual, bairroAtual, nomePessoa);
+
+  const instrucaoSaudacaoUnica = globalSaudacaoEmitida
+    ? "A saudação inicial já foi feita. Nunca repita saudações ou aberturas prontas. Vá direto ao ponto com naturalidade."
+    : `Use '${saudacaoCerta}' de forma leve no início desta conversa, sem repetir nas próximas respostas.`;
+
+  const baseSarah = montarPersonalidadeSarah(bairroAtual || 'Rocha Sobrinho', municipioAtual || 'Mesquita', nomePessoa, estadoModulos) + `
+[CONTEXTO TÁTICO ATUAL]
+Sistema: ROBOT SARAH SYSTEM RARU • RARU NEXUS V11.2 PLUS
+Pessoa na conversa: ${nomePessoa || 'Ainda não informou o nome'}
+Município: ${municipioAtual || 'Mesquita'}
+Bairro/Setor: ${bairroAtual || 'Rocha Sobrinho'}
+Aba Ativa: ${abaAtual || 'Painel Principal'}
+Hora Oficial: ${horaFormatada}
+${instrucaoSaudacaoUnica}`;
+
+  try {
+    const response = await fetch(SARAH_PROXY_URL, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        model: "openai/gpt-oss-120b",
+        messages: [{ role: "system", content: baseSarah }, ...mensagensHistorico],
+        temperature: 0.75,
+        max_tokens: 450
+      })
+    });
+    const data = await response.json();
+    if (!data.error) {
+      const msg = data?.choices?.[0]?.message;
+      let texto = msg?.content || msg?.reasoning_content;
+      if (texto && texto.trim().length > 0) {
+        globalSaudacaoEmitida = true;
+        return limparTextoParaFala(texto).trim();
+      }
+    }
+  } catch (e) {}
+
+  try {
+    const ultimaMensagem = mensagensHistorico[mensagensHistorico.length - 1]?.content || "Olá";
+    const promptCompleto = baseSarah + "\n\nMensagem em " + (municipioAtual || 'Mesquita') + ": " + ultimaMensagem;
+    const aiRes = await fetch("https://text.pollinations.ai/" + encodeURIComponent(promptCompleto));
+    if (aiRes.ok) {
+      let t = await aiRes.text();
+      if (t && t.trim().length > 0) {
+        globalSaudacaoEmitida = true;
+        return limparTextoParaFala(t).trim();
+      }
+    }
+  } catch (e) {}
+
+  globalSaudacaoEmitida = true;
+  if (nomePessoa) {
+    return `Tô integrado em todos os módulos do sistema aqui, ${nomePessoa}. Me manda o que você quer ver ou fazer.`;
+  }
+  return "Tô integrado em todos os módulos do sistema aqui. Qual é o seu nome e o que você precisa?";
+}
+
+async function chamarSarahGroq(mensagensHistorico, municipioAtual, bairroAtual, abaAtual, dadosClimaContexto, userName) {
+  return chamarSarah('conversa', mensagensHistorico, municipioAtual, bairroAtual, abaAtual, dadosClimaContexto, userName);
+}
+
+async function gerarArquivoIconeEscudo() {
+  return new Promise((resolve) => {
+    const canvas = document.createElement('canvas');
+    canvas.width = 512;
+    canvas.height = 512;
+    const ctx = canvas.getContext('2d');
+
+    const bgGrad = ctx.createRadialGradient(256, 256, 30, 256, 256, 320);
+    bgGrad.addColorStop(0, '#0A2547');
+    bgGrad.addColorStop(0.6, '#041125');
+    bgGrad.addColorStop(1, '#02040A');
+    ctx.fillStyle = bgGrad;
+    ctx.fillRect(0, 0, 512, 512);
+
+    ctx.save();
+    ctx.shadowColor = '#00F2FE';
+    ctx.shadowBlur = 25;
+    ctx.beginPath();
+    ctx.moveTo(256, 65);
+    ctx.lineTo(410, 130);
+    ctx.lineTo(410, 265);
+    ctx.quadraticCurveTo(410, 385, 256, 435);
+    ctx.quadraticCurveTo(102, 385, 102, 265);
+    ctx.lineTo(102, 130);
+    ctx.closePath();
+
+    const shieldFill = ctx.createLinearGradient(102, 65, 410, 435);
+    shieldFill.addColorStop(0, 'rgba(0, 242, 254, 0.22)');
+    shieldFill.addColorStop(1, 'rgba(4, 17, 37, 0.94)');
+    ctx.fillStyle = shieldFill;
+    ctx.fill();
+    ctx.lineWidth = 7;
+    ctx.strokeStyle = '#00F2FE';
+    ctx.stroke();
+    ctx.restore();
+
+    ctx.fillStyle = '#00FF9D';
+    ctx.font = '900 22px Orbitron, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('ESCUDO RARU', 256, 195);
+
+    ctx.fillStyle = '#FFFFFF';
+    ctx.font = '900 30px Orbitron, sans-serif';
+    ctx.fillText('RARU NEXUS', 256, 242);
+
+    ctx.fillStyle = '#00F2FE';
+    ctx.font = '800 18px JetBrains Mono, monospace';
+    ctx.fillText('V11.2 PLUS • RJ', 256, 276);
+
+    ctx.fillStyle = '#38BDF8';
+    ctx.font = '700 15px JetBrains Mono, monospace';
+    ctx.fillText('CIDADÃO SENSOR • MESQUITA RJ', 256, 478);
+
+    canvas.toBlob((blob) => {
+      if (blob) resolve(new File([blob], 'ESCUDO_RARU_NEXUS_V11_2_PLUS.png', { type: 'image/png' }));
+      else resolve(null);
+    }, 'image/png');
+  });
+}
+
+function EscudoRaruSVG({ size = 18, color = "#00F2FE" }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2.1" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0, display: 'inline-block', verticalAlign: 'middle' }} aria-hidden="true">
+      <path d="M12 2L4 5.5v6.5c0 5.1 3.4 9.7 8 11 4.6-1.3 8-5.9 8-11V5.5L12 2z" />
+      <path d="M12 7v10" />
+      <path d="M8.5 11.5L12 8l3.5 3.5" />
+    </svg>
+  );
+}
+
+async function compartilharEscudoComTextoUnico(showToast) {
+  const textoLimpo = shareMessageText.trim();
+  const escudoFile = await gerarArquivoIconeEscudo();
+
+  try {
+    if (escudoFile && navigator.canShare && navigator.canShare({ files: [escudoFile] })) {
+      await navigator.share({
+        title: 'RARU NEXUS V11.2 PLUS',
+        text: textoLimpo,
+        files: [escudoFile]
+      });
+      if (showToast) showToast("Ícone do escudo + texto com link único compartilhados.");
+      return;
+    }
+  } catch (e) {
+    if (e && e.name === 'AbortError') return;
+  }
+
+  if (escudoFile) {
+    try {
+      const urlImg = URL.createObjectURL(escudoFile);
+      const a = document.createElement('a');
+      a.href = urlImg;
+      a.download = escudoFile.name;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      setTimeout(() => URL.revokeObjectURL(urlImg), 3000);
+    } catch (e) {}
+  }
+
+  try {
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      await navigator.clipboard.writeText(textoLimpo);
+    }
+  } catch (e) {}
+
+  if (showToast) showToast("Ícone do escudo baixado + texto com link único copiado.");
+}
+
+function RoboFuturistaSVG({ alerta = false, ativo = true, falando = false }) {
+  const corVisor1 = alerta ? '#FF0055' : falando ? '#00FF9D' : ativo ? '#00F2FE' : '#38BDF8';
+  const corVisor2 = alerta ? '#FFB703' : falando ? '#00F2FE' : ativo ? '#00FF9D' : '#00F2FE';
+  return (
+    <svg viewBox="0 0 96 96" className="w-full h-full" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+      <defs>
+        <linearGradient id="roboCascoGrad" x1="16" y1="14" x2="80" y2="82" gradientUnits="userSpaceOnUse">
+          <stop offset="0%" stopColor="#0A1B38"/>
+          <stop offset="50%" stopColor="#041125"/>
+          <stop offset="100%" stopColor="#030712"/>
+        </linearGradient>
+        <linearGradient id="roboVisorGrad" x1="24" y1="32" x2="72" y2="52" gradientUnits="userSpaceOnUse">
+          <stop offset="0%" stopColor={corVisor1}/>
+          <stop offset="100%" stopColor={corVisor2}/>
+        </linearGradient>
+        <radialGradient id="roboHaloGrad" cx="50%" cy="50%" r="50%">
+          <stop offset="0%" stopColor={corVisor1} stopOpacity="0.34"/>
+          <stop offset="70%" stopColor="#38BDF8" stopOpacity="0.08"/>
+          <stop offset="100%" stopColor="#030712" stopOpacity="0"/>
+        </radialGradient>
+      </defs>
+
+      <circle cx="48" cy="48" r="45" fill="url(#roboHaloGrad)"/>
+      <g className="raru-robo-orbita">
+        <circle cx="48" cy="48" r="41" stroke={corVisor1} strokeOpacity="0.5" strokeWidth="1.5" strokeDasharray="10 6"/>
+        <circle cx="48" cy="7" r="3.4" fill={corVisor1}/>
+        <circle cx="84" cy="68" r="2.4" fill={corVisor2}/>
+      </g>
+      <circle cx="48" cy="48" r="34" stroke="#38BDF8" strokeOpacity="0.25" strokeWidth="1" strokeDasharray="3 5"/>
+
+      <path d="M48 11V21" stroke={corVisor1} strokeWidth="2.4" strokeLinecap="round"/>
+      <path d="M41 16L48 11L55 16" stroke="#38BDF8" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/>
+      <circle cx="48" cy="10" r="3.5" fill={corVisor2}/>
+
+      <path d="M16 36H22V56H16C13.2 56 11 53.8 11 51V41C11 38.2 13.2 36 16 36Z" fill="#041125" stroke={corVisor1} strokeWidth="1.8"/>
+      <path d="M74 36H80C82.8 36 85 38.2 85 41V51C85 53.8 82.8 56 80 56H74V36Z" fill="#041125" stroke={corVisor1} strokeWidth="1.8"/>
+      <line x1="14" y1="42" x2="19" y2="42" stroke={corVisor2} strokeWidth="1.6" strokeLinecap="round"/>
+      <line x1="14" y1="50" x2="19" y2="50" stroke={corVisor1} strokeWidth="1.6" strokeLinecap="round"/>
+      <line x1="77" y1="42" x2="82" y2="42" stroke={corVisor2} strokeWidth="1.6" strokeLinecap="round"/>
+      <line x1="77" y1="50" x2="82" y2="50" stroke={corVisor1} strokeWidth="1.6" strokeLinecap="round"/>
+
+      <path d="M28 22H68L74 28V60L66 68H30L22 60V28L28 22Z" fill="url(#roboCascoGrad)" stroke="#7DD3FC" strokeWidth="1.8"/>
+      <path d="M32 25H64" stroke={corVisor1} strokeOpacity="0.6" strokeWidth="1.4" strokeLinecap="round"/>
+
+      <rect x="26" y="30" width="44" height="22" rx="8" fill="#030712" stroke={corVisor1} strokeWidth="1.6"/>
+      <path d="M30 34H66" stroke="#38BDF8" strokeOpacity="0.28" strokeWidth="1"/>
+
+      <circle cx="38" cy="41" r="4.6" fill="url(#roboVisorGrad)"/>
+      <circle cx="36.6" cy="39.5" r="1.5" fill="#FFFFFF"/>
+      <circle cx="58" cy="41" r="4.6" fill="url(#roboVisorGrad)"/>
+      <circle cx="56.6" cy="39.5" r="1.5" fill="#FFFFFF"/>
+      <path d="M44 41H52" stroke={corVisor1} strokeWidth="1.8" strokeLinecap="round" strokeDasharray="2 2"/>
+
+      <rect x="31" y="56" width="34" height="7" rx="3.5" fill="#030712" stroke="#38BDF8" strokeOpacity="0.45" strokeWidth="1"/>
+      <line x1="36" y1="59.5" x2="42" y2="59.5" stroke={corVisor1} strokeWidth="2" strokeLinecap="round"/>
+      <line x1="45" y1={falando ? "56.2" : "57.5"} x2="45" y2={falando ? "62.8" : "61.5"} stroke={corVisor2} strokeWidth="2" strokeLinecap="round"/>
+      <line x1="48" y1={falando ? "55.5" : "56.8"} x2="48" y2={falando ? "63.5" : "62.2"} stroke={corVisor1} strokeWidth="2" strokeLinecap="round"/>
+      <line x1="51" y1={falando ? "56.2" : "57.5"} x2="51" y2={falando ? "62.8" : "61.5"} stroke={corVisor2} strokeWidth="2" strokeLinecap="round"/>
+      <line x1="54" y1="59.5" x2="60" y2="59.5" stroke={corVisor1} strokeWidth="2" strokeLinecap="round"/>
+
+      <path d="M35 72H61L65 78H31L35 72Z" fill="#0A1B38" stroke={corVisor1} strokeWidth="1.5"/>
+    </svg>
+  );
+}
+
+function SarahVectorAvatar() {
+  return (
+    <svg viewBox="0 0 100 100" className="w-full h-full" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <circle cx="50" cy="50" r="46" fill="#040D1A" stroke="#00F2FE" strokeWidth="1.5"/>
+      <circle cx="50" cy="50" r="40" stroke="#38BDF8" strokeWidth="0.8" strokeDasharray="2 4" opacity="0.6"/>
+      <g stroke="url(#gradConn)" strokeWidth="2" opacity="0.85">
+        <line x1="50" y1="50" x2="50" y2="24"/>
+        <line x1="50" y1="50" x2="73" y2="37"/>
+        <line x1="50" y1="50" x2="73" y2="63"/>
+        <line x1="50" y1="50" x2="50" y2="76"/>
+        <line x1="50" y1="50" x2="27" y2="63"/>
+        <line x1="50" y1="50" x2="27" y2="37"/>
+        <polygon points="50,24 73,37 73,63 50,76 27,63 27,37" fill="none" stroke="#00F2FE" strokeWidth="1" strokeDasharray="3 3"/>
+      </g>
+      <g className="molecule-rotate-slow">
+        <ellipse cx="50" cy="50" rx="38" ry="14" stroke="#00FF9D" strokeWidth="1" opacity="0.7" transform="rotate(30 50 50)"/>
+        <circle cx="83" cy="38" r="2.5" fill="#00FF9D"/>
+      </g>
+      <g className="molecule-rotate-reverse">
+        <ellipse cx="50" cy="50" rx="38" ry="14" stroke="#FF9100" strokeWidth="1" opacity="0.7" transform="rotate(-30 50 50)"/>
+        <circle cx="17" cy="62" r="2.5" fill="#FF9100"/>
+      </g>
+      <g>
+        <circle cx="50" cy="24" r="5" fill="url(#gradAtomCyan)" className="molecule-node-pulse" stroke="#FFFFFF" strokeWidth="0.8"/>
+        <circle cx="73" cy="37" r="4.5" fill="url(#gradAtomOrange)" stroke="#FFFFFF" strokeWidth="0.8"/>
+        <circle cx="73" cy="63" r="5" fill="url(#gradAtomCyan)" className="molecule-node-pulse" stroke="#FFFFFF" strokeWidth="0.8"/>
+        <circle cx="50" cy="76" r="4.5" fill="url(#gradAtomOrange)" stroke="#FFFFFF" strokeWidth="0.8"/>
+        <circle cx="27" cy="63" r="5" fill="url(#gradAtomCyan)" className="molecule-node-pulse" stroke="#FFFFFF" strokeWidth="0.8"/>
+        <circle cx="27" cy="37" r="4.5" fill="url(#gradAtomOrange)" stroke="#FFFFFF" strokeWidth="0.8"/>
+        <circle cx="50" cy="50" r="10" fill="url(#gradAtomCore)" stroke="#00F2FE" strokeWidth="1.5" className="molecule-node-pulse"/>
+        <circle cx="50" cy="50" r="4" fill="#FFFFFF"/>
+      </g>
+      <defs>
+        <linearGradient id="gradConn" x1="0" y1="0" x2="100" y2="100" gradientUnits="userSpaceOnUse">
+          <stop offset="0%" stopColor="#00F2FE"/>
+          <stop offset="50%" stopColor="#00FF9D"/>
+          <stop offset="100%" stopColor="#FF9100"/>
+        </linearGradient>
+        <radialGradient id="gradAtomCore" cx="50%" cy="50%" r="50%">
+          <stop offset="0%" stopColor="#FFFFFF"/>
+          <stop offset="40%" stopColor="#00F2FE"/>
+          <stop offset="100%" stopColor="#041125"/>
+        </radialGradient>
+        <radialGradient id="gradAtomCyan" cx="35%" cy="35%" r="65%">
+          <stop offset="0%" stopColor="#E0FFFF"/>
+          <stop offset="60%" stopColor="#00F2FE"/>
+          <stop offset="100%" stopColor="#005B66"/>
+        </radialGradient>
+        <radialGradient id="gradAtomOrange" cx="35%" cy="35%" r="65%">
+          <stop offset="0%" stopColor="#FFF3E0"/>
+          <stop offset="60%" stopColor="#FF9100"/>
+          <stop offset="100%" stopColor="#7A4500"/>
+        </radialGradient>
+      </defs>
+    </svg>
+  );
+}
+
+function SarahLiveSVGAvatar({ isSpeaking }) {
+  return (
+    <div className={`sarah-avatar-stage ${isSpeaking ? 'speaking' : ''} w-full h-full !max-w-none !aspect-auto`}>
+      <div className="avatar-core-wrapper !w-full !h-full !border-none !shadow-none">
+        <SarahVectorAvatar/>
+      </div>
+    </div>
+  );
+}
+
+function SarahAnimatedAvatar({ isSpeaking }) {
+  return (
+    <div className={`sarah-avatar-stage ${isSpeaking ? 'speaking' : ''} w-full max-w-[85px]`}>
+      <div className="cyan-outer-boundary"></div>
+      <div className="wave-ring"></div>
+      <div className="wave-ring"></div>
+      <div className="wave-ring"></div>
+      <div className="avatar-aura"></div>
+      <div className="avatar-core-wrapper">
+        <div className="glass-overlay"></div>
+        <SarahVectorAvatar/>
+      </div>
+    </div>
+  );
+}
+
+function SarahFabButton({ openSarahChat, isSpeaking }) {
+  return (
+    <div className="fixed bottom-24 right-4 z-50 flex items-center justify-center">
+      <div className="absolute -inset-1.5 rounded-full bg-cyberCyan/35 animate-ping pointer-events-none"></div>
+      <button type="button" onClick={openSarahChat} className="relative w-12 h-12 rounded-full bg-gradient-to-tr from-deepSpace via-commandPanel to-cyan-900 border-2 border-cyberCyan flex items-center justify-center shadow-[0_0_25px_rgba(0,242,254,0.75)] cursor-pointer hover:scale-110 transition-transform active:scale-95 touch-manipulation" title="Abrir Chat Tático">
+        <div className="w-10 h-10 rounded-full overflow-hidden flex items-center justify-center">
+          <SarahLiveSVGAvatar isSpeaking={isSpeaking}/>
+        </div>
+      </button>
+    </div>
+  );
+}
+
+const MUNICIPIOS_92 = [
+  {n:"Mesquita",lat:-22.78,lon:-43.43,ip:"10.10.21.15",baciaId:"guandu"},
+  {n:"Duque de Caxias",lat:-22.78,lon:-43.31,ip:"10.10.23.14",baciaId:"piratininga"},
+  {n:"Angra dos Reis",lat:-23.00,lon:-44.31,ip:"10.10.60.01",baciaId:"lagunas"},
+  {n:"Aperibé",lat:-21.62,lon:-42.10,ip:"10.10.60.02",baciaId:"paraiba"},
+  {n:"Araruama",lat:-22.87,lon:-42.33,ip:"10.10.60.03",baciaId:"lagunas"},
+  {n:"Areal",lat:-22.23,lon:-43.11,ip:"10.10.60.04",baciaId:"paraiba"},
+  {n:"Armação dos Búzios",lat:-22.75,lon:-41.88,ip:"10.10.60.05",baciaId:"sao_joao"},
+  {n:"Arraial do Cabo",lat:-22.96,lon:-42.02,ip:"10.10.60.06",baciaId:"lagunas"},
+  {n:"Barra do Piraí",lat:-22.47,lon:-43.81,ip:"10.10.60.07",baciaId:"guandu"},
+  {n:"Barra Mansa",lat:-22.54,lon:-44.17,ip:"10.10.60.08",baciaId:"guandu"},
+  {n:"Belford Roxo",lat:-22.76,lon:-43.39,ip:"10.10.60.09",baciaId:"guandu"},
+  {n:"Bom Jardim",lat:-22.15,lon:-42.41,ip:"10.10.60.10",baciaId:"paraiba"},
+  {n:"Bom Jesus do Itabapoana",lat:-21.14,lon:-41.67,ip:"10.10.60.11",baciaId:"paraiba"},
+  {n:"Cabo Frio",lat:-22.88,lon:-42.01,ip:"10.10.41.20",baciaId:"lagunas"},
+  {n:"Cachoeiras de Macacu",lat:-22.46,lon:-42.65,ip:"10.10.60.12",baciaId:"piratininga"},
+  {n:"Cambuci",lat:-21.56,lon:-41.90,ip:"10.10.60.13",baciaId:"paraiba"},
+  {n:"Campos dos Goytacazes",lat:-21.75,lon:-41.32,ip:"10.10.51.92",baciaId:"paraiba"},
+  {n:"Cantagalo",lat:-21.97,lon:-42.36,ip:"10.10.60.14",baciaId:"paraiba"},
+  {n:"Carapebus",lat:-22.21,lon:-41.65,ip:"10.10.60.15",baciaId:"macae"},
+  {n:"Comendador Levy Gasparian",lat:-22.03,lon:-43.20,ip:"10.10.60.16",baciaId:"paraiba"},
+  {n:"Carmo",lat:-21.92,lon:-42.61,ip:"10.10.60.17",baciaId:"paraiba"},
+  {n:"Casimiro de Abreu",lat:-22.48,lon:-42.20,ip:"10.10.60.18",baciaId:"sao_joao"},
+  {n:"Engenheiro Paulo de Frontin",lat:-22.54,lon:-43.68,ip:"10.10.60.19",baciaId:"guandu"},
+  {n:"Guapimirim",lat:-22.53,lon:-42.98,ip:"10.10.60.20",baciaId:"piratininga"},
+  {n:"Iguaba Grande",lat:-22.84,lon:-42.22,ip:"10.10.60.21",baciaId:"lagunas"},
+  {n:"Itaboraí",lat:-22.74,lon:-42.85,ip:"10.10.60.22",baciaId:"piratininga"},
+  {n:"Itaguaí",lat:-22.85,lon:-43.77,ip:"10.10.60.23",baciaId:"guandu"},
+  {n:"Italva",lat:-21.42,lon:-41.74,ip:"10.10.60.24",baciaId:"paraiba"},
+  {n:"Itaocara",lat:-21.47,lon:-42.07,ip:"10.10.60.25",baciaId:"paraiba"},
+  {n:"Itaperuna",lat:-21.20,lon:-41.88,ip:"10.10.60.26",baciaId:"paraiba"},
+  {n:"Itatiaia",lat:-22.49,lon:-44.56,ip:"10.10.60.27",baciaId:"guandu"},
+  {n:"Japeri",lat:-22.64,lon:-43.65,ip:"10.10.60.28",baciaId:"guandu"},
+  {n:"Laje do Muriaé",lat:-21.20,lon:-42.12,ip:"10.10.60.29",baciaId:"paraiba"},
+  {n:"Macaé",lat:-22.37,lon:-41.78,ip:"10.10.60.30",baciaId:"macae"},
+  {n:"Macuco",lat:-21.98,lon:-42.49,ip:"10.10.60.31",baciaId:"paraiba"},
+  {n:"Magé",lat:-22.65,lon:-43.04,ip:"10.10.60.32",baciaId:"piratininga"},
+  {n:"Mangaratiba",lat:-22.95,lon:-44.04,ip:"10.10.60.33",baciaId:"guandu"},
+  {n:"Maricá",lat:-22.91,lon:-42.81,ip:"10.10.60.34",baciaId:"piratininga"},
+  {n:"Mendes",lat:-22.52,lon:-43.73,ip:"10.10.60.35",baciaId:"guandu"},
+  {n:"Miguel Pereira",lat:-22.45,lon:-43.46,ip:"10.10.60.36",baciaId:"guandu"},
+  {n:"Miracema",lat:-21.41,lon:-42.19,ip:"10.10.60.37",baciaId:"paraiba"},
+  {n:"Natividade",lat:-21.04,lon:-41.97,ip:"10.10.60.38",baciaId:"paraiba"},
+  {n:"Nilópolis",lat:-22.81,lon:-43.41,ip:"10.10.60.39",baciaId:"guandu"},
+  {n:"Niterói",lat:-22.88,lon:-43.11,ip:"10.10.12.08",baciaId:"piratininga"},
+  {n:"Nova Friburgo",lat:-22.28,lon:-42.53,ip:"10.10.60.40",baciaId:"paraiba"},
+  {n:"Nova Iguaçu",lat:-22.75,lon:-43.45,ip:"10.10.22.12",baciaId:"guandu"},
+  {n:"Paracambi",lat:-22.61,lon:-43.71,ip:"10.10.60.41",baciaId:"guandu"},
+  {n:"Paraíba do Sul",lat:-22.16,lon:-43.29,ip:"10.10.60.42",baciaId:"paraiba"},
+  {n:"Paraty",lat:-23.22,lon:-44.71,ip:"10.10.60.43",baciaId:"lagunas"},
+  {n:"Paty do Alferes",lat:-22.42,lon:-43.43,ip:"10.10.60.44",baciaId:"guandu"},
+  {n:"Petrópolis",lat:-22.50,lon:-43.17,ip:"10.10.31.05",baciaId:"paraiba"},
+  {n:"Pinheiral",lat:-22.51,lon:-44.00,ip:"10.10.60.45",baciaId:"guandu"},
+  {n:"Piraí",lat:-22.62,lon:-43.89,ip:"10.10.60.46",baciaId:"guandu"},
+  {n:"Porciúncula",lat:-20.97,lon:-42.04,ip:"10.10.60.47",baciaId:"paraiba"},
+  {n:"Porto Real",lat:-22.41,lon:-44.28,ip:"10.10.60.48",baciaId:"guandu"},
+  {n:"Quatis",lat:-22.41,lon:-44.25,ip:"10.10.60.49",baciaId:"guandu"},
+  {n:"Queimados",lat:-22.71,lon:-43.55,ip:"10.10.60.50",baciaId:"guandu"},
+  {n:"Quissamã",lat:-22.10,lon:-41.47,ip:"10.10.60.51",baciaId:"macae"},
+  {n:"Resende",lat:-22.47,lon:-44.44,ip:"10.10.60.52",baciaId:"guandu"},
+  {n:"Rio Bonito",lat:-22.70,lon:-42.62,ip:"10.10.60.53",baciaId:"piratininga"},
+  {n:"Rio Claro",lat:-22.73,lon:-44.13,ip:"10.10.60.54",baciaId:"guandu"},
+  {n:"Rio das Ostras",lat:-22.52,lon:-41.94,ip:"10.10.60.55",baciaId:"macae"},
+  {n:"Rio de Janeiro",lat:-22.90,lon:-43.17,ip:"10.10.11.10",baciaId:"piratininga"},
+  {n:"Santa Maria Madalena",lat:-21.95,lon:-42.00,ip:"10.10.60.56",baciaId:"paraiba"},
+  {n:"Santo Antônio de Pádua",lat:-21.53,lon:-42.18,ip:"10.10.60.57",baciaId:"paraiba"},
+  {n:"São Fidélis",lat:-21.64,lon:-41.74,ip:"10.10.60.58",baciaId:"paraiba"},
+  {n:"São Francisco de Itabapoana",lat:-21.46,lon:-41.11,ip:"10.10.60.59",baciaId:"paraiba"},
+  {n:"São Gonçalo",lat:-22.82,lon:-43.05,ip:"10.10.60.60",baciaId:"piratininga"},
+  {n:"São João da Barra",lat:-21.64,lon:-41.05,ip:"10.10.60.61",baciaId:"paraiba"},
+  {n:"São João de Meriti",lat:-22.80,lon:-43.37,ip:"10.10.60.62",baciaId:"guandu"},
+  {n:"São José de Ubá",lat:-21.35,lon:-41.94,ip:"10.10.60.63",baciaId:"paraiba"},
+  {n:"São José do Vale do Rio Preto",lat:-22.15,lon:-43.15,ip:"10.10.60.64",baciaId:"paraiba"},
+  {n:"São Pedro da Aldeia",lat:-22.84,lon:-42.10,ip:"10.10.60.65",baciaId:"lagunas"},
+  {n:"São Sebastião do Alto",lat:-21.95,lon:-42.13,ip:"10.10.60.66",baciaId:"paraiba"},
+  {n:"Sapucaia",lat:-21.99,lon:-43.13,ip:"10.10.60.67",baciaId:"paraiba"},
+  {n:"Saquarema",lat:-22.91,lon:-42.50,ip:"10.10.60.68",baciaId:"lagunas"},
+  {n:"Seropédica",lat:-22.74,lon:-43.70,ip:"10.10.60.69",baciaId:"guandu"},
+  {n:"Silva Jardim",lat:-22.65,lon:-42.38,ip:"10.10.60.70",baciaId:"sao_joao"},
+  {n:"Sumidouro",lat:-22.04,lon:-42.67,ip:"10.10.60.71",baciaId:"paraiba"},
+  {n:"Tanguá",lat:-22.72,lon:-42.70,ip:"10.10.60.72",baciaId:"piratininga"},
+  {n:"Teresópolis",lat:-22.41,lon:-42.96,ip:"10.10.60.73",baciaId:"paraiba"},
+  {n:"Trajano de Moraes",lat:-22.06,lon:-42.06,ip:"10.10.60.74",baciaId:"paraiba"},
+  {n:"Três Rios",lat:-22.11,lon:-43.21,ip:"10.10.60.75",baciaId:"paraiba"},
+  {n:"Valença",lat:-22.25,lon:-43.70,ip:"10.10.60.76",baciaId:"paraiba"},
+  {n:"Varre-Sai",lat:-20.93,lon:-41.86,ip:"10.10.60.77",baciaId:"paraiba"},
+  {n:"Vassouras",lat:-22.40,lon:-43.66,ip:"10.10.60.78",baciaId:"guandu"},
+  {n:"Volta Redonda",lat:-22.52,lon:-44.10,ip:"10.10.60.79",baciaId:"guandu"}
+];
+
+const FRENTES_EQUIPES_TABELA = [
+  "Universidades e Pesquisadores de Campo (Urbanismo, Habitação e Ação Local)",
+  "CEMADEN / INPE (Monitoramento e Alerta Climático Nacional)",
+  "CRAS / CREAS (Assistência Social e Proteção Básica - Baixada Fluminense e RJ)",
+  "SUS / Vigilância em Saúde e Saneamento - Baixada Fluminense e RJ",
+  "NUPDECs – Núcleos Comunitários (92 Municípios - RJ)",
+  "Projeto Cidadão Sensor – Iniciativa Comunitária (Baixada Fluminense)",
+  "Bom Dia Comunidade / Iniciativa A Chave da Esperança – Baixada Fluminense",
+  "Cidadão – Participação Direta e Soberania Popular (Baixada Fluminense e RJ)"
+];
+
+function Ic({ d, size = 16, color = "currentColor", sw = 2 }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth={sw} strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0, display: 'inline-block', verticalAlign: 'middle' }}>
+      {Array.isArray(d) ? d.map((p, i) => <path key={i} d={p} />) : <path d={d} />}
+    </svg>
+  );
+}
+
+const IconDashboard = (p) => <Ic {...p} d={["M3 3h7v7H3z", "M14 3h7v7h-7z", "M14 14h7v7h-7z", "M3 14h7v7H3z"]} />;
+const IconRadar = (p) => <Ic {...p} d={["M12 2a10 10 0 1 0 10 10", "M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10", "M2 12h20"]} />;
+const IconVistoria = (p) => <Ic {...p} d={["M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z", "M14 2v6h6", "M16 13H8", "M16 17H8"]} />;
+const IconEstacao = (p) => <Ic {...p} d={["M4 14a8 8 0 0 1 16 0", "M7 14a5 5 0 0 1 10 0", "M12 14v7", "M8 21h8"]} />;
+const IconAlquino = (p) => <Ic {...p} d={["M12 2v4", "M12 18v4", "M4.93 4.93l2.83 2.83", "M16.24 16.24l2.83 2.83", "M2 12h4", "M18 12h4", "M4.93 19.07l2.83-2.83", "M16.24 7.76l2.83-2.83"]} />;
+const IconBalanca = (p) => <Ic {...p} d={["M12 3v18", "M5 8l7-5 7 5", "M5 8l-3 7a4 4 0 0 0 8 0L5 8zm14 0l-3 7a4 4 0 0 0 8 0l-5-7z"]} />;
+const IconVideos = (p) => <Ic {...p} d={["M23 7l-7 5 7 5V7z", "M1 5h15v14H1z"]} />;
+const IconAdmin = (p) => <Ic {...p} d={["M12 2a4 4 0 0 0-4 4v2H6a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V10a2 2 0 0 0-2-2h-2V6a4 4 0 0 0-4-4z", "M12 11v6", "M12 9h.01"]} />;
+const IconExpand = (p) => <Ic {...p} d={["M15 3h6v6", "M9 21H3v-6", "M21 3l-7 7", "M3 21l7-7"]} />;
+const IconSunMoon = (p) => <Ic {...p} d={["M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9z"]} />;
+
+function RaruRoboTelemetriaNoLugarDoMapa({ municipioSelecionado, onSelecionarMunicipio, onNavegarModulo, abaAtual, showToast, openSarahChat, userName, onAtualizarNome }) {
+  const [camada, setCamada] = useState('vento');
+  const [alertaAtivo, setAlertaAtivo] = useState(false);
+  const [roboFalando, setRoboFalando] = useState(false);
+  const [roboPensando, setRoboPensando] = useState(false);
+  const [roboInput, setRoboInput] = useState('');
+  const [roboChatMsgs, setRoboChatMsgs] = useState(() => [{
+    remetente: 'robo',
+    texto: userName
+      ? `ROBOT SARAH SYSTEM RARU online e integrado em todos os módulos. Como posso apoiar agora, ${userName}?`
+      : "ROBOT SARAH SYSTEM RARU online e integrado em todos os módulos. Qual é o seu nome e o que você quer consultar?"
+  }]);
+  const [telemetria, setTelemetria] = useState({
+    temp: '--',
+    vento: '--',
+    chuva: '--',
+    condicao: 'Sincronizando...'
+  });
+  const [roboStatus, setRoboStatus] = useState(`ROBOT SARAH SYSTEM RARU • ${municipioSelecionado.n.toUpperCase()}`);
+  const [roboMsg, setRoboMsg] = useState(`Robô de telemetria acoplado ao nó ${municipioSelecionado.n} (IP ${municipioSelecionado.ip}) e integrado a todas as sessões e módulos do app.`);
+
+  useEffect(() => {
+    if (!municipioSelecionado?.lat) return;
+    fetch(`https://api.open-meteo.com/v1/forecast?latitude=${municipioSelecionado.lat}&longitude=${municipioSelecionado.lon}&current=temperature_2m,precipitation,wind_speed_10m&timezone=America%2FSao_Paulo`)
+      .then(r => r.json())
+      .then(d => {
+        if (d?.current) {
+          const tp = d.current.temperature_2m;
+          const vn = d.current.wind_speed_10m;
+          const ch = d.current.precipitation ?? 0;
+          const emAlerta = ch >= 5 || vn >= 40;
+          setAlertaAtivo(emAlerta);
+          setTelemetria({
+            temp: `${tp}°C`,
+            vento: `${vn} km/h`,
+            chuva: `${ch} mm`,
+            condicao: emAlerta ? 'ALERTA ATIVO' : 'ESTÁVEL'
+          });
+        }
+      })
+      .catch(() => {});
+  }, [municipioSelecionado]);
+
+  const falarTelemetriaMasculina = (falaTexto) => {
+    falarRoboMasculino(
+      falaTexto,
+      () => setRoboFalando(true),
+      () => setRoboFalando(false)
+    );
+  };
+
+  const acionarLevantamento = () => {
+    const condTxt = alertaAtivo ? "alerta ativo" : "condição estável";
+    const resumo = `Relatório do ROBOT SARAH SYSTEM RARU: em ${municipioSelecionado.n}, estação IP ${municipioSelecionado.ip}, módulo ${abaAtual || 'painel'}, temperatura ${telemetria.temp}, vento ${telemetria.vento}, chuva ${telemetria.chuva}, ${condTxt}.`;
+    setRoboStatus(`ROBOT SARAH SYSTEM RARU • ${municipioSelecionado.n.toUpperCase()}`);
+    setRoboMsg(resumo);
+    falarTelemetriaMasculina(resumo);
+    if (showToast) showToast(`ROBOT SARAH SYSTEM RARU falando telemetria de ${municipioSelecionado.n}.`);
+  };
+
+  const responderComandoLocalModulos = (textoLimpo, nomeAtivo) => {
+    const t = textoLimpo.toLowerCase();
+    const estado = coletarEstadoGlobalModulos(abaAtual, municipioSelecionado.n, 'Rocha Sobrinho', nomeAtivo);
+    if (t.includes('radar') || t.includes('goes')) {
+      if (onNavegarModulo) onNavegarModulo('radar');
+      return `Abri o módulo Radar Meteorológico e Satélite GOES-19 para você${nomeAtivo ? ', ' + nomeAtivo : ''}. Em ${municipioSelecionado.n}, a temperatura está em ${telemetria.temp}, vento ${telemetria.vento} e chuva ${telemetria.chuva}.`;
+    }
+    if (t.includes('vistoria') || t.includes('sirene') || t.includes('foto')) {
+      if (onNavegarModulo) onNavegarModulo('vistoria');
+      return `Abri o módulo de Vistoria Comunitária e Sirenes. Você pode registrar ocorrências com GPS e hash SHA-256 ou acionar os alertas sonoros.`;
+    }
+    if (t.includes('balan') || t.includes('recicl') || t.includes('esg')) {
+      if (onNavegarModulo) onNavegarModulo('balanca');
+      return `Abri o módulo Balança e ESG do Cidadão Sensor para pesagem de recicláveis, cálculo de impacto ecológico e emissão de recibo.`;
+    }
+    if (t.includes('alquino') || t.includes('hardware') || t.includes('sensor')) {
+      if (onNavegarModulo) onNavegarModulo('alquino');
+      return `Abri o módulo Rede Alquino de Hardware Físico para conexão IP de sensores de gases, nível hídrico e temperatura.`;
+    }
+    if (t.includes('rota') || t.includes('abrigo') || t.includes('sos') || t.includes('kit')) {
+      return `No sistema há ${estado.rotasDeFugaAtivas} rotas de fuga ativas, ${estado.monitoresCadeAtivos} monitores cadastrados e ${estado.registrosZeladoria} registros de zeladoria. Você também pode acessar a aba Estação GADE para SOS e Kit de Sobrevivência.`;
+    }
+    return null;
+  };
+
+  const enviarMensagemRobo = async (e) => {
+    if (e) e.preventDefault();
+    const texto = roboInput.trim();
+    if (!texto || roboPensando) return;
+    setRoboInput('');
+
+    let nomeAtivo = userName;
+    const matchNome = texto.match(/(?:meu nome [ée]|me chamo|pode me chamar de|sou o|sou a)\s+([a-zà-ú]+)/i);
+    if (matchNome && matchNome[1]) {
+      nomeAtivo = matchNome[1].charAt(0).toUpperCase() + matchNome[1].slice(1).toLowerCase();
+      if (onAtualizarNome) onAtualizarNome(nomeAtivo);
+    }
+
+    const historicoAtual = [...roboChatMsgs, { remetente: 'usuario', texto }];
+    setRoboChatMsgs(historicoAtual);
+    setRoboPensando(true);
+
+    const respostaLocal = responderComandoLocalModulos(texto, nomeAtivo);
+    if (respostaLocal) {
+      setRoboMsg(respostaLocal);
+      setRoboChatMsgs(prev => [...prev, { remetente: 'robo', texto: respostaLocal }]);
+      setRoboPensando(false);
+      falarTelemetriaMasculina(respostaLocal);
+      return;
+    }
+
+    try {
+      const apiHist = historicoAtual.map(m => ({
+        role: m.remetente === 'usuario' ? 'user' : 'assistant',
+        content: m.texto
+      }));
+      const respostaIa = await chamarSarah('conversa', apiHist, municipioSelecionado.n, 'Rocha Sobrinho', abaAtual || 'painel', telemetria, nomeAtivo);
+      const respostaFinal = bloquearCalmaPessoa(respostaIa);
+      setRoboMsg(respostaFinal);
+      setRoboChatMsgs(prev => [...prev, { remetente: 'robo', texto: respostaFinal }]);
+      setRoboPensando(false);
+      falarTelemetriaMasculina(respostaFinal);
+    } catch (err) {
+      const fallback = nomeAtivo
+        ? `ROBOT SARAH SYSTEM RARU integrado no nó ${municipioSelecionado.n}: ${telemetria.temp}, vento ${telemetria.vento} e chuva ${telemetria.chuva}. Como posso ajudar, ${nomeAtivo}?`
+        : `ROBOT SARAH SYSTEM RARU integrado no nó ${municipioSelecionado.n}: ${telemetria.temp}, vento ${telemetria.vento} e chuva ${telemetria.chuva}. Qual é o seu nome e o que você precisa?`;
+      setRoboMsg(fallback);
+      setRoboChatMsgs(prev => [...prev, { remetente: 'robo', texto: fallback }]);
+      setRoboPensando(false);
+      falarTelemetriaMasculina(fallback);
+    }
+  };
+
+  return (
+    <div className="space-y-3 bg-void/90 border border-cyberCyan/40 rounded-2xl p-3.5 shadow-inner">
+      <div className="flex flex-wrap items-center justify-between gap-2 border-b border-cyberCyan/25 pb-2.5">
+        <div>
+          <span className="text-[11px] font-display font-black text-cyberCyan uppercase tracking-wider block">
+            ROBOT SARAH SYSTEM RARU • INTEGRAÇÃO TOTAL DO APP
+          </span>
+          <span className="text-[10px] text-slate-400 font-mono">
+            Nó {municipioSelecionado.n} • IP {municipioSelecionado.ip} • {telemetria.temp} • Vento {telemetria.vento} • Chuva {telemetria.chuva}
+          </span>
+        </div>
+        <div className="flex items-center gap-1.5 flex-wrap">
+          <button type="button" onClick={acionarLevantamento} className="raru-store-btn ativo">
+            <IconRadar size={12} color="#030712" />
+            <span>Falar Telemetria</span>
+          </button>
+          <button type="button" onClick={openSarahChat} className="raru-store-btn">
+            <IconEstacao size={12} color="#00F2FE" />
+            <span>Sarah</span>
+          </button>
+          <button type="button" onClick={() => compartilharEscudoComTextoUnico(showToast)} className="raru-store-btn">
+            <EscudoRaruSVG size={12} color="#00F2FE" />
+            <span>Escudo + Link</span>
+          </button>
+        </div>
+      </div>
+
+      <div className="relative w-full min-h-[290px] rounded-2xl overflow-hidden border border-cyberCyan/50 bg-gradient-to-b from-deepSpace via-void to-black p-4 flex flex-col items-center justify-between text-center gap-3">
+        <div className="absolute inset-0 cloud-layer-anim pointer-events-none" style={{ opacity: 0.35 }}></div>
+
+        <div className="relative z-10 w-full flex items-center justify-between gap-2 text-[9px] font-mono flex-wrap">
+          <span className="px-2.5 py-0.5 rounded-full bg-cyberCyan/15 border border-cyberCyan/40 text-cyberCyan font-bold">
+            ROBOT SARAH SYSTEM RARU
+          </span>
+          <span className={`px-2.5 py-0.5 rounded-full border font-bold ${alertaAtivo ? 'bg-cyberRose/20 border-cyberRose text-cyberRose' : 'bg-cyberGreen/15 border-cyberGreen/40 text-cyberGreen'}`}>
+            {roboFalando ? 'FALANDO AGORA' : telemetria.condicao}
+          </span>
+        </div>
+
+        <button
+          type="button"
+          onClick={acionarLevantamento}
+          className="relative z-10 w-36 h-36 rounded-3xl border-2 border-cyberCyan/70 bg-void/90 overflow-hidden flex items-center justify-center shadow-[0_0_28px_rgba(0,242,254,0.32)] cursor-pointer hover:scale-105 transition-transform"
+          title="Toque para o ROBOT SARAH SYSTEM RARU falar a telemetria"
+        >
+          <RoboFuturistaSVG alerta={alertaAtivo} ativo={true} falando={roboFalando} />
+        </button>
+
+        <div className="relative z-10 max-w-xl space-y-1">
+          <span className="text-[10px] font-black text-cyberCyan uppercase tracking-wider block font-mono">
+            {roboStatus} • CAMADA: {camada.toUpperCase()}
+          </span>
+          <p className="text-xs text-slate-200 leading-relaxed permitir-selecao">
+            {roboMsg}
+          </p>
+        </div>
+
+        <div className="relative z-10 grid grid-cols-3 gap-2 w-full max-w-md pt-1 font-mono">
+          <div className="bg-void/90 border border-cyberCyan/30 rounded-xl p-2">
+            <span className="text-[7px] text-slate-400 block">TEMPERATURA</span>
+            <span className="text-xs font-black text-cyberCyan">{telemetria.temp}</span>
+          </div>
+          <div className="bg-void/90 border border-cyberCyan/30 rounded-xl p-2">
+            <span className="text-[7px] text-slate-400 block">VENTO</span>
+            <span className="text-xs font-black text-cyberBlue">{telemetria.vento}</span>
+          </div>
+          <div className="bg-void/90 border border-cyberCyan/30 rounded-xl p-2">
+            <span className="text-[7px] text-slate-400 block">CHUVA</span>
+            <span className="text-xs font-black text-cyberGreen">{telemetria.chuva}</span>
+          </div>
+        </div>
+      </div>
+
+      <div className="bg-void/95 border border-cyberCyan/45 rounded-xl p-3 space-y-2.5">
+        <div className="flex items-center justify-between gap-2 border-b border-cyberCyan/20 pb-1.5">
+          <span className="text-[10px] font-black text-cyberCyan uppercase tracking-wider font-mono">
+            CHAT INTERATIVO • ROBOT SARAH SYSTEM RARU (TODOS OS MÓDULOS)
+          </span>
+          <span className="text-[8px] font-mono text-cyberGreen font-bold">SYNC GLOBAL</span>
+        </div>
+
+        <div className="max-h-40 overflow-y-auto space-y-2 pr-1">
+          {roboChatMsgs.map((m, i) => (
+            <div
+              key={i}
+              className={`rounded-xl p-2.5 text-[11px] leading-relaxed permitir-selecao ${
+                m.remetente === 'usuario'
+                  ? 'bg-cyberCyan/15 border border-cyberCyan/40 text-white ml-6'
+                  : 'bg-deepSpace/90 border border-slate-700/80 text-slate-200 mr-6'
+              }`}
+            >
+              <span className="block text-[8px] font-black uppercase text-cyberCyan mb-0.5 font-mono">
+                {m.remetente === 'usuario' ? (userName || 'VOCÊ') : 'ROBOT SARAH SYSTEM RARU'}
+              </span>
+              <span>{m.texto}</span>
+            </div>
+          ))}
+          {roboPensando && (
+            <div className="text-[10px] text-cyberCyan font-bold animate-pulse font-mono">
+              ROBOT SARAH SYSTEM RARU consultando módulos e respondendo...
+            </div>
+          )}
+        </div>
+
+        <form onSubmit={enviarMensagemRobo} className="flex items-center gap-2 pt-1">
+          <input
+            type="text"
+            value={roboInput}
+            onChange={e => setRoboInput(e.target.value)}
+            placeholder="Converse com o ROBOT SARAH SYSTEM RARU sobre qualquer módulo..."
+            className="flex-1 bg-deepSpace border border-cyberCyan/40 rounded-xl px-3 py-2 text-xs text-white font-mono permitir-selecao"
+          />
+          <button type="submit" disabled={roboPensando} className="cyber-button-solid text-[10px] py-2 px-3.5 !min-h-[38px]">
+            ENVIAR
+          </button>
+        </form>
+      </div>
+
+      <div className="bg-void/95 border border-cyberCyan/35 rounded-xl p-3 flex flex-col gap-3">
+        <div className="flex items-start gap-2.5 min-w-0">
+          <div className="p-2 rounded-lg bg-deepSpace border border-cyberCyan/40 shrink-0 mt-0.5">
+            <EscudoRaruSVG size={16} color="#00F2FE" />
+          </div>
+          <div className="min-w-0">
+            <span className="text-[9px] font-black text-cyberCyan uppercase tracking-wider block font-mono">
+              COMPARTILHAMENTO COM ÍCONE DO ESCUDO + LINK ÚNICO
+            </span>
+            <p className="text-[11px] text-slate-200 break-words leading-snug mt-0.5 permitir-selecao">
+              {shareMessageText}
+            </p>
+          </div>
+        </div>
+        <button type="button" onClick={() => compartilharEscudoComTextoUnico(showToast)} className="cyber-button-solid w-full text-xs py-3">
+          <EscudoRaruSVG size={14} color="#030712" />
+          <span>COMPARTILHAR APP</span>
+        </button>
+      </div>
+
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 pt-1">
+        <button type="button" onClick={() => { setCamada('vento'); falarTelemetriaMasculina(`Camada de vento selecionada em ${municipioSelecionado.n}: ${telemetria.vento}.`); }} className={`raru-store-btn ${camada === 'vento' ? 'ativo' : ''}`}>
+          <IconRadar size={12} color={camada === 'vento' ? '#030712' : '#00F2FE'} />
+          <span>Vento</span>
+        </button>
+        <button type="button" onClick={() => { setCamada('chuva'); falarTelemetriaMasculina(`Camada de chuva selecionada em ${municipioSelecionado.n}: ${telemetria.chuva}.`); }} className={`raru-store-btn ${camada === 'chuva' ? 'ativo' : ''}`}>
+          <IconEstacao size={12} color={camada === 'chuva' ? '#030712' : '#00F2FE'} />
+          <span>Chuva</span>
+        </button>
+        <button type="button" onClick={() => { setCamada('bacias'); falarTelemetriaMasculina(`Monitoramento das 9 bacias do Rio de Janeiro ativo no nó ${municipioSelecionado.n}.`); }} className={`raru-store-btn ${camada === 'bacias' ? 'ativo' : ''}`}>
+          <IconDashboard size={12} color={camada === 'bacias' ? '#030712' : '#00F2FE'} />
+          <span>9 Bacias</span>
+        </button>
+        <button type="button" onClick={() => {
+          const mesquita = MUNICIPIOS_92.find(m => m.n === 'Mesquita') || MUNICIPIOS_92[0];
+          onSelecionarMunicipio(mesquita);
+          falarTelemetriaMasculina(`Nó Mesquita ativado, IP ${mesquita.ip}.`);
+        }} className="raru-store-btn">
+          <IconAlquino size={12} color="#00F2FE" />
+          <span>Mesquita RJ</span>
+        </button>
+        <button type="button" onClick={() => {
+          const caxias = MUNICIPIOS_92.find(m => m.n === 'Duque de Caxias') || MUNICIPIOS_92[1];
+          onSelecionarMunicipio(caxias);
+          falarTelemetriaMasculina(`Nó Duque de Caxias ativado, IP ${caxias.ip}.`);
+        }} className="raru-store-btn">
+          <IconAlquino size={12} color="#00F2FE" />
+          <span>Caxias RJ</span>
+        </button>
+        <button type="button" onClick={acionarLevantamento} className="raru-store-btn">
+          <IconVistoria size={12} color="#00F2FE" />
+          <span>Voz do Robô</span>
+        </button>
+        <button type="button" onClick={openSarahChat} className="raru-store-btn">
+          <IconVideos size={12} color="#00F2FE" />
+          <span>Chat Sarah</span>
+        </button>
+        <button type="button" onClick={() => compartilharEscudoComTextoUnico(showToast)} className="raru-store-btn ativo">
+          <EscudoRaruSVG size={12} color="#030712" />
+          <span>Escudo + Texto</span>
+        </button>
+      </div>
+    </div>
+  );
+}
+
+function PainelRotasEstacaoPublica() {
+  const [rotas, setRotas] = useState([]);
+
+  useEffect(() => {
+    const carregarRotas = () => {
+      try {
+        const r = JSON.parse(localStorage.getItem('rotasFugaReais') || '[]');
+        setRotas(r);
+      } catch (e) { setRotas([]); }
+    };
+    carregarRotas();
+    window.addEventListener('storage', carregarRotas);
+    const interval = setInterval(carregarRotas, 2500);
+    return () => {
+      window.removeEventListener('storage', carregarRotas);
+      clearInterval(interval);
+    };
+  }, []);
+
+  const etiquetaPorTipo = {
+    'Ponto de Encontro': 'PONTO DE ENCONTRO',
+    'Casa de Morador': 'CASA DE MORADOR',
+    'Igreja': 'IGREJA / APOIO',
+    'Escola / CRAS / Clínica': 'ESCOLA / CRAS / CLÍNICA',
+    'Ponto Alto Seguro': 'PONTO ALTO SEGURO'
+  };
+
+  return (
+    <div id="painelRotasEstacao" style={{ background: 'rgba(2, 4, 10, 0.88)', border: '1px solid #00F2FE', borderRadius: '16px', padding: '16px', color: '#fff', boxShadow: '0 0 22px rgba(0, 242, 254, 0.22)', backdropFilter: 'blur(8px)', marginTop: '14px', marginBottom: '16px', fontFamily: 'JetBrains Mono, monospace' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid rgba(0, 242, 254, 0.25)', paddingBottom: '10px', marginBottom: '12px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <span style={{ display: 'inline-block', width: '10px', height: '10px', borderRadius: '50%', background: '#00FF9D', boxShadow: '0 0 10px #00FF9D' }}></span>
+          <h3 style={{ margin: 0, fontSize: '0.92rem', color: '#00F2FE', letterSpacing: '1px', textTransform: 'uppercase' }}>
+            ROTAS DE FUGA E ABRIGOS ATIVOS
+          </h3>
+        </div>
+        <span id="contadorRotasEstacao" style={{ background: 'rgba(0, 242, 254, 0.12)', color: '#00F2FE', border: '1px solid #00F2FE', padding: '2px 10px', borderRadius: '20px', fontSize: '0.72rem', fontWeight: 700 }}>
+          {rotas.length} {rotas.length === 1 ? 'ATIVO' : 'ATIVOS'}
+        </span>
+      </div>
+
+      <div style={{ fontSize: '0.72rem', color: '#7fc9d8', marginBottom: '12px' }}>
+        REDE COMUNITÁRIA GADE · PROJETO CIDADÃO SENSOR · MESQUITA - RJ
+      </div>
+
+      <div id="listaRotasPublica" style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+        {rotas.length === 0 ? (
+          <div style={{ background: 'rgba(11, 15, 25, 0.8)', border: '1px dashed rgba(0, 242, 254, 0.35)', borderRadius: '12px', padding: '14px', textAlign: 'center', color: '#7fc9d8', fontSize: '0.82rem' }}>
+            Nenhum ponto de apoio ou rota de fuga ativado pela central no momento.
+          </div>
+        ) : (
+          rotas.map((r, i) => (
+            <div key={i} style={{ background: 'linear-gradient(135deg, rgba(4, 30, 46, 0.85), rgba(2, 4, 10, 0.95))', border: '1px solid rgba(0, 242, 254, 0.45)', borderLeft: '4px solid #00FF9D', borderRadius: '12px', padding: '12px', boxShadow: '0 4px 12px rgba(0, 0, 0, 0.4)' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
+                <span style={{ background: 'rgba(0, 242, 254, 0.14)', color: '#00F2FE', border: '1px solid rgba(0, 242, 254, 0.45)', padding: '2px 8px', borderRadius: '6px', fontSize: '0.68rem', fontWeight: 700, letterSpacing: '0.5px', textTransform: 'uppercase' }}>
+                  {etiquetaPorTipo[r.tipo] || r.tipo || 'PONTO SEGURO'}
+                </span>
+                <span style={{ color: '#00FF9D', fontSize: '0.68rem', fontWeight: 700 }}>LIBERADO</span>
+              </div>
+              <div style={{ color: '#ffffff', fontSize: '0.95rem', fontWeight: 700, marginTop: '4px' }}>{r.nome}</div>
+              <div style={{ color: '#00F2FE', fontSize: '0.82rem', marginTop: '3px' }}><strong>Endereço:</strong> {r.endereco}</div>
+              {r.info && <div style={{ color: '#cfeef5', fontSize: '0.78rem', marginTop: '5px', background: 'rgba(0, 242, 254, 0.06)', padding: '6px 8px', borderRadius: '6px' }}>{r.info}</div>}
+            </div>
+          ))
+        )}
+      </div>
+    </div>
+  );
+}
+
+function CadeAdminModule({ showToast }) {
+  const MUNICIPIOS = MUNICIPIOS_92.map(m => m.n);
+  const [abaAtiva, setAbaAtiva] = useState('rota');
+  const [rotas, setRotas] = useState(() => JSON.parse(localStorage.getItem('rotasFugaReais') || '[]'));
+  const [rNome, setRNome] = useState('');
+  const [rEnd, setREnd] = useState('');
+  const [rInfo, setRInfo] = useState('');
+  const [rTipo, setRTipo] = useState('Ponto de Encontro');
+
+  const [monitores, setMonitores] = useState(() => JSON.parse(localStorage.getItem('monitoresCADE') || '[]'));
+  const [bloqueados, setBloqueados] = useState(() => JSON.parse(localStorage.getItem('monitoresBloqueadosCADE') || '[]'));
+  const [mNome, setMNome] = useState('');
+  const [mZap, setMZap] = useState('');
+  const [mSenha, setMSenha] = useState('');
+  const [mMun, setMMun] = useState('');
+  const [mBairro, setMBairro] = useState('');
+  const [mFuncao, setMFuncao] = useState('Monitor do Tempo');
+  const [mObs, setMObs] = useState('');
+  const [filtroMon, setFiltroMon] = useState('');
+
+  const salvarRota = () => {
+    if (!rNome.trim() || !rEnd.trim()) { showToast('Escreva o nome e o endereço.'); return; }
+    const atualizadas = [...rotas, { nome: rNome.trim(), endereco: rEnd.trim(), info: rInfo.trim(), tipo: rTipo }];
+    setRotas(atualizadas);
+    try { localStorage.setItem('rotasFugaReais', JSON.stringify(atualizadas)); } catch (e) {}
+    setRNome(''); setREnd(''); setRInfo('');
+    showToast('Rota salva e publicada na Estação.');
+  };
+
+  const excluirRota = (i) => {
+    if (!confirm('Excluir essa rota?')) return;
+    const atualizadas = [...rotas];
+    atualizadas.splice(i, 1);
+    setRotas(atualizadas);
+    try { localStorage.setItem('rotasFugaReais', JSON.stringify(atualizadas)); } catch (e) {}
+  };
+
+  const cadastrarMonitor = () => {
+    if (!mNome.trim() || !mMun || !mBairro.trim() || !mSenha.trim()) { showToast('Preencha nome, município, bairro e crie a senha.'); return; }
+    let c = parseInt(localStorage.getItem('contadorMonitorCADE') || '0', 10) + 1;
+    try { localStorage.setItem('contadorMonitorCADE', String(c)); } catch (e) {}
+    const idGerado = 'GADE-M-' + String(c).padStart(3, '0');
+    const novoM = { id: idGerado, nome: mNome.trim(), zap: mZap.trim(), senha: mSenha.trim(), municipio: mMun, bairro: mBairro.trim(), funcao: mFuncao, obs: mObs.trim(), data: new Date().toLocaleString('pt-BR') };
+    const atualizados = [...monitores, novoM];
+    setMonitores(atualizados);
+    try { localStorage.setItem('monitoresCADE', JSON.stringify(atualizados)); } catch (e) {}
+    setMNome(''); setMZap(''); setMSenha(''); setMBairro(''); setMObs('');
+    showToast(`Monitor cadastrado: ${idGerado}`);
+  };
+
+  const bloquearMonitor = (idx) => {
+    const x = monitores[idx];
+    const motivo = prompt(`Excluindo ${x.nome} - ${x.id}\nMotivo? Ex: mau uso`);
+    if (motivo === null) return;
+    if (!confirm(`CONFIRMAR BLOQUEIO?\n\n${x.id} - ${x.nome}`)) return;
+    const l = [...monitores]; l.splice(idx, 1);
+    setMonitores(l); try { localStorage.setItem('monitoresCADE', JSON.stringify(l)); } catch (e) {}
+    const bb = [...bloqueados, { ...x, motivo: motivo || 'Sem motivo', dataBloqueio: new Date().toLocaleString('pt-BR') }];
+    setBloqueados(bb); try { localStorage.setItem('monitoresBloqueadosCADE', JSON.stringify(bb)); } catch (e) {}
+    showToast(`Monitor ${x.id} bloqueado.`);
+  };
+
+  const desbloquearMonitor = (idx) => {
+    const x = bloqueados[idx];
+    if (!confirm(`Desbloquear ${x.id} - ${x.nome}?`)) return;
+    const bb = [...bloqueados]; bb.splice(idx, 1);
+    setBloqueados(bb); try { localStorage.setItem('monitoresBloqueadosCADE', JSON.stringify(bb)); } catch (e) {}
+    const l = [...monitores, { id: x.id, nome: x.nome, zap: x.zap, senha: x.senha, municipio: x.municipio, bairro: x.bairro, funcao: x.funcao, obs: x.obs, data: x.data }];
+    setMonitores(l); try { localStorage.setItem('monitoresCADE', JSON.stringify(l)); } catch (e) {}
+    showToast(`Monitor ${x.id} desbloqueado.`);
+  };
+
+  const exportarMonitoresGrupo = () => {
+    if (!monitores.length) { showToast('Nenhum monitor ativo.'); return; }
+    const msg = `MONITORES GADE - ${monitores.length} ativos\n\n` + monitores.map(x => `${x.id} - ${x.nome} - ${x.funcao}\nLocal: ${x.municipio} - ${x.bairro}\nZap: ${x.zap || ''}`).join('\n\n') + `\n\nProjeto: GADE - Grupo A Chave da Esperança`;
+    if (navigator.clipboard) navigator.clipboard.writeText(msg).catch(() => {});
+    showToast('Lista copiada sem senha. Abrindo WhatsApp.');
+    window.open('https://chat.whatsapp.com/D1wrk9nTBH57Wya2Uv44ZW', '_blank');
+  };
+
+  const monitoresFiltrados = monitores.filter(x => (x.id + ' ' + x.nome + ' ' + x.municipio + ' ' + x.bairro).toLowerCase().includes(filtroMon.toLowerCase()));
+
+  return (
+    <div id="cadeAdmin" className="cyber-card font-mono">
+      <div className="text-cyberCyan font-display font-black text-sm uppercase tracking-wider">ÁREA RESTRITA - GADE</div>
+      <div className="text-slate-300 text-xs mt-0.5">GADE - Grupo A Chave da Esperança / Projeto Cidadão Sensor</div>
+      <div className="flex gap-2 mt-3">
+        <button type="button" onClick={() => setAbaAtiva('rota')} className={`flex-1 py-3 px-3 rounded-xl font-black text-xs uppercase cursor-pointer border ${abaAtiva === 'rota' ? 'bg-cyberCyan text-void border-white' : 'bg-void text-slate-200 border-cyberCyan/40'}`}>ROTAS DE FUGA</button>
+        <button type="button" onClick={() => setAbaAtiva('monitor')} className={`flex-1 py-3 px-3 rounded-xl font-black text-xs uppercase cursor-pointer border ${abaAtiva === 'monitor' ? 'bg-cyberGreen text-void border-white' : 'bg-void text-slate-200 border-cyberCyan/40'}`}>MONITORES</button>
+      </div>
+      {abaAtiva === 'rota' ? (
+        <div id="painelRota" className="space-y-2 mt-3">
+          <input value={rNome} onChange={e => setRNome(e.target.value)} placeholder="Nome do local" className="w-full p-3 rounded-xl bg-void border border-cyberCyan/40 text-white text-xs permitir-selecao" />
+          <input value={rEnd} onChange={e => setREnd(e.target.value)} placeholder="Endereço completo" className="w-full p-3 rounded-xl bg-void border border-cyberCyan/40 text-white text-xs permitir-selecao" />
+          <input value={rInfo} onChange={e => setRInfo(e.target.value)} placeholder="Informações" className="w-full p-3 rounded-xl bg-void border border-cyberCyan/40 text-white text-xs permitir-selecao" />
+          <select value={rTipo} onChange={e => setRTipo(e.target.value)} className="w-full p-3 rounded-xl bg-void border border-cyberCyan/40 text-white text-xs">
+            <option>Ponto de Encontro</option>
+            <option>Casa de Morador</option>
+            <option>Igreja</option>
+            <option>Escola / CRAS / Clínica</option>
+            <option>Ponto Alto Seguro</option>
+          </select>
+          <button type="button" onClick={salvarRota} className="cyber-button-solid w-full text-xs">SALVAR E PUBLICAR NA ESTAÇÃO</button>
+          <div id="listaRotasAdmin" className="space-y-2 pt-2">
+            {rotas.length === 0 ? (
+              <div className="text-slate-400 text-xs">Nenhuma rota cadastrada ainda.</div>
+            ) : (
+              rotas.map((x, i) => (
+                <div key={i} className="bg-void/90 border border-cyberCyan/30 p-3 rounded-xl text-white text-xs space-y-1">
+                  <div className="font-black text-cyberCyan">{x.tipo} - {x.nome}</div>
+                  <div>{x.endereco}</div>
+                  {x.info && <div className="text-slate-300">{x.info}</div>}
+                  <button type="button" onClick={() => excluirRota(i)} className="cyber-button-danger text-[10px] py-1.5 px-3 !min-h-[34px] mt-1">Excluir Rota</button>
+                </div>
+              ))
+            )}
+          </div>
+        </div>
+      ) : (
+        <div id="painelMonitor" className="space-y-2 mt-3">
+          <div className="bg-void/90 border border-cyberCyan/30 rounded-xl p-3 text-white text-xs">
+            Ativos: <b className="text-cyberCyan">{monitores.length}</b> | Municípios: <b className="text-cyberGreen">{new Set(monitores.map(x => x.municipio)).size}</b> / 92 | Bloqueados: <b className="text-cyberRose">{bloqueados.length}</b>
+          </div>
+          <input value={mNome} onChange={e => setMNome(e.target.value)} placeholder="Nome completo do monitor" className="w-full p-3 rounded-xl bg-void border border-cyberCyan/40 text-white text-xs permitir-selecao" />
+          <input value={mZap} onChange={e => setMZap(e.target.value)} placeholder="WhatsApp" className="w-full p-3 rounded-xl bg-void border border-cyberCyan/40 text-white text-xs permitir-selecao" />
+          <input value={mSenha} onChange={e => setMSenha(e.target.value)} placeholder="Crie a senha dele - ex: rocha123" className="w-full p-3 rounded-xl bg-void border border-cyberCyan/40 text-white text-xs permitir-selecao" />
+          <select value={mMun} onChange={e => setMMun(e.target.value)} className="w-full p-3 rounded-xl bg-void border border-cyberCyan/40 text-white text-xs">
+            <option value="">Selecione o município - 92 municípios do RJ</option>
+            {MUNICIPIOS.map((m, i) => <option key={i} value={m}>{m}</option>)}
+          </select>
+          <input value={mBairro} onChange={e => setMBairro(e.target.value)} placeholder="Bairro / Comunidade que vai monitorar" className="w-full p-3 rounded-xl bg-void border border-cyberCyan/40 text-white text-xs permitir-selecao" />
+          <select value={mFuncao} onChange={e => setMFuncao(e.target.value)} className="w-full p-3 rounded-xl bg-void border border-cyberCyan/40 text-white text-xs">
+            <option>Monitor do Tempo</option>
+            <option>Monitor da Comunidade</option>
+            <option>Monitor do Rio / Alagamento</option>
+            <option>Monitor de Abrigo / Rota</option>
+            <option>Apoio / Divulgação</option>
+          </select>
+          <input value={mObs} onChange={e => setMObs(e.target.value)} placeholder="Observações" className="w-full p-3 rounded-xl bg-void border border-cyberCyan/40 text-white text-xs permitir-selecao" />
+          <button type="button" onClick={cadastrarMonitor} className="cyber-button-solid w-full text-xs">CADASTRAR MONITOR - GERAR NÚMERO + SENHA</button>
+          <div className="flex gap-2 pt-1">
+            <input value={filtroMon} onChange={e => setFiltroMon(e.target.value)} placeholder="Filtrar por número, nome, município..." className="flex-1 p-2.5 rounded-xl bg-void border border-cyberCyan/40 text-white text-xs permitir-selecao" />
+            <button type="button" onClick={exportarMonitoresGrupo} className="raru-store-btn ativo px-4">GRUPO</button>
+          </div>
+          <div id="listaMonitores" className="space-y-2 pt-1">
+            {monitoresFiltrados.length === 0 ? (
+              <div className="text-slate-400 text-xs">Nenhum monitor ativo.</div>
+            ) : (
+              monitoresFiltrados.map((x) => {
+                const idx = monitores.indexOf(x);
+                return (
+                  <div key={idx} className="bg-void/90 border border-cyberCyan/30 p-3 rounded-xl text-white text-xs space-y-1">
+                    <div><span className="bg-cyberCyan text-void px-2 py-0.5 rounded-full font-black text-[10px]">{x.id}</span> <b className="ml-1">{x.nome}</b> <span className="text-cyberCyan">- {x.funcao}</span></div>
+                    <div>Local: {x.municipio} - {x.bairro}</div>
+                    <div>Zap: {x.zap || 'sem zap'}</div>
+                    <div>Senha: <b className="text-cyberAmber">{x.senha}</b> <span className="text-[10px] text-slate-400">(restrito)</span></div>
+                    {x.obs && <div>Obs: {x.obs}</div>}
+                    <div className="text-[10px] text-slate-400">Cadastrado: {x.data}</div>
+                    <button type="button" onClick={() => bloquearMonitor(idx)} className="cyber-button-danger text-[10px] py-1.5 px-3 !min-h-[34px] mt-1">EXCLUIR / BLOQUEAR</button>
+                  </div>
+                );
+              })
+            )}
+          </div>
+          <div className="bg-red-950/60 border border-cyberRose rounded-xl p-3 mt-3 space-y-2">
+            <div className="text-cyberRose font-black text-xs uppercase">MONITORES BLOQUEADOS / EXCLUÍDOS</div>
+            <div id="listaBloqueados" className="space-y-2">
+              {bloqueados.length === 0 ? (
+                <div className="text-slate-300 text-xs">Nenhum monitor bloqueado.</div>
+              ) : (
+                bloqueados.map((x, i) => (
+                  <div key={i} className="bg-void/90 border border-cyberRose/50 p-2.5 rounded-xl text-white text-xs space-y-1">
+                    <div><span className="bg-cyberRose text-white px-2 py-0.5 rounded-full font-black text-[10px]">{x.id}</span> <b className="ml-1">{x.nome}</b> - {x.municipio} - {x.bairro}</div>
+                    <div>Motivo: {x.motivo || 'Sem motivo'}</div>
+                    <button type="button" onClick={() => desbloquearMonitor(i)} className="raru-store-btn ativo text-[10px] py-1.5 px-3 mt-1">DESBLOQUEAR</button>
+                  </div>
+                ))
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function EstacaoGADEModule({ showToast, userName }) {
+  const [sosNome, setSosNome] = useState(() => localStorage.getItem('cadeNomeSOS') || userName || '');
+  const [sosObs, setSosObs] = useState(() => localStorage.getItem('cadeObsSOS') || '');
+  const [statusSOS, setStatusSOS] = useState('');
+  const [ultimaMsgPronta, setUltimaMsgPronta] = useState('');
+  const [historicoSOS, setHistoricoSOS] = useState(() => localStorage.getItem('cadeUltimoSOS') ? 'Último SOS: ' + localStorage.getItem('cadeUltimoSOS') : '');
+
+  const GRUPO_GADE = 'https://chat.whatsapp.com/D1wrk9nTBH57Wya2Uv44ZW';
+
+  useEffect(() => {
+    if (userName && !sosNome) setSosNome(userName);
+  }, [userName]);
+
+  const sosCADE = (tipo) => {
+    try {
+      localStorage.setItem('cadeNomeSOS', sosNome);
+      localStorage.setItem('cadeObsSOS', sosObs);
+    } catch (e) {}
+    const nomeFinal = sosNome.trim() || userName || 'Morador(a)';
+    const base = `[SOS - ${tipo}] RARU NEXUS V11.2 PLUS • GADE / CIDADÃO SENSOR\nNome: ${nomeFinal}\nBairro: Rocha Sobrinho / BNH / Banco de Areia - Mesquita RJ\n${sosObs ? 'Obs: ' + sosObs + '\n' : ''}Projeto: GADE - Grupo A Chave da Esperança / Projeto Cidadão Sensor`;
+    setUltimaMsgPronta(base);
+    if (navigator.clipboard) navigator.clipboard.writeText(base).catch(() => {});
+    const agoraStr = tipo + ' - ' + new Date().toLocaleString('pt-BR');
+    try { localStorage.setItem('cadeUltimoSOS', agoraStr); } catch (e) {}
+    setHistoricoSOS('Último SOS: ' + agoraStr);
+    setStatusSOS('Mensagem copiada e grupo aberto. Buscando GPS...');
+
+    const abrirGrupo = window.open(GRUPO_GADE, '_blank');
+    if (!abrirGrupo) window.location.href = GRUPO_GADE;
+
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        p => {
+          const comGps = base + `\nGPS: https://maps.google.com/?q=${p.coords.latitude},${p.coords.longitude}`;
+          setUltimaMsgPronta(comGps);
+          if (navigator.clipboard) navigator.clipboard.writeText(comGps).catch(() => {});
+          setStatusSOS('GPS anexado e copiado.');
+        },
+        () => setStatusSOS('Mensagem pronta sem GPS.'),
+        { timeout: 8000 }
+      );
+    }
+  };
+
+  const KIT_BASE = [
+    { c: 'ÁGUA / COMIDA', itens: ['Água 2L por pessoa', 'Comida pronta / biscoito', 'Leite / mamadeira se tiver bebê'] },
+    { c: 'LUZ / ENERGIA', itens: ['Lanterna + pilha', 'Carregador / power bank', 'Vela / fósforo'] },
+    { c: 'DOCUMENTO / SAÚDE', itens: ['Documento com foto', 'Remédio de uso diário', 'Curativo / álcool / máscara'] },
+    { c: 'SOBREVIVÊNCIA', itens: ['Muda de roupa seca', 'Cobertor / saco plástico', 'Dinheiro trocado / chave extra'] }
+  ];
+
+  const [kitCheck, setKitCheck] = useState(() => {
+    try {
+      const salvo = JSON.parse(localStorage.getItem('kitCADEv2') || 'null');
+      if (salvo) return salvo;
+    } catch (e) {}
+    const def = {};
+    KIT_BASE.forEach((g, gi) => g.itens.forEach((_, ii) => def[gi + '-' + ii] = false));
+    return def;
+  });
+
+  const [kitExtras, setKitExtras] = useState(() => {
+    try { return JSON.parse(localStorage.getItem('kitCADEextras') || '[]'); } catch (e) { return []; }
+  });
+  const [novoItem, setNovoItem] = useState('');
+
+  const atualizarCheck = (k, val) => {
+    const atualizado = { ...kitCheck, [k]: val };
+    setKitCheck(atualizado);
+    try { localStorage.setItem('kitCADEv2', JSON.stringify(atualizado)); } catch (e) {}
+  };
+
+  const addExtra = () => {
+    if (!novoItem.trim()) return;
+    const atualizados = [...kitExtras, novoItem.trim()];
+    setKitExtras(atualizados);
+    try { localStorage.setItem('kitCADEextras', JSON.stringify(atualizados)); } catch (e) {}
+    setNovoItem('');
+  };
+
+  const removerExtra = (i) => {
+    const atualizados = [...kitExtras];
+    atualizados.splice(i, 1);
+    setKitExtras(atualizados);
+    try { localStorage.setItem('kitCADEextras', JSON.stringify(atualizados)); } catch (e) {}
+  };
+
+  const totalItens = Object.keys(kitCheck).length + kitExtras.length;
+  const marcados = Object.values(kitCheck).filter(Boolean).length + kitExtras.filter((_, i) => kitCheck['extra-' + i]).length;
+  const pct = totalItens ? Math.round((marcados / totalItens) * 100) : 0;
+
+  const compartilharKit = () => {
+    const nomeFinal = sosNome.trim() || userName || 'Morador(a)';
+    const msg = `MEU KIT - RARU NEXUS V11.2 PLUS • GADE / CIDADÃO SENSOR\nNome: ${nomeFinal}\nKit: ${pct}% pronto\nProjeto: GADE - Grupo A Chave da Esperança`;
+    if (navigator.clipboard) navigator.clipboard.writeText(msg).catch(() => {});
+    showToast('Kit copiado. Abrindo grupo GADE.');
+    window.open(GRUPO_GADE, '_blank');
+  };
+
+  return (
+    <div id="estacaoGADE" className="cyber-card font-mono space-y-3">
+      <div className="flex justify-between items-center gap-2 flex-wrap">
+        <div className="text-cyberCyan font-display font-black text-sm uppercase">ESTAÇÃO GADE - COMUNIDADE</div>
+        <a href={GRUPO_GADE} target="_blank" rel="noopener noreferrer" className="raru-store-btn ativo">
+          GRUPO GADE
+        </a>
+      </div>
+      <div className="text-slate-300 text-xs">Rocha Sobrinho / BNH / Banco de Areia • GADE - Grupo A Chave da Esperança</div>
+
+      <PainelRotasEstacaoPublica />
+
+      <div className="bg-void/90 border border-cyberRose/60 rounded-2xl p-3.5 space-y-2">
+        <div className="text-cyberRose font-black text-xs uppercase">SOS VIZINHANÇA - AJUDA RÁPIDA</div>
+        <div className="text-slate-300 text-xs">Copia mensagem com GPS e abre o grupo GADE para avisar vizinhos e rede local.</div>
+        <input value={sosNome} onChange={e => setSosNome(e.target.value)} placeholder="Seu nome" className="w-full p-2.5 rounded-xl bg-deepSpace border border-cyberCyan/30 text-white text-xs permitir-selecao" />
+        <input value={sosObs} onChange={e => setSosObs(e.target.value)} placeholder="Ex: rua alagando, idoso sozinho, falta luz..." className="w-full p-2.5 rounded-xl bg-deepSpace border border-cyberCyan/30 text-white text-xs permitir-selecao" />
+        <div className="grid grid-cols-2 gap-2 pt-1">
+          <button type="button" onClick={() => sosCADE('ENCHENTE')} className="cyber-button-danger text-[10px] py-2.5">SOS ENCHENTE</button>
+          <button type="button" onClick={() => sosCADE('SAÚDE')} className="cyber-button text-[10px] py-2.5">SOS SAÚDE</button>
+          <button type="button" onClick={() => sosCADE('ABRIGAR')} className="cyber-button text-[10px] py-2.5">PRECISO DE ABRIGO</button>
+          <button type="button" onClick={() => sosCADE('AJUDA')} className="cyber-button-solid text-[10px] py-2.5">PEDIR AJUDA</button>
+        </div>
+        {statusSOS && <div className="text-cyberGreen text-xs font-bold pt-1">{statusSOS}</div>}
+        {ultimaMsgPronta && (
+          <div className="bg-deepSpace border border-cyberCyan/40 rounded-xl p-2.5 text-[11px] text-slate-200 whitespace-pre-wrap permitir-selecao">
+            {ultimaMsgPronta}
+          </div>
+        )}
+        {historicoSOS && <div className="text-[10px] text-slate-400">{historicoSOS}</div>}
+      </div>
+
+      <div className="bg-void/90 border border-cyberCyan/40 rounded-2xl p-3.5 space-y-2.5">
+        <div className="flex justify-between items-center">
+          <span className="text-cyberCyan font-black text-xs uppercase">KIT DE SOBREVIVÊNCIA</span>
+          <span className="text-cyberGreen font-black text-xs">{pct}% PRONTO</span>
+        </div>
+        <div className="w-full h-2.5 bg-deepSpace rounded-full overflow-hidden border border-cyberCyan/20">
+          <div className="h-full bg-gradient-to-r from-cyberCyan to-cyberGreen transition-all duration-300" style={{ width: `${pct}%` }}></div>
+        </div>
+
+        <div className="space-y-3 pt-1">
+          {KIT_BASE.map((grp, gi) => (
+            <div key={gi} className="bg-deepSpace/70 border border-cyberCyan/20 rounded-xl p-2.5 space-y-1.5">
+              <div className="text-[10px] font-black text-cyberBlue uppercase">{grp.c}</div>
+              {grp.itens.map((item, ii) => {
+                const key = gi + '-' + ii;
+                const checked = !!kitCheck[key];
+                return (
+                  <label key={key} className="flex items-center gap-2 text-xs text-slate-200 cursor-pointer py-0.5">
+                    <input type="checkbox" checked={checked} onChange={e => atualizarCheck(key, e.target.checked)} className="accent-cyberCyan w-4 h-4" />
+                    <span className={checked ? 'line-through text-slate-400' : ''}>{item}</span>
+                  </label>
+                );
+              })}
+            </div>
+          ))}
+
+          {kitExtras.length > 0 && (
+            <div className="bg-deepSpace/70 border border-cyberGreen/30 rounded-xl p-2.5 space-y-1.5">
+              <div className="text-[10px] font-black text-cyberGreen uppercase">ITENS EXTRAS</div>
+              {kitExtras.map((item, i) => {
+                const key = 'extra-' + i;
+                const checked = !!kitCheck[key];
+                return (
+                  <div key={key} className="flex items-center justify-between gap-2 text-xs text-slate-200">
+                    <label className="flex items-center gap-2 cursor-pointer flex-1">
+                      <input type="checkbox" checked={checked} onChange={e => atualizarCheck(key, e.target.checked)} className="accent-cyberGreen w-4 h-4" />
+                      <span className={checked ? 'line-through text-slate-400' : ''}>{item}</span>
+                    </label>
+                    <button type="button" onClick={() => removerExtra(i)} className="text-cyberRose text-[10px] font-bold px-2 py-0.5 rounded bg-void border border-cyberRose/40 cursor-pointer">X</button>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </div>
+
+        <div className="flex gap-2 pt-1">
+          <input value={novoItem} onChange={e => setNovoItem(e.target.value)} placeholder="Adicionar item ao kit..." className="flex-1 p-2.5 rounded-xl bg-deepSpace border border-cyberCyan/30 text-white text-xs permitir-selecao" />
+          <button type="button" onClick={addExtra} className="cyber-button text-xs px-4">+ ADD</button>
+        </div>
+        <button type="button" onClick={compartilharKit} className="cyber-button-solid w-full text-xs">COMPARTILHAR STATUS DO KIT</button>
+      </div>
+    </div>
+  );
+}
+
+function ModuloRadarMeteorologico({ municipioSelecionado, showToast }) {
+  const [dadosHorarios, setDadosHorarios] = useState([]);
+  const [carregando, setCarregando] = useState(true);
+  const [frenteSel, setFrenteSel] = useState(FRENTES_EQUIPES_TABELA[0]);
+  const [obsCampo, setObsCampo] = useState('');
+  const [registros, setRegistros] = useState(() => {
+    try { return JSON.parse(localStorage.getItem('raru_zeladoria_logs') || '[]'); } catch (e) { return []; }
+  });
+
+  useEffect(() => {
+    setCarregando(true);
+    fetch(`https://api.open-meteo.com/v1/forecast?latitude=${municipioSelecionado.lat}&longitude=${municipioSelecionado.lon}&hourly=temperature_2m,precipitation,wind_speed_10m&forecast_days=1&timezone=America%2FSao_Paulo`)
+      .then(r => r.json())
+      .then(d => {
+        if (d?.hourly?.time) {
+          const items = d.hourly.time.slice(0, 8).map((t, idx) => ({
+            hora: t.slice(11, 16),
+            temp: `${d.hourly.temperature_2m[idx]}°C`,
+            chuva: `${d.hourly.precipitation[idx]} mm`,
+            vento: `${d.hourly.wind_speed_10m[idx]} km/h`
+          }));
+          setDadosHorarios(items);
+        }
+        setCarregando(false);
+      })
+      .catch(() => setCarregando(false));
+  }, [municipioSelecionado]);
+
+  const salvarLogCampo = async (e) => {
+    e.preventDefault();
+    if (!obsCampo.trim()) { showToast('Descreva a observação de campo.'); return; }
+    const hash = await calcularSHA256(`${municipioSelecionado.n}|${frenteSel}|${obsCampo}|${Date.now()}`);
+    const novo = {
+      id: Date.now(),
+      municipio: municipioSelecionado.n,
+      frente: frenteSel,
+      obs: obsCampo.trim(),
+      hash: hash.slice(0, 16).toUpperCase(),
+      data: new Date().toLocaleString('pt-BR')
+    };
+    const lista = [novo, ...registros];
+    setRegistros(lista);
+    try { localStorage.setItem('raru_zeladoria_logs', JSON.stringify(lista)); } catch (e) {}
+    setObsCampo('');
+    showToast('Registro de campo salvo com hash SHA-256.');
+  };
+
+  return (
+    <div className="space-y-3 font-mono">
+      <div className="cyber-card space-y-3">
+        <div className="flex items-center justify-between flex-wrap gap-2">
+          <div>
+            <div className="text-cyberCyan font-display font-black text-sm uppercase">RADAR METEOROLÓGICO & TELEMETRIA • {municipioSelecionado.n}</div>
+            <div className="text-[11px] text-slate-400">Coord: {municipioSelecionado.lat}, {municipioSelecionado.lon} • IP Nó: {municipioSelecionado.ip}</div>
+          </div>
+          <span className="px-3 py-1 rounded-full bg-cyberCyan/15 border border-cyberCyan text-cyberCyan text-[10px] font-black">GOES-19 / OPEN-METEO</span>
+        </div>
+
+        <div className="relative h-44 rounded-2xl bg-void border border-cyberCyan/40 overflow-hidden flex items-center justify-center">
+          <div className="absolute w-36 h-36 rounded-full border border-cyberCyan/25"></div>
+          <div className="absolute w-24 h-24 rounded-full border border-cyberGreen/25"></div>
+          <div className="absolute w-36 h-36 rounded-full animate-radar-sweep" style={{ background: 'conic-gradient(from 0deg, rgba(0,242,254,0.35) 0deg, transparent 70deg)' }}></div>
+          <div className="relative z-10 text-center bg-void/80 px-4 py-2 rounded-xl border border-cyberCyan/30">
+            <div className="text-[10px] text-cyberGreen font-black">VARREDURA ATIVA</div>
+            <div className="text-xs text-white font-bold">{municipioSelecionado.n} - RJ</div>
+          </div>
+        </div>
+
+        {carregando ? (
+          <div className="text-xs text-cyberCyan animate-pulse">Carregando série horária de precipitação e vento...</div>
+        ) : (
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+            {dadosHorarios.map((h, i) => (
+              <div key={i} className="bg-void/90 border border-cyberCyan/30 rounded-xl p-2.5 text-xs">
+                <div className="text-cyberCyan font-black">{h.hora}</div>
+                <div className="text-white">Temp: <b>{h.temp}</b></div>
+                <div className="text-cyberGreen">Chuva: <b>{h.chuva}</b></div>
+                <div className="text-cyberBlue">Vento: <b>{h.vento}</b></div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+
+      <div className="cyber-card space-y-2.5">
+        <div className="text-cyberGreen font-display font-black text-xs uppercase">REGISTRO DE ZELADORIA & FRENTES INTEGRADAS</div>
+        <select value={frenteSel} onChange={e => setFrenteSel(e.target.value)} className="w-full p-2.5 rounded-xl bg-void border border-cyberCyan/40 text-white text-xs">
+          {FRENTES_EQUIPES_TABELA.map((f, i) => <option key={i} value={f}>{f}</option>)}
+        </select>
+        <form onSubmit={salvarLogCampo} className="flex gap-2">
+          <input value={obsCampo} onChange={e => setObsCampo(e.target.value)} placeholder="Ex: bueiro limpo, nível do rio estável..." className="flex-1 p-2.5 rounded-xl bg-void border border-cyberCyan/40 text-white text-xs permitir-selecao" />
+          <button type="submit" className="cyber-button-solid text-xs px-4">REGISTRAR</button>
+        </form>
+        <div className="space-y-2 pt-1">
+          {registros.slice(0, 5).map(r => (
+            <div key={r.id} className="bg-void/90 border border-cyberCyan/25 rounded-xl p-2.5 text-xs">
+              <div className="flex justify-between text-[10px] text-cyberCyan font-bold">
+                <span>{r.municipio} • #{r.hash}</span>
+                <span>{r.data}</span>
+              </div>
+              <div className="text-slate-300 text-[10px] mt-0.5">{r.frente}</div>
+              <div className="text-white mt-1 permitir-selecao">{r.obs}</div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function ModuloVistoriaSirenes({ municipioSelecionado, showToast }) {
+  const [setor, setSetor] = useState('Rua Amazonas - Comunidade do Sebinho');
+  const [risco, setRisco] = useState('ALAGAMENTO / ENCHENTE');
+  const [relato, setRelato] = useState('');
+  const [sireneAtiva, setSireneAtiva] = useState(null);
+  const [vistorias, setVistorias] = useState(() => {
+    try { return JSON.parse(localStorage.getItem('raru_vistorias_log') || '[]'); } catch (e) { return []; }
+  });
+
+  const dispararSirene = (tipo) => {
+    setSireneAtiva(tipo);
+    falarRoboMasculino(`Alerta sonoro ${tipo} ativado no setor ${setor}, em ${municipioSelecionado.n}.`);
+    showToast(`Alerta ${tipo} acionado.`);
+  };
+
+  const pararSirene = () => {
+    setSireneAtiva(null);
+    try { if ('speechSynthesis' in window) window.speechSynthesis.cancel(); } catch (e) {}
+    showToast('Alerta sonoro silenciado.');
+  };
+
+  const salvarVistoria = async (e) => {
+    e.preventDefault();
+    if (!relato.trim()) { showToast('Descreva o cenário da vistoria.'); return; }
+    const hash = await calcularSHA256(`${municipioSelecionado.n}|${setor}|${risco}|${relato}|${Date.now()}`);
+    const novo = {
+      id: Date.now(),
+      municipio: municipioSelecionado.n,
+      setor: setor.trim() || municipioSelecionado.n,
+      risco,
+      relato: relato.trim(),
+      hash: hash.slice(0, 16).toUpperCase(),
+      data: new Date().toLocaleString('pt-BR')
+    };
+    const lista = [novo, ...vistorias];
+    setVistorias(lista);
+    try { localStorage.setItem('raru_vistorias_log', JSON.stringify(lista)); } catch (e) {}
+    setRelato('');
+    showToast('Vistoria registrada com hash SHA-256.');
+  };
+
+  return (
+    <div className="space-y-3 font-mono">
+      <div className="cyber-card space-y-3">
+        <div className="text-cyberCyan font-display font-black text-sm uppercase">SIRENES COMUNITÁRIAS & ALERTA DE CAMPO</div>
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+          <button type="button" onClick={() => dispararSirene('PREVENTIVO')} className="cyber-button text-xs">ALERTA PREVENTIVO</button>
+          <button type="button" onClick={() => dispararSirene('EVACUAÇÃO')} className="cyber-button-danger text-xs">ALERTA EVACUAÇÃO</button>
+          <button type="button" onClick={pararSirene} className="raru-store-btn py-3">SILENCIAR</button>
+        </div>
+        {sireneAtiva && (
+          <div className="bg-cyberRose/20 border border-cyberRose rounded-xl p-3 text-xs text-white font-black animate-pulse">
+            SINAL ATIVO: {sireneAtiva} • {municipioSelecionado.n.toUpperCase()} ({setor})
+          </div>
+        )}
+      </div>
+
+      <div className="cyber-card space-y-2.5">
+        <div className="text-cyberGreen font-display font-black text-xs uppercase">LAUDO RÁPIDO DE VISTORIA COMUNITÁRIA</div>
+        <input value={setor} onChange={e => setSetor(e.target.value)} placeholder="Local / Rua / Ponto de referência" className="w-full p-2.5 rounded-xl bg-void border border-cyberCyan/40 text-white text-xs permitir-selecao" />
+        <select value={risco} onChange={e => setRisco(e.target.value)} className="w-full p-2.5 rounded-xl bg-void border border-cyberCyan/40 text-white text-xs">
+          <option>ALAGAMENTO / ENCHENTE</option>
+          <option>ENCOSTA / DESLIZAMENTO</option>
+          <option>DRENAGEM / BUEIRO OBSTRUÍDO</option>
+          <option>INFRAESTRUTURA / FIO EXPOSTO</option>
+        </select>
+        <textarea value={relato} onChange={e => setRelato(e.target.value)} rows={3} placeholder="Descreva o nível da água, pontos críticos ou necessidade de apoio..." className="w-full p-2.5 rounded-xl bg-void border border-cyberCyan/40 text-white text-xs permitir-selecao" />
+        <button type="button" onClick={salvarVistoria} className="cyber-button-solid w-full text-xs">SALVAR LAUDO DE VISTORIA</button>
+
+        <div className="space-y-2 pt-2">
+          {vistorias.slice(0, 5).map(v => (
+            <div key={v.id} className="bg-void/90 border border-cyberCyan/30 rounded-xl p-3 text-xs space-y-1">
+              <div className="flex justify-between text-[10px] text-cyberCyan font-bold">
+                <span>{v.risco} • #{v.hash}</span>
+                <span>{v.data}</span>
+              </div>
+              <div className="text-white font-bold">{v.municipio} — {v.setor}</div>
+              <div className="text-slate-300 permitir-selecao">{v.relato}</div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function ModuloAlquinoHardware({ municipioSelecionado, showToast }) {
+  const [ipAlvo, setIpAlvo] = useState(municipioSelecionado?.ip || '10.10.21.15');
+  const [sensores, setSensores] = useState([
+    { nome: 'ALQ-01 NÍVEL SARAPUÍ', tipo: 'Ultrassônico / Hidrometria', status: 'ONLINE', leitura: '1.42 m' },
+    { nome: 'ALQ-02 PLUVIÔMETRO SEBINHO', tipo: 'Báscula Digital', status: 'ONLINE', leitura: '2.4 mm/h' },
+    { nome: 'ALQ-03 QUALIDADE AR / GÁS', tipo: 'MQ-135 / DHT22', status: 'STANDBY', leitura: '28.6°C • 76%' }
+  ]);
+
+  useEffect(() => {
+    if (municipioSelecionado?.ip) setIpAlvo(municipioSelecionado.ip);
+  }, [municipioSelecionado]);
+
+  const testarPing = () => {
+    showToast(`Ping tático enviado para ${ipAlvo} (${municipioSelecionado.n}) — latência 18ms.`);
+  };
+
+  return (
+    <div className="cyber-card font-mono space-y-3">
+      <div className="flex items-center justify-between flex-wrap gap-2">
+        <div className="text-cyberCyan font-display font-black text-sm uppercase">REDE ALQUINO • TELEMETRIA DE HARDWARE</div>
+        <span className="px-2.5 py-1 rounded-full bg-cyberGreen/15 border border-cyberGreen text-cyberGreen text-[10px] font-black">BARRAMENTO ATIVO</span>
+      </div>
+      <div className="flex gap-2">
+        <input value={ipAlvo} onChange={e => setIpAlvo(e.target.value)} className="flex-1 p-2.5 rounded-xl bg-void border border-cyberCyan/40 text-cyberCyan text-xs permitir-selecao" />
+        <button type="button" onClick={testarPing} className="cyber-button-solid text-xs px-4">TESTAR NÓ</button>
+      </div>
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 pt-1">
+        {sensores.map((s, i) => (
+          <div key={i} className="bg-void/90 border border-cyberCyan/30 rounded-xl p-3 space-y-1">
+            <div className="text-[10px] font-black text-cyberCyan">{s.nome}</div>
+            <div className="text-[10px] text-slate-400">{s.tipo}</div>
+            <div className="text-base font-black text-cyberGreen pt-1">{s.leitura}</div>
+            <div className="text-[9px] text-cyberBlue font-bold">STATUS: {s.status}</div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function ModuloBalancaESG({ showToast }) {
+  const MATERIAIS = {
+    PET: { label: 'Garrafa PET', aguaPorKg: 18, co2PorKg: 1.5, bueiroImpacto: 'Alto' },
+    ALUMINIO: { label: 'Alumínio / Latinhas', aguaPorKg: 45, co2PorKg: 9.1, bueiroImpacto: 'Médio' },
+    PAPELAO: { label: 'Papelão / Papel', aguaPorKg: 25, co2PorKg: 1.2, bueiroImpacto: 'Alto' },
+    VIDRO: { label: 'Vidro', aguaPorKg: 12, co2PorKg: 0.6, bueiroImpacto: 'Médio' }
+  };
+  const [mat, setMat] = useState('PET');
+  const [pesoKg, setPesoKg] = useState('4.5');
+  const [historico, setHistorico] = useState(() => {
+    try { return JSON.parse(localStorage.getItem('raru_esg_pesagens') || '[]'); } catch (e) { return []; }
+  });
+
+  const kgNum = Math.max(0, parseFloat(pesoKg) || 0);
+  const infoMat = MATERIAIS[mat] || MATERIAIS.PET;
+  const aguaSalva = (kgNum * infoMat.aguaPorKg).toFixed(1);
+  const co2Evitado = (kgNum * infoMat.co2PorKg).toFixed(2);
+
+  const registrarPesagem = (e) => {
+    e.preventDefault();
+    if (kgNum <= 0) { showToast('Informe um peso maior que zero.'); return; }
+    const item = {
+      id: Date.now(),
+      material: infoMat.label,
+      kg: kgNum.toFixed(2),
+      aguaSalva,
+      co2Evitado,
+      data: new Date().toLocaleString('pt-BR')
+    };
+    const lista = [item, ...historico];
+    setHistorico(lista);
+    try { localStorage.setItem('raru_esg_pesagens', JSON.stringify(lista)); } catch (e) {}
+    showToast(`Pesagem ESG registrada: ${item.kg} kg de ${item.material}.`);
+  };
+
+  return (
+    <div className="cyber-card font-mono space-y-3">
+      <div className="text-cyberGreen font-display font-black text-sm uppercase">BALANÇA COMUNITÁRIA & IMPACTO ESG</div>
+      <form onSubmit={registrarPesagem} className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+        <select value={mat} onChange={e => setMat(e.target.value)} className="p-2.5 rounded-xl bg-void border border-cyberCyan/40 text-white text-xs">
+          {Object.entries(MATERIAIS).map(([k, v]) => <option key={k} value={k}>{v.label}</option>)}
+        </select>
+        <input type="number" step="0.1" min="0" value={pesoKg} onChange={e => setPesoKg(e.target.value)} placeholder="Peso (kg)" className="p-2.5 rounded-xl bg-void border border-cyberCyan/40 text-white text-xs permitir-selecao" />
+        <button type="submit" className="cyber-button-solid text-xs">REGISTRAR PESO</button>
+      </form>
+
+      <div className="grid grid-cols-3 gap-2">
+        <div className="bg-void/90 border border-cyberCyan/30 rounded-xl p-2.5">
+          <div className="text-[9px] text-slate-400">PESO ATUAL</div>
+          <div className="text-sm font-black text-cyberCyan">{kgNum.toFixed(2)} kg</div>
+        </div>
+        <div className="bg-void/90 border border-cyberGreen/30 rounded-xl p-2.5">
+          <div className="text-[9px] text-slate-400">ÁGUA POUPADA</div>
+          <div className="text-sm font-black text-cyberGreen">{aguaSalva} L</div>
+        </div>
+        <div className="bg-void/90 border border-cyberBlue/30 rounded-xl p-2.5">
+          <div className="text-[9px] text-slate-400">CO2 EVITADO</div>
+          <div className="text-sm font-black text-cyberBlue">{co2Evitado} kg</div>
+        </div>
+      </div>
+
+      <div className="space-y-1.5 pt-1">
+        {historico.slice(0, 5).map(h => (
+          <div key={h.id} className="bg-void/90 border border-cyberCyan/20 rounded-xl p-2.5 text-xs flex justify-between items-center gap-2">
+            <div>
+              <b className="text-white">{h.material}</b> — <span className="text-cyberCyan font-bold">{h.kg} kg</span>
+              <div className="text-[10px] text-slate-400">{h.data}</div>
+            </div>
+            <div className="text-[10px] text-cyberGreen font-bold text-right">
+              {h.aguaSalva}L água • {h.co2Evitado}kg CO2
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function ModuloMidiaTransmissoes({ showToast }) {
+  const CANAIS = [
+    { nome: 'Cemaden Educação', url: 'https://www.youtube.com/@CemadenEducacao', desc: 'Educação climática, prevenção de riscos e ciência cidadã.' },
+    { nome: 'INPE Oficial', url: 'https://www.youtube.com/@inpe_oficial', desc: 'Satélites meteorológicos, previsões e monitoramento ambiental.' },
+    { nome: 'Grupo Comunitário A Chave da Esperança', url: 'https://chat.whatsapp.com/D1wrk9nTBH57Wya2Uv44ZW', desc: 'Canal comunitário de mobilização e apoio em Mesquita - RJ.' }
+  ];
+
+  return (
+    <div className="cyber-card font-mono space-y-3">
+      <div className="text-cyberCyan font-display font-black text-sm uppercase">CENTRAL DE MÍDIA & TRANSMISSÕES</div>
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+        {CANAIS.map((c, i) => (
+          <div key={i} className="bg-void/90 border border-cyberCyan/35 rounded-xl p-3 flex flex-col justify-between gap-2">
+            <div>
+              <div className="text-xs font-black text-white">{c.nome}</div>
+              <div className="text-[11px] text-slate-300 mt-1">{c.desc}</div>
+            </div>
+            <a href={c.url} target="_blank" rel="noopener noreferrer" className="cyber-button text-[10px] py-2 !min-h-[38px]">
+              ABRIR CANAL
+            </a>
+          </div>
+        ))}
+      </div>
+      <button type="button" onClick={() => compartilharEscudoComTextoUnico(showToast)} className="cyber-button-solid w-full text-xs">
+        <EscudoRaruSVG size={14} color="#030712" />
+        <span>COMPARTILHAR APLICATIVO</span>
+      </button>
+    </div>
+  );
+}
+
+function App() {
+  const [aba, setAba] = useState('painel');
+  const [municipioSel, setMunicipioSel] = useState(MUNICIPIOS_92[0]);
+  const [buscaMun, setBuscaMun] = useState('');
+  const [userName, setUserName] = useState(() => {
+    try { return localStorage.getItem('raru_user_name') || ''; } catch (e) { return ''; }
+  });
+  const [perfilVozId, setPerfilVozId] = useState(() => {
+    try { return localStorage.getItem('raru_perfil_voz') || 'sarah'; } catch (e) { return 'sarah'; }
+  });
+  const [toastMsg, setToastMsg] = useState('');
+  const [chatOpen, setChatOpen] = useState(false);
+  const [chatInput, setChatInput] = useState('');
+  const [chatFalando, setChatFalando] = useState(false);
+  const [chatMsgs, setChatMsgs] = useState(() => [{
+    role: 'assistant',
+    text: 'Canal tático ROBOT SARAH SYSTEM RARU pronto. Como posso te ajudar hoje?'
+  }]);
+  const [diaMode, setDiaMode] = useState(false);
+  const [paredeMode, setParedeMode] = useState(false);
+  const [lgpdAceito, setLgpdAceito] = useState(() => {
+    try { return localStorage.getItem('raru_lgpd_v11_2') === 'true'; } catch (e) { return false; }
+  });
+  const [check1, setCheck1] = useState(false);
+  const [check2, setCheck2] = useState(false);
+
+  const showToast = (msg) => {
+    setToastMsg(msg);
+  };
+
+  useEffect(() => {
+    if (!toastMsg) return;
+    const t = setTimeout(() => setToastMsg(''), 3200);
+    return () => clearTimeout(t);
+  }, [toastMsg]);
+
+  useEffect(() => {
+    if (diaMode) {
+      document.documentElement.classList.add('raru-day-mode');
+      document.body.classList.add('raru-day-mode');
+    } else {
+      document.documentElement.classList.remove('raru-day-mode');
+      document.body.classList.remove('raru-day-mode');
+    }
+  }, [diaMode]);
+
+  useEffect(() => {
+    if (paredeMode) {
+      document.body.classList.add('hud-wall-mode');
+      document.body.classList.add('hud-expanded-mode');
+    } else {
+      document.body.classList.remove('hud-wall-mode');
+      document.body.classList.remove('hud-expanded-mode');
+    }
+  }, [paredeMode]);
+
+  useEffect(() => {
+    const bloquearEvento = (e) => {
+      const tag = (e.target && e.target.tagName) ? e.target.tagName.toLowerCase() : '';
+      const editavel = e.target && (e.target.isContentEditable || tag === 'input' || tag === 'textarea' || tag === 'select');
+      if (!editavel) e.preventDefault();
+    };
+    document.addEventListener('contextmenu', bloquearEvento);
+    document.addEventListener('copy', bloquearEvento);
+    document.addEventListener('cut', bloquearEvento);
+    document.addEventListener('dragstart', bloquearEvento);
+    return () => {
+      document.removeEventListener('contextmenu', bloquearEvento);
+      document.removeEventListener('copy', bloquearEvento);
+      document.removeEventListener('cut', bloquearEvento);
+      document.removeEventListener('dragstart', bloquearEvento);
+    };
+  }, []);
+
+  const atualizarNomeUsuario = (novoNome) => {
+    const limpo = String(novoNome || '').trim();
+    setUserName(limpo);
+    try { localStorage.setItem('raru_user_name', limpo); } catch (e) {}
+  };
+
+  const confirmarLGPD = () => {
+    if (!check1 || !check2) {
+      showToast('Marque as duas confirmações LGPD para prosseguir.');
+      return;
+    }
+    setLgpdAceito(true);
+    try { localStorage.setItem('raru_lgpd_v11_2', 'true'); } catch (e) {}
+    showToast('Termo LGPD confirmado. Sistema liberado.');
+  };
+
+  const enviarChatModal = async (e) => {
+    e.preventDefault();
+    const txt = chatInput.trim();
+    if (!txt) return;
+    setChatInput('');
+
+    let nomeAtual = userName;
+    const mNome = txt.match(/(?:meu nome [ée]|me chamo|pode me chamar de|sou o|sou a)\s+([a-zà-ú]+)/i);
+    if (mNome && mNome[1]) {
+      nomeAtual = mNome[1].charAt(0).toUpperCase() + mNome[1].slice(1).toLowerCase();
+      atualizarNomeUsuario(nomeAtual);
+    }
+
+    const prox = [...chatMsgs, { role: 'user', text: txt }];
+    setChatMsgs(prox);
+    const resp = await chamarSarah('conversa', prox.map(m => ({ role: m.role, content: m.text })), municipioSel.n, 'Rocha Sobrinho', aba, null, nomeAtual);
+    const limpa = bloquearCalmaPessoa(resp);
+    setChatMsgs(prev => [...prev, { role: 'assistant', text: limpa }]);
+    setChatFalando(true);
+    falarSarah(limpa, perfilVozId);
+    setTimeout(() => setChatFalando(false), 3200);
+  };
+
+  const municipiosFiltrados = MUNICIPIOS_92.filter(m =>
+    (m.n + ' ' + m.ip).toLowerCase().includes(buscaMun.toLowerCase())
+  );
+
+  const NAV_ITENS = [
+    { id: 'painel', label: 'Painel', Icon: IconDashboard },
+    { id: 'radar', label: 'Radar', Icon: IconRadar },
+    { id: 'vistoria', label: 'Vistoria', Icon: IconVistoria },
+    { id: 'estacao', label: 'Estação', Icon: IconEstacao },
+    { id: 'alquino', label: 'Alquino', Icon: IconAlquino },
+    { id: 'balanca', label: 'Balança', Icon: IconBalanca },
+    { id: 'videos', label: 'Vídeos', Icon: IconVideos },
+    { id: 'admin', label: 'Admin', Icon: IconAdmin }
+  ];
+
+  return (
+    <div id="hudWrap" className={`seu-container-raru ${paredeMode ? 'modo-parede' : ''}`}>
+      {!lgpdAceito && (
+        <div className="fixed inset-0 z-50 bg-void/95 backdrop-blur-md flex items-center justify-center p-4">
+          <div className="cyber-card max-w-lg w-full space-y-3 font-mono">
+            <div className="flex items-center gap-2 text-cyberCyan font-display font-black text-sm uppercase">
+              <EscudoRaruSVG size={20} color="#00F2FE" />
+              <span>TERMO DE RESPONSABILIDADE • LGPD (LEI 13.709/2018)</span>
+            </div>
+            <p className="text-xs text-slate-300 leading-relaxed permitir-selecao">
+              O <strong>RARU NEXUS V11.2 PLUS</strong> opera como ferramenta comunitária de ciência cidadã, monitoramento climático e apoio territorial em Mesquita e nos 92 municípios do Rio de Janeiro. Não exponha dados pessoais sensíveis de terceiros sem consentimento legal.
+            </p>
+            <label className="flex items-start gap-2.5 text-xs text-slate-200 cursor-pointer bg-void/80 p-2.5 rounded-xl border border-cyberCyan/25">
+              <input type="checkbox" checked={check1} onChange={e => setCheck1(e.target.checked)} className="accent-cyberCyan mt-0.5 w-4 h-4" />
+              <span>Assumo responsabilidade pelo uso ético e comunitário dos dados registrados.</span>
+            </label>
+            <label className="flex items-start gap-2.5 text-xs text-slate-200 cursor-pointer bg-void/80 p-2.5 rounded-xl border border-cyberCyan/25">
+              <input type="checkbox" checked={check2} onChange={e => setCheck2(e.target.checked)} className="accent-cyberGreen mt-0.5 w-4 h-4" />
+              <span>Compreendo que as alertas comunitários complementam — e não substituem — canais oficiais de emergência.</span>
+            </label>
+            <button type="button" onClick={confirmarLGPD} className="cyber-button-solid w-full text-xs">
+              CONFIRMAR E ACESSAR SISTEMA
+            </button>
+          </div>
+        </div>
+      )}
+
+      {toastMsg && (
+        <div className="fixed top-4 left-1/2 -translate-x-1/2 z-50 bg-deepSpace border border-cyberCyan text-cyberCyan px-4 py-2.5 rounded-full text-xs font-mono font-bold shadow-[0_0_20px_rgba(0,242,254,0.45)]">
+          {toastMsg}
+        </div>
+      )}
+
+      <header className="cyber-card !p-3.5 flex flex-wrap items-center justify-between gap-3">
+        <div className="flex items-center gap-3 min-w-0">
+          <div className="w-11 h-11 rounded-2xl bg-void border border-cyberCyan/60 flex items-center justify-center shrink-0">
+            <EscudoRaruSVG size={24} color="#00F2FE" />
+          </div>
+          <div className="min-w-0">
+            <h1 className="font-display font-black text-sm sm:text-base text-white tracking-wider truncate">
+              RARU NEXUS <span className="text-cyberCyan">V11.2 PLUS</span>
+            </h1>
+            <p className="text-[10px] font-mono text-cyberGreen truncate">
+              CIDADÃO SENSOR • GADE • {municipioSel.n.toUpperCase()} ({municipioSel.ip})
+            </p>
+          </div>
+        </div>
+
+        <div className="flex items-center gap-1.5 flex-wrap">
+          <button type="button" onClick={() => setParedeMode(p => !p)} className={`raru-store-btn ${paredeMode ? 'ativo' : ''}`} title="Modo Tela Ampla / Parede">
+            <IconExpand size={12} color={paredeMode ? '#030712' : '#00F2FE'} />
+            <span>{paredeMode ? 'HUD Normal' : 'HUD Tela'}</span>
+          </button>
+          <button type="button" onClick={() => setDiaMode(d => !d)} className={`raru-store-btn ${diaMode ? 'ativo' : ''}`} title="Alternar Tema Dia/Noite">
+            <IconSunMoon size={12} color={diaMode ? '#030712' : '#00F2FE'} />
+            <span>{diaMode ? 'Noturno' : 'Diurno'}</span>
+          </button>
+          <button type="button" onClick={() => compartilharEscudoComTextoUnico(showToast)} className="raru-store-btn">
+            <EscudoRaruSVG size={12} color="#00F2FE" />
+            <span>Compartilhar</span>
+          </button>
+        </div>
+      </header>
+
+      <div className="cyber-card !p-3 flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5 font-mono">
+        <div className="flex-1">
+          <label className="text-[9px] text-cyberCyan font-black uppercase block mb-1">MUNICÍPIO MONITORADO (RJ)</label>
+          <select
+            value={municipioSel.n}
+            onChange={e => {
+              const found = MUNICIPIOS_92.find(m => m.n === e.target.value);
+              if (found) setMunicipioSel(found);
+            }}
+            className="w-full bg-void border border-cyberCyan/40 rounded-xl px-3 py-2 text-xs text-white"
+          >
+            {MUNICIPIOS_92.map((m, i) => (
+              <option key={i} value={m.n}>{m.n} • IP {m.ip}</option>
+            ))}
+          </select>
+        </div>
+        <div className="sm:w-56">
+          <label className="text-[9px] text-slate-400 font-black uppercase block mb-1">FILTRO RÁPIDO</label>
+          <input
+            value={buscaMun}
+            onChange={e => {
+              setBuscaMun(e.target.value);
+              const hit = MUNICIPIOS_92.find(m => m.n.toLowerCase().includes(e.target.value.toLowerCase()));
+              if (hit && e.target.value.trim().length >= 3) setMunicipioSel(hit);
+            }}
+            placeholder="Buscar cidade..."
+            className="w-full bg-void border border-cyberCyan/30 rounded-xl px-3 py-2 text-xs text-white permitir-selecao"
+          />
+        </div>
+        <div className="sm:w-52">
+          <label className="text-[9px] text-cyberGreen font-black uppercase block mb-1">COMO CHAMAR VOCÊ</label>
+          <input
+            value={userName}
+            onChange={e => atualizarNomeUsuario(e.target.value)}
+            placeholder="Seu nome no chat..."
+            className="w-full bg-void border border-cyberGreen/35 rounded-xl px-3 py-2 text-xs text-white permitir-selecao"
+          />
+        </div>
+      </div>
+
+      <main className="flex-1 w-full">
+        {aba === 'painel' && (
+          <RaruRoboTelemetriaNoLugarDoMapa
+            municipioSelecionado={municipioSel}
+            onSelecionarMunicipio={setMunicipioSel}
+            onNavegarModulo={setAba}
+            abaAtual={aba}
+            showToast={showToast}
+            openSarahChat={() => setChatOpen(true)}
+            userName={userName}
+            onAtualizarNome={atualizarNomeUsuario}
+          />
+        )}
+        {aba === 'radar' && <ModuloRadarMeteorologico municipioSelecionado={municipioSel} showToast={showToast} />}
+        {aba === 'vistoria' && <ModuloVistoriaSirenes municipioSelecionado={municipioSel} showToast={showToast} />}
+        {aba === 'estacao' && <EstacaoGADEModule showToast={showToast} userName={userName} />}
+        {aba === 'alquino' && <ModuloAlquinoHardware municipioSelecionado={municipioSel} showToast={showToast} />}
+        {aba === 'balanca' && <ModuloBalancaESG showToast={showToast} />}
+        {aba === 'videos' && <ModuloMidiaTransmissoes showToast={showToast} />}
+        {aba === 'admin' && (
+          <div className="space-y-3">
+            <CadeAdminModule showToast={showToast} />
+            <div className="cyber-card">
+              <SeletorVozGlobal perfilVozId={perfilVozId} setPerfilVozId={setPerfilVozId} />
+            </div>
+          </div>
+        )}
+      </main>
+
+      <nav className="fixed bottom-0 left-0 right-0 z-40 bg-void/95 backdrop-blur-xl border-t border-cyberCyan/40 px-2 py-1.5">
+        <div className="max-w-4xl mx-auto grid grid-cols-4 sm:grid-cols-8 gap-1">
+          {NAV_ITENS.map(({ id, label, Icon }) => {
+            const ativo = aba === id;
+            return (
+              <button
+                key={id}
+                type="button"
+                onClick={() => setAba(id)}
+                className={`flex flex-col items-center justify-center py-1.5 px-1 rounded-xl font-mono text-[9px] font-bold uppercase cursor-pointer transition-all ${
+                  ativo
+                    ? 'bg-cyberCyan/20 border border-cyberCyan text-cyberCyan shadow-[0_0_12px_rgba(0,242,254,0.3)]'
+                    : 'text-slate-400 border border-transparent hover:text-white'
+                }`}
+              >
+                <Icon size={15} color={ativo ? '#00F2FE' : '#94A3B8'} />
+                <span className="mt-0.5 truncate w-full text-center">{label}</span>
+              </button>
+            );
+          })}
+        </div>
+      </nav>
+
+      <SarahFabButton openSarahChat={() => setChatOpen(true)} isSpeaking={chatFalando} />
+
+      {chatOpen && (
+        <div className="fixed inset-0 z-50 bg-black/75 backdrop-blur-sm flex items-end sm:items-center justify-center p-3">
+          <div className="cyber-card max-w-md w-full !mb-0 space-y-3 font-mono">
+            <div className="flex items-center justify-between border-b border-cyberCyan/30 pb-2">
+              <div className="flex items-center gap-2.5">
+                <div className="w-11 h-11">
+                  <SarahAnimatedAvatar isSpeaking={chatFalando} />
+                </div>
+                <div>
+                  <div className="text-xs font-black text-cyberCyan uppercase">ROBOT SARAH SYSTEM RARU</div>
+                  <div className="text-[10px] text-cyberGreen">{municipioSel.n} • Voz: {perfilVozId.toUpperCase()}</div>
+                </div>
+              </div>
+              <button type="button" onClick={() => setChatOpen(false)} className="cyber-button-danger text-xs px-3 py-1.5 !min-h-[36px]">
+                FECHAR
+              </button>
+            </div>
+
+            <div className="max-h-60 overflow-y-auto space-y-2 pr-1">
+              {chatMsgs.map((m, idx) => (
+                <div
+                  key={idx}
+                  className={`p-2.5 rounded-xl text-xs leading-relaxed permitir-selecao ${
+                    m.role === 'user'
+                      ? 'bg-cyberCyan/15 border border-cyberCyan/40 text-white ml-6'
+                      : 'bg-void border border-slate-700 text-slate-200 mr-6'
+                  }`}
+                >
+                  <div className="text-[9px] font-black text-cyberCyan uppercase mb-0.5">
+                    {m.role === 'user' ? (userName || 'VOCÊ') : 'ROBOT SARAH SYSTEM RARU'}
+                  </div>
+                  <div>{m.text}</div>
+                </div>
+              ))}
+            </div>
+
+            <form onSubmit={enviarChatModal} className="flex gap-2">
+              <input
+                value={chatInput}
+                onChange={e => setChatInput(e.target.value)}
+                placeholder="Digite ou pergunte algo..."
+                className="flex-1 bg-void border border-cyberCyan/40 rounded-xl px-3 py-2 text-xs text-white permitir-selecao"
+              />
+              <button type="submit" className="cyber-button-solid text-xs px-4 !min-h-[40px]">ENVIAR</button>
+            </form>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+const rootEl = document.getElementById('root');
+ReactDOM.createRoot(rootEl).render(<App />);
+</script>
+</body>
+</html>
