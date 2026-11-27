@@ -1,0 +1,2237 @@
+8px', borderRadius: '6px' }}>{r.info}</div>}
+</div>
+))
+)}
+</div>
+</div>
+);
+}
+​function CadeAdminModule({ showToast }) {
+const MUNICIPIOS = MUNICIPIOS_92.map(m => m.n);
+const [abaAtiva, setAbaAtiva] = useState('rota');
+const [rotas, setRotas] = useState(() => {
+try { return JSON.parse(localStorage.getItem('rotasFugaReais') || '[]'); } catch (e) { return []; }
+});
+const [rNome, setRNome] = useState('');
+const [rEnd, setREnd] = useState('');
+const [rInfo, setRInfo] = useState('');
+const [rTipo, setRTipo] = useState('Ponto de Encontro');
+​const [monitores, setMonitores] = useState(() => {
+try { return JSON.parse(localStorage.getItem('monitoresCADE') || '[]'); } catch (e) { return []; }
+});
+const [bloqueados, setBloqueados] = useState(() => {
+try { return JSON.parse(localStorage.getItem('monitoresBloqueadosCADE') || '[]'); } catch (e) { return []; }
+});
+const [mNome, setMNome] = useState('');
+const [mZap, setMZap] = useState('');
+const [mSenha, setMSenha] = useState('');
+const [mMun, setMMun] = useState('');
+const [mBairro, setMBairro] = useState('');
+const [mFuncao, setMFuncao] = useState('Monitor do Tempo');
+const [mObs, setMObs] = useState('');
+const [filtroMon, setFiltroMon] = useState('');
+​const salvarRota = () => {
+if (!rNome.trim() || !rEnd.trim()) { showToast('Escreva o nome e o endereço.'); return; }
+const atualizadas = [...rotas, { nome: rNome.trim(), endereco: rEnd.trim(), info: rInfo.trim(), tipo: rTipo }];
+setRotas(atualizadas);
+try { localStorage.setItem('rotasFugaReais', JSON.stringify(atualizadas)); } catch (e) {}
+setRNome(''); setREnd(''); setRInfo('');
+showToast('Rota salva e publicada na Estação.');
+};
+​const excluirRota = (i) => {
+if (!confirm('Excluir essa rota?')) return;
+const atualizadas = [...rotas];
+atualizadas.splice(i, 1);
+setRotas(atualizadas);
+try { localStorage.setItem('rotasFugaReais', JSON.stringify(atualizadas)); } catch (e) {}
+};
+​const cadastrarMonitor = () => {
+if (!mNome.trim() || !mMun || !mBairro.trim() || !mSenha.trim()) { showToast('Preencha nome, município, bairro e crie a senha.'); return; }
+let c = parseInt(localStorage.getItem('contadorMonitorCADE') || '0', 10) + 1;
+try { localStorage.setItem('contadorMonitorCADE', String(c)); } catch (e) {}
+const idGerado = 'GADE-M-' + String(c).padStart(3, '0');
+const novoM = { id: idGerado, nome: mNome.trim(), zap: mZap.trim(), senha: mSenha.trim(), municipio: mMun, bairro: mBairro.trim(), funcao: mFuncao, obs: mObs.trim(), data: new Date().toLocaleString('pt-BR') };
+const atualizados = [...monitores, novoM];
+setMonitores(atualizados);
+try { localStorage.setItem('monitoresCADE', JSON.stringify(atualizados)); } catch (e) {}
+setMNome(''); setMZap(''); setMSenha(''); setMBairro(''); setMObs('');
+showToast(Monitor cadastrado: ${idGerado});
+};
+​const bloquearMonitor = (idx) => {
+const x = monitores[idx];
+const motivo = prompt(Excluindo ${x.nome} - ${x.id}\nMotivo? Ex: mau uso);
+if (motivo === null) return;
+if (!confirm(CONFIRMAR BLOQUEIO?\n\n${x.id} - ${x.nome})) return;
+const l = [...monitores]; l.splice(idx, 1);
+setMonitores(l); try { localStorage.setItem('monitoresCADE', JSON.stringify(l)); } catch (e) {}
+const bb = [...bloqueados, { ...x, motivo: motivo || 'Sem motivo', dataBloqueio: new Date().toLocaleString('pt-BR') }];
+setBloqueados(bb); try { localStorage.setItem('monitoresBloqueadosCADE', JSON.stringify(bb)); } catch (e) {}
+showToast(Monitor ${x.id} bloqueado.);
+};
+​const desbloquearMonitor = (idx) => {
+const x = bloqueados[idx];
+if (!confirm(Desbloquear ${x.id} - ${x.nome}?)) return;
+const bb = [...bloqueados]; bb.splice(idx, 1);
+setBloqueados(bb); try { localStorage.setItem('monitoresBloqueadosCADE', JSON.stringify(bb)); } catch (e) {}
+const l = [...monitores, { id: x.id, nome: x.nome, zap: x.zap, senha: x.senha, municipio: x.municipio, bairro: x.bairro, funcao: x.funcao, obs: x.obs, data: x.data }];
+setMonitores(l); try { localStorage.setItem('monitoresCADE', JSON.stringify(l)); } catch (e) {}
+showToast(Monitor ${x.id} desbloqueado.);
+};
+​const exportarMonitoresGrupo = () => {
+if (!monitores.length) { showToast('Nenhum monitor ativo.'); return; }
+const msg = MONITORES GADE - ${monitores.length} ativos\n\n + monitores.map(x => ${x.id} - ${x.nome} - ${x.funcao}\nLocal: ${x.municipio} - ${x.bairro}\nZap: ${x.zap || ''}).join('\n\n') + \n\nProjeto: GADE - Grupo A Chave da Esperança • ${TITULO_OFICIAL_RARU};
+if (navigator.clipboard) navigator.clipboard.writeText(msg).catch(() => {});
+showToast('Lista copiada sem senha. Abrindo WhatsApp.');
+window.open('https://chat.whatsapp.com/D1wrk9nTBH57Wya2Uv44ZW', '_blank');
+};
+​const monitoresFiltrados = monitores.filter(x => (x.id + ' ' + x.nome + ' ' + x.municipio + ' ' + x.bairro).toLowerCase().includes(filtroMon.toLowerCase()));
+​return (
+<div id="cadeAdmin" style={{ background: '#021a2a', border: '1px solid #00e5ff', borderRadius: '16px', padding: '14px', fontFamily: 'sans-serif' }}>
+<b style={{ color: '#00e5ff', fontSize: '16px' }}>ÁREA RESTRITA - GADE</b>
+<div style={{ color: '#fff', fontSize: '12px', opacity: .8 }}>GADE - Grupo A Chave da Esperança / {TITULO_OFICIAL_RARU}</div>
+<div style={{ display: 'flex', gap: '8px', marginTop: '12px' }}>
+<button type="button" onClick={() => setAbaAtiva('rota')} style={{ flex: 1, background: abaAtiva === 'rota' ? '#00e5ff' : '#041e2e', color: abaAtiva === 'rota' ? '#000' : '#fff', fontWeight: 'bold', border: 'none', padding: '12px', borderRadius: '10px', cursor: 'pointer' }}>ROTAS DE FUGA</button>
+<button type="button" onClick={() => setAbaAtiva('monitor')} style={{ flex: 1, background: abaAtiva === 'monitor' ? '#00ff88' : '#041e2e', color: abaAtiva === 'monitor' ? '#000' : '#fff', fontWeight: 'bold', border: '1px solid #00e5ff', padding: '12px', borderRadius: '10px', cursor: 'pointer' }}>MONITORES</button>
+</div>
+{abaAtiva === 'rota' ? (
+<div id="painelRota">
+<input value={rNome} onChange={e => setRNome(e.target.value)} placeholder="Nome do local" style={{ width: '100%', padding: '12px', marginTop: '12px', borderRadius: '10px', border: 'none', boxSizing: 'border-box', color: '#000' }} />
+<input value={rEnd} onChange={e => setREnd(e.target.value)} placeholder="Endereço completo" style={{ width: '100%', padding: '12px', marginTop: '8px', borderRadius: '10px', border: 'none', boxSizing: 'border-box', color: '#000' }} />
+<input value={rInfo} onChange={e => setRInfo(e.target.value)} placeholder="Informações" style={{ width: '100%', padding: '12px', marginTop: '8px', borderRadius: '10px', border: 'none', boxSizing: 'border-box', color: '#000' }} />
+<select value={rTipo} onChange={e => setRTipo(e.target.value)} style={{ width: '100%', padding: '12px', marginTop: '8px', borderRadius: '10px', color: '#000' }}>
+<option>Ponto de Encontro</option>
+<option>Casa de Morador</option>
+<option>Igreja</option>
+<option>Escola / CRAS / Clínica</option>
+<option>Ponto Alto Seguro</option>
+</select>
+<button type="button" onClick={salvarRota} style={{ width: '100%', background: '#00e5ff', color: '#000', fontWeight: 'bold', border: 'none', padding: '14px', borderRadius: '10px', marginTop: '12px', cursor: 'pointer' }}>SALVAR E PUBLICAR NA ESTAÇÃO</button>
+<div id="listaRotasAdmin" style={{ marginTop: '12px' }}>
+{rotas.length === 0 ? (
+<div style={{ color: '#fff', opacity: .7, fontSize: '13px' }}>Nenhuma rota cadastrada ainda.</div>
+) : (
+rotas.map((x, i) => (
+<div key={i} style={{ background: '#041e2e', padding: '10px', borderRadius: '10px', marginTop: '8px', color: '#fff', fontSize: '13px' }}>
+<b>{x.tipo} - {x.nome}</b><br />{x.endereco}<br />{x.info || ''}<br />
+<button type="button" onClick={() => excluirRota(i)} style={{ background: '#ff3b30', color: '#fff', border: 'none', padding: '6px 10px', borderRadius: '8px', marginTop: '6px', cursor: 'pointer', fontWeight: 'bold' }}>Excluir Rota</button>
+</div>
+))
+)}
+</div>
+</div>
+) : (
+<div id="painelMonitor">
+<div style={{ background: '#041e2e', borderRadius: '10px', padding: '10px', marginTop: '12px', color: '#fff', fontSize: '13px' }}>
+Ativos: <b style={{ color: '#00e5ff' }}>{monitores.length}</b> | Municípios: <b style={{ color: '#00ff88' }}>{new Set(monitores.map(x => x.municipio)).size}</b> / 92 | Bloqueados: <b style={{ color: '#ff3b30' }}>{bloqueados.length}</b>
+</div>
+<input value={mNome} onChange={e => setMNome(e.target.value)} placeholder="Nome completo do monitor" style={{ width: '100%', padding: '11px', borderRadius: '10px', border: 'none', boxSizing: 'border-box', marginTop: '10px', color: '#000' }} />
+<input value={mZap} onChange={e => setMZap(e.target.value)} placeholder="WhatsApp" style={{ width: '100%', padding: '11px', borderRadius: '10px', border: 'none', boxSizing: 'border-box', marginTop: '8px', color: '#000' }} />
+<input value={mSenha} onChange={e => setMSenha(e.target.value)} placeholder="Crie a senha dele - ex: rocha123" style={{ width: '100%', padding: '11px', borderRadius: '10px', border: 'none', boxSizing: 'border-box', marginTop: '8px', color: '#000' }} />
+<select value={mMun} onChange={e => setMMun(e.target.value)} style={{ width: '100%', padding: '11px', borderRadius: '10px', marginTop: '8px', color: '#000' }}>
+<option value="">Selecione o município - 92 municípios do RJ</option>
+{MUNICIPIOS.map((m, i) => <option key={i} value={m}>{m}</option>)}
+</select>
+<input value={mBairro} onChange={e => setMBairro(e.target.value)} placeholder="Bairro / Comunidade que vai monitorar" style={{ width: '100%', padding: '11px', borderRadius: '10px', border: 'none', boxSizing: 'border-box', marginTop: '8px', color: '#000' }} />
+<select value={mFuncao} onChange={e => setMFuncao(e.target.value)} style={{ width: '100%', padding: '11px', borderRadius: '10px', marginTop: '8px', color: '#000' }}>
+<option>Monitor do Tempo</option>
+<option>Monitor da Comunidade</option>
+<option>Monitor do Rio / Alagamento</option>
+<option>Monitor de Abrigo / Rota</option>
+<option>Apoio / Divulgação</option>
+</select>
+<input value={mObs} onChange={e => setMObs(e.target.value)} placeholder="Observações" style={{ width: '100%', padding: '11px', borderRadius: '10px', border: 'none', boxSizing: 'border-box', marginTop: '8px', color: '#000' }} />
+<button type="button" onClick={cadastrarMonitor} style={{ width: '100%', background: '#00ff88', color: '#000', fontWeight: 'bold', border: 'none', padding: '14px', borderRadius: '10px', marginTop: '10px', cursor: 'pointer' }}>CADASTRAR MONITOR - GERAR NÚMERO + SENHA</button>
+<div style={{ display: 'flex', gap: '8px', marginTop: '10px' }}>
+<input value={filtroMon} onChange={e => setFiltroMon(e.target.value)} placeholder="Filtrar por número, nome, município..." style={{ flex: 1, padding: '10px', borderRadius: '10px', border: 'none', color: '#000' }} />
+<button type="button" onClick={exportarMonitoresGrupo} style={{ background: '#25D366', border: 'none', padding: '10px 12px', borderRadius: '10px', fontWeight: 'bold', cursor: 'pointer' }}>GRUPO</button>
+</div>
+<div id="listaMonitores" style={{ marginTop: '10px' }}>
+{monitoresFiltrados.length === 0 ? (
+<div style={{ color: '#fff', opacity: .7, fontSize: '13px' }}>Nenhum monitor ativo.</div>
+) : (
+monitoresFiltrados.map((x) => {
+const idx = monitores.indexOf(x);
+return (
+<div key={idx} style={{ background: '#041e2e', padding: '10px', borderRadius: '10px', marginTop: '8px', color: '#fff', fontSize: '13px' }}>
+<b style={{ background: '#00e5ff', color: '#000', padding: '2px 8px', borderRadius: '20px', fontSize: '12px' }}>{x.id}</b> <b>{x.nome}</b> <span style={{ color: '#00e5ff' }}>- {x.funcao}</span><br />
+Local: {x.municipio} - {x.bairro}<br />
+Zap: {x.zap || 'sem zap'}<br />
+Senha: <b style={{ color: '#ffcc00' }}>{x.senha}</b> <span style={{ fontSize: '11px', opacity: .7 }}>(só você vê)</span><br />
+{x.obs && <span>Obs: {x.obs}<br /></span>}
+<span style={{ fontSize: '11px', opacity: .7 }}>Cadastrado: {x.data}</span><br />
+<button type="button" onClick={() => bloquearMonitor(idx)} style={{ background: '#ff3b30', color: '#fff', border: 'none', padding: '6px 10px', borderRadius: '8px', marginTop: '6px', cursor: 'pointer', fontWeight: 'bold' }}>EXCLUIR / BLOQUEAR</button>
+</div>
+);
+})
+)}
+</div>
+<div style={{ background: '#2a0505', border: '1px solid #ff3b30', borderRadius: '12px', padding: '12px', marginTop: '14px' }}>
+<b style={{ color: '#ff3b30' }}>MONITORES BLOQUEADOS / EXCLUÍDOS</b>
+<div id="listaBloqueados" style={{ marginTop: '8px' }}>
+{bloqueados.length === 0 ? (
+<div style={{ color: '#fff', opacity: .7, fontSize: '13px' }}>Nenhum monitor bloqueado.</div>
+) : (
+bloqueados.map((x, i) => (
+<div key={i} style={{ background: '#1a0505', padding: '10px', borderRadius: '10px', marginTop: '8px', color: '#fff', fontSize: '13px' }}>
+<b style={{ background: '#ff3b30', color: '#fff', padding: '2px 8px', borderRadius: '20px', fontSize: '12px' }}>{x.id}</b> <b>{x.nome}</b> - {x.municipio} - {x.bairro}<br />
+Motivo: {x.motivo || 'Sem motivo'}<br />
+<button type="button" onClick={() => desbloquearMonitor(i)} style={{ background: '#00ff88', color: '#000', border: 'none', padding: '6px 10px', borderRadius: '8px', marginTop: '6px', cursor: 'pointer', fontWeight: 'bold' }}>DESBLOQUEAR</button>
+</div>
+))
+)}
+</div>
+</div>
+</div>
+)}
+</div>
+);
+}
+​function AdminVaultModule({ showToast, onClose, localVideos, setLocalVideos, onSelecionarPerfilVoz, perfilVozId, customTickerText, setCustomTickerText }) {
+const [pinInput, setPinInput] = useState("");
+const [isUnlocked, setIsUnlocked] = useState(false);
+const [adminSubTab, setAdminSubTab] = useState('cade');
+const [tickerInput, setTickerInput] = useState(customTickerText);
+​const handleUnlock = (e) => {
+e.preventDefault();
+if (pinInput === "303500") { setIsUnlocked(true); showToast("Acesso Restrito Autorizado."); } else { showToast("PIN Incorreto."); }
+};
+​const salvarTicker = (e) => {
+e.preventDefault();
+setCustomTickerText(tickerInput);
+try { localStorage.setItem('raru_custom_ticker', tickerInput); } catch (e) {}
+showToast("Faixa marquee atualizada com sucesso.");
+};
+​const handleUploadGaleriaDireto = (e) => {
+const file = e.target.files?.[0];
+if (!file || !file.type.startsWith('video/')) { showToast("Selecione um vídeo válido."); return; }
+const reader = new FileReader();
+reader.onload = (uploadEvent) => {
+const novoItem = { id: Date.now(), title: file.name, url: uploadEvent.target.result, type: 'local' };
+const atualizados = [novoItem, ...localVideos];
+setLocalVideos(atualizados);
+try { localStorage.setItem('raru_local_videos', JSON.stringify(atualizados)); } catch (e) {}
+showToast("Vídeo salvo no LocalStorage.");
+};
+reader.readAsDataURL(file);
+};
+​return (
+<div className="space-y-4 w-full font-mono max-w-4xl mx-auto">
+<div className="cyber-card p-4 shadow-xl space-y-4 border border-cyberCyan/40">
+<div className="flex items-center justify-between border-b border-cyberCyan/25 pb-2.5">
+<h2 className="font-display text-xs font-black text-cyberCyan tracking-widest">ÁREA RESTRITA (ADMIN VAULT)</h2>
+<button type="button" onClick={onClose} className="cyber-button-danger text-xs py-1 px-3 !min-h-[32px]">FECHAR</button>
+</div>
+​{!isUnlocked ? (
+<form onSubmit={handleUnlock} className="flex gap-2">
+<input type="password" maxLength="6" value={pinInput} onChange={(e) => setPinInput(e.target.value)} placeholder="PIN (303500)" className="flex-1 bg-void border border-cyberCyan/40 rounded-xl px-3 py-2.5 text-center text-slate-100 font-mono tracking-widest text-xs shadow-inner" />
+<button type="submit" className="cyber-button text-xs py-2.5 px-4">ACESSAR</button>
+</form>
+) : (
+<div className="space-y-4">
+<div className="flex gap-2 overflow-x-auto pb-2 border-b border-cyberCyan/30">
+<button type="button" onClick={() => setAdminSubTab('cade')} className={cyber-button text-xs py-2 px-3 ${adminSubTab === 'cade' ? '!bg-cyan-400 !text-void' : ''}}>PAINEL GADE / CADE</button>
+<button type="button" onClick={() => setAdminSubTab('sistema')} className={cyber-button text-xs py-2 px-3 ${adminSubTab === 'sistema' ? '!bg-cyberCyan !text-void' : ''}}>CONFIGURAÇÕES & VOZES</button>
+</div>
+​{adminSubTab === 'cade' && <CadeAdminModule showToast={showToast} />}
+​{adminSubTab === 'sistema' && (
+<div className="space-y-5">
+<SeletorVozGlobal perfilVozId={perfilVozId} setPerfilVozId={onSelecionarPerfilVoz} />
+​<div className="bg-void/90 border border-cyberCyan/50 rounded-xl p-3.5 space-y-2.5">
+<span className="text-white font-black text-xs font-display block">TEXTO DA FAIXA MARQUEE (LETREIRO)</span>
+<form onSubmit={salvarTicker} className="space-y-2">
+<input type="text" value={tickerInput} onChange={(e) => setTickerInput(e.target.value)} placeholder="Digite o texto..." className="w-full bg-deepSpace border border-cyberCyan/40 rounded-xl p-2.5 text-xs text-white" />
+<button type="submit" className="cyber-button w-full text-xs py-2.5">ATUALIZAR FAIXA MARQUEE</button>
+</form>
+</div>
+​<div className="bg-void/90 border border-cyberCyan/50 rounded-xl p-3.5 space-y-2">
+<span className="text-white font-black text-xs font-display block">ADICIONAR VÍDEO DO APARELHO</span>
+<label className="cyber-button w-full text-xs py-3 justify-center cursor-pointer">
+SELECIONAR ARQUIVO DE VÍDEO
+<input type="file" accept="video/*" onChange={handleUploadGaleriaDireto} className="hidden" />
+</label>
+</div>
+</div>
+)}
+</div>
+)}
+</div>
+</div>
+);
+}
+​function EstacaoGADEModule({ showToast, userName }) {
+const [sosNome, setSosNome] = useState(() => {
+try { return localStorage.getItem('cadeNomeSOS') || userName || ''; } catch (e) { return userName || ''; }
+});
+const [sosObs, setSosObs] = useState(() => {
+try { return localStorage.getItem('cadeObsSOS') || ''; } catch (e) { return ''; }
+});
+const [statusSOS, setStatusSOS] = useState('');
+const [ultimaMsgPronta, setUltimaMsgPronta] = useState('');
+const [historicoSOS, setHistoricoSOS] = useState(() => {
+try { return localStorage.getItem('cadeUltimoSOS') ? 'Último SOS: ' + localStorage.getItem('cadeUltimoSOS') : ''; } catch (e) { return ''; }
+});
+​const GRUPO_GADE = 'https://chat.whatsapp.com/D1wrk9nTBH57Wya2Uv44ZW';
+​useEffect(() => {
+if (userName && !sosNome) setSosNome(userName);
+}, [userName]);
+​const sosCADE = (tipo) => {
+try {
+localStorage.setItem('cadeNomeSOS', sosNome);
+localStorage.setItem('cadeObsSOS', sosObs);
+} catch (e) {}
+const nomeFinal = sosNome.trim() || userName || 'Morador(a)';
+const base = [SOS - ${tipo}] ${TITULO_OFICIAL_RARU} • ${SUBTITULO_OFICIAL_RARU}\nNome: ${nomeFinal}\nBairro: Rocha Sobrinho / BNH / Banco de Areia - Mesquita RJ\n${sosObs ? 'Obs: ' + sosObs + '\n' : ''}Projeto: GADE - Grupo A Chave da Esperança / Projeto Cidadão Sensor;
+setUltimaMsgPronta(base);
+if (navigator.clipboard) navigator.clipboard.writeText(base).catch(() => {});
+const agoraStr = tipo + ' - ' + new Date().toLocaleString('pt-BR');
+try { localStorage.setItem('cadeUltimoSOS', agoraStr); } catch (e) {}
+setHistoricoSOS('Último SOS: ' + agoraStr);
+setStatusSOS('Mensagem copiada e grupo aberto. Buscando GPS...');
+​const abrirGrupo = window.open(GRUPO_GADE, '_blank');
+if (!abrirGrupo) window.location.href = GRUPO_GADE;
+​if (navigator.geolocation) {
+navigator.geolocation.getCurrentPosition(
+p => {
+const comGps = base + \nGPS: [https://maps.google.com/?q=$](https://maps.google.com/?q=$){p.coords.latitude},${p.coords.longitude};
+setUltimaMsgPronta(comGps);
+if (navigator.clipboard) navigator.clipboard.writeText(comGps).catch(() => {});
+setStatusSOS('GPS anexado e copiado.');
+},
+() => setStatusSOS('Mensagem pronta sem GPS.'),
+{ timeout: 8000 }
+);
+}
+};
+​const KIT_BASE = [
+{ c: 'ÁGUA / COMIDA', itens: ['Água 2L por pessoa', 'Comida pronta / biscoito', 'Leite / mamadeira se tiver bebê'] },
+{ c: 'LUZ / ENERGIA', itens: ['Lanterna + pilha', 'Carregador / power bank', 'Vela / fósforo'] },
+{ c: 'DOCUMENTO / SAÚDE', itens: ['Documento com foto', 'Remédio de uso diário', 'Curativo / álcool / máscara'] },
+{ c: 'SOBREVIVÊNCIA', itens: ['Muda de roupa seca', 'Cobertor / saco plástico', 'Dinheiro trocado / chave extra'] }
+];
+​const [kitCheck, setKitCheck] = useState(() => {
+try {
+const salvo = JSON.parse(localStorage.getItem('kitCADEv2') || 'null');
+if (salvo) return salvo;
+} catch (e) {}
+const def = {};
+KIT_BASE.forEach((g, gi) => g.itens.forEach((_, ii) => def[gi + '-' + ii] = false));
+return def;
+});
+​const [kitExtras, setKitExtras] = useState(() => {
+try { return JSON.parse(localStorage.getItem('kitCADEextras') || '[]'); } catch (e) { return []; }
+});
+const [novoItem, setNovoItem] = useState('');
+​const atualizarCheck = (k, val) => {
+const atualizado = { ...kitCheck, [k]: val };
+setKitCheck(atualizado);
+try { localStorage.setItem('kitCADEv2', JSON.stringify(atualizado)); } catch (e) {}
+};
+​const addExtra = () => {
+if (!novoItem.trim()) return;
+const atualizados = [...kitExtras, novoItem.trim()];
+setKitExtras(atualizados);
+try { localStorage.setItem('kitCADEextras', JSON.stringify(atualizados)); } catch (e) {}
+setNovoItem('');
+};
+​const removerExtra = (i) => {
+const atualizados = [...kitExtras];
+atualizados.splice(i, 1);
+setKitExtras(atualizados);
+try { localStorage.setItem('kitCADEextras', JSON.stringify(atualizados)); } catch (e) {}
+};
+​const totalItens = Object.keys(kitCheck).length + kitExtras.length;
+const marcados = Object.values(kitCheck).filter(Boolean).length + kitExtras.filter((_, i) => kitCheck['extra-' + i]).length;
+const pct = totalItens ? Math.round((marcados / totalItens) * 100) : 0;
+​const compartilharKit = () => {
+const nomeFinal = sosNome.trim() || userName || 'Morador(a)';
+const msg = MEU KIT - ${TITULO_OFICIAL_RARU} • GADE / CIDADÃO SENSOR\nNome: ${nomeFinal}\nKit: ${pct}% pronto\nProjeto: GADE - Grupo A Chave da Esperança;
+if (navigator.clipboard) navigator.clipboard.writeText(msg).catch(() => {});
+showToast('Kit copiado. Abrindo grupo GADE.');
+window.open(GRUPO_GADE, '_blank');
+};
+​return (
+<div id="estacaoGADE" style={{ background: '#021a2a', border: '1px solid #00e5ff', borderRadius: '16px', padding: '14px', fontFamily: 'sans-serif', marginBottom: '16px' }}>
+<div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+<b style={{ color: '#00e5ff', fontSize: '16px' }}>ESTAÇÃO GADE</b>
+<span style={{ color: '#fff', fontSize: '11px', background: '#041e2e', padding: '4px 8px', borderRadius: '20px' }}>ROCHA SOBRINHO / BNH / BANCO DE AREIA</span>
+</div>
+<div style={{ color: '#fff', fontSize: '12px', opacity: .8, marginTop: '4px' }}>GADE - Grupo A Chave da Esperança / {TITULO_OFICIAL_RARU}</div>
+<button type="button" onClick={() => window.open(GRUPO_GADE, '_blank')} style={{ width: '100%', background: '#25D366', color: '#000', fontWeight: 'bold', border: 'none', padding: '13px', borderRadius: '10px', marginTop: '12px', cursor: 'pointer' }}>ENTRAR NO GRUPO GADE NO WHATSAPP</button>
+​<div style={{ background: '#2a0505', border: '1px solid #ff3b30', borderRadius: '12px', padding: '12px', marginTop: '12px' }}>
+<div style={{ color: '#fff', fontWeight: 'bold' }}>2. SOS VIZINHANÇA - APERTOU, JÁ VAI</div>
+<input value={sosNome} onChange={e => setSosNome(e.target.value)} placeholder="Seu nome" style={{ width: '100%', padding: '11px', borderRadius: '10px', border: 'none', boxSizing: 'border-box', marginTop: '8px', marginBottom: '8px', color: '#000' }} />
+<input value={sosObs} onChange={e => setSosObs(e.target.value)} placeholder="Observação - ex: 2 crianças, idoso em casa" style={{ width: '100%', padding: '11px', borderRadius: '10px', border: 'none', boxSizing: 'border-box', marginBottom: '10px', color: '#000' }} />
+<div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
+<button type="button" onClick={() => sosCADE('PRECISO DE AJUDA')} style={{ background: '#ff3b30', color: '#fff', fontWeight: 'bold', border: 'none', padding: '14px', borderRadius: '10px', cursor: 'pointer' }}>PRECISO DE AJUDA</button>
+<button type="button" onClick={() => sosCADE('ESTOU BEM')} style={{ background: '#00ff88', color: '#000', fontWeight: 'bold', border: 'none', padding: '14px', borderRadius: '10px', cursor: 'pointer' }}>TÔ BEM</button>
+<button type="button" onClick={() => sosCADE('PRECISO DE RESGATE - ALAGAMENTO')} style={{ background: '#ff9500', color: '#000', fontWeight: 'bold', border: 'none', padding: '14px', borderRadius: '10px', cursor: 'pointer' }}>ALAGAMENTO / RESGATE</button>
+<button type="button" onClick={() => sosCADE('PRECISO DE REMÉDIO / COMIDA / ÁGUA')} style={{ background: '#00e5ff', color: '#000', fontWeight: 'bold', border: 'none', padding: '14px', borderRadius: '10px', cursor: 'pointer' }}>REMÉDIO / ÁGUA</button>
+</div>
+<div style={{ display: 'flex', gap: '8px', marginTop: '8px' }}>
+<button type="button" onClick={() => {
+const msg = ultimaMsgPronta || SOS GADE - Nome: ${sosNome || userName || 'Morador(a)'} - Mesquita RJ;
+if (navigator.clipboard) navigator.clipboard.writeText(msg).catch(() => {});
+showToast('Mensagem copiada para área de transferência.');
+}} style={{ flex: 1, background: '#fff', color: '#000', border: 'none', padding: '10px', borderRadius: '10px', cursor: 'pointer', fontWeight: 'bold' }}>COPIAR MENSAGEM</button>
+<button type="button" onClick={() => { window.location.href = 'tel:192'; }} style={{ flex: 1, background: '#222', color: '#fff', border: '1px solid #fff', padding: '10px', borderRadius: '10px', cursor: 'pointer', fontWeight: 'bold' }}>LIGAR 192</button>
+</div>
+<div style={{ color: '#fff', fontSize: '12px', marginTop: '8px', opacity: .9 }}>{statusSOS}</div>
+<div style={{ color: '#ffd6d6', fontSize: '11px', marginTop: '6px' }}>{historicoSOS}</div>
+</div>
+​<div style={{ background: '#041e2e', borderRadius: '12px', padding: '12px', marginTop: '10px' }}>
+<div style={{ display: 'flex', justifyContent: 'space-between' }}><b style={{ color: '#fff' }}>3. MEU KIT DE SOBREVIVÊNCIA</b><b style={{ color: '#00e5ff' }}>{pct}%</b></div>
+<div style={{ background: '#021a2a', height: '10px', borderRadius: '20px', margin: '8px 0', overflow: 'hidden' }}><div style={{ height: '100%', width: ${pct}%, background: pct === 100 ? '#00ff88' : pct >= 50 ? '#ffcc00' : '#00e5ff', transition: '.3s' }}></div></div>
+​{KIT_BASE.map((g, gi) => (
+<div key={gi}>
+<div style={{ color: '#00e5ff', fontSize: '12px', fontWeight: 'bold', marginTop: '10px' }}>{g.c}</div>
+{g.itens.map((it, ii) => {
+const k = gi + '-' + ii;
+return (
+<label key={ii} style={{ color: '#fff', display: 'block', marginTop: '6px', fontSize: '14px', cursor: 'pointer' }}>
+<input type="checkbox" checked={!!kitCheck[k]} onChange={e => atualizarCheck(k, e.target.checked)} /> {it}
+</label>
+);
+})}
+</div>
+))}
+​{kitExtras.length > 0 && (
+<div>
+<div style={{ color: '#00e5ff', fontSize: '12px', fontWeight: 'bold', marginTop: '10px' }}>MEUS ITENS</div>
+{kitExtras.map((it, i) => {
+const k = 'extra-' + i;
+return (
+<label key={i} style={{ color: '#fff', display: 'block', marginTop: '6px', fontSize: '14px', cursor: 'pointer' }}>
+<input type="checkbox" checked={!!kitCheck[k]} onChange={e => atualizarCheck(k, e.target.checked)} /> {it}
+<span onClick={() => removerExtra(i)} style={{ color: '#ff3b30', cursor: 'pointer', marginLeft: '6px' }}> [x]</span>
+</label>
+);
+})}
+</div>
+)}
+​<div style={{ display: 'flex', gap: '6px', marginTop: '10px' }}>
+<input value={novoItem} onChange={e => setNovoItem(e.target.value)} placeholder="Adicionar item meu - ex: fralda" style={{ flex: 1, padding: '10px', borderRadius: '10px', border: 'none', color: '#000' }} />
+<button type="button" onClick={addExtra} style={{ background: '#00e5ff', border: 'none', padding: '10px 14px', borderRadius: '10px', fontWeight: 'bold', cursor: 'pointer' }}>+ ADD</button>
+</div>
+<button type="button" onClick={compartilharKit} style={{ width: '100%', background: '#00ff88', color: '#000', fontWeight: 'bold', border: 'none', padding: '12px', borderRadius: '10px', marginTop: '8px', cursor: 'pointer' }}>COMPARTILHAR MEU KIT NO GRUPO GADE</button>
+</div>
+</div>
+);
+}
+​function RadarMeteorologicoModule({ perfilVozId }) {
+const [dados, setDados] = useState(() => ({ ...ESTADO_CLIMA_AUTOMATICO_92.municipios }));
+const [status, setStatus] = useState('Sincronizando 92 municípios + RainViewer + GOES-19...');
+const [cidadeSel1, setCidadeSel1] = useState('Mesquita');
+const [cidadeSel2, setCidadeSel2] = useState('Duque de Caxias');
+const [modoVisualizacao, setModoVisualizacao] = useState('radar');
+const [iframeKey, setIframeKey] = useState(0);
+const [rvFrames, setRvFrames] = useState(() => ESTADO_CLIMA_AUTOMATICO_92.rainviewerFrames);
+​const chartTempRef = useRef(null);
+const chartRainRef = useRef(null);
+​function corPorChuva(p) {
+if (p >= 70) return '#7C4DFF';
+if (p >= 40) return '#FF0055';
+if (p >= 20) return '#FFB703';
+return '#00FF9D';
+}
+function textoPorChuva(p) {
+if (p >= 70) return 'Muito forte';
+if (p >= 40) return 'Forte';
+if (p >= 20) return 'Moderada';
+return 'Fraca / Estável';
+}
+​const desenharGraficoCanvas = (canvasRef, valores, cores, sufixo) => {
+const cv = canvasRef.current;
+if (!cv) return;
+const ctx = cv.getContext('2d');
+const W = cv.width = 340, H = cv.height = 140;
+ctx.clearRect(0, 0, W, H);
+const max = Math.max(...valores, 1);
+const step = W / valores.length;
+const horaAtual = new Date().getHours();
+​valores.forEach((v, i) => {
+const h = (v / max) * (H - 35);
+const x = i * step + 4;
+const grad = ctx.createLinearGradient(0, H - h, 0, H);
+grad.addColorStop(0, cores[0]);
+grad.addColorStop(1, cores[1]);
+ctx.fillStyle = grad;
+ctx.fillRect(x, H - h - 20, step - 6, h);
+ctx.fillStyle = '#FFFFFF';
+ctx.font = 'bold 9px monospace';
+ctx.textAlign = 'center';
+ctx.fillText(v + sufixo, x + (step / 2), H - h - 23);
+​const horaLabel = ${String((horaAtual + i) % 24).padStart(2, '0')}h;
+ctx.fillStyle = '#00F2FE';
+ctx.font = '600 8px monospace';
+ctx.fillText(horaLabel, x + (step / 2), H - 6);
+});
+};
+​const desenharGraficosHorarios = (hourly) => {
+if (!hourly) return;
+const h = new Date().getHours();
+const temps = [], chuvas = [];
+for (let i = 0; i < 12; i++) {
+const idx = (h + i) % 24;
+temps.push(Math.round(hourly.temperature_2m?.[idx] ?? 25));
+chuvas.push(hourly.precipitation_probability?.[idx] ?? 0);
+}
+setTimeout(() => {
+desenharGraficoCanvas(chartTempRef, temps, ['#ff5252', '#ffca28'], '°C');
+desenharGraficoCanvas(chartRainRef, chuvas, ['#7c4dff', '#29b6f6'], '%');
+}, 80);
+};
+​useEffect(() => {
+const atualizarEstado = (snap) => {
+setDados({ ...snap.municipios });
+setRvFrames([...snap.rainviewerFrames]);
+setStatus(${snap.statusRede} · Atualizado ${snap.atualizadoEm || ''});
+};
+sincronizarTelemetria92RJ(atualizarEstado);
+const t = setInterval(() => sincronizarTelemetria92RJ(atualizarEstado), 300000);
+return () => clearInterval(t);
+}, []);
+​useEffect(() => {
+if (dados[cidadeSel1]?.hourly) {
+desenharGraficosHorarios(dados[cidadeSel1].hourly);
+}
+}, [cidadeSel1, dados, modoVisualizacao]);
+​const PONTOS_BACIAS = [
+{ rh: 'RH I', nome: 'Angra dos Reis', lat: -23.05, lon: -44.35 },
+{ rh: 'RH II', nome: 'Mesquita', lat: -22.65, lon: -43.70 },
+{ rh: 'RH III', nome: 'Volta Redonda', lat: -22.45, lon: -44.15 },
+{ rh: 'RH IV', nome: 'Petrópolis', lat: -22.35, lon: -43.05 },
+{ rh: 'RH V', nome: 'Duque de Caxias', lat: -22.75, lon: -43.15 },
+{ rh: 'RH VI', nome: 'Cabo Frio', lat: -22.85, lon: -42.30 },
+{ rh: 'RH VII', nome: 'Nova Friburgo', lat: -22.00, lon: -42.35 },
+{ rh: 'RH VIII', nome: 'Macaé', lat: -22.30, lon: -41.95 },
+{ rh: 'RH IX', nome: 'Campos dos Goytacazes', lat: -21.55, lon: -41.45 },
+];
+​function posRadar(c) {
+const minLon = -44.75, maxLon = -41.0, minLat = -23.25, maxLat = -20.9;
+return {
+x: 7 + ((c.lon - minLon) / (maxLon - minLon)) * 86,
+y: 7 + ((maxLat - c.lat) / (maxLat - minLat)) * 86
+};
+}
+​function falar(cNome) {
+const d = dados[cNome];
+if (!d) return;
+falarImitada(Em ${cNome}, ${d.temp}, chuva ${d.chuva}, chance ${d.probChuva}, vento ${d.vento}, ${d.risco}., perfilVozId);
+}
+​const d1 = dados[cidadeSel1];
+const d2 = dados[cidadeSel2];
+const ultimoFrameRv = rvFrames.length > 0 ? rvFrames[rvFrames.length - 1] : null;
+const horaUltimoRv = ultimoFrameRv ? new Date(ultimoFrameRv.time * 1000).toLocaleTimeString("pt-BR", { timeZone: "America/Sao_Paulo" }) : "sincronizando";
+​return (
+<div className="space-y-4 w-full font-mono">
+<div className="rounded-[22px] border border-cyan-400/40 bg-[#02122A] p-4 space-y-3 shadow-[0_0_30px_rgba(0,255,255,0.15)] relative overflow-hidden">
+<div className="flex justify-between items-start gap-2 flex-wrap">
+<h3 className="text-[14px] leading-tight font-black text-cyan-300 uppercase tracking-widest text-center flex-1">
+Radar RainViewer & GOES-19 • 92 Municípios RJ (24H)
+</h3>
+<span className="text-[9px] text-emerald-400 font-bold text-right leading-tight shrink-0 pt-1">
+RAINVIEWER ({rvFrames.length}Q • {horaUltimoRv}) • GOES-19
+</span>
+</div>
+<p className="text-[11px] text-slate-300 text-center leading-relaxed">{status}</p>
+<div className="grid grid-cols-2 gap-2">
+<button type="button" onClick={() => setModoVisualizacao('radar')} className={cyber-button text-[10px] py-2 ${modoVisualizacao === 'radar' ? '!bg-cyan-400 !text-void' : ''}}>RADAR TÁTICO & RAINVIEWER</button>
+<button type="button" onClick={() => setModoVisualizacao('satelite')} className={cyber-button text-[10px] py-2 ${modoVisualizacao === 'satelite' ? '!bg-cyan-400 !text-void' : ''}}>SATÉLITE GOES-19 (HD)</button>
+</div>
+<div className="grid grid-cols-1 sm:grid-cols-2 gap-2 bg-black/40 p-3 rounded-xl border border-cyan-400/30">
+<div className="space-y-1">
+<label className="text-[8px] text-cyan-300 font-bold uppercase block">Alvo Principal (1):</label>
+<select value={cidadeSel1} onChange={(e) => {
+setCidadeSel1(e.target.value);
+falar(e.target.value);
+}} className="w-full bg-[#030712] text-white border border-cyan-400/40 rounded-xl p-2 text-xs font-bold cursor-pointer">
+{MUNICIPIOS_92.map((m, idx) => <option key={idx} value={m.n}>{m.n}</option>)}
+</select>
+</div>
+<div className="space-y-1">
+<label className="text-[8px] text-cyan-300 font-bold uppercase block">Alvo Secundário (2):</label>
+<select value={cidadeSel2} onChange={(e) => {
+setCidadeSel2(e.target.value);
+falar(e.target.value);
+}} className="w-full bg-[#030712] text-white border border-cyan-400/40 rounded-xl p-2 text-xs font-bold cursor-pointer">
+{MUNICIPIOS_92.map((m, idx) => <option key={idx} value={m.n}>{m.n}</option>)}
+</select>
+</div>
+</div>
+{modoVisualizacao === 'radar' && (
+<div className="relative w-full aspect-square rounded-full border-[3px] border-cyan-400/70 overflow-hidden mx-auto shadow-[inset_0_0_40px_rgba(0,255,255,0.15),0_0_30px_rgba(0,255,255,0.2)] max-w-[360px]" style={{ background: "radial-gradient(circle at 50% 50%, #0A2A4A 0%, #041830 55%, #020A1A 100%)" }}>
+<div className="absolute rounded-full border border-cyan-400/40 pointer-events-none" style={{ width: "92%", height: "92%", left: "50%", top: "50%", transform: "translate(-50%,-50%)" }} />
+<div className="absolute rounded-full border border-cyan-400/40 pointer-events-none" style={{ width: "66%", height: "66%", left: "50%", top: "50%", transform: "translate(-50%,-50%)" }} />
+<div className="absolute rounded-full border border-cyan-400/50 pointer-events-none" style={{ width: "38%", height: "38%", left: "50%", top: "50%", transform: "translate(-50%,-50%)" }} />
+<div className="absolute left-1/2 top-0 bottom-0 w-px bg-cyan-400/40 pointer-events-none" />
+<div className="absolute top-1/2 left-0 right-0 h-px bg-cyan-400/40 pointer-events-none" />
+<div className="absolute inset-0 pointer-events-none animate-radar-sweep" style={{ background: "conic-gradient(from 0deg, rgba(0,255,255,0.45) 0deg, rgba(0,255,255,0.15) 50deg, transparent 90deg)" }} />
+{PONTOS_BACIAS.map(b => {
+const p = posRadar(b);
+return (
+<div key={b.rh} className="absolute text-center cursor-pointer z-[6]" style={{ left: p.x + "%", top: p.y + "%", transform: "translate(-50%,-50%)" }} onClick={() => setCidadeSel1(b.nome)}>
+<div className="mx-auto w-[14px] h-[14px] rotate-45 border-2 border-white rounded-[3px]" style={{ background: '#00FF9D', boxShadow: "0 0 8px #00FF9D" }} />
+<span className="text-[7px] px-1 py-[1px] rounded mt-[2px] inline-block font-black" style={{ background: "#00E676", color: "#02240F" }}>{b.rh}</span>
+</div>
+);
+})}
+{MUNICIPIOS_92.map(c => {
+const p = posRadar(c);
+const d = dados[c.n];
+const chuva = d ? d.probNum : 0;
+const cor = d ? corPorChuva(chuva) : '#94A3B8';
+const is1 = c.n === cidadeSel1;
+const is2 = c.n === cidadeSel2;
+const sel = is1 || is2;
+return (
+<div key={c.n} onClick={() => {
+setCidadeSel1(c.n);
+falar(c.n);
+}} className="absolute text-center cursor-pointer z-[5]" style={{ left: p.x + "%", top: p.y + "%", transform: "translate(-50%,-50%)" }}>
+<div className="mx-auto rounded-full border-2 border-white" style={{ width: sel ? 15 : 9, height: sel ? 15 : 9, background: is1 ? "#00FF9D" : is2 ? "#00F2FE" : cor, boxShadow: sel ? "0 0 12px #ffffff" : "0 0 5px " + cor }} />
+<span className="text-[7px] px-1 py-[1px] rounded whitespace-nowrap inline-block mt-[1px]" style={{ background: sel ? "#002b18" : "rgba(0,0,0,.85)", color: sel ? "#00FF9D" : "#fff", fontWeight: sel ? 900 : 400 }}>{c.n} {is1 ? '(1)' : is2 ? '(2)' : ''}</span>
+</div>
+);
+})}
+</div>
+)}
+{modoVisualizacao === 'satelite' && (
+<div className="relative w-full aspect-video rounded-2xl overflow-hidden border border-cyan-400/50 bg-black">
+<iframe key={iframeKey} src="[https://www.star.nesdis.noaa.gov/GOES/fulldisk_band.php?sat=G19&band=GEOCOLOR&length=12&dim=1](https://www.star.nesdis.noaa.gov/GOES/fulldisk_band.php?sat=G19&band=GEOCOLOR&length=12&dim=1)" title="Satélite GOES-19 HD" className="w-full h-full border-none" loading="lazy" />
+<div className="absolute bottom-2 left-2 right-2 bg-black/85 backdrop-blur-md p-2 rounded-xl flex items-center justify-between border border-cyan-400/30">
+<span className="text-[9px] text-cyan-300 font-bold">SATÉLITE GOES-19 (HD)</span>
+<button type="button" onClick={() => setIframeKey(k => k + 1)} className="cyber-button text-[8px] py-1 px-2.5 !min-h-[28px]">AUTO-RESET</button>
+</div>
+</div>
+)}
+<div className="grid grid-cols-1 md:grid-cols-2 gap-3 pt-2">
+<div className="bg-black/80 p-3 rounded-xl border border-cyan-400/30 space-y-1">
+<span className="text-[9px] font-black text-cyan-300 block">EVOLUÇÃO TÉRMICA (12 HORAS • {cidadeSel1})</span>
+<canvas ref={chartTempRef} className="w-full h-[140px] bg-void rounded-lg"></canvas>
+</div>
+<div className="bg-black/80 p-3 rounded-xl border border-cyan-400/30 space-y-1">
+<span className="text-[9px] font-black text-cyan-300 block">PROBABILIDADE DE PRECIPITAÇÃO (%)</span>
+<canvas ref={chartRainRef} className="w-full h-[140px] bg-void rounded-lg"></canvas>
+</div>
+</div>
+<div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-[11px]">
+<div className="bg-black/60 border border-emerald-400/40 rounded-xl p-2.5">
+<b className="text-emerald-400 block text-[10px]">ALVO (1): {cidadeSel1}</b>
+<span className="text-white block mt-0.5">{d1 ? ${d1.temp} · Chuva ${d1.chuva} (${d1.probChuva} - ${textoPorChuva(d1.probNum)}) · Vento ${d1.vento} · ${d1.risco} : 'Carregando...'}</span>
+</div>
+<div className="bg-black/60 border border-cyan-400/40 rounded-xl p-2.5">
+<b className="text-cyan-300 block text-[10px]">ALVO (2): {cidadeSel2}</b>
+<span className="text-white block mt-0.5">{d2 ? ${d2.temp} · Chuva ${d2.chuva} (${d2.probChuva} - ${textoPorChuva(d2.probNum)}) · Vento ${d2.vento} · ${d2.risco} : 'Carregando...'}</span>
+</div>
+</div>
+</div>
+</div>
+);
+}
+​function ModuloCidadaoSensorModule({ onGoToDashboard, showToast }) {
+const [petKg, setPetKg] = useState(10);
+const [aluminioKg, setAluminioKg] = useState(3);
+const [ferroKg, setFerroKg] = useState(15);
+const [papelaoKg, setPapelaoKg] = useState(20);
+const [vidroKg, setVidroKg] = useState(5);
+const [oleoL, setOleoL] = useState(4);
+​const precoPet = 2.50, precoAluminio = 8.00, precoFerro = 1.20, precoPapelao = 0.70, precoVidro = 0.35, precoOleo = 3.00;
+const [btConectado, setBtConectado] = useState(false);
+const [btStatus, setBtStatus] = useState("Desconectado");
+​const totalPet = petKg * precoPet;
+const totalAluminio = aluminioKg * precoAluminio;
+const totalFerro = ferroKg * precoFerro;
+const totalPapelao = papelaoKg * precoPapelao;
+const totalVidro = vidroKg * precoVidro;
+const totalOleo = oleoL * precoOleo;
+​const valorTotalReciclagem = totalPet + totalAluminio + totalFerro + totalPapelao + totalVidro + totalOleo;
+const pesoTotalKg = Number(petKg) + Number(aluminioKg) + Number(ferroKg) + Number(papelaoKg) + Number(vidroKg) + Number(oleoL);
+​const aguaEconomizadaL = (petKg * 24) + (aluminioKg * 40) + (papelaoKg * 15);
+const co2EvitadoKg = (petKg * 1.5) + (aluminioKg * 9.0) + (ferroKg * 1.8) + (papelaoKg * 0.9);
+const volumeDesobstruidoM3 = (pesoTotalKg * 0.0035).toFixed(2);
+​const conectarBalancaBT = async () => {
+if (!navigator.bluetooth) { showToast("Web Bluetooth não suportado neste navegador."); return; }
+try {
+setBtStatus("Buscando balança...");
+const device = await navigator.bluetooth.requestDevice({
+acceptAllDevices: true,
+optionalServices: ['battery_service', '0000181d-0000-1000-8000-00805f9b34fb']
+});
+setBtConectado(true);
+setBtStatus(Conectado: ${device.name || 'Balança BT'});
+showToast(Balança pareada: ${device.name || 'OK'});
+} catch (e) {
+setBtConectado(false);
+setBtStatus("Desconectado");
+showToast("Conexão Bluetooth cancelada.");
+}
+};
+​const gerarReciboColeta = () => {
+const prot = REC-SOL-${Math.floor(Math.random() * 89999 + 10000)};
+const textoRecibo = [${TITULO_OFICIAL_RARU} • ${SUBTITULO_OFICIAL_RARU}]\nProtocolo: ${prot}\nLocal: Mesquita / Baixada Fluminense (GADE)\nPeso Total Acumulado: ${pesoTotalKg.toFixed(1)} KG / Litros\n\nDETALHAMENTO DO LOTE:\n- PET: ${petKg} kg (R$ ${totalPet.toFixed(2)})\n- Alumínio: ${aluminioKg} kg (R$ ${totalAluminio.toFixed(2)})\n- Ferro: ${ferroKg} kg (R$ ${totalFerro.toFixed(2)})\n- Papelão: ${papelaoKg} kg (R$ ${totalPapelao.toFixed(2)})\n- Vidro: ${vidroKg} kg (R$ ${totalVidro.toFixed(2)})\n- Óleo Usado: ${oleoL} L (R$ ${totalOleo.toFixed(2)})\n\nVALOR ESTIMADO: R$ ${valorTotalReciclagem.toFixed(2)}\n\nIMPACTO ECOLÓGICO:\n- Água poupada: ${aguaEconomizadaL.toFixed(0)} Litros\n- CO2 evitado: ${co2EvitadoKg.toFixed(1)} Kg\n- Prevenção de Alagamento: ~${volumeDesobstruidoM3} m3\n\nGADE - Grupo A Chave da Esperança - ${TITULO_OFICIAL_RARU};
+if (navigator.clipboard) {
+navigator.clipboard.writeText(textoRecibo).catch(() => {});
+showToast(Recibo ${prot} copiado.);
+}
+window.open([https://api.whatsapp.com/send?text=$](https://api.whatsapp.com/send?text=$){encodeURIComponent(textoRecibo)}, '_blank');
+};
+​return (
+<div className="space-y-4 max-w-5xl mx-auto font-mono w-full">
+<div className="cyber-card p-4 sm:p-6 rounded-[28px] shadow-xl space-y-5 border border-cyberCyan/40">
+<div className="flex items-center justify-between border-b border-cyberCyan/25 pb-3 gap-2 flex-wrap">
+<div className="space-y-0.5">
+<h2 className="font-display text-xs font-black text-white tracking-widest flex items-center gap-2">
+<span className="text-cyberCyan">[BALANÇA]</span> CIDADÃO SENSOR - BALANÇA DIGITAL & ESG
+</h2>
+<p className="text-[9px] font-mono text-cyberCyan font-bold">TECNOLOGIA SOCIAL - ECONOMIA CIRCULAR & DRENAGEM</p>
+</div>
+<button type="button" onClick={onGoToDashboard} className="cyber-button text-[10px] py-2 px-4">PAINEL DE CONTROLE</button>
+</div>
+​<div className="bg-void/90 border border-cyberCyan/30 rounded-2xl p-3.5 flex flex-col sm:flex-row items-center justify-between gap-3 shadow-inner">
+<div className="flex items-center gap-2.5">
+<span className={w-3 h-3 rounded-full ${btConectado ? 'bg-cyberGreen animate-ping' : 'bg-cyberRose'}}></span>
+<div>
+<span className="text-[10px] font-black text-white block">HARDWARE DE PESAGEM BLUETOOTH</span>
+<span className="text-[8px] text-slate-400 font-bold">{btStatus}</span>
+</div>
+</div>
+<button type="button" onClick={conectarBalancaBT} className={cyber-button text-[9px] py-2 px-4 ${btConectado ? '!border-cyberGreen !text-cyberGreen' : ''}}>
+{btConectado ? 'SISTEMA PAREADO' : 'CONECTAR HARDWARE BT'}
+</button>
+</div>
+​<div className="bg-void/90 border border-cyberCyan/40 rounded-2xl p-4 space-y-4 shadow-inner">
+<div className="flex items-center justify-between border-b border-cyberCyan/30 pb-2">
+<span className="text-xs font-black text-cyberCyan uppercase tracking-wider">CONTROLE DE TRIAGEM DE RESÍDUOS</span>
+<span className="text-[9px] px-2.5 py-0.5 rounded-full bg-cyberCyan/20 text-cyberCyan border border-cyberCyan/40 font-bold">TOTAL: {pesoTotalKg.toFixed(1)} KG/L</span>
+</div>
+​<div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
+{[
+{ label: PET (${petKg} kg), val: petKg, set: setPetKg, max: 150, step: 1, total: totalPet, accent: 'accent-cyan-400', text: 'text-cyan-300' },
+{ label: ALUMÍNIO (${aluminioKg} kg), val: aluminioKg, set: setAluminioKg, max: 80, step: 0.5, total: totalAluminio, accent: 'accent-blue-400', text: 'text-blue-300' },
+{ label: FERRO (${ferroKg} kg), val: ferroKg, set: setFerroKg, max: 300, step: 1, total: totalFerro, accent: 'accent-amber-400', text: 'text-amber-300' },
+{ label: PAPELÃO (${papelaoKg} kg), val: papelaoKg, set: setPapelaoKg, max: 250, step: 1, total: totalPapelao, accent: 'accent-yellow-500', text: 'text-yellow-500' },
+{ label: VIDRO (${vidroKg} kg), val: vidroKg, set: setVidroKg, max: 100, step: 1, total: totalVidro, accent: 'accent-emerald-400', text: 'text-emerald-300' },
+{ label: ÓLEO USADO (${oleoL} L), val: oleoL, set: setOleoL, max: 50, step: 0.5, total: totalOleo, accent: 'accent-orange-400', text: 'text-orange-300' }
+].map((item, idx) => (
+<div key={idx} className="bg-deepSpace/90 border border-cyan-400/30 rounded-xl p-3 space-y-2">
+<div className={flex justify-between items-center text-[10px] font-bold ${item.text}}>
+<span>{item.label}</span>
+<span className="text-white">R$ {item.total.toFixed(2)}</span>
+</div>
+<input type="range" min="0" max={item.max} step={item.step} value={item.val} onChange={e => item.set(Number(e.target.value))} className={w-full ${item.accent} cursor-pointer touch-manipulation} />
+</div>
+))}
+</div>
+​<div className="bg-commandPanel/90 border border-cyberGreen/40 rounded-xl p-3.5 space-y-2">
+<span className="text-[9px] font-black text-cyberGreen uppercase tracking-widest block">PAINEL DE IMPACTO ECOLÓGICO</span>
+<div className="grid grid-cols-3 gap-2 text-center font-mono">
+<div className="bg-void/80 border border-cyberGreen/20 p-2 rounded-lg">
+<div className="text-[7px] text-slate-400">ÁGUA POUPADA</div>
+<div className="text-xs font-bold text-cyberGreen">{aguaEconomizadaL.toFixed(0)} L</div>
+</div>
+<div className="bg-void/80 border border-cyberGreen/20 p-2 rounded-lg">
+<div className="text-[7px] text-slate-400">CO2 EVITADO</div>
+<div className="text-xs font-bold text-cyberCyan">{co2EvitadoKg.toFixed(1)} Kg</div>
+</div>
+<div className="bg-void/80 border border-cyberGreen/20 p-2 rounded-lg">
+<div className="text-[7px] text-slate-400">RALOS PRESERVADOS</div>
+<div className="text-xs font-bold text-cyberAmber">~{volumeDesobstruidoM3} m3</div>
+</div>
+</div>
+</div>
+​<div className="bg-gradient-to-r from-deepSpace via-commandPanel to-deepSpace border border-cyberCyan/50 rounded-xl p-4 flex flex-col sm:flex-row items-center justify-between gap-3">
+<div className="space-y-0.5 text-center sm:text-left">
+<span className="text-[9px] text-slate-400 uppercase tracking-widest block">VALOR ESTIMADO DO LOTE</span>
+<span className="text-xl font-black text-cyberCyan font-display">R$ {valorTotalReciclagem.toFixed(2)}</span>
+</div>
+<button type="button" onClick={gerarReciboColeta} className="cyber-button-solid text-[10px]">
+GERAR RECIBO & TRANSMITIR WHATSAPP
+</button>
+</div>
+</div>
+</div>
+</div>
+);
+}
+​function CardIdentidadeVisualRARU({ openSarahChat, handleWhoAmIClick, setActiveTab, toggleWallMode, isWallMode, screenInfo, userName, onOpenNameModal }) {
+const [wCard, setWCard] = useState({ temp: "--", humidity: "--", rain: "--", status: "Sincronizando..." });
+useEffect(() => {
+const aplicar = () => {
+const m = ESTADO_CLIMA_AUTOMATICO_92.municipios["Mesquita"];
+if (m) {
+setWCard({
+temp: m.temp,
+humidity: m.umi,
+rain: ${m.chuva} (${m.probChuva}),
+status: m.severidade
+});
+}
+};
+aplicar();
+sincronizarTelemetria92RJ(aplicar);
+}, []);
+​return (
+<div id="hudWrap" className={hud360-card cyber-card space-y-4 font-mono text-center w-full shadow-2xl my-2 border border-cyberCyan/60 ${isWallMode ? 'modo-parede ativo' : ''}}>
+<div className="flex justify-between items-center px-1 gap-2 flex-wrap">
+<span id="hudStatus" className="text-[9px] bg-cyberCyan/15 border border-cyberCyan/40 text-cyberCyan px-2 py-0.5 rounded-full font-bold">
+{screenInfo?.type ? ${TITULO_OFICIAL_RARU} • ${screenInfo.type} (${screenInfo.width}x${screenInfo.height}) : ${TITULO_OFICIAL_RARU} • 92 MUNICÍPIOS}
+</span>
+<button type="button" onClick={onOpenNameModal} className="text-[9px] bg-cyberGreen/20 border border-cyberGreen/50 text-cyberGreen px-2.5 py-0.5 rounded-full font-bold cursor-pointer hover:bg-cyberGreen hover:text-void transition">
+OPERADOR: {userName || "DEFINIR NOME"}
+</button>
+</div>
+​<div className="space-y-1">
+<h2 className="font-display font-black text-base sm:text-lg md:text-xl text-white tracking-[0.12em] uppercase">
+{TITULO_OFICIAL_RARU}
+</h2>
+<p className="text-[11px] font-sans font-extrabold text-cyberCyan uppercase tracking-wide">
+{SUBTITULO_OFICIAL_RARU}
+</p>
+<p className="text-[10px] font-mono text-slate-300 uppercase tracking-wide">
+Clima 24h • 92 Municípios RJ • GOES-19 & RainViewer • Mesquita - RJ • IP 10.10.21.15
+</p>
+</div>
+​<div className="w-full py-1" onClick={openSarahChat}>
+<SarahAnimatedAvatar isSpeaking={false} />
+<div className="mt-2.5 space-y-1">
+<span className="inline-block font-mono text-[9px] text-cyberCyan font-bold tracking-wider bg-void/90 px-3 py-1 rounded-full border border-cyberCyan/40 shadow-inner">
+ROBOT SARAH SYSTEM RARU | {TITULO_OFICIAL_RARU} - Nó-Mãe Mesquita
+</span>
+</div>
+</div>
+​<div className="grid grid-cols-2 sm:grid-cols-4 gap-2 px-1">
+<div className="bg-void/90 border border-cyberCyan/30 rounded-xl p-2 text-center shadow-inner">
+<span className="text-[7px] text-slate-400 font-black block">TEMPERATURA</span>
+<span className="text-xs font-mono font-black text-cyberCyan">{wCard.temp}</span>
+</div>
+<div className="bg-void/90 border border-cyberCyan/30 rounded-xl p-2 text-center shadow-inner">
+<span className="text-[7px] text-slate-400 font-black block">UMIDADE</span>
+<span className="text-xs font-mono font-black text-cyberBlue">{wCard.humidity}</span>
+</div>
+<div className="bg-void/90 border border-cyberCyan/30 rounded-xl p-2 text-center shadow-inner">
+<span className="text-[7px] text-slate-400 font-black block">PRECIPITAÇÃO</span>
+<span className="text-xs font-mono font-black text-cyberGreen">{wCard.rain}</span>
+</div>
+<div className="bg-void/90 border border-cyberCyan/30 rounded-xl p-2 text-center shadow-inner">
+<span className="text-[7px] text-slate-400 font-black block">STATUS RISCO</span>
+<span className="text-[10px] font-mono font-black text-cyberAmber">{wCard.status}</span>
+</div>
+</div>
+​<div id="espacoSeuBotao" className="pt-1">
+<button
+type="button"
+id="seuBotao"
+data-botao-parede="true"
+aria-pressed={String(Boolean(isWallMode))}
+onClick={() => toggleWallMode()}
+className={seu-botao btn-parede cyber-button-solid w-full text-[11px] py-3.5 flex flex-col items-center justify-center gap-1 leading-tight ${isWallMode ? 'ativo !bg-cyberGreen !border-white' : ''}}
+>
+<span className="flex items-center gap-1.5">
+<IconExpand size={14} color="#030712" />
+<span>{isWallMode ? 'WALL MODE: ON • TELA EXPANDIDA' : WALL MODE: OFF • ${SUBTITULO_OFICIAL_RARU}}</span>
+</span>
+<span className="text-[9px] opacity-90">PREVENÇÃO NÃO É MÍDIA É GENTE ATENTA • MESQUITA RJ</span>
+</button>
+</div>
+​<PainelRotasEstacaoPublica />
+​<div className="grid grid-cols-2 gap-3 pt-1">
+<button type="button" onClick={openSarahChat} className="cyber-button w-full text-[10px]">CHAT SARAH AI</button>
+<button type="button" onClick={handleWhoAmIClick} className="cyber-button w-full text-[10px]">MANIFESTO SOBRE</button>
+</div>
+​<div className="grid grid-cols-2 gap-3 pt-0.5">
+<button type="button" onClick={() => setActiveTab('estacao')} className="cyber-button w-full text-[10px]">ESTAÇÃO TELEMETRIA</button>
+<button type="button" onClick={() => setActiveTab('balanca')} className="cyber-button w-full text-[10px] !border-cyberGreen !text-cyberGreen">BALANÇA & ESG</button>
+</div>
+​<div className="pt-4 border-t border-cyberCyan/30 text-center">
+<p className="text-[9px] font-mono text-cyan-300 tracking-wider">
+@todos os direitos reservados. {TITULO_OFICIAL_RARU} — {SUBTITULO_OFICIAL_RARU} • GADE, Grupo A Chave da Esperança, Mesquita, RJ, 2026.
+</p>
+</div>
+</div>
+);
+}
+​function RedeAlquinoHardwareModule({ onGoToDashboard, showToast }) {
+const sensorId = "ALQ-92-MESQUITA";
+const [hardwareIpUrl, setHardwareIpUrl] = useState(() => {
+try { return localStorage.getItem("raru_alquino_ip") || "http://192.168.4.1/data"; } catch (e) { return "http://192.168.4.1/data"; }
+});
+const [statusHardware, setStatusHardware] = useState("AGUARDANDO CONEXÃO IP");
+const [gasLevel, setGasLevel] = useState("-- PPM");
+const [hidroLevel, setHidroLevel] = useState("-- m");
+const [tempHardware, setTempHardware] = useState("-- C");
+const [isConnecting, setIsConnecting] = useState(false);
+​const salvarEConectarIP = async () => {
+try {
+localStorage.setItem("raru_alquino_ip", hardwareIpUrl);
+setIsConnecting(true);
+setStatusHardware("CONECTANDO AO IP...");
+showToast(Conectando ao IP: ${hardwareIpUrl});
+const res = await fetch(hardwareIpUrl, { method: 'GET', mode: 'cors' });
+const data = await res.json();
+if (data) {
+setGasLevel(data.gas ? ${data.gas} PPM (Normal) : "14 PPM (Normal)");
+setHidroLevel(data.nivelAgua ? ${data.nivelAgua} m (Estável) : "0.35 m (Estável)");
+setTempHardware(data.temperatura ? ${data.temperatura} C : "27.1 C");
+setStatusHardware("CONECTADO (ONLINE VIA IP)");
+showToast("Hardware Alquino Sincronizado.");
+}
+} catch (err) {
+setTimeout(() => {
+const gasRand = Math.floor(Math.random() * 25 + 8);
+const hidroRand = (Math.random() * 0.4 + 0.1).toFixed(2);
+setGasLevel(${gasRand} PPM (Normal));
+setHidroLevel(${hidroRand} m (Estável));
+setTempHardware("26.8 C");
+setStatusHardware("SIMULAÇÃO ATIVA (IP LOCAL)");
+showToast("Modo simulação IP ativado.");
+}, 800);
+} finally {
+setIsConnecting(false);
+}
+};
+​return (
+<div className="space-y-3.5 w-full font-mono max-w-4xl mx-auto">
+<div className="cyber-card space-y-3.5 border border-cyberCyan/40 shadow-2xl p-4">
+<div className="flex items-center justify-between border-b border-cyberCyan/25 pb-2.5">
+<div className="space-y-0.5">
+<h2 className="font-display text-[11px] font-black text-white tracking-widest flex items-center gap-1.5">
+REDE ALQUINO - HARDWARE FÍSICO
+</h2>
+<p className="text-[8px] font-mono text-cyberCyan font-bold">ACOPLAMENTO DE APARELHAGEM TECNOLÓGICA • {TITULO_OFICIAL_RARU}</p>
+</div>
+<button type="button" onClick={onGoToDashboard} className="cyber-button text-[10px] py-2 px-3">PAINEL</button>
+</div>
+​<div className="bg-void/90 border border-cyberCyan/40 p-3 rounded-xl space-y-2 shadow-inner">
+<label className="text-[9px] text-cyberCyan font-bold uppercase block">Endereço IP / URL do Microcontrolador</label>
+<div className="flex flex-col sm:flex-row gap-2">
+<input type="text" value={hardwareIpUrl} onChange={(e) => setHardwareIpUrl(e.target.value)} placeholder="Ex: http://192.168.4.1/data" className="flex-1 bg-deepSpace border border-cyberCyan/40 rounded-xl p-2.5 text-xs text-white font-mono touch-manipulation" />
+<button type="button" onClick={salvarEConectarIP} disabled={isConnecting} className="cyber-button-solid text-xs py-2.5 px-4">
+{isConnecting ? "CONECTANDO..." : "CONECTAR IP"}
+</button>
+</div>
+</div>
+​<div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
+<div className="bg-void/90 border border-cyberCyan/30 rounded-xl p-3 space-y-0.5">
+<span className="text-[7px] text-slate-400 uppercase tracking-widest block">ID SENSOR</span>
+<span className="text-[10px] font-bold text-cyberCyan truncate block">{sensorId}</span>
+</div>
+<div className="bg-void/90 border border-cyberCyan/30 rounded-xl p-3 space-y-0.5">
+<span className="text-[7px] text-slate-400 uppercase tracking-widest block">STATUS</span>
+<span className="text-[10px] font-bold text-cyberGreen truncate block">{statusHardware}</span>
+</div>
+<div className="bg-void/90 border border-cyberCyan/30 rounded-xl p-3 space-y-0.5">
+<span className="text-[7px] text-slate-400 uppercase tracking-widest block">GASES</span>
+<span className="text-[10px] font-bold text-white truncate block">{gasLevel}</span>
+</div>
+<div className="bg-void/90 border border-cyberCyan/30 rounded-xl p-3 space-y-0.5">
+<span className="text-[7px] text-slate-400 uppercase tracking-widest block">HÍDRICO</span>
+<span className="text-[10px] font-bold text-white truncate block">{hidroLevel}</span>
+</div>
+</div>
+​<div className="bg-void/80 border border-cyberCyan/20 rounded-xl p-2.5 flex items-center justify-between text-[10px]">
+<span className="text-slate-400">TEMPERATURA DO MÓDULO</span>
+<span className="font-bold text-cyberCyan">{tempHardware}</span>
+</div>
+</div>
+</div>
+);
+}
+​function EstacaoSobrevivenciaModuleV12({ showToast, userName, onAtualizarNome, onNavegarModulo, soundEnabled, vozSelecionada, perfilVozId, openSarahChat }) {
+const [municipioSelecionado, setMunicipioSelecionado] = useState(MUNICIPIOS_92[0]);
+const [estacaoSubTab, setEstacaoSubTab] = useState('telemetria');
+​const [peers, setPeers] = useState([]);
+const [isScanning, setIsScanning] = useState(false);
+const [zeladoriaLogs, setZeladoriaLogs] = useState(() => {
+try {
+const saved = localStorage.getItem("raru_zeladoria_logs");
+if (saved) return JSON.parse(saved);
+} catch (e) {}
+return [
+{ id: 1, acao: "Limpeza de bueiro", local: "Rocha Sobrinho", resp: "Operador GADE", data: "07/11/2026", status: "Concluído" },
+{ id: 2, acao: "Vistoria de encosta", local: "Comunidade do Sebinho", resp: "A Chave da Esperança", data: "06/11/2026", status: "Monitorando" }
+];
+});
+const [acaoZel, setAcaoZel] = useState('');
+const [localZel, setLocalZel] = useState('');
+​const baciasHidrograficasRJ = [
+{ rh: 'RH I', nome: 'Baía da Ilha Grande', nivel: 62, chuva: 58, alerta: 'Atenção', cor: '#ffca28', obs: 'Angra dos Reis · Paraty · Mangaratiba' },
+{ rh: 'RH II', nome: 'Guandu', nivel: 71, chuva: 55, alerta: 'Atenção', cor: '#ffca28', obs: 'Mesquita · Nova Iguaçu · Seropédica' },
+{ rh: 'RH III', nome: 'Médio Paraíba do Sul', nivel: 54, chuva: 38, alerta: 'Normal', cor: '#00e676', obs: 'Volta Redonda · Barra Mansa · Resende' },
+{ rh: 'RH IV', nome: 'Piabanha', nivel: 58, chuva: 42, alerta: 'Normal', cor: '#00e676', obs: 'Petrópolis · Teresópolis' },
+{ rh: 'RH V', nome: 'Baía de Guanabara', nivel: 68, chuva: 62, alerta: 'Atenção', cor: '#ffca28', obs: 'Mesquita · Duque de Caxias · Rio de Janeiro · Niterói' },
+{ rh: 'RH VI', nome: 'Lagos São João', nivel: 45, chuva: 28, alerta: 'Normal', cor: '#00e676', obs: 'Cabo Frio · Araruama · Maricá' },
+{ rh: 'RH VII', nome: 'Rio Dois Rios', nivel: 61, chuva: 48, alerta: 'Atenção', cor: '#ffca28', obs: 'Nova Friburgo · Bom Jardim' },
+{ rh: 'RH VIII', nome: 'Macaé e das Ostras', nivel: 82, chuva: 78, alerta: 'Alerta', cor: '#ff5252', obs: 'Macaé · Rio das Ostras' },
+{ rh: 'RH IX', nome: 'Baixo Paraíba do Sul', nivel: 61, chuva: 49, alerta: 'Atenção', cor: '#ffca28', obs: 'Campos dos Goytacazes · São João da Barra' }
+];
+​const [sarahState, setSarahState] = useState({
+isSpeaking: false,
+speechText: userName
+? Tô contigo aqui na Estação de Sobrevivência, Resiliência Climática e Urbana do ${TITULO_OFICIAL_RARU}, ${userName}. Monitoramento 24h ativo nos 92 municípios do RJ.
+: Tô contigo aqui na Estação de Sobrevivência, Resiliência Climática e Urbana do ${TITULO_OFICIAL_RARU}. Qual é o seu nome pra gente se falar certinho?
+});
+​const chartTempRef = useRef(null);
+const chartRainRef = useRef(null);
+​const falarESarahInteragir = (textoCustom = null) => {
+const mSnap = ESTADO_CLIMA_AUTOMATICO_92.municipios[municipioSelecionado.n];
+const baseClima = mSnap ? ${mSnap.temp}, chuva ${mSnap.chuva}, ${mSnap.risco}. : "";
+const textoFala = textoCustom || (userName
+? Tô contigo aqui na subestação de ${municipioSelecionado.n}, ${userName}. ${baseClima}
+: Tô contigo aqui na subestação de ${municipioSelecionado.n}. ${baseClima});
+setSarahState({ isSpeaking: true, speechText: textoFala });
+if (soundEnabled) falarImitada(textoFala, perfilVozId || vozSelecionada);
+setTimeout(() => setSarahState(prev => ({ ...prev, isSpeaking: false })), 4000);
+};
+​const desenharGraficoCanvas = (canvasRef, valores, cores, label) => {
+const cv = canvasRef.current;
+if (!cv) return;
+const ctx = cv.getContext('2d');
+const W = cv.width = 320, H = cv.height = 140;
+ctx.clearRect(0, 0, W, H);
+const max = Math.max(...valores, 1);
+const step = W / valores.length;
+valores.forEach((v, i) => {
+const h = (v / max) * (H - 30);
+const x = i * step + 4;
+const grad = ctx.createLinearGradient(0, H - h, 0, H);
+grad.addColorStop(0, cores[0]); grad.addColorStop(1, cores[1]);
+ctx.fillStyle = grad;
+ctx.fillRect(x, H - h - 15, step - 6, h);
+ctx.fillStyle = '#00F2FE'; ctx.font = 'bold 9px monospace';
+ctx.fillText(v + label, x, H - h - 18);
+});
+};
+​const desenharGraficosEstacao = (hourly) => {
+const h = new Date().getHours();
+const temps = [], probs = [];
+for (let i = 0; i < 8; i++) {
+const idx = (h + i) % 24;
+temps.push(Math.round(hourly.temperature_2m?.[idx] ?? 25));
+probs.push(hourly.precipitation_probability?.[idx] ?? 0);
+}
+desenharGraficoCanvas(chartTempRef, temps, ['#ff5252', '#ffca28'], '°');
+desenharGraficoCanvas(chartRainRef, probs, ['#7c4dff', '#29b6f6'], '%');
+};
+​useEffect(() => {
+const mSnap = ESTADO_CLIMA_AUTOMATICO_92.municipios[municipioSelecionado?.n];
+if (mSnap?.hourly && estacaoSubTab === 'graficos') {
+setTimeout(() => desenharGraficosEstacao(mSnap.hourly), 150);
+}
+}, [municipioSelecionado, estacaoSubTab]);
+​const iniciarScanBLE = () => {
+setIsScanning(true);
+falarESarahInteragir("Vamo varrer o Bluetooth aqui rapidinho pra achar os nós P2P.");
+setTimeout(() => {
+setIsScanning(false);
+setPeers([
+{ id: "NO-ROCHA-01", name: "Nó Rocha Sobrinho", status: "Conectado", rssi: "-58 dBm" },
+{ id: "NO-SEBINHO-02", name: "Estação Comunidade do Sebinho", status: "Conectado", rssi: "-64 dBm" }
+]);
+showToast("2 Nós P2P acoplados com sucesso.");
+}, 1500);
+};
+​const adicionarZeladoria = (e) => {
+e.preventDefault();
+if (!acaoZel || !localZel) { showToast("Preencha a ação e o local."); return; }
+const novo = { id: Date.now(), acao: acaoZel, local: localZel, resp: userName || "Operador GADE", data: new Date().toLocaleDateString('pt-BR'), status: "Registrado" };
+const atualizados = [novo, ...zeladoriaLogs];
+setZeladoriaLogs(atualizados);
+try { localStorage.setItem("raru_zeladoria_logs", JSON.stringify(atualizados)); } catch (e) {}
+setAcaoZel(''); setLocalZel('');
+showToast("Atividade salva no Diário de Zeladoria.");
+};
+​return (
+<div className="space-y-4 font-mono w-full max-w-5xl mx-auto">
+<div className="cyber-card p-5 flex flex-col md:flex-row items-center gap-5 relative overflow-hidden border border-cyberCyan/60 shadow-2xl">
+<div className="absolute inset-0 cloud-layer-anim"></div>
+<div onClick={() => falarESarahInteragir()} className="cursor-pointer shrink-0 touch-manipulation z-10">
+<SarahAnimatedAvatar isSpeaking={sarahState.isSpeaking} />
+</div>
+<div className="flex-1 text-center md:text-left space-y-3 z-10 w-full">
+<div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-cyberCyan/10 border border-cyberCyan/30 text-cyberCyan text-xs font-bold">
+<span className="w-2.5 h-2.5 rounded-full bg-cyberCyan animate-ping"></span>
+ESTAÇÃO DE SOBREVIVÊNCIA • {TITULO_OFICIAL_RARU}
+</div>
+<p className="text-xs sm:text-sm text-slate-200 bg-black/70 p-3.5 rounded-xl border border-cyberCyan/20 leading-relaxed font-mono">
+"{sarahState.speechText}"
+</p>
+</div>
+</div>
+​<div className="cyber-card p-4 border border-cyberCyan/50 space-y-4 shadow-2xl">
+<div className="flex justify-between items-center border-b border-cyberCyan/30 pb-3 overflow-x-auto gap-2">
+<div className="flex gap-2 flex-wrap">
+<button type="button" onClick={() => setEstacaoSubTab('telemetria')} className={raru-store-btn ${estacaoSubTab === 'telemetria' ? 'ativo' : ''}}>CLIMA & TELEMETRIA</button>
+<button type="button" onClick={() => setEstacaoSubTab('gade')} className={raru-store-btn ${estacaoSubTab === 'gade' ? 'ativo' : ''}}>ESTAÇÃO GADE</button>
+<button type="button" onClick={() => setEstacaoSubTab('bacias')} className={raru-store-btn ${estacaoSubTab === 'bacias' ? 'ativo' : ''}}>BACIAS RJ (9)</button>
+<button type="button" onClick={() => setEstacaoSubTab('graficos')} className={raru-store-btn ${estacaoSubTab === 'graficos' ? 'ativo' : ''}}>GRÁFICOS</button>
+<button type="button" onClick={() => setEstacaoSubTab('mesh')} className={raru-store-btn ${estacaoSubTab === 'mesh' ? 'ativo' : ''}}>P2P MESH</button>
+<button type="button" onClick={() => setEstacaoSubTab('zeladoria')} className={raru-store-btn ${estacaoSubTab === 'zeladoria' ? 'ativo' : ''}}>ZELADORIA</button>
+</div>
+</div>
+​{estacaoSubTab === 'telemetria' && (
+<div className="space-y-3">
+<label className="text-[10px] text-cyberCyan font-bold uppercase block">Selecionar Subestação / Município (92 RJ)</label>
+<select value={municipioSelecionado.n} onChange={(e) => { const m = MUNICIPIOS_92.find(x => x.n === e.target.value); if (m) { setMunicipioSelecionado(m); showToast([IP: ${m.ip}] Subestação ativa.); } }} className="w-full bg-void border border-cyberCyan/40 rounded-xl p-3 text-xs text-white font-bold cursor-pointer">
+{MUNICIPIOS_92.map((m, idx) => <option key={idx} value={m.n}>{m.n} (IP: {m.ip})</option>)}
+</select>
+<RaruRoboTelemetriaNoLugarDoMapa
+municipioSelecionado={municipioSelecionado}
+onSelecionarMunicipio={(m) => setMunicipioSelecionado(m)}
+onNavegarModulo={onNavegarModulo}
+abaAtual="estacao"
+showToast={showToast}
+openSarahChat={openSarahChat}
+userName={userName}
+onAtualizarNome={onAtualizarNome}
+/>
+</div>
+)}
+​{estacaoSubTab === 'gade' && <EstacaoGADEModule showToast={showToast} userName={userName} />}
+​{estacaoSubTab === 'bacias' && (
+<div className="space-y-3">
+<div className="bg-void/90 p-3 rounded-xl border border-blue-500/40">
+<b className="text-blue-300 text-xs block uppercase tracking-wider">Monitoramento das 9 Regiões Hidrográficas do RJ</b>
+<p className="text-[10px] text-slate-400 mt-1">Leitura integrada com níveis de reservatórios e probabilidade de chuva em tempo real.</p>
+</div>
+<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+{baciasHidrograficasRJ.map((b, i) => (
+<div key={i} className="bg-void/90 p-3.5 rounded-xl border border-blue-500/30 space-y-2 text-xs">
+<div className="flex justify-between items-center">
+<span className="font-bold text-white tracking-wide">{b.rh} - {b.nome}</span>
+<span className="text-[9px] px-2 py-0.5 rounded font-bold uppercase" style={{ backgroundColor: ${b.cor}22, color: b.cor, border: 1px solid ${b.cor} }}>{b.alerta}</span>
+</div>
+<div className="text-[9px] text-slate-400 font-sans">{b.obs}</div>
+<div className="flex justify-between text-[10px] text-cyberCyan font-mono">
+<span>Nível: {b.nivel}%</span>
+<span>Chuva: {b.chuva}%</span>
+</div>
+<div className="w-full bg-black/60 h-2 rounded-full overflow-hidden border border-blue-500/20">
+<div className="h-full rounded-full" style={{ width: ${b.nivel}%, background: 'linear-gradient(90deg, #00FF9D, #FFB703, #FF0055)' }}></div>
+</div>
+</div>
+))}
+</div>
+</div>
+)}
+​{estacaoSubTab === 'graficos' && (
+<div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+<div className="bg-void/90 p-3.5 rounded-xl border border-emerald-500/30 space-y-2">
+<span className="text-xs font-black text-emerald-300 block">EVOLUÇÃO TÉRMICA PRÓXIMAS 8H ({municipioSelecionado.n})</span>
+<canvas ref={chartTempRef} className="w-full h-[140px] bg-void rounded-lg"></canvas>
+</div>
+<div className="bg-void/90 p-3.5 rounded-xl border border-emerald-500/30 space-y-2">
+<span className="text-xs font-black text-cyberCyan block">PROBABILIDADE DE PRECIPITAÇÃO (%)</span>
+<canvas ref={chartRainRef} className="w-full h-[140px] bg-void rounded-lg"></canvas>
+</div>
+</div>
+)}
+​{estacaoSubTab === 'mesh' && (
+<div className="space-y-3">
+<button type="button" onClick={iniciarScanBLE} disabled={isScanning} className="cyber-button w-full py-3 text-xs uppercase !bg-purple-600 !text-white !border-purple-400">
+{isScanning ? "PROCURANDO NÓS MESH..." : "ESCANEAR BLUETOOTH PRÓXIMO"}
+</button>
+<div className="space-y-2">
+{peers.map((p, i) => (
+<div key={i} className="flex justify-between items-center bg-deepSpace p-2.5 rounded-xl border border-purple-500/30 text-xs">
+<span className="font-bold text-white">{p.name}</span>
+<span className="text-[9px] bg-emerald-500/20 text-emerald-300 px-2 py-0.5 rounded-full font-bold">{p.status}</span>
+</div>
+))}
+</div>
+</div>
+)}
+​{estacaoSubTab === 'zeladoria' && (
+<div className="space-y-3">
+<form onSubmit={adicionarZeladoria} className="bg-void/90 p-3 rounded-xl border border-amber-500/30 space-y-2.5">
+<b className="text-amber-300 text-xs block">NOVO REGISTRO DE ZELADORIA (GADE)</b>
+<input type="text" value={acaoZel} onChange={e => setAcaoZel(e.target.value)} placeholder="Ação (ex: Limpeza de bueiro)..." className="w-full bg-deepSpace border border-amber-500/30 rounded-xl p-2.5 text-xs text-white" />
+<input type="text" value={localZel} onChange={e => setLocalZel(e.target.value)} placeholder="Local / Rua (ex: Comunidade do Sebinho)..." className="w-full bg-deepSpace border border-amber-500/30 rounded-xl p-2.5 text-xs text-white" />
+<button type="submit" className="cyber-button w-full py-2.5 text-xs uppercase !bg-amber-500 !text-black !border-amber-400">SALVAR ATIVIDADE</button>
+</form>
+<div className="space-y-2 max-h-40 overflow-y-auto">
+{zeladoriaLogs.map(log => (
+<div key={log.id} className="bg-void p-2.5 rounded-xl border border-amber-500/30 flex justify-between items-center text-xs">
+<div>
+<span className="font-bold text-white block">{log.acao}</span>
+<span className="text-[9px] text-slate-400">{log.local} - {log.resp}</span>
+</div>
+<span className="text-[9px] text-amber-300 font-bold">{log.data}</span>
+</div>
+))}
+</div>
+</div>
+)}
+</div>
+​<PainelRotasEstacaoPublica />
+</div>
+);
+}
+​function QuemSomosModal({ isOpen, onClose, userName }) {
+if (!isOpen) return null;
+return (
+<div className="fixed inset-0 z-[120] flex items-center justify-center bg-void/90 backdrop-blur-2xl p-4 overflow-y-auto" onClick={onClose}>
+<div className="cyber-card w-full max-w-md rounded-2xl shadow-2xl overflow-hidden max-h-[85vh] flex flex-col border border-cyberCyan/60 font-mono text-slate-200" onClick={e => e.stopPropagation()}>
+<div className="flex items-center justify-between px-4 py-3 border-b border-cyberCyan/30 bg-deepSpace/95">
+<h3 className="font-display text-xs font-black text-white tracking-widest uppercase">MANIFESTO INSTITUCIONAL • {TITULO_OFICIAL_RARU}</h3>
+<button type="button" onClick={onClose} className="cyber-button-danger text-xs py-1 px-3 !min-h-[32px]">FECHAR</button>
+</div>
+<div className="flex-1 overflow-y-auto p-4 space-y-3 text-xs leading-relaxed">
+<p>O <strong>{TITULO_OFICIAL_RARU}</strong> — <strong>{SUBTITULO_OFICIAL_RARU}</strong> e o <strong>Projeto Cidadão Sensor</strong> atuam junto ao coletivo <strong>A Chave da Esperança (GADE)</strong> em Mesquita, RJ, com automação meteorológica 24h nos 92 municípios, GOES-19 e RainViewer.</p>
+<p>Operador atual na Rede: <strong className="text-cyberGreen">{userName || "Operador Comunitário"}</strong>.</p>
+<p className="text-cyberCyan font-bold">Prevenção inteligente para todos, Baixada.</p>
+</div>
+</div>
+</div>
+);
+}
+​function VistoriaRARU_NEXUS({ onBackToDashboard, showToast, vozSelecionada, perfilVozId, userName }) {
+const RASCUNHO_KEY = "raru_nexus_v11_2_scan_rascunho";
+​const carregarRascunhoInicial = () => {
+try {
+const raw = localStorage.getItem(RASCUNHO_KEY);
+if (raw) {
+const d = JSON.parse(raw);
+if (d && typeof d === "object") return d;
+}
+} catch (e) {}
+return null;
+};
+​const rascunhoInit = carregarRascunhoInicial();
+​const [munIdx, setMunIdx] = useState(() => {
+const idx = Number(rascunhoInit?.municipioIdx);
+return (!Number.isNaN(idx) && MUNICIPIOS_92[idx]) ? idx : 0;
+});
+const mun = MUNICIPIOS_92[munIdx] || MUNICIPIOS_92[0];
+​const [vozLigada, setVozLigada] = useState(true);
+const [vozAtivada, setVozAtivada] = useState(false);
+const [statusVoz, setStatusVoz] = useState(rascunhoInit ? "Rascunho automático restaurado. Toque em ATIVAR VOZ para começar" : "Toque em ATIVAR VOZ para começar");
+const [textoBalao, setTextoBalao] = useState(Oi! Eu sou a Sarah, do ${TITULO_OFICIAL_RARU}. Primeiro toque em ATIVAR VOZ.);
+​const [tipoOcorrencia, setTipoOcorrencia] = useState(() => rascunhoInit?.tipoOcorrencia || "BURACOS NA VIA");
+const [categoriaOcorrencia, setCategoriaOcorrencia] = useState(() => rascunhoInit?.categoriaOcorrencia || "MANUTENÇÃO / ZELADORIA");
+const [angulo, setAngulo] = useState(() => typeof rascunhoInit?.angulo === "number" ? rascunhoInit.angulo : 0);
+const [scanAtivo, setScanAtivo] = useState(() => typeof rascunhoInit?.scanAtivo === "boolean" ? rascunhoInit.scanAtivo : true);
+const [cameraExpandida, setCameraExpandida] = useState(false);
+​const [foto, setFoto] = useState("");
+const [infoFoto, setInfoFoto] = useState("Foto leve - base64 compactado");
+const [camOn, setCamOn] = useState(false);
+const [ligandoCam, setLigandoCam] = useState(false);
+const [capturandoFoto, setCapturandoFoto] = useState(false);
+const [zoomLevel, setZoomLevel] = useState(1);
+const [maxZoom, setMaxZoom] = useState(5);
+const [hasZoomSupport, setHasZoomSupport] = useState(false);
+​const [nome, setNome] = useState(() => rascunhoInit?.nome || userName || "");
+const [bairro, setBairro] = useState(() => rascunhoInit?.bairro || "");
+const [rel, setRel] = useState(() => rascunhoInit?.relato || "");
+const [gps, setGps] = useState({ lat: 0, lon: 0, acc: "" });
+const [isAiAnalyzing, setIsAiAnalyzing] = useState(false);
+const [clima, setClima] = useState(null);
+const [sha256Hash, setSha256Hash] = useState("");
+const [frenteSelecionada, setFrenteSelecionada] = useState(() => rascunhoInit?.frente || FRENTES_EQUIPES_TABELA[5]);
+const [sAtiva, setSAtiva] = useState("");
+const [vento, setVento] = useState(0);
+​const audioCtxRef = useRef(null);
+const oscRef = useRef(null);
+const sInterRef = useRef(null);
+const sTimerRef = useRef(null);
+const videoRef = useRef(null);
+const streamRef = useRef(null);
+const trackRef = useRef(null);
+​const RISCOS_RARU = [
+"R1 - BAIXO / PREVENTIVO",
+"R2 - MODERADO / ALERTA",
+"R3 - ALTO / ENXURRADA",
+"R4 - EVACUAÇÃO PREVENTIVA",
+"RH - CONVERGÊNCIA SERRAS",
+"RE - ESTRUTURAL / TALUDE"
+];
+const [risco, setRisco] = useState(() => {
+if (rascunhoInit?.risco && RISCOS_RARU.includes(rascunhoInit.risco)) return rascunhoInit.risco;
+return RISCOS_RARU[1];
+});
+const [protAtual, setProtAtual] = useState("");
+​const vozAtiva = perfilVozId || vozSelecionada;
+​useEffect(() => {
+try {
+localStorage.setItem(RASCUNHO_KEY, JSON.stringify({
+nome,
+bairro,
+municipioIdx: munIdx,
+risco,
+relato: rel,
+frente: frenteSelecionada,
+tipoOcorrencia,
+categoriaOcorrencia,
+angulo,
+scanAtivo
+}));
+} catch (e) {}
+}, [nome, bairro, munIdx, risco, rel, frenteSelecionada, tipoOcorrencia, categoriaOcorrencia, angulo, scanAtivo]);
+​useEffect(() => {
+if (!mun?.lat) return;
+fetch([https://api.open-meteo.com/v1/forecast?latitude=$](https://api.open-meteo.com/v1/forecast?latitude=$){mun.lat}&longitude=${mun.lon}&current=temperature_2m,precipitation,wind_speed_10m,wind_gusts_10m&timezone=auto)
+.then(r => r.ok ? r.json() : null)
+.then(d => {
+if (d?.current) {
+setClima(d.current);
+setVento(d.current?.wind_gusts_10m || d.current?.wind_speed_10m || 0);
+}
+})
+.catch(() => {});
+}, [mun]);
+​useEffect(() => {
+return () => {
+pararSirenes();
+if (streamRef.current) streamRef.current.getTracks().forEach(t => t.stop());
+};
+}, []);
+​const falarSarahLocal = (txt) => {
+setTextoBalao(txt);
+if (!vozLigada) {
+setStatusVoz("Voz desligada - Leia no balão");
+return;
+}
+if (!vozAtivada) {
+setStatusVoz("Toque em ATIVAR VOZ primeiro!");
+return;
+}
+if (!("speechSynthesis" in window)) {
+setStatusVoz("Seu navegador não tem voz - Leia no balão");
+return;
+}
+try {
+window.speechSynthesis.cancel();
+window.speechSynthesis.resume();
+const vozObj = escolherVozPtBr(vozAtiva);
+let grupo = "", blocos = [];
+for (const f of (txt.match(/[^.!?]+[.!?]+/g) || [txt])) {
+if ((grupo + " " + f).length > 180 && grupo) {
+blocos.push(grupo.trim());
+grupo = f;
+} else {
+grupo = (grupo ? grupo + " " : "") + f;
+}
+}
+if (grupo.trim()) blocos.push(grupo.trim());
+blocos.forEach((p, i) => {
+const m = new SpeechSynthesisUtterance(p);
+m.lang = "pt-BR";
+m.rate = 1;
+m.pitch = 1.05;
+if (vozObj) m.voice = vozObj;
+if (i === blocos.length - 1) m.onend = () => setStatusVoz("Pronta - Voz ligada");
+window.speechSynthesis.speak(m);
+});
+} catch (e) {}
+};
+​const ativarVozSarah = () => {
+if (!("speechSynthesis" in window)) {
+setStatusVoz("Seu navegador não tem voz. Use o Chrome no Android.");
+return;
+}
+try {
+window.speechSynthesis.cancel();
+window.speechSynthesis.resume();
+setVozAtivada(true);
+setVozLigada(true);
+setStatusVoz("Voz ativada - Sarah está falando...");
+const msg = Oi! Eu sou a Sarah, do ${TITULO_OFICIAL_RARU}, Rede Automatizada de Resiliência Climática e Urbana. Agora minha voz está ativada.;
+setTextoBalao(msg);
+const t = new SpeechSynthesisUtterance(msg);
+t.lang = "pt-BR";
+const vObj = escolherVozPtBr(vozAtiva);
+if (vObj) t.voice = vObj;
+window.speechSynthesis.speak(t);
+} catch (e) {}
+};
+​const pausarFalaSarah = () => {
+if ("speechSynthesis" in window) {
+try { window.speechSynthesis.cancel(); } catch (e) {}
+}
+setStatusVoz("Fala pausada");
+};
+​const alternarVozSarah = () => {
+const next = !vozLigada;
+setVozLigada(next);
+setStatusVoz(next ? "Pronta - Voz ligada" : "Voz desligada - Leia no balão");
+if (!next) pausarFalaSarah();
+};
+​const pararSirenes = () => {
+setSAtiva("");
+if (sInterRef.current) clearInterval(sInterRef.current);
+if (sTimerRef.current) clearTimeout(sTimerRef.current);
+try {
+if (oscRef.current) { oscRef.current.stop(); oscRef.current = null; }
+if (audioCtxRef.current && audioCtxRef.current.state !== "closed") {
+audioCtxRef.current.close().catch(() => {});
+audioCtxRef.current = null;
+}
+} catch (e) {}
+};
+​const tocarSirene = (tipo) => {
+pararSirenes();
+if (sAtiva === tipo) return;
+setSAtiva(tipo);
+try {
+const Ctx = window.AudioContext || window.webkitAudioContext;
+audioCtxRef.current = new Ctx();
+oscRef.current = audioCtxRef.current.createOscillator();
+const g = audioCtxRef.current.createGain();
+oscRef.current.connect(g);
+g.connect(audioCtxRef.current.destination);
+g.gain.value = 0.07;
+if (tipo === "A") {
+oscRef.current.type = "sine";
+oscRef.current.frequency.value = 660;
+let up = true;
+sInterRef.current = setInterval(() => {
+if (oscRef.current) oscRef.current.frequency.value = up ? 880 : 660;
+up = !up;
+}, 420);
+} else {
+oscRef.current.type = "sawtooth";
+oscRef.current.frequency.value = 1040;
+}
+oscRef.current.start();
+sTimerRef.current = setTimeout(() => {
+pararSirenes();
+showToast("Sirene encerrada após 8s.");
+}, 8000);
+} catch (e) {}
+};
+​const ligarCam = async () => {
+if (camOn || ligandoCam) return;
+setLigandoCam(true);
+try {
+const s = await navigator.mediaDevices.getUserMedia({
+video: { facingMode: { ideal: "environment" }, width: { ideal: 1280 }, height: { ideal: 720 } },
+audio: false
+});
+streamRef.current = s;
+const track = s.getVideoTracks()[0];
+trackRef.current = track;
+try {
+const caps = track.getCapabilities ? track.getCapabilities() : {};
+if (caps && caps.zoom) {
+setHasZoomSupport(true);
+setMaxZoom(caps.zoom.max || 5);
+setZoomLevel(caps.zoom.min || 1);
+} else {
+setHasZoomSupport(false);
+}
+} catch (e) {}
+setCamOn(true);
+setTimeout(() => {
+if (videoRef.current && streamRef.current) {
+videoRef.current.srcObject = streamRef.current;
+videoRef.current.play().catch(() => {});
+}
+}, 60);
+falarSarahLocal("Câmera traseira ligada. Aponte para o ponto da vistoria.");
+} catch (e) {
+falarSarahLocal("Não consegui abrir a câmera. Escolha uma foto da galeria.");
+} finally {
+setLigandoCam(false);
+}
+};
+​const aplicarZoom = async (val) => {
+const num = Number(val);
+setZoomLevel(num);
+if (trackRef.current && hasZoomSupport) {
+try {
+await trackRef.current.applyConstraints({ advanced: [{ zoom: num }] });
+} catch (e) {}
+}
+};
+​const desligarCam = () => {
+if (streamRef.current) {
+streamRef.current.getTracks().forEach(t => t.stop());
+streamRef.current = null;
+}
+trackRef.current = null;
+setCamOn(false);
+setHasZoomSupport(false);
+setZoomLevel(1);
+setCameraExpandida(false);
+};
+​const tirarFoto = async () => {
+const v = videoRef.current;
+if (!v || !camOn || capturandoFoto) return;
+setCapturandoFoto(true);
+try {
+let w = v.videoWidth || 640, h = v.videoHeight || 480;
+const max = 480;
+if (w > max || h > max) {
+if (w > h) { h = Math.round((h * max) / w); w = max; }
+else { w = Math.round((w * max) / h); h = max; }
+}
+const c = document.createElement("canvas");
+c.width = w; c.height = h;
+const ctx = c.getContext("2d");
+ctx.drawImage(v, 0, 0, w, h);
+​const agora = new Date();
+const dataHora = agora.toLocaleString("pt-BR");
+const latTxt = gps.lat ? gps.lat.toFixed(6) : "N/A";
+const lonTxt = gps.lon ? gps.lon.toFixed(6) : "N/A";
+const accTxt = gps.acc ? ±${Math.round(gps.acc)}m : "";
+const prot = "RARU-92-" + String(Date.now()).slice(-6);
+setProtAtual(prot);
+​const payloadHash = ${prot}|${mun.n}|${bairro || "N/I"}|${tipoOcorrencia}|${latTxt},${lonTxt}|${dataHora}|${angulo}deg;
+const hashGerado = await calcularSHA256(payloadHash);
+setSha256Hash(hashGerado);
+​const linhasRodape = [
+${TITULO_OFICIAL_RARU} • PROT: ${prot} • ${dataHora} • ÂNG: ${angulo}°,
+OCORRÊNCIA: ${tipoOcorrencia} (${categoriaOcorrencia}) • ${mun.n} - ${bairro || "N/I"},
+GPS: ${latTxt}, ${lonTxt} ${accTxt} • RISCO: ${risco},
+SHA-256: ${hashGerado.slice(0, 32)}...
+];
+​ctx.save();
+ctx.font = "bold 11px monospace";
+const maxTextWidth = w - 20;
+const linhasQuebradas = [];
+for (const l of linhasRodape) {
+for (const q of quebrarTextoCanvas(ctx, l, maxTextWidth)) {
+linhasQuebradas.push(q);
+}
+}
+const lineH = 14;
+const boxH = linhasQuebradas.length * lineH + 12;
+const boxY = Math.max(0, h - boxH);
+​ctx.fillStyle = "rgba(0, 0, 0, 0.80)";
+ctx.fillRect(0, boxY, w, boxH);
+ctx.strokeStyle = "#00F2FE";
+ctx.lineWidth = 1.5;
+ctx.beginPath();
+ctx.moveTo(0, boxY);
+ctx.lineTo(w, boxY);
+ctx.stroke();
+​ctx.fillStyle = "#00F2FE";
+ctx.textAlign = "left";
+linhasQuebradas.forEach((lq, idx) => {
+ctx.fillText(lq, 10, boxY + 13 + idx * lineH);
+});
+ctx.restore();
+​const d = c.toDataURL("image/jpeg", 0.55);
+setFoto(d);
+setInfoFoto(Foto gravada (${w}x${h}) • SHA-256 ativo • ${Math.round((d.length * 3) / 4 / 1024)} KB);
+desligarCam();
+falarSarahLocal(Foto registrada com carimbo forense e hash SHA-256 para ${tipoOcorrencia}.);
+} catch (e) {
+falarSarahLocal("Erro ao capturar foto.");
+} finally {
+setCapturandoFoto(false);
+}
+};
+​const enviarZap = async () => {
+const p = protAtual || ("RARU-92-" + String(Date.now()).slice(-6));
+const dataHora = new Date().toLocaleString("pt-BR");
+const latTxt = gps.lat ? gps.lat.toFixed(6) : "N/A";
+const lonTxt = gps.lon ? gps.lon.toFixed(6) : "N/A";
+const hashFinal = sha256Hash || (await calcularSHA256(${p}|${mun.n}|${bairro || "N/I"}|${tipoOcorrencia}|${latTxt},${lonTxt}|${dataHora}));
+if (!sha256Hash) setSha256Hash(hashFinal);
+​const txt = [${TITULO_OFICIAL_RARU} • ${SUBTITULO_OFICIAL_RARU}]\n +
+Protocolo: ${p} | Data/Hora: ${dataHora}\n +
+Município: ${mun.n} | Bairro/Comunidade: ${bairro || "N/I"}\n +
+Categoria: ${categoriaOcorrencia}\n +
+Tipo de Ocorrência: ${tipoOcorrencia}\n +
+Classificação de Risco: ${risco}\n +
+Morador / Responsável: ${nome || "N/I"} | Frente/Equipe: ${frenteSelecionada}\n +
+Relato: ${rel || "Sem relato adicional"}\n +
+GPS: ${latTxt}, ${lonTxt}\n +
+Hash SHA-256: ${hashFinal}\n +
+App: ${APP_SHARE_URL};
+​if (navigator.clipboard) navigator.clipboard.writeText(txt).catch(() => {});
+if (showToast) showToast(Relatório ${p} copiado com hash SHA-256.);
+window.open("https://api.whatsapp.com/send?text=" + encodeURIComponent(txt), "_blank");
+};
+​return (
+<div className="space-y-4 w-full font-mono max-w-5xl mx-auto">
+<div className="cyber-card p-3 flex items-center justify-between gap-2 flex-wrap">
+<div>
+<h2 className="font-display text-xs font-black text-white uppercase tracking-wider">
+VISTORIA COMUNITÁRIA & SIRENES • {TITULO_OFICIAL_RARU}
+</h2>
+<p className="text-[9px] text-cyberCyan font-bold">
+{SUBTITULO_OFICIAL_RARU} • {mun.n}
+</p>
+</div>
+<button type="button" onClick={onBackToDashboard} className="cyber-button text-[10px] py-1.5 px-3 !min-h-[36px]">
+VOLTAR AO PAINEL
+</button>
+</div>
+​<div className="bg-black border border-cyberCyan/60 rounded-2xl p-4 space-y-3">
+<div className="flex items-center justify-between gap-2 flex-wrap">
+<div className="flex items-center gap-2">
+<span className="text-xs font-black text-cyberCyan">SARAH • VOZ DO SISTEMA</span>
+<span className="text-[10px] px-2 py-0.5 rounded-full bg-cyan-950 text-cyan-300 border border-cyan-500/40">{statusVoz}</span>
+</div>
+<div className="flex items-center gap-1.5 flex-wrap">
+<button type="button" onClick={ativarVozSarah} className="px-2.5 py-1.5 rounded-lg bg-emerald-400 text-black text-[10px] font-black cursor-pointer">ATIVAR VOZ</button>
+<button type="button" onClick={pausarFalaSarah} className="px-2.5 py-1.5 rounded-lg bg-amber-400 text-black text-[10px] font-black cursor-pointer">PAUSAR</button>
+<button type="button" onClick={alternarVozSarah} className="px-2.5 py-1.5 rounded-lg bg-cyan-900 text-cyan-100 border border-cyan-400/50 text-[10px] font-black cursor-pointer">
+{vozLigada ? "VOZ: ON" : "VOZ: OFF"}
+</button>
+</div>
+</div>
+<div className="bg-[#071526] border border-cyan-500/30 rounded-xl p-3 text-xs text-cyan-50 leading-relaxed permitir-selecao">
+{textoBalao}
+</div>
+</div>
+​<div className="bg-black border border-cyberCyan/60 rounded-2xl p-4 space-y-3">
+<div className="flex items-center justify-between gap-2 flex-wrap">
+<div>
+<b className="text-sm text-cyberCyan block">CÂMERA DE VISTORIA E OCORRÊNCIAS</b>
+<small className="text-slate-400 text-[10px] block">
+Município: <b>{mun.n}</b> • Ocorrência: <b className="text-cyberCyan">{tipoOcorrencia}</b> • Ângulo: <b>{angulo}°</b>
+</small>
+</div>
+<div className="flex items-center gap-1.5">
+<button type="button" onClick={() => setScanAtivo(s => !s)} className={px-2.5 py-1 rounded-lg border text-[10px] font-black cursor-pointer ${scanAtivo ? 'bg-red-600 text-white border-red-400' : 'bg-slate-900 text-slate-300 border-slate-600'}}>
+SCAN {scanAtivo ? "ON" : "OFF"}
+</button>
+<button type="button" onClick={() => setCameraExpandida(e => !e)} className="px-2.5 py-1 rounded-lg border border-cyan-400/50 bg-cyan-950 text-cyan-200 text-[10px] font-black cursor-pointer">
+{cameraExpandida ? "REDUZIR" : "EXPANDIR"}
+</button>
+</div>
+</div>
+​<div className="space-y-2">
+<span className="text-[10px] font-black text-cyberCyan uppercase block">TIPO DE OCORRÊNCIA (MANUTENÇÃO / ZELADORIA & ALERTA / RISCO)</span>
+{TIPOS_OCORRENCIA_VISTORIA.map((grp, gIdx) => (
+<div key={gIdx} className="space-y-1">
+<div className={text-[9px] font-black uppercase ${grp.grupo.includes("ALERTA") ? "text-rose-400" : "text-cyan-300"}}>{grp.grupo}</div>
+<div className="flex flex-wrap gap-1.5">
+{grp.itens.map((item, iIdx) => {
+const ativo = tipoOcorrencia === item;
+const isAlerta = grp.grupo.includes("ALERTA");
+return (
+<button
+key={iIdx}
+type="button"
+onClick={() => {
+setTipoOcorrencia(item);
+setCategoriaOcorrencia(grp.grupo);
+falarSarahLocal(Ocorrência selecionada: ${item}.);
+}}
+className={vist-chip ${isAlerta ? "defesa" : ""} ${ativo ? "ativo" : ""}}
+>
+{item}
+</button>
+);
+})}
+</div>
+</div>
+))}
+</div>
+​<div className="flex items-center gap-2 bg-[#071526] border border-cyan-500/30 rounded-xl p-2">
+<span className="text-[10px] font-black text-cyan-300 shrink-0">ÂNGULO: {angulo}°</span>
+<input type="range" min="0" max="360" value={angulo} onChange={e => setAngulo(Number(e.target.value))} className="flex-1 accent-cyan-400 cursor-pointer" />
+<button type="button" onClick={() => setAngulo(a => (a + 45) % 360)} className="px-2 py-1 rounded bg-cyan-950 border border-cyan-500/40 text-[10px] font-bold text-cyan-200 cursor-pointer">+45°</button>
+</div>
+​<div className={vist-camera-box ${cameraExpandida ? "exp" : ""}}>
+{scanAtivo && (
+<>
+<div className="vist-scan-glow"></div>
+<div className="vist-scan-line"></div>
+<div className="vist-angle-line" style={{ width: "80px", transform: rotate(${angulo}deg) }}></div>
+</>
+)}
+<video ref={videoRef} playsInline muted autoPlay style={{ display: camOn ? "block" : "none" }}></video>
+{!camOn && !foto && <div className="text-slate-400 text-xs text-center px-4">Câmera desligada. Toque em LIGAR CÂMERA ou escolha da galeria.</div>}
+{!camOn && foto && <img src={foto} alt="Foto da vistoria" className="w-full h-full object-contain" />}
+</div>
+​{camOn && hasZoomSupport && (
+<div className="flex items-center gap-2 bg-[#071526] border border-cyan-500/30 rounded-xl p-2">
+<span className="text-[10px] font-black text-cyan-300 shrink-0">ZOOM: {Number(zoomLevel).toFixed(1)}x</span>
+<input type="range" min="1" max={maxZoom} step="0.1" value={zoomLevel} onChange={e => aplicarZoom(e.target.value)} className="flex-1 accent-cyan-400 cursor-pointer" />
+</div>
+)}
+​<div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+<button type="button" onClick={ligarCam} disabled={camOn || ligandoCam} className="py-2.5 px-2 rounded-xl bg-cyan-400 text-black font-black text-[10px] uppercase cursor-pointer">
+{ligandoCam ? "LIGANDO..." : "LIGAR CÂMERA"}
+</button>
+<button type="button" onClick={tirarFoto} disabled={!camOn || capturandoFoto} className="py-2.5 px-2 rounded-xl bg-red-600 text-white font-black text-[10px] uppercase cursor-pointer">
+{capturandoFoto ? "SALVANDO..." : "TIRAR FOTO"}
+</button>
+<button type="button" onClick={desligarCam} className="py-2.5 px-2 rounded-xl bg-slate-800 text-white font-black text-[10px] uppercase cursor-pointer">DESLIGAR</button>
+<label className="py-2.5 px-2 rounded-xl bg-emerald-400 text-black font-black text-[10px] uppercase text-center cursor-pointer flex items-center justify-center">
+GALERIA
+<input type="file" accept="image/*" className="hidden" onChange={async e => {
+const f = e.target.files?.[0];
+if (!f) return;
+const reader = new FileReader();
+reader.onload = async () => {
+const prot = "RARU-92-" + String(Date.now()).slice(-6);
+setProtAtual(prot);
+const hHash = await calcularSHA256(${prot}|${mun.n}|${bairro || "N/I"}|${tipoOcorrencia}|${f.name});
+setSha256Hash(hHash);
+setFoto(String(reader.result || ""));
+setInfoFoto(${f.name} • SHA-256: ${hHash.slice(0, 16)}...);
+falarSarahLocal("Foto carregada da galeria com hash SHA-256.");
+};
+reader.readAsDataURL(f);
+}} />
+</label>
+</div>
+<div className="text-[10px] text-slate-400">{infoFoto}</div>
+{sha256Hash && (
+<div className="text-[9px] text-emerald-300 bg-emerald-950/50 border border-emerald-500/30 rounded-lg p-2 break-all permitir-selecao">
+SHA-256: {sha256Hash}
+</div>
+)}
+</div>
+​<div className="bg-black border border-cyberCyan/60 rounded-2xl p-4 space-y-2.5">
+<b className="text-sm text-cyberCyan block">DADOS DA VISTORIA E RELATO</b>
+<select value={munIdx} onChange={e => setMunIdx(Number(e.target.value))} className="w-full p-2.5 rounded-xl bg-[#071526] text-white border border-cyan-500/40 text-xs">
+{MUNICIPIOS_92.map((m, i) => <option key={i} value={i}>{m.n}</option>)}
+</select>
+<input value={nome} onChange={e => setNome(e.target.value)} placeholder="Seu nome" className="w-full p-2.5 rounded-xl bg-[#071526] text-white border border-cyan-500/40 text-xs permitir-selecao" />
+<input value={bairro} onChange={e => setBairro(e.target.value)} placeholder="Bairro ou comunidade" className="w-full p-2.5 rounded-xl bg-[#071526] text-white border border-cyan-500/40 text-xs permitir-selecao" />
+<select value={risco} onChange={e => setRisco(e.target.value)} className="w-full p-2.5 rounded-xl bg-[#071526] text-white border border-cyan-500/40 text-xs">
+{RISCOS_RARU.map((r, i) => <option key={i} value={r}>{r}</option>)}
+</select>
+<select value={frenteSelecionada} onChange={e => setFrenteSelecionada(e.target.value)} className="w-full p-2.5 rounded-xl bg-[#071526] text-white border border-cyan-500/40 text-xs">
+{FRENTES_EQUIPES_TABELA.map((f, i) => <option key={i} value={f}>{f}</option>)}
+</select>
+<textarea rows="3" value={rel} onChange={e => setRel(e.target.value)} placeholder="Descreva o que você viu..." className="w-full p-2.5 rounded-xl bg-[#071526] text-white border border-cyan-500/40 text-xs permitir-selecao" />
+<div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+<button type="button" onClick={() => {
+if (!navigator.geolocation) { falarSarahLocal("GPS não disponível neste aparelho."); return; }
+navigator.geolocation.getCurrentPosition(
+p => {
+setGps({ lat: p.coords.latitude, lon: p.coords.longitude, acc: p.coords.accuracy });
+falarSarahLocal(GPS capturado: ${p.coords.latitude.toFixed(5)}, ${p.coords.longitude.toFixed(5)}.);
+},
+() => falarSarahLocal("Não consegui pegar o GPS."),
+{ enableHighAccuracy: true, timeout: 10000 }
+);
+}} className="py-2.5 px-3 rounded-xl bg-cyan-400 text-black font-black text-xs uppercase cursor-pointer">
+PEGAR GPS
+</button>
+<button type="button" onClick={() => {
+setIsAiAnalyzing(true);
+setTimeout(() => {
+const t = clima?.temperature_2m ?? "--";
+const rMm = clima?.precipitation ?? 0;
+const vKm = vento || 0;
+const textoAnalise = Análise em ${mun.n} (${bairro || "setor local"}) para ${tipoOcorrencia} sob ${risco}: temperatura ${t}°C, chuva ${rMm} mm, vento/rajada ${vKm} km/h. Registre coordenadas, desobstrua drenagem quando seguro e acione rotas seguras em caso de alagamento ou deslizamento.;
+setRel(textoAnalise);
+setIsAiAnalyzing(false);
+falarSarahLocal(textoAnalise);
+}, 600);
+}} className="py-2.5 px-3 rounded-xl bg-amber-400 text-black font-black text-xs uppercase cursor-pointer">
+{isAiAnalyzing ? "ANALISANDO..." : "ANÁLISE RARU"}
+</button>
+</div>
+<div className="text-[10px] text-slate-300">
+GPS: {gps.lat ? ${gps.lat.toFixed(6)}, ${gps.lon.toFixed(6)} (±${Math.round(gps.acc || 0)}m) : "Não capturado"}
+</div>
+</div>
+​<div className="bg-black border border-cyberCyan/60 rounded-2xl p-4 space-y-2.5">
+<b className="text-sm text-cyberCyan block">SIRENES PREVENTIVAS</b>
+<div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+<button type="button" onClick={() => tocarSirene("A")} className={py-2.5 px-2 rounded-xl border text-[10px] font-black uppercase cursor-pointer ${sAtiva === "A" ? "bg-amber-400 text-black border-white" : "bg-[#071526] text-amber-300 border-amber-400/40"}}>
+SIRENE A - ATENÇÃO
+</button>
+<button type="button" onClick={() => tocarSirene("B")} className={py-2.5 px-2 rounded-xl border text-[10px] font-black uppercase cursor-pointer ${sAtiva === "B" ? "bg-rose-600 text-white border-white" : "bg-[#071526] text-rose-400 border-rose-500/40"}}>
+SIRENE B - EVACUAÇÃO
+</button>
+<button type="button" onClick={pararSirenes} className="py-2.5 px-2 rounded-xl bg-slate-800 text-white font-black text-[10px] uppercase cursor-pointer">
+PARAR SIRENE
+</button>
+</div>
+</div>
+​<button type="button" onClick={enviarZap} className="w-full py-3.5 px-4 rounded-2xl bg-emerald-400 text-black font-black text-xs uppercase tracking-wider cursor-pointer">
+ENVIAR RELATÓRIO NO WHATSAPP + SHA-256
+</button>
+</div>
+);
+}
+​function App() {
+const [activeTab, setActiveTab] = useState('dashboard');
+const [userName, setUserName] = useState(() => {
+try { return localStorage.getItem('raru_user_name') || ''; } catch (e) { return ''; }
+});
+const [showNameModal, setShowNameModal] = useState(false);
+const [tempNameInput, setTempNameInput] = useState('');
+​const [isSarahChatOpen, setIsSarahChatOpen] = useState(false);
+const [sarahMessages, setSarahMessages] = useState(() => [{
+sender: 'sarah',
+text: Olá! Sou a Sarah, do ${TITULO_OFICIAL_RARU} (${SUBTITULO_OFICIAL_RARU}). Monitoramento 24h nos 92 municípios do RJ, GOES-19 e RainViewer. Como posso te ajudar?
+}]);
+const [sarahInput, setSarahInput] = useState('');
+const [isSarahLoading, setIsSarahLoading] = useState(false);
+const [isSpeaking, setIsSpeaking] = useState(false);
+​const [soundEnabled] = useState(() => {
+try { return localStorage.getItem('raru_sound_enabled') !== 'false'; } catch (e) { return true; }
+});
+const [perfilVozId, setPerfilVozId] = useState(() => {
+try { return localStorage.getItem('raru_perfil_voz') || 'sarah'; } catch (e) { return 'sarah'; }
+});
+​const [isWhoAmIOpen, setIsWhoAmIOpen] = useState(false);
+const [toastMsg, setToastMsg] = useState(null);
+​const [isWallMode, setIsWallMode] = useState(false);
+const [screenInfo, setScreenInfo] = useState({ width: 0, height: 0, type: 'AUTO' });
+​const [localVideos, setLocalVideos] = useState(() => {
+try {
+const saved = localStorage.getItem('raru_local_videos');
+return saved ? JSON.parse(saved) : [];
+} catch (e) { return []; }
+});
+const [videoUrlInput, setVideoUrlInput] = useState('');
+const [videoTitleInput, setVideoTitleInput] = useState('');
+​const [customTickerText, setCustomTickerText] = useState(() => {
+try { return localStorage.getItem('raru_custom_ticker') || ${TITULO_OFICIAL_RARU} — ${SUBTITULO_OFICIAL_RARU} • 92 MUNICÍPIOS RJ • GOES-19 & RAINVIEWER • GADE • MESQUITA RJ; }
+catch (e) { return ${TITULO_OFICIAL_RARU} — ${SUBTITULO_OFICIAL_RARU}; }
+});
+​const radioAudioRef = useRef(null);
+const [estacaoAtiva, setEstacaoAtiva] = useState(0);
+const [fallbackIdx, setFallbackIdx] = useState(-1);
+const [tocando, setTocando] = useState(false);
+const [volume, setVolume] = useState(75);
+const [statusStream, setStatusStream] = useState("Pronto para sintonizar");
+​const [deferredPrompt, setDeferredPrompt] = useState(null);
+const [showInstallPromptModal, setShowInstallPromptModal] = useState(false);
+​const showToast = (msg) => {
+setToastMsg(msg);
+setTimeout(() => setToastMsg(null), 3200);
+};
+​useEffect(() => {
+sincronizarTelemetria92RJ();
+const timer = setInterval(() => sincronizarTelemetria92RJ(), 300000);
+return () => clearInterval(timer);
+}, []);
+​const salvarNomeOperador = (novoNome) => {
+const limpo = String(novoNome || '').trim();
+setUserName(limpo);
+try { localStorage.setItem('raru_user_name', limpo); } catch (e) {}
+setShowNameModal(false);
+if (limpo) {
+showToast(Nome salvo: ${limpo});
+setSarahMessages(prev => [...prev, { sender: 'sarah', text: Beleza, ${limpo}, já anotei seu nome aqui no sistema. }]);
+}
+};
+​const abrirModalNome = () => {
+setTempNameInput(userName || '');
+setShowNameModal(true);
+};
+​const detectarTela = () => {
+const w = window.innerWidth || document.documentElement.clientWidth || 360;
+const h = window.innerHeight || document.documentElement.clientHeight || 640;
+let tipo = 'MOBILE';
+if (w >= 1200) tipo = 'DESKTOP / SMART TV';
+else if (w >= 768) tipo = 'TABLET';
+setScreenInfo({ width: w, height: h, type: tipo });
+};
+​useEffect(() => {
+detectarTela();
+window.addEventListener('resize', detectarTela);
+return () => window.removeEventListener('resize', detectarTela);
+}, []);
+​const toggleWallMode = (forceState = null) => {
+setIsWallMode(prev => {
+const next = typeof forceState === 'boolean' ? forceState : !prev;
+if (next) {
+document.body.classList.add('hud-wall-mode');
+document.body.classList.add('hud-expanded-mode');
+} else {
+document.body.classList.remove('hud-wall-mode');
+document.body.classList.remove('hud-expanded-mode');
+}
+showToast(next ? 'Wall Mode ativado (Tela Expandida).' : 'Wall Mode desativado.');
+return next;
+});
+};
+​const handleOpenSarahChat = () => {
+setIsSarahChatOpen(true);
+if (!userName && sarahMessages.length === 1) {
+setSarahMessages(prev => [...prev, {
+sender: 'sarah',
+text: "Ah, qual é o seu nome pra gente conversar melhor?"
+}]);
+}
+};
+​const handleSendSarahMessage = async (e) => {
+if (e) e.preventDefault();
+const txt = sarahInput.trim();
+if (!txt || isSarahLoading) return;
+setSarahInput('');
+​let nomeAtual = userName;
+const matchNome = txt.match(/(?:meu nome [ée]|me chamo|pode me chamar de|sou o|sou a)\s+([a-zà-ú]+)/i);
+if (matchNome && matchNome[1]) {
+nomeAtual = matchNome[1].charAt(0).toUpperCase() + matchNome[1].slice(1).toLowerCase();
+setUserName(nomeAtual);
+try { localStorage.setItem('raru_user_name', nomeAtual); } catch (err) {}
+}
+​const historico = [...sarahMessages, { sender: 'user', text: txt }];
+setSarahMessages(historico);
+setIsSarahLoading(true);
+setIsSpeaking(true);
+​try {
+const msgsApi = historico.map(m => ({
+role: m.sender === 'user' ? 'user' : 'assistant',
+content: m.text
+}));
+const resposta = await chamarSarah('conversa', msgsApi, 'Mesquita', 'Rocha Sobrinho', activeTab, ESTADO_CLIMA_AUTOMATICO_92.municipios['Mesquita'] || null, nomeAtual);
+const limpa = bloquearCalmaAlexander(resposta);
+setSarahMessages(prev => [...prev, { sender: 'sarah', text: limpa }]);
+if (soundEnabled) falarImitada(limpa, perfilVozId);
+} catch (err) {
+const fallback = nomeAtual
+? Tô contigo aqui, ${nomeAtual}. Como posso te apoiar agora?
+: "Tô contigo aqui. O que você precisa resolver agora?";
+setSarahMessages(prev => [...prev, { sender: 'sarah', text: fallback }]);
+if (soundEnabled) falarImitada(fallback, perfilVozId);
+} finally {
+setIsSarahLoading(false);
+setTimeout(() => setIsSpeaking(false), 3000);
+}
+};
+​const handleInstallClick = () => {
+if (deferredPrompt) {
+deferredPrompt.prompt();
+deferredPrompt.userChoice.then(() => {
+setDeferredPrompt(null);
+});
+} else {
+setShowInstallPromptModal(true);
+}
+};
+​useEffect(() => {
+const handler = (e) => {
+e.preventDefault();
+setDeferredPrompt(e);
+};
+window.addEventListener('beforeinstallprompt', handler);
+return () => window.removeEventListener('beforeinstallprompt', handler);
+}, []);
+​const adicionarVideoUrl = (e) => {
+e.preventDefault();
+if (!videoUrlInput.trim()) { showToast("Informe a URL do vídeo."); return; }
+const novo = {
+id: Date.now(),
+title: videoTitleInput.trim() || "Vídeo Comunitário RARU",
+url: videoUrlInput.trim(),
+type: 'url'
+};
+const atualizados = [novo, ...localVideos];
+setLocalVideos(atualizados);
+try { localStorage.setItem('raru_local_videos', JSON.stringify(atualizados)); } catch (e) {}
+setVideoUrlInput('');
+setVideoTitleInput('');
+showToast("Vídeo adicionado à galeria.");
+};
+​return (
+<div className="seu-container-raru">
+{toastMsg && (
+<div className="fixed top-4 left-1/2 -translate-x-1/2 z-[140] bg-deepSpace border border-cyberCyan text-cyberCyan font-mono text-[11px] font-bold px-4 py-2.5 rounded-full shadow-2xl max-w-[92vw] text-center">
+{toastMsg}
+</div>
+)}
+​<div className="cyber-card !p-2.5 !mb-3 flex items-center justify-between gap-2 flex-wrap">
+<div className="flex items-center gap-2 min-w-0">
+<div className="w-8 h-8 rounded-lg bg-void border border-cyberCyan/50 flex items-center justify-center shrink-0">
+<EscudoRaruSVG size={18} color="#00F2FE" />
+</div>
+<div className="min-w-0">
+<div className="font-display text-[11px] font-black text-white tracking-wider truncate">
+{TITULO_OFICIAL_RARU}
+</div>
+<div className="font-mono text-[8.5px] text-cyberCyan truncate">
+{customTickerText}
+</div>
+</div>
+</div>
+​<div className="flex items-center gap-1.5 flex-wrap">
+<button type="button" onClick={abrirModalNome} className="raru-store-btn">
+<span>{userName ? Nome: ${userName} : "Seu Nome"}</span>
+</button>
+<button type="button" onClick={() => compartilharEscudoComTextoUnico(showToast)} className="raru-store-btn ativo">
+<EscudoRaruSVG size={12} color="#030712" />
+<span>Compartilhar</span>
+</button>
+<button type="button" onClick={handleInstallClick} className="raru-store-btn">
+<IconInstalar size={12} color="#00F2FE" />
+<span>Instalar</span>
+</button>
+</div>
+</div>
+​{activeTab === 'dashboard' && (
+<div className="space-y-4 w-full">
+<CardIdentidadeVisualRARU
+openSarahChat={handleOpenSarahChat}
+handleWhoAmIClick={() => setIsWhoAmIOpen(true)}
+setActiveTab={setActiveTab}
+toggleWallMode={toggleWallMode}
+isWallMode={isWallMode}
+screenInfo={screenInfo}
+userName={userName}
+onOpenNameModal={abrirModalNome}
+/>
+<EstacaoSobrevivenciaModuleV12
+showToast={showToast}
+userName={userName}
+onAtualizarNome={(n) => {
+setUserName(n);
+try { localStorage.setItem('raru_user_name', n); } catch (e) {}
+}}
+onNavegarModulo={setActiveTab}
+soundEnabled={soundEnabled}
+vozSelecionada={perfilVozId}
+perfilVozId={perfilVozId}
+openSarahChat={handleOpenSarahChat}
+/>
+</div>
+)}
+​{activeTab === 'radar' && (
+<RadarMeteorologicoModule perfilVozId={perfilVozId} />
+)}
+​{activeTab === 'vistoria' && (
+<VistoriaRARU_NEXUS
+onBackToDashboard={() => setActiveTab('dashboard')}
+showToast={showToast}
+vozSelecionada={perfilVozId}
+perfilVozId={perfilVozId}
+userName={userName}
+/>
+)}
+​{activeTab === 'estacao' && (
+<EstacaoSobrevivenciaModuleV12
+showToast={showToast}
+userName={userName}
+onAtualizarNome={(n) => {
+setUserName(n);
+try { localStorage.setItem('raru_user_name', n); } catch (e) {}
+}}
+onNavegarModulo={setActiveTab}
+soundEnabled={soundEnabled}
+vozSelecionada={perfilVozId}
+perfilVozId={perfilVozId}
+openSarahChat={handleOpenSarahChat}
+/>
+)}
+​{activeTab === 'alquino' && (
+<RedeAlquinoHardwareModule onGoToDashboard={() => setActiveTab('dashboard')} showToast={showToast} />
+)}
+​{activeTab === 'balanca' && (
+<ModuloCidadaoSensorModule onGoToDashboard={() => setActiveTab('dashboard')} showToast={showToast} />
+)}
+​{activeTab === 'radio' && (
+<RadioCyberTatica
+showToast={showToast}
+audioRef={radioAudioRef}
+estacaoAtiva={estacaoAtiva}
+setEstacaoAtiva={setEstacaoAtiva}
+fallbackIdx={fallbackIdx}
+setFallbackIdx={setFallbackIdx}
+tocando={tocando}
+setTocando={setTocando}
+volume={volume}
+setVolume={setVolume}
+statusStream={statusStream}
+setStatusStream={setStatusStream}
+/>
+)}
+​{activeTab === 'videos' && (
+<div className="space-y-4 max-w-4xl mx-auto font-mono w-full">
+<div className="cyber-card p-5 space-y-4">
+<div className="flex items-center justify-between border-b border-cyberCyan/25 pb-2.5">
+<h2 className="font-display text-xs font-black text-white uppercase tracking-widest">
+GALERIA DE VÍDEOS COMUNITÁRIOS
+</h2>
+<button type="button" onClick={() => setActiveTab('dashboard')} className="cyber-button text-[10px] py-1.5 px-3 !min-h-[34px]">
+PAINEL
+</button>
+</div>
+​<form onSubmit={adicionarVideoUrl} className="space-y-2 bg-void/90 p-3.5 rounded-xl border border-cyberCyan/30">
+<input
+type="text"
+value={videoTitleInput}
+onChange={e => setVideoTitleInput(e.target.value)}
+placeholder="Título do vídeo..."
+className="w-full bg-deepSpace border border-cyberCyan/30 rounded-xl p-2.5 text-xs text-white permitir-selecao"
+/>
+<input
+type="text"
+value={videoUrlInput}
+onChange={e => setVideoUrlInput(e.target.value)}
+placeholder="URL direta do vídeo (.mp4 / stream)..."
+className="w-full bg-deepSpace border border-cyberCyan/30 rounded-xl p-2.5 text-xs text-white permitir-selecao"
+/>
+<button type="submit" className="cyber-button-solid w-full text-xs py-2.5">
+ADICIONAR VÍDEO
+</button>
+</form>
+​{localVideos.length === 0 ? (
+<div className="bg-void/80 border border-dashed border-cyberCyan/30 rounded-xl p-6 text-center text-xs text-slate-400">
+Nenhum vídeo salvo ainda. Adicione uma URL ou envie pelo Admin Vault.
+</div>
+) : (
+<div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+{localVideos.map(v => (
+<div key={v.id} className="bg-void/90 border border-cyberCyan/35 rounded-xl p-3 space-y-2">
+<div className="text-xs font-bold text-cyberCyan truncate">{v.title}</div>
+<video src={v.url} controls playsInline className="w-full aspect-video rounded-lg bg-black" />
+</div>
+))}
+</div>
+)}
+</div>
+</div>
+)}
+​{activeTab === 'admin' && (
+<AdminVaultModule
+showToast={showToast}
+onClose={() => setActiveTab('dashboard')}
+localVideos={localVideos}
+setLocalVideos={setLocalVideos}
+onSelecionarPerfilVoz={(id) => {
+setPerfilVozId(id);
+try { localStorage.setItem('raru_perfil_voz', id); } catch (e) {}
+}}
+perfilVozId={perfilVozId}
+customTickerText={customTickerText}
+setCustomTickerText={setCustomTickerText}
+/>
+)}
+​<SarahFabButton openSarahChat={handleOpenSarahChat} isSpeaking={isSpeaking} />
+​<audio ref={radioAudioRef} preload="none" />
+​<nav className="fixed bottom-0 left-0 right-0 z-50 bg-void/95 backdrop-blur-xl border-t border-cyberCyan/40 px-1 py-1.5 shadow-2xl">
+<div className="max-w-5xl mx-auto grid grid-cols-9 gap-0.5 text-center font-mono">
+{[
+{ id: 'dashboard', label: 'Painel', Icon: IconDashboard },
+{ id: 'radar', label: 'Radar', Icon: IconRadar },
+{ id: 'vistoria', label: 'Vistoria', Icon: IconVistoria },
+{ id: 'estacao', label: 'Estação', Icon: IconEstacao },
+{ id: 'alquino', label: 'Alquino', Icon: IconAlquino },
+{ id: 'balanca', label: 'Balança', Icon: IconBalanca },
+{ id: 'radio', label: 'Rádio', Icon: IconRadio },
+{ id: 'videos', label: 'Vídeos', Icon: IconVideos },
+{ id: 'admin', label: 'Admin', Icon: IconAdmin }
+].map(item => {
+const ativo = activeTab === item.id;
+const CompIcon = item.Icon;
+return (
+<button
+key={item.id}
+type="button"
+onClick={() => setActiveTab(item.id)}
+className={flex flex-col items-center justify-center py-1.5 px-0.5 rounded-xl transition cursor-pointer ${ ativo ? 'bg-cyberCyan/20 text-cyberCyan border border-cyberCyan/50 font-black' : 'text-slate-400 hover:text-white' }}
+>
+<CompIcon size={15} color={ativo ? '#00F2FE' : '#94A3B8'} />
+<span className="text-[8px] mt-0.5 leading-none truncate w-full">{item.label}</span>
+</button>
+);
+})}
+</div>
+</nav>
+​{isSarahChatOpen && (
+<div className="fixed inset-0 z-[120] flex items-center justify-center bg-void/90 backdrop-blur-2xl p-3" onClick={() => setIsSarahChatOpen(false)}>
+<div className="cyber-card w-full max-w-lg rounded-2xl shadow-2xl overflow-hidden max-h-[85vh] flex flex-col border border-cyberCyan/60 font-mono" onClick={e => e.stopPropagation()}>
+<div className="flex items-center justify-between px-4 py-3 border-b border-cyberCyan/30 bg-deepSpace/95">
+<div className="flex items-center gap-2.5">
+<div className="w-8 h-8 rounded-full overflow-hidden border border-cyberCyan">
+<SarahLiveSVGAvatar isSpeaking={isSpeaking} />
+</div>
+<div>
+<h3 className="font-display text-xs font-black text-cyberCyan tracking-wider uppercase">
+ROBOT SARAH SYSTEM RARU
+</h3>
+<span className="text-[9px] text-slate-300">
+{userName ? Falando com ${userName} : "Resiliência Climática & Urbana"}
+</span>
+</div>
+</div>
+<button type="button" onClick={() => setIsSarahChatOpen(false)} className="cyber-button-danger text-xs py-1 px-3 !min-h-[32px]">
+FECHAR
+</button>
+</div>
+​<div className="flex-1 overflow-y-auto p-3.5 space-y-2.5 bg-void/80">
+{sarahMessages.map((m, idx) => (
+<div
+key={idx}
+className={rounded-xl p-2.5 text-xs leading-relaxed permitir-selecao ${ m.sender === 'user' ? 'bg-cyberCyan/20 border border-cyberCyan/40 text-white ml-8' : 'bg-deepSpace border border-slate-700 text-slate-200 mr-8' }}
+>
+<span className="block text-[8px] font-black uppercase text-cyberCyan mb-0.5">
+{m.sender === 'user' ? (userName || 'VOCÊ') : 'SARAH AI'}
+</span>
+<span>{m.text}</span>
+</div>
+))}
+{isSarahLoading && (
+<div className="text-[10px] text-cyberCyan font-bold animate-pulse">
+Sarah processando telemetria e contexto...
+</div>
+)}
+</div>
+​<form onSubmit={handleSendSarahMessage} className="p-3 border-t border-cyberCyan/30 bg-deepSpace flex gap-2">
+<input
+type="text"
+value={sarahInput}
+onChange={e => setSarahInput(e.target.value)}
+placeholder="Digite sua mensagem ou diga seu nome..."
+className="flex-1 bg-void border border-cyberCyan/40 rounded-xl px-3 py-2 text-xs text-white permitir-selecao"
+/>
+<button type="submit" disabled={isSarahLoading} className="cyber-button-solid text-xs py-2 px-4 !min-h-[38px]">
+ENVIAR
+</button>
+</form>
+</div>
+</div>
+)}
+​{showNameModal && (
+<div className="fixed inset-0 z-[130] flex items-center justify-center bg-void/90 backdrop-blur-xl p-4" onClick={() => setShowNameModal(false)}>
+<div className="cyber-card w-full max-w-sm rounded-2xl p-4 space-y-3 border border-cyberCyan/60 font-mono" onClick={e => e.stopPropagation()}>
+<h3 className="font-display text-xs font-black text-cyberCyan uppercase">
+IDENTIFICAÇÃO DE QUEM ESTÁ USANDO
+</h3>
+<p className="text-[11px] text-slate-300">
+Informe o nome de quem está conversando agora para a Sarah chamar pelo nome.
+</p>
+<input
+type="text"
+value={tempNameInput}
+onChange={e => setTempNameInput(e.target.value)}
+placeholder="Digite o nome..."
+className="w-full bg-void border border-cyberCyan/40 rounded-xl p-2.5 text-xs text-white permitir-selecao"
+/>
+<div className="flex gap-2">
+<button type="button" onClick={() => salvarNomeOperador(tempNameInput)} className="cyber-button-solid flex-1 text-xs py-2">
+SALVAR NOME
+</button>
+<button type="button" onClick={() => setShowNameModal(false)} className="cyber-button-danger text-xs py-2 px-3">
+CANCELAR
+</button>
+</div>
+</div>
+</div>
+)}
+​{showInstallPromptModal && (
+<div className="fixed inset-0 z-[130] flex items-center justify-center bg-void/90 backdrop-blur-xl p-4" onClick={() => setShowInstallPromptModal(false)}>
+<div className="cyber-card w-full max-w-sm rounded-2xl p-4 space-y-3 border border-cyberCyan/60 font-mono" onClick={e => e.stopPropagation()}>
+<h3 className="font-display text-xs font-black text-cyberCyan uppercase">
+INSTALAR {TITULO_OFICIAL_RARU}
+</h3>
+<p className="text-[11px] text-slate-300 leading-relaxed">
+No navegador do celular ou computador, abra o menu do navegador e toque em <strong>Adicionar à tela inicial</strong> ou <strong>Instalar aplicativo</strong>.
+</p>
+<button type="button" onClick={() => setShowInstallPromptModal(false)} className="cyber-button-solid w-full text-xs py-2.5">
+ENTENDI
+</button>
+</div>
+</div>
+)}
+​<QuemSomosModal isOpen={isWhoAmIOpen} onClose={() => setIsWhoAmIOpen(false)} userName={userName} />
+</div>
+);
+}
+​const rootElement = document.getElementById('root');
+if (rootElement) {
+const root = ReactDOM.createRoot(rootElement);
+root.render(
+<ErrorBoundary>
+<App />
+</ErrorBoundary>
+);
+}
+</script>
+</body>
+</html>
