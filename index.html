@@ -1,0 +1,681 @@
+<!DOCTYPE html>
+<html lang="pt-br" class="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<title>Área de Vistoria • RARU NEXUS V11.2 PLUS</title>
+<script src="https://cdn.tailwindcss.com/3.4.16"></script>
+<script crossorigin src="https://unpkg.com/react@18.3.1/umd/react.production.min.js"></script>
+<script crossorigin src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.production.min.js"></script>
+<script crossorigin src="https://unpkg.com/@babel/standalone@7.26.4/babel.min.js"></script>
+<style>
+  html, body { margin: 0; padding: 12px; background: #030712; color: #fff; font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace; }
+  .vist-modulo-root .wrap { max-width: 780px; margin: 0 auto; width: 100%; }
+  .vist-modulo-root .card { background: #030712; border: 1px solid rgba(0, 229, 255, 0.35); border-radius: 20px; padding: 16px; margin-bottom: 14px; }
+  .vist-modulo-root .topbar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; gap: 8px; flex-wrap: wrap; }
+  .vist-modulo-root .logo { font-weight: 900; font-size: clamp(15px, 1.4vw, 22px); color: #fff; }
+  .vist-modulo-root .logo small { display: block; font-size: clamp(9px, 0.9vw, 12px); letter-spacing: 1px; color: #67e8f9; }
+  .vist-modulo-root .btn { border: 0; cursor: pointer; border-radius: 999px; padding: 10px 14px; font-weight: 900; font-size: clamp(11px, 1vw, 15px); white-space: nowrap; }
+  .vist-modulo-root .btn:disabled { opacity: 0.45; cursor: not-allowed; }
+  .vist-modulo-root .btn-cyan { background: #00E5FF; color: #00141a; }
+  .vist-modulo-root .btn-green { background: #10b981; color: #000; }
+  .vist-modulo-root .btn-ghost { background: #0f172a; color: #fff; border: 1px solid #334155; }
+  .vist-modulo-root .btn-pink { background: #FF2EA6; color: #fff; }
+  .vist-modulo-root .btn-red { background: #dc2626; color: #fff; }
+  .vist-modulo-root .btn-small { padding: 8px 12px; font-size: clamp(10px, 0.95vw, 14px); }
+  .vist-modulo-root input, .vist-modulo-root select, .vist-modulo-root textarea { width: 100%; background: #000; color: #fff; border: 1px solid #334155; border-radius: 12px; padding: 12px; font-size: clamp(13px, 1.1vw, 17px); outline: none; box-sizing: border-box; }
+  .vist-modulo-root textarea { resize: vertical; line-height: 1.6; }
+  .vist-modulo-root label { font-size: clamp(10px, 0.95vw, 14px); color: #00E5FF; font-weight: 900; display: block; margin-bottom: 6px; }
+  .vist-modulo-root .chip { padding: 9px 11px; border-radius: 999px; border: 1px solid #334155; font-size: clamp(10px, 0.9vw, 13px); font-weight: 800; cursor: pointer; background: #000; color: #e2e8f0; text-align: left; }
+  .vist-modulo-root .chip.ativo { background: #00E5FF; color: #000; border-color: #00E5FF; }
+  .vist-modulo-root .chip.defesa.ativo { background: #ff3366; color: #fff; border-color: #ff3366; }
+  .vist-modulo-root .camera-box { width: 100%; height: clamp(320px, 42vh, 560px); border-radius: 14px; overflow: hidden; background: #000; display: flex; align-items: center; justify-content: center; position: relative; border: 2px solid #1e293b; }
+  .vist-modulo-root .camera-box video { width: 100%; height: 100%; object-fit: cover; }
+  .vist-modulo-root .etq { position: absolute; background: rgba(0, 0, 0, .75); color: #fff; font-size: 10px; padding: 6px 8px; border-radius: 8px; z-index: 30; }
+  .vist-modulo-root .scan-line { position: absolute; left: 0; right: 0; height: 3px; background: linear-gradient(90deg, transparent, #ff0000 20%, #ff4d4d 50%, #ff0000 80%, transparent); box-shadow: 0 0 18px 4px rgba(255, 0, 0, .85); animation: scan 2.2s linear infinite; z-index: 20; display: none; }
+  @keyframes scan { 0% { top: 0; opacity: 0; } 10% { opacity: 1; } 90% { opacity: 1; } 100% { top: 100%; opacity: 0; } }
+  .vist-modulo-root .hud { position: absolute; inset: 0; pointer-events: none; z-index: 20; display: none; }
+  .vist-modulo-root .hud.on { display: block; }
+  .vist-modulo-root .hud-corner { position: absolute; width: 28px; height: 28px; opacity: .95; }
+  .vist-modulo-root .hud-centro { position: absolute; left: 50%; top: 50%; width: 130px; height: 130px; transform: translate(-50%, -50%); }
+  .vist-modulo-root .anel { position: absolute; inset: 0; border-radius: 50%; border: 2px dashed rgba(255, 255, 255, .95); animation: girar 6s linear infinite; }
+  .vist-modulo-root .anel2 { position: absolute; inset: 18px; border-radius: 50%; border: 1px solid rgba(255, 255, 255, .5); }
+  .vist-modulo-root .cruz-h { position: absolute; left: 50%; top: 50%; width: 44px; height: 2px; background: #fff; transform: translate(-50%, -50%); }
+  .vist-modulo-root .cruz-v { position: absolute; left: 50%; top: 50%; width: 2px; height: 44px; background: #fff; transform: translate(-50%, -50%); }
+  .vist-modulo-root .ponto { position: absolute; left: 50%; top: 50%; width: 8px; height: 8px; border-radius: 50%; background: #ff0000; transform: translate(-50%, -50%); box-shadow: 0 0 10px #ff0000; }
+  @keyframes girar { from { transform: rotate(0); } to { transform: rotate(360deg); } }
+  .vist-modulo-root .grade { position: absolute; inset: 0; opacity: .22; background-image: linear-gradient(rgba(255, 255, 255, .5) 1px, transparent 1px), linear-gradient(90deg, rgba(255, 255, 255, .5) 1px, transparent 1px); background-size: 33.33% 33.33%; }
+  .vist-modulo-root .carimbo { background: rgba(3, 7, 18, .92); border: 1px solid #00F2FE; border-radius: 10px; padding: 10px; display: flex; flex-direction: column; gap: 4px; font-size: 11px; line-height: 1.6; word-break: break-word; }
+  .vist-modulo-root .range { accent-color: #00E5FF; }
+  .vist-modulo-root .preview-pdf { width: 100%; height: 480px; border: 1px solid #00E5FF; border-radius: 12px; background: #fff; display: none; }
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel">
+const { useEffect, useRef } = React;
+const TITULO_OFICIAL_RARU = "RARU NEXUS V11.2 PLUS";
+const SUBTITULO_OFICIAL_RARU = "REDE AUTOMATIZADA DE RESILIÊNCIA URBANA";
+const COMPLEMENTO_OFICIAL_RARU = "EDIÇÃO TEMPO & CLIMA";
+
+function limparTextoParaFala(texto) {
+  return String(texto || "").replace(/\bcalma,?\s+alexander\b/gi, "respira").replace(/\bcalma,?\s+alexandre\b/gi, "respira").replace(/[*#_`]/g, "").replace(/https?:\/\/\S+/g, "").replace(/\s+/g, " ").trim();
+}
+function falarImitada(texto) {
+  try { if (localStorage.getItem("raru_sound_enabled") === "false") return; } catch (e) {}
+  if (!("speechSynthesis" in window)) return;
+  const limpo = limparTextoParaFala(texto);
+  if (!limpo) return;
+  try { window.speechSynthesis.cancel(); const u = new SpeechSynthesisUtterance(limpo); u.lang = "pt-BR"; window.speechSynthesis.speak(u); } catch (e) {}
+}
+function normalizarBusca(str) {
+  return String(str || "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().trim();
+}
+function stringParaWinAnsiBytes(str) {
+  const mapaExtras = { 0x20AC: 0x80, 0x201A: 0x82, 0x0192: 0x83, 0x201E: 0x84, 0x2026: 0x85, 0x2020: 0x86, 0x2021: 0x87, 0x02C6: 0x88, 0x2030: 0x89, 0x0160: 0x8A, 0x2039: 0x8B, 0x0152: 0x8C, 0x017D: 0x8E, 0x2018: 0x91, 0x2019: 0x92, 0x201C: 0x93, 0x201D: 0x94, 0x2022: 0x95, 0x2013: 0x96, 0x2014: 0x97, 0x02DC: 0x98, 0x2122: 0x99, 0x0161: 0x9A, 0x203A: 0x9B, 0x0153: 0x9C, 0x017E: 0x9E, 0x0178: 0x9F };
+  const out = [];
+  for (let i = 0; i < str.length; i++) {
+    const code = str.charCodeAt(i);
+    if ((code >= 0x20 && code <= 0x7E) || (code >= 0xA0 && code <= 0xFF)) out.push(code);
+    else if (mapaExtras[code] !== undefined) out.push(mapaExtras[code]);
+    else if (code === 0x0A || code === 0x0D) out.push(code);
+    else out.push(0x20);
+  }
+  return new Uint8Array(out);
+}
+function concatUint8Arrays(arrays) {
+  const total = arrays.reduce((acc, a) => acc + a.length, 0);
+  const res = new Uint8Array(total);
+  let offset = 0;
+  for (const a of arrays) { res.set(a, offset); offset += a.length; }
+  return res;
+}
+function base64ParaUint8Array(dataUrl) {
+  const base64 = dataUrl.split(",")[1] || "";
+  const bin = atob(base64);
+  const bytes = new Uint8Array(bin.length);
+  for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+  return bytes;
+}
+
+function VistoriaRARU_NEXUS({ onBackToDashboard, showToast, perfilVozId, userName }) {
+  const containerRef = useRef(null);
+  useEffect(() => {
+    const rootEl = containerRef.current;
+    if (!rootEl) return;
+
+    const M = "Angra dos Reis|-23.00|-44.31|10.10.60.01|lagunas;Aperibé|-21.62|-42.10|10.10.60.02|paraiba;Araruama|-22.87|-42.33|10.10.60.03|lagunas;Areal|-22.23|-43.11|10.10.60.04|paraiba;Armação dos Búzios|-22.75|-41.88|10.10.60.05|sao_joao;Arraial do Cabo|-22.96|-42.02|10.10.60.06|lagunas;Barra do Piraí|-22.47|-43.81|10.10.60.07|guandu;Barra Mansa|-22.54|-44.17|10.10.60.08|guandu;Belford Roxo|-22.76|-43.39|10.10.60.09|guandu;Bom Jardim|-22.15|-42.41|10.10.60.10|paraiba;Bom Jesus do Itabapoana|-21.14|-41.67|10.10.60.11|paraiba;Cabo Frio|-22.88|-42.01|10.10.41.20|lagunas;Cachoeiras de Macacu|-22.46|-42.65|10.10.60.12|piratininga;Cambuci|-21.56|-41.90|10.10.60.13|paraiba;Campos dos Goytacazes|-21.75|-41.32|10.10.51.92|paraiba;Cantagalo|-21.97|-42.36|10.10.60.14|paraiba;Carapebus|-22.21|-41.65|10.10.60.15|macae;Cardoso Moreira|-21.48|-41.21|10.10.60.80|paraiba;Carmo|-21.92|-42.61|10.10.60.17|paraiba;Casimiro de Abreu|-22.48|-42.20|10.10.60.18|sao_joao;Comendador Levy Gasparian|-22.03|-43.20|10.10.60.16|paraiba;Conceição de Macabu|-22.08|-41.86|10.10.60.81|macae;Cordeiro|-22.02|-42.36|10.10.60.82|paraiba;Duas Barras|-22.05|-42.52|10.10.60.83|paraiba;Duque de Caxias|-22.78|-43.31|10.10.23.14|piratininga;Engenheiro Paulo de Frontin|-22.54|-43.68|10.10.60.19|guandu;Guapimirim|-22.53|-42.98|10.10.60.20|piratininga;Iguaba Grande|-22.84|-42.22|10.10.60.21|lagunas;Itaboraí|-22.74|-42.85|10.10.60.22|piratininga;Itaguaí|-22.85|-43.77|10.10.60.23|guandu;Italva|-21.42|-41.74|10.10.60.24|paraiba;Itaocara|-21.47|-42.07|10.10.60.25|paraiba;Itaperuna|-21.20|-41.88|10.10.60.26|paraiba;Itatiaia|-22.49|-44.56|10.10.60.27|guandu;Japeri|-22.64|-43.65|10.10.60.28|guandu;Laje do Muriaé|-21.20|-42.12|10.10.60.29|paraiba;Macaé|-22.37|-41.78|10.10.60.30|macae;Macuco|-21.98|-42.49|10.10.60.31|paraiba;Magé|-22.65|-43.04|10.10.60.32|piratininga;Mangaratiba|-22.95|-44.04|10.10.60.33|guandu;Maricá|-22.91|-42.81|10.10.60.34|piratininga;Mendes|-22.52|-43.73|10.10.60.35|guandu;Mesquita|-22.78|-43.43|10.10.21.15|guandu;Miguel Pereira|-22.45|-43.46|10.10.60.36|guandu;Miracema|-21.41|-42.19|10.10.60.37|paraiba;Natividade|-21.04|-41.97|10.10.60.38|paraiba;Nilópolis|-22.81|-43.41|10.10.60.39|guandu;Niterói|-22.88|-43.11|10.10.12.08|piratininga;Nova Friburgo|-22.28|-42.53|10.10.60.40|paraiba;Nova Iguaçu|-22.75|-43.45|10.10.22.12|guandu;Paracambi|-22.61|-43.71|10.10.60.41|guandu;Paraíba do Sul|-22.16|-43.29|10.10.60.42|paraiba;Paraty|-23.22|-44.71|10.10.60.43|lagunas;Paty do Alferes|-22.42|-43.43|10.10.60.44|guandu;Petrópolis|-22.50|-43.17|10.10.31.05|paraiba;Pinheiral|-22.51|-44.00|10.10.60.45|guandu;Piraí|-22.62|-43.89|10.10.60.46|guandu;Porciúncula|-20.97|-42.04|10.10.60.47|paraiba;Porto Real|-22.41|-44.28|10.10.60.48|guandu;Quatis|-22.41|-44.25|10.10.60.49|guandu;Queimados|-22.71|-43.55|10.10.60.50|guandu;Quissamã|-22.10|-41.47|10.10.60.51|macae;Resende|-22.47|-44.44|10.10.60.52|guandu;Rio Bonito|-22.70|-42.62|10.10.60.53|piratininga;Rio Claro|-22.73|-44.13|10.10.60.54|guandu;Rio das Ostras|-22.52|-41.94|10.10.60.55|macae;Rio de Janeiro|-22.90|-43.17|10.10.11.10|piratininga;Santa Maria Madalena|-21.95|-42.00|10.10.60.56|paraiba;Santo Antônio de Pádua|-21.53|-42.18|10.10.60.57|paraiba;São Fidélis|-21.64|-41.74|10.10.60.58|paraiba;São Francisco de Itabapoana|-21.46|-41.11|10.10.60.59|paraiba;São Gonçalo|-22.82|-43.05|10.10.60.60|piratininga;São João da Barra|-21.64|-41.05|10.10.60.61|paraiba;São João de Meriti|-22.80|-43.37|10.10.60.62|guandu;São José de Ubá|-21.35|-41.94|10.10.60.63|paraiba;São José do Vale do Rio Preto|-22.15|-43.15|10.10.60.64|paraiba;São Pedro da Aldeia|-22.84|-42.10|10.10.60.65|lagunas;São Sebastião do Alto|-21.95|-42.13|10.10.60.66|paraiba;Sapucaia|-21.99|-43.13|10.10.60.67|paraiba;Saquarema|-22.91|-42.50|10.10.60.68|lagunas;Seropédica|-22.74|-43.70|10.10.60.69|guandu;Silva Jardim|-22.65|-42.38|10.10.60.70|sao_joao;Sumidouro|-22.04|-42.67|10.10.60.71|paraiba;Tanguá|-22.72|-42.70|10.10.60.72|piratininga;Teresópolis|-22.41|-42.96|10.10.60.73|paraiba;Trajano de Moraes|-22.06|-42.06|10.10.60.74|paraiba;Três Rios|-22.11|-43.21|10.10.60.75|paraiba;Valença|-22.25|-43.70|10.10.60.76|paraiba;Varre-Sai|-20.93|-41.86|10.10.60.77|paraiba;Vassouras|-22.40|-43.66|10.10.60.78|guandu;Volta Redonda|-22.52|-44.10|10.10.60.79|guandu";
+    const MUNICIPIOS_92 = M.split(";").map(s => { const a = s.split("|"); return { n: a[0], lat: +a[1], lon: +a[2], ip: a[3] }; });
+    const FRENTES = [
+      "Projeto Cidadão Sensor - Iniciativa Comunitária (Baixada Fluminense)",
+      "Universidades e Pesquisadores de Campo (Urbanismo, Habitação e Ação Local)",
+      "CEMADEN / INPE (Monitoramento e Alerta Climático Nacional)",
+      "CRAS / CREAS (Assistência Social e Proteção Básica - Baixada Fluminense e RJ)",
+      "SUS / Vigilância em Saúde e Saneamento - Baixada Fluminense e RJ",
+      "NUPDECs - Núcleos Comunitários (92 Municípios - RJ)",
+      "Bom Dia Comunidade / Grupo Comunitário A Chave da Esperança - Baixada Fluminense",
+      "Cidadão - Participação Direta e Soberania Popular (Baixada Fluminense e RJ)"
+    ];
+    const TIPOS = [
+      { grupo: "MANUTENÇÃO / ZELADORIA", itens: ["MATO ALTO", "BUEIRO ENTUPIDO", "BUEIRO SEM TAMPA", "PODA DE ÁRVORE", "BURACOS NA VIA", "DESCARTE IRREGULAR DE LIXO", "ILUMINAÇÃO PÚBLICA APAGADA", "DANOS AO PATRIMÔNIO PÚBLICO", "EQUIPAMENTO PÚBLICO QUEBRADO / DANIFICADO"] },
+      { grupo: "ALERTA / RISCO", itens: ["ALAGAMENTO - ÁGUA PARADA NA RUA OU NA CASA", "ENXURRADA - ÁGUA CORRENDO COM FORÇA", "INUNDAÇÃO / RIO CHEIO - RIO TRANSBORDOU", "DESLIZAMENTO / ENCOSTA INSTÁVEL", "RISCO DE DESABAMENTO", "ÁRVORE EM RISCO DE QUEDA", "EROSÃO / TALUDE"] }
+    ];
+    const KEY = "raru_nexus_v11_2_scan_rascunho", KEY_LISTA = "raru_nexus_vistorias_v1";
+    const munPadrao = MUNICIPIOS_92.find(x => x.n === "Mesquita") || MUNICIPIOS_92[0];
+
+    let vozLigada = true, vozAtivada = false, stream = null, track = null, zoom = 1, hasZoom = false, maxZoom = 5, foto = "", fotoDim = { w: 0, h: 0 }, fotoBlob = null, hash = "", gps = { lat: 0, lon: 0, acc: "" }, clima = null, vento = 0, chuva = 0, riscos = [], tiposSel = [], selMun = munPadrao, selFrente = FRENTES[0], modo = "auto", rotacao = 0, protocoloAtual = "", dataAtual = "", urlPdfAtual = "", nomePdfAtual = "";
+
+    const $ = (id) => rootEl.querySelector(`#${id}`);
+    const listeners = [];
+    const on = (el, ev, fn) => { if (el) { el.addEventListener(ev, fn); listeners.push([el, ev, fn]); } };
+
+    function falar(t) { if (!vozLigada) return; falarImitada(t, perfilVozId || "sarah"); }
+    function destravarVoz() {
+      if (vozAtivada) return;
+      vozAtivada = true;
+      if (window.speechSynthesis) { try { window.speechSynthesis.cancel(); const u = new SpeechSynthesisUtterance(" "); u.volume = 0; window.speechSynthesis.speak(u); } catch (e) {} }
+      if ($("btnVoz")) { $("btnVoz").textContent = vozLigada ? "Voz: ON" : "Voz: OFF"; $("btnVoz").className = "btn " + (vozLigada ? "btn-cyan" : "btn-ghost"); }
+    }
+    on(rootEl, "pointerdown", destravarVoz);
+    on(rootEl, "touchstart", destravarVoz);
+    function aviso(t) {
+      if ($("aviso")) { $("aviso").textContent = t; $("aviso").style.display = "block"; clearTimeout(aviso.t); aviso.t = setTimeout(() => { if ($("aviso")) $("aviso").style.display = "none"; }, 4200); }
+      if (showToast) showToast(t);
+    }
+    function esc(s) { return (s || "").replace(/[&<>'"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", "'": "&#39;", '"': "&quot;" }[c])); }
+    function agora() { return new Date().toLocaleString("pt-BR"); }
+    function cod() { const d = new Date(); return `RARU-V11.2-${d.getFullYear()}${String(d.getMonth() + 1).padStart(2, "0")}${String(d.getDate()).padStart(2, "0")}-${String(d.getHours()).padStart(2, "0")}${String(d.getMinutes()).padStart(2, "0")}${String(d.getSeconds()).padStart(2, "0")}`; }
+    function garantirProtocolo() { if (!protocoloAtual) protocoloAtual = cod(); if (!dataAtual) dataAtual = agora(); return { protocolo: protocoloAtual, data: dataAtual }; }
+    async function sha256(buf) { const h = await crypto.subtle.digest("SHA-256", buf); return [...new Uint8Array(h)].map(b => b.toString(16).padStart(2, "0")).join("").toUpperCase(); }
+
+    // ===== ALARMES - SEU CÓDIGO ADAPTADO - 3 MIN + 1 MIN PAUSA + 1 MIN = 5 MIN =====
+    let audioCtxSirene = null, oscSirene = null, gainSirene = null, sireneInterval = null, sireneTimeouts = [], alarmeTipoAtivo = "";
+    function limparTimeoutsSirene(){ sireneTimeouts.forEach(t=>clearTimeout(t)); sireneTimeouts=[]; }
+    function pararOscSirene(){
+      if (sireneInterval) { clearInterval(sireneInterval); sireneInterval = null; }
+      try { if (oscSirene) oscSirene.stop(); } catch(e){}
+      oscSirene = null; gainSirene = null;
+    }
+    function atualizarBotoesAlarme(){
+      if ($("btnAlarmeRusso")) $("btnAlarmeRusso").textContent = alarmeTipoAtivo==="russo" ? "ALARME RUSSO ATIVO" : "DISPARAR ALARME RUSSO";
+      if ($("btnAlarmeCemaden")) $("btnAlarmeCemaden").textContent = alarmeTipoAtivo==="cemaden" ? "ALARME CEMADEN ATIVO" : "DISPARAR ALARME CEMADEN";
+      if ($("btnPararSirene")) $("btnPararSirene").style.display = alarmeTipoAtivo ? "inline-block" : "none";
+      if ($("alarmeStatus")) $("alarmeStatus").textContent = alarmeTipoAtivo ? ("Sirene ativa: " + (alarmeTipoAtivo==="russo" ? "ALARME RUSSO" : "ALARME CEMADEN") + " - ciclo 3+1+1 = 5 min") : "Alarmes: parados";
+    }
+    function pararTodasSirenes(){
+      limparTimeoutsSirene(); pararOscSirene();
+      alarmeTipoAtivo = "";
+      atualizarBotoesAlarme();
+    }
+    function iniciarOscSirene(tipo){
+      try{
+        if (!audioCtxSirene) { const AC = window.AudioContext || window.webkitAudioContext; audioCtxSirene = new AC(); }
+        audioCtxSirene.resume();
+        const ehRusso = tipo==="russo";
+        oscSirene = audioCtxSirene.createOscillator();
+        gainSirene = audioCtxSirene.createGain();
+        oscSirene.type = ehRusso ? "sawtooth" : "sine";
+        oscSirene.frequency.value = ehRusso ? 450 : 600;
+        gainSirene.gain.value = 0.15;
+        oscSirene.connect(gainSirene); gainSirene.connect(audioCtxSirene.destination);
+        oscSirene.start();
+        let subindo = true;
+        sireneInterval = setInterval(()=>{
+          let f = oscSirene.frequency.value;
+          if (subindo){ f+=30; if(f>=950) subindo=false; } else { f-=30; if(f<=400) subindo=true; }
+          oscSirene.frequency.setTargetAtTime(f, audioCtxSirene.currentTime, 0.1);
+        }, 80);
+      } catch(e){}
+    }
+    function dispararSirene5Minutos(tipo){
+      pararTodasSirenes();
+      const ehRusso = tipo==="russo";
+      alarmeTipoAtivo = tipo;
+      atualizarBotoesAlarme();
+      aviso(`Sirene ${ehRusso ? "Alarme Russo" : "CEMADEN"} disparada por 5 minutos.`);
+      if (showToast) showToast(`Sirene ${ehRusso ? "Alarme Russo" : "CEMADEN"} disparada por 5 minutos.`);
+      falar("Atenção comunidade! Alerta máximo disparado pela estação de sobrevivência.");
+      // FASE 1: 3 min tocando
+      iniciarOscSirene(tipo);
+      if ($("alarmeStatus")) $("alarmeStatus").textContent = (ehRusso ? "ALARME RUSSO" : "ALARME CEMADEN") + " - FASE 1: 3 min tocando";
+      // FASE PAUSA: depois de 3 min, para 1 min p/ morador raciocinar e reagir
+      sireneTimeouts.push(setTimeout(()=>{
+        pararOscSirene();
+        if ($("alarmeStatus")) $("alarmeStatus").textContent = (ehRusso ? "ALARME RUSSO" : "ALARME CEMADEN") + " - PAUSA: 1 min p/ raciocinar e reagir";
+        // FASE 2: depois de 1 min de pausa, toca 1 min p/ despertar quem tá dormindo
+        sireneTimeouts.push(setTimeout(()=>{
+          iniciarOscSirene(tipo);
+          if ($("alarmeStatus")) $("alarmeStatus").textContent = (ehRusso ? "ALARME RUSSO" : "ALARME CEMADEN") + " - FASE 2: 1 min tocando p/ despertar e alertar todos";
+          sireneTimeouts.push(setTimeout(()=>{
+            pararTodasSirenes();
+            aviso("Ciclo de 5 minutos da sirene encerrado.");
+            if (showToast) showToast("Ciclo de 5 minutos da sirene encerrado.");
+          }, 60*1000));
+        }, 60*1000));
+      }, 3*60*1000));
+    }
+    // ===== FIM ALARMES =====
+
+    function popularMunicipiosSelect(filtroTexto) {
+      const sel = $("munSel");
+      if (!sel) return;
+      const q = normalizarBusca(filtroTexto);
+      const filtrados = q ? MUNICIPIOS_92.filter(m => normalizarBusca(m.n).includes(q) || normalizarBusca(m.ip).includes(q)) : MUNICIPIOS_92;
+      const listaParaExibir = filtrados.length ? filtrados : MUNICIPIOS_92;
+      sel.innerHTML = listaParaExibir.map(m => `<option value="${esc(m.n)}">${esc(m.n)} (${esc(m.ip)})</option>`).join("");
+      if (listaParaExibir.some(m => m.n === selMun.n)) sel.value = selMun.n;
+      else if (filtrados.length) { selMun = filtrados[0]; sel.value = selMun.n; carregarClima(selMun); }
+      else sel.value = selMun.n;
+      if ($("munFiltroInfo")) $("munFiltroInfo").textContent = q ? `${filtrados.length} município(s) encontrado(s) de 92 no RJ` : `92 municípios oficiais do Estado do RJ disponíveis`;
+    }
+    async function carregarClima(m) {
+      try {
+        const r = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${m.lat}&longitude=${m.lon}&current=temperature_2m,relative_humidity_2m,precipitation,wind_speed_10m,wind_gusts_10m&timezone=America%2FSao_Paulo`);
+        const d = await r.json();
+        const c = d.current || {};
+        clima = { temp: c.temperature_2m, umi: c.relative_humidity_2m, chuva: c.precipitation ?? 0, vento: c.wind_speed_10m ?? 0, rajada: c.wind_gusts_10m ?? 0 };
+        vento = Math.max(clima.vento, clima.rajada);
+        chuva = clima.chuva;
+        if ($("climaInfo")) $("climaInfo").textContent = `${m.n}: ${clima.temp} °C • Umidade ${clima.umi}% • Chuva ${chuva} mm • Vento ${vento} km/h`;
+        if ($("ventoRange")) $("ventoRange").value = Math.min(120, Math.round(vento));
+        if ($("chuvaRange")) $("chuvaRange").value = Math.min(100, Math.round(chuva));
+        if ($("ventoTxt")) $("ventoTxt").textContent = `${Math.round(vento)} km/h`;
+        if ($("chuvaTxt")) $("chuvaTxt").textContent = `${chuva} mm`;
+        atualizarRiscosAuto(); atualizarCarimbo();
+      } catch (e) { if ($("climaInfo")) $("climaInfo").textContent = `${m.n}: clima offline ou indisponível`; }
+    }
+    function pegarGps() {
+      if (!navigator.geolocation) return aviso("GPS não disponível neste dispositivo.");
+      if ($("gpsInfo")) $("gpsInfo").textContent = "GPS: buscando localização...";
+      navigator.geolocation.getCurrentPosition(p => {
+        gps = { lat: p.coords.latitude.toFixed(6), lon: p.coords.longitude.toFixed(6), acc: Math.round(p.coords.accuracy) };
+        if ($("gpsInfo")) $("gpsInfo").textContent = `GPS: ${gps.lat}, ${gps.lon} (±${gps.acc} m)`;
+        atualizarCarimbo(); salvarRascunho(); aviso("GPS atualizado com sucesso.");
+      }, () => { if ($("gpsInfo")) $("gpsInfo").textContent = "GPS: sem sinal ou permissão negada"; }, { enableHighAccuracy: true, timeout: 12000, maximumAge: 0 });
+    }
+    function ler(el) { return el ? el.value.trim() : ""; }
+    function setVal(el, v) { if (el) el.value = v || ""; }
+    function montarTextoLaudo(protocoloFixo, dataFixa) {
+      const ref = garantirProtocolo(), prot = protocoloFixo || ref.protocolo, dt = dataFixa || ref.data, m = selMun.n, f = selFrente;
+      const tipoTxt = tiposSel.length ? tiposSel.join(" | ") : "NÃO INFORMADO";
+      const endereco = ler($("endereco")) || "NÃO INFORMADO", ponto = ler($("pontoRef")) || "NÃO INFORMADO", sep = ler($("separacao")) || "NÃO INFORMADO";
+      const resp = ler($("resp")) || userName || "NÃO INFORMADO", desc = ler($("desc")) || "SEM DESCRIÇÃO", obs = ler($("obs")) || "SEM OBSERVAÇÕES";
+      const n1 = ler($("n1")), c1 = ler($("c1")), n2 = ler($("n2")), c2 = ler($("c2")), n3 = ler($("n3")), c3 = ler($("c3"));
+      const contatos = [n1 || c1 ? `1: ${n1 || "SEM NOME"} (${c1 || "SEM CONTATO"})` : "", n2 || c2 ? `2: ${n2 || "SEM NOME"} (${c2 || "SEM CONTATO"})` : "", n3 || c3 ? `3: ${n3 || "SEM NOME"} (${c3 || "SEM CONTATO"})` : ""].filter(Boolean).join(" • ") || "NÃO INFORMADO";
+      const cTxt = clima ? `${clima.temp} °C • Umidade ${clima.umi}% • Chuva ${clima.chuva} mm • Vento ${clima.vento} km/h (Rajada ${clima.rajada} km/h)` : "SEM LEITURA METEOROLÓGICA";
+      const gTxt = gps.lat ? `${gps.lat}, ${gps.lon} (±${gps.acc || "?"} m)` : "SEM GPS";
+      return [
+        `${TITULO_OFICIAL_RARU} — ${SUBTITULO_OFICIAL_RARU} (${COMPLEMENTO_OFICIAL_RARU})`,
+        "LAUDO DE VISTORIA TÉCNICA E OCORRÊNCIA COMUNITÁRIA",
+        `Protocolo: ${prot} • Data/Hora: ${dt}`,
+        `Município: ${m} (RJ) • Frente/Equipe: ${f}`,
+        `Classificação: ${tipoTxt}`,
+        `Endereço: ${endereco} • Ponto de Referência: ${ponto} • Divisão/Setor: ${sep}`,
+        `Responsável / Morador: ${resp}`,
+        `Contatos: ${contatos}`,
+        `Riscos Observados: ${riscos.length ? riscos.join(", ") : "NENHUM"} • Vento: ${vento} km/h • Chuva: ${chuva} mm`,
+        `Condições Climáticas: ${cTxt}`,
+        `Coordenadas GPS: ${gTxt}`,
+        `Descrição da Vistoria: ${desc}`,
+        `Observações e Encaminhamentos: ${obs}`,
+        `Hash SHA-256 da Imagem: ${hash || "SEM FOTO ANEXADA"}`,
+        `Integração via Equipe Responsável`
+      ].join("\n");
+    }
+    function atualizarCarimbo() {
+      const m = selMun.n, f = selFrente, tipoTxt = tiposSel.length ? tiposSel.join(" • ") : "NÃO INFORMADO";
+      const gTxt = gps.lat ? `${gps.lat}, ${gps.lon} (±${gps.acc || "?"} m)` : "GPS pendente";
+      const cTxt = clima ? `${clima.temp} °C • Chuva ${clima.chuva} mm • Vento ${vento} km/h` : `Chuva ${chuva} mm • Vento ${vento} km/h`;
+      const endTxt = ler($("endereco")) || "Endereço não informado";
+      if ($("carimboPreview")) {
+        $("carimboPreview").innerHTML = `<div><b>${TITULO_OFICIAL_RARU} • ${COMPLEMENTO_OFICIAL_RARU}</b> • ${agora()}</div><div><b>Município:</b> ${esc(m)} (RJ) • <b>Frente:</b> ${esc(f)}</div><div><b>Classificação:</b> ${esc(tipoTxt)}</div><div><b>Local:</b> ${esc(endTxt)} • <b>GPS:</b> ${esc(gTxt)}</div><div><b>Clima:</b> ${esc(cTxt)} • <b>Riscos:</b> ${esc(riscos.length ? riscos.join(", ") : "Nenhum")}</div><div><b>Hash SHA-256:</b> ${esc(hash || "Sem foto")}</div><div><b>Integração via Equipe Responsável</b></div>`;
+      }
+      if ($("laudo")) $("laudo").value = montarTextoLaudo();
+    }
+    function salvarRascunho() {
+      try { localStorage.setItem(KEY, JSON.stringify({ protocolo: protocoloAtual, data: dataAtual, mun: selMun.n, frente: selFrente, tipos: tiposSel, endereco: ler($("endereco")), pontoRef: ler($("pontoRef")), separacao: ler($("separacao")), resp: ler($("resp")), n1: ler($("n1")), c1: ler($("c1")), n2: ler($("n2")), c2: ler($("c2")), n3: ler($("n3")), c3: ler($("c3")), desc: ler($("desc")), obs: ler($("obs")), riscos, vento, chuva, gps, hash, rotacao })); } catch (e) {}
+    }
+    function carregarRascunho() {
+      try {
+        const d = JSON.parse(localStorage.getItem(KEY) || "null");
+        if (!d) return;
+        if (d.protocolo) protocoloAtual = d.protocolo;
+        if (d.data) dataAtual = d.data;
+        if (d.mun) { const m = MUNICIPIOS_92.find(x => x.n === d.mun); if (m) { selMun = m; if ($("munSel")) $("munSel").value = m.n; } }
+        if (d.frente) { selFrente = d.frente; if ($("frenteSel")) $("frenteSel").value = d.frente; }
+        if (Array.isArray(d.tipos)) tiposSel = d.tipos;
+        setVal($("endereco"), d.endereco); setVal($("pontoRef"), d.pontoRef); setVal($("separacao"), d.separacao);
+        setVal($("resp"), d.resp); setVal($("n1"), d.n1); setVal($("c1"), d.c1);
+        setVal($("n2"), d.n2); setVal($("c2"), d.c2); setVal($("n3"), d.n3);
+        setVal($("desc"), d.desc); setVal($("obs"), d.obs);
+        riscos = d.riscos || []; vento = d.vento || 0; chuva = d.chuva || 0;
+        gps = d.gps || { lat: 0, lon: 0, acc: "" }; hash = d.hash || ""; rotacao = d.rotacao || 0;
+        if ($("ventoRange")) $("ventoRange").value = vento; if ($("chuvaRange")) $("chuvaRange").value = chuva;
+        if ($("ventoTxt")) $("ventoTxt").textContent = `${vento} km/h`; if ($("chuvaTxt")) $("chuvaTxt").textContent = `${chuva} mm`;
+        if ($("gpsInfo") && gps.lat) $("gpsInfo").textContent = `GPS: ${gps.lat}, ${gps.lon} (±${gps.acc || "?"} m)`;
+        if ($("hashInfo") && hash) $("hashInfo").textContent = `Hash SHA-256: ${hash}`;
+        marcarRiscosUI(); marcarTiposUI();
+      } catch (e) {}
+    }
+    function marcarRiscosUI() { if ($("riscosBox")) $("riscosBox").querySelectorAll(".chip").forEach(b => { const onChip = riscos.includes(b.dataset.r); b.classList.toggle("ativo", onChip); b.classList.toggle("defesa", onChip && b.dataset.defesa === "1"); }); }
+    function marcarTiposUI() { if ($("tiposBox")) $("tiposBox").querySelectorAll(".chip").forEach(b => { const onChip = tiposSel.includes(b.dataset.tipo); b.classList.toggle("ativo", onChip); b.classList.toggle("defesa", onChip && b.dataset.defesa === "1"); }); }
+    function atualizarRiscosAuto() {
+      let mud = false;
+      if (vento >= 60 && !riscos.includes("Ventania")) { riscos.push("Ventania"); mud = true; }
+      if (chuva >= 20 && !riscos.includes("Alagamento")) { riscos.push("Alagamento"); mud = true; }
+      if (mud) { marcarRiscosUI(); salvarRascunho(); }
+    }
+    function aplicarZoom() {
+      try { if (track && hasZoom) track.applyConstraints({ advanced: [{ zoom }] }).catch(() => {}); else if ($("video")) $("video").style.transform = `scale(${zoom}) rotate(${rotacao}deg)`; } catch (e) {}
+      if ($("zoomVal")) $("zoomVal").textContent = `${Number(zoom).toFixed(1)}x`;
+      if ($("zoomRange")) $("zoomRange").value = zoom;
+    }
+    function aplicarOrientacao() {
+      const m = modo === "auto" ? (window.innerWidth > window.innerHeight ? "paisagem" : "retrato") : modo;
+      if ($("video")) { $("video").style.objectFit = m === "paisagem" ? "contain" : "cover"; $("video").style.transform = `scale(${zoom}) rotate(${rotacao}deg)`; }
+      if ($("orientInfo")) $("orientInfo").textContent = `Orientação: ${modo === "auto" ? `Automática (${m})` : m} • Rotação: ${rotacao}°`;
+    }
+    async function ligarCamera() {
+      pararCamera();
+      try {
+        const c1 = { video: { facingMode: { ideal: "environment" }, width: { ideal: 1920 }, height: { ideal: 1080 } }, audio: false };
+        const c2 = { video: { facingMode: "environment" }, audio: false };
+        try { stream = await navigator.mediaDevices.getUserMedia(c1); } catch (e) { stream = await navigator.mediaDevices.getUserMedia(c2); }
+        if ($("video")) { $("video").srcObject = stream; await $("video").play(); }
+        track = stream.getVideoTracks()[0] || null; hasZoom = false; zoom = 1;
+        if (track && track.getCapabilities) { const cap = track.getCapabilities(); if (cap.zoom) { hasZoom = true; maxZoom = Math.min(cap.zoom.max || 5, 8); if ($("zoomRange")) { $("zoomRange").min = cap.zoom.min || 1; $("zoomRange").max = maxZoom; $("zoomRange").step = cap.zoom.step || 0.1; $("zoomRange").value = 1; } } }
+        if ($("video")) $("video").style.display = "block"; if ($("fotoImg")) $("fotoImg").style.display = "none";
+        if ($("hud")) $("hud").classList.add("on"); if ($("scanLine")) $("scanLine").style.display = "block";
+        if ($("btnFoto")) $("btnFoto").disabled = false; if ($("btnParar")) $("btnParar").disabled = false;
+        if ($("camStatus")) $("camStatus").textContent = "Câmera: ativa";
+        aplicarOrientacao(); aviso("Câmera ligada.");
+      } catch (e) { if ($("camStatus")) $("camStatus").textContent = "Câmera: bloqueada ou sem permissão"; aviso("Não foi possível abrir a câmera. Utilize Galeria / Arquivo."); }
+    }
+    function pararCamera() {
+      if (stream) { stream.getTracks().forEach(t => t.stop()); stream = null; }
+      track = null;
+      if ($("hud")) $("hud").classList.remove("on"); if ($("scanLine")) $("scanLine").style.display = "none";
+      if ($("btnFoto")) $("btnFoto").disabled = true; if ($("btnParar")) $("btnParar").disabled = true;
+      if ($("camStatus")) $("camStatus").textContent = "Câmera: desligada";
+    }
+    function renderizarFotoNoCanvas(imgEl, wSrc, hSrc) {
+      const c = document.createElement("canvas"), maxW = 1400, trocaEixos = (rotacao % 180) !== 0;
+      const baseW = trocaEixos ? hSrc : wSrc, baseH = trocaEixos ? wSrc : hSrc, escala = baseW > maxW ? maxW / baseW : 1;
+      c.width = Math.round(baseW * escala); c.height = Math.round(baseH * escala);
+      const ctx = c.getContext("2d");
+      ctx.save(); ctx.translate(c.width / 2, c.height / 2); ctx.rotate(rotacao * Math.PI / 180); ctx.scale(zoom, zoom);
+      const drawW = trocaEixos ? c.height : c.width, drawH = trocaEixos ? c.width : c.height;
+      ctx.drawImage(imgEl, -drawW / 2, -drawH / 2, drawW, drawH); ctx.restore();
+      const pad = Math.round(14 * escala), lh = Math.round(19 * escala);
+      const linhas = [
+        `${TITULO_OFICIAL_RARU} • ${COMPLEMENTO_OFICIAL_RARU} • ${agora()}`,
+        `Município: ${selMun.n} (RJ) • Frente: ${selFrente}`,
+        `Classificação: ${tiposSel.length ? tiposSel.join(" | ") : "NÃO INFORMADO"}`,
+        `Endereço: ${ler($("endereco")) || "NÃO INFORMADO"}`,
+        `GPS: ${gps.lat ? `${gps.lat}, ${gps.lon} (±${gps.acc || "?"} m)` : "SEM GPS"} • Clima: ${clima ? `${clima.temp} °C • Chuva ${chuva} mm • Vento ${vento} km/h` : `Chuva ${chuva} mm • Vento ${vento} km/h`}`,
+        `Riscos: ${riscos.length ? riscos.join(", ") : "NENHUM"}`
+      ];
+      const boxH = linhas.length * lh + pad * 2;
+      ctx.fillStyle = "rgba(3,7,18,.88)"; ctx.fillRect(0, c.height - boxH, c.width, boxH);
+      ctx.fillStyle = "#00F2FE"; ctx.font = `bold ${Math.max(11, Math.round(13 * escala))}px monospace`;
+      linhas.forEach((l, i) => ctx.fillText(l, pad, c.height - boxH + pad + (i + 0.8) * lh));
+      foto = c.toDataURL("image/jpeg", 0.88); fotoDim = { w: c.width, h: c.height };
+      if ($("fotoImg")) { $("fotoImg").src = foto; $("fotoImg").style.display = "block"; }
+      if ($("video")) $("video").style.display = "none";
+      if ($("hud")) $("hud").classList.remove("on"); if ($("scanLine")) $("scanLine").style.display = "none";
+      c.toBlob(async b => { fotoBlob = b; if (b) { hash = await sha256(await b.arrayBuffer()); if ($("hashInfo")) $("hashInfo").textContent = `Hash SHA-256: ${hash}`; atualizarCarimbo(); salvarRascunho(); } }, "image/jpeg", 0.88);
+    }
+    function baterFoto() { const v = $("video"); if (!v || !v.videoWidth) return aviso("Ligue a câmera primeiro."); renderizarFotoNoCanvas(v, v.videoWidth, v.videoHeight); pararCamera(); aviso("Foto capturada e carimbada com sucesso."); }
+    function carregarArquivoFoto(ev) {
+      const f = ev.target.files[0]; if (!f) return;
+      const r = new FileReader();
+      r.onload = () => { const im = new Image(); im.onload = () => { pararCamera(); renderizarFotoNoCanvas(im, im.width, im.height); aviso("Imagem carregada e carimbada com sucesso."); }; im.src = r.result; };
+      r.readAsDataURL(f);
+    }
+    function limparFoto() { foto = ""; fotoDim = { w: 0, h: 0 }; fotoBlob = null; hash = ""; if ($("fotoImg")) { $("fotoImg").src = ""; $("fotoImg").style.display = "none"; } if ($("hashInfo")) $("hashInfo").textContent = "Hash SHA-256: pendente"; if ($("arquivoFoto")) $("arquivoFoto").value = ""; atualizarCarimbo(); salvarRascunho(); }
+    function lerLista() { try { return JSON.parse(localStorage.getItem(KEY_LISTA) || "[]"); } catch (e) { return []; } }
+    function salvarLista(arr) {
+      try { localStorage.setItem(KEY_LISTA, JSON.stringify(arr)); } catch (e) {
+        const semFoto = arr.map(x => ({ ...x, foto: "" }));
+        try { localStorage.setItem(KEY_LISTA, JSON.stringify(semFoto)); aviso("Armazenamento cheio: vistoria salva sem imagem embutida."); } catch (e2) { aviso("Falha ao salvar no armazenamento local do dispositivo."); }
+      }
+      renderLista();
+    }
+    function salvarRegistro() {
+      const ref = garantirProtocolo(), prot = ref.protocolo, dt = ref.data;
+      const item = { id: Date.now(), protocolo: prot, data: dt, mun: selMun.n, frente: selFrente, tipos: [...tiposSel], endereco: ler($("endereco")), pontoRef: ler($("pontoRef")), separacao: ler($("separacao")), resp: ler($("resp")) || userName || "", contatos: { n1: ler($("n1")), c1: ler($("c1")), n2: ler($("n2")), c2: ler($("c2")), n3: ler($("n3")), c3: ler($("c3")) }, desc: ler($("desc")), obs: ler($("obs")), riscos: [...riscos], vento, chuva, clima, gps, hash, texto: montarTextoLaudo(prot, dt), foto, fotoDim };
+      const arr = lerLista(), idxExistente = arr.findIndex(x => x.protocolo === prot);
+      if (idxExistente >= 0) arr[idxExistente] = item; else arr.unshift(item);
+      salvarLista(arr); salvarRascunho(); aviso(`Vistoria salva: ${item.protocolo}`); falar(`Vistoria salva em ${item.mun}, protocolo ${item.protocolo}.`);
+    }
+    function exportarJsonVistorias() {
+      const arr = lerLista(); if (!arr.length) return aviso("Não há vistorias salvas para exportar.");
+      const blob = new Blob([JSON.stringify({ sistema: TITULO_OFICIAL_RARU, exportadoEm: agora(), total: arr.length, vistorias: arr }, null, 2)], { type: "application/json" });
+      const url = URL.createObjectURL(blob), a = document.createElement("a");
+      a.href = url; a.download = `RARU-VISTORIAS-${new Date().toISOString().slice(0, 10)}.json`; a.click(); setTimeout(() => URL.revokeObjectURL(url), 1500);
+      aviso(`Backup JSON exportado (${arr.length} registro(s)).`);
+    }
+    function importarJsonVistorias(ev) {
+      const f = ev.target.files && ev.target.files[0]; if (!f) return;
+      const r = new FileReader();
+      r.onload = () => {
+        try {
+          const parsed = JSON.parse(r.result), importadas = Array.isArray(parsed) ? parsed : (Array.isArray(parsed && parsed.vistorias) ? parsed.vistorias : null);
+          if (!importadas) return aviso("Arquivo JSON inválido para vistorias.");
+          const mapa = new Map();
+          [...importadas, ...lerLista()].forEach(it => { if (it && typeof it === "object") { const chave = it.protocolo || it.id || Math.random().toString(36); if (!mapa.has(chave)) mapa.set(chave, it); } });
+          salvarLista(Array.from(mapa.values())); aviso(`Importação concluída (${importadas.length} registro(s) processado(s)).`);
+        } catch (e) { aviso("Erro ao ler o arquivo JSON."); }
+        if ($("arquivoJson")) $("arquivoJson").value = "";
+      };
+      r.readAsText(f, "utf-8");
+    }
+    function renderLista() {
+      if (!$("listaVistorias")) return;
+      const arr = lerLista();
+      if (!arr.length) { $("listaVistorias").innerHTML = `<div style="font-size:12px;color:#94a3b8">Nenhuma vistoria salva ainda.</div>`; return; }
+      $("listaVistorias").innerHTML = arr.map((it, idx) => `<div style="background:#000;border:1px solid #1e293b;border-radius:14px;padding:12px;margin-bottom:10px"><div style="display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap;align-items:center"><b style="color:#00E5FF;font-size:12px">${esc(it.protocolo)} • ${esc(it.mun)}</b><span style="font-size:10px;color:#94a3b8">${esc(it.data)}</span></div><div style="font-size:11px;color:#10b981;margin-top:4px">${esc(it.frente || "")}</div><div style="font-size:11px;color:#ffd166;margin-top:3px"><b>Classificação:</b> ${esc((it.tipos && it.tipos.length) ? it.tipos.join(" | ") : "Não informado")}</div><div style="font-size:12px;color:#e2e8f0;margin-top:6px;white-space:pre-line">${esc(it.desc || "Sem descrição")}</div><div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px"><button type="button" class="btn btn-cyan btn-small" data-acao="carregar" data-idx="${idx}">Carregar no Formulário</button><button type="button" class="btn btn-ghost btn-small" data-acao="pdf" data-idx="${idx}">Gerar PDF</button><button type="button" class="btn btn-red btn-small" data-acao="excluir" data-idx="${idx}">Excluir</button></div></div>`).join("");
+    }
+    function gerarPdfDeItem(it) {
+      const protRef = it.protocolo || garantirProtocolo().protocolo, linhasFormatadas = [];
+      (it.texto || montarTextoLaudo(protRef, it.data)).split("\n").forEach(ln => {
+        const str = String(ln || "");
+        if (str.length <= 88) linhasFormatadas.push(str);
+        else { let atual = ""; str.split(" ").forEach(p => { if ((atual + (atual ? " " : "") + p).length <= 88) atual += (atual ? " " : "") + p; else { if (atual) linhasFormatadas.push(atual); atual = p; } }); if (atual) linhasFormatadas.push(atual); }
+      });
+      const escPdf = s => String(s || "").replace(/\\/g, "\\\\").replace(/\(/g, "\\(").replace(/\)/g, "\\)");
+      const paginasOps = [];
+      let opsAtual = ["BT", "/F1 10 Tf", "42 790 Td", "14 TL"], yAtual = 790, primeiraLinhaNaPagina = true;
+      const fecharPaginaTexto = () => { opsAtual.push("ET"); paginasOps.push(opsAtual.join("\n")); };
+      const abrirNovaPaginaTexto = () => { opsAtual = ["BT", "/F1 10 Tf", "42 790 Td", "14 TL"]; yAtual = 790; primeiraLinhaNaPagina = true; };
+      linhasFormatadas.forEach(ln => {
+        if (yAtual < 56) { fecharPaginaTexto(); abrirNovaPaginaTexto(); }
+        const txtEsc = escPdf(ln);
+        if (primeiraLinhaNaPagina) { opsAtual.push(`(${txtEsc}) Tj`); primeiraLinhaNaPagina = false; } else opsAtual.push(`T* (${txtEsc}) Tj`);
+        yAtual -= 14;
+      });
+      fecharPaginaTexto();
+      const temFotoJpeg = it.foto && it.foto.startsWith("data:image/jpeg;base64,") && it.fotoDim && it.fotoDim.w > 0 && it.fotoDim.h > 0;
+      let imgBytes = null;
+      if (temFotoJpeg) {
+        imgBytes = base64ParaUint8Array(it.foto);
+        const ratio = Math.min(510 / it.fotoDim.w, 620 / it.fotoDim.h), wPdf = Math.round(it.fotoDim.w * ratio), hPdf = Math.round(it.fotoDim.h * ratio);
+        paginasOps.push(["BT", "/F1 10 Tf", "42 775 Td", `(${escPdf(`ANEXO FOTOGRÁFICO • ${protRef} • HASH SHA-256: ${(it.hash || hash || "N/A").slice(0, 32)}...`)}) Tj`, "ET", `q ${wPdf} 0 0 ${hPdf} ${Math.round((595 - wPdf) / 2)} ${Math.round(740 - hPdf)} cm /Im1 Do Q`].join("\n"));
+      }
+      const numPaginas = paginasOps.length, firstPageObj = 4, firstStreamObj = 4 + numPaginas, imageObj = temFotoJpeg ? (4 + numPaginas * 2) : null;
+      const blocos = [], offsets = [0];
+      let pos = 0;
+      const pushTexto = txt => { const b = stringParaWinAnsiBytes(txt); blocos.push(b); pos += b.length; };
+      const pushBytes = b => { blocos.push(b); pos += b.length; };
+      pushTexto("%PDF-1.4\n");
+      offsets.push(pos); pushTexto("1 0 obj << /Type /Catalog /Pages 2 0 R >> endobj\n");
+      const kidsRefs = []; for (let p = 0; p < numPaginas; p++) kidsRefs.push(`${firstPageObj + p} 0 R`);
+      offsets.push(pos); pushTexto(`2 0 obj << /Type /Pages /Kids [${kidsRefs.join(" ")}] /Count ${numPaginas} >> endobj\n`);
+      offsets.push(pos); pushTexto("3 0 obj << /Type /Font /Subtype /Type1 /BaseFont /Helvetica /Encoding /WinAnsiEncoding >> endobj\n");
+      for (let p = 0; p < numPaginas; p++) { const xObjectRef = (temFotoJpeg && p === numPaginas - 1) ? `/XObject << /Im1 ${imageObj} 0 R >>` : ""; offsets.push(pos); pushTexto(`${firstPageObj + p} 0 obj << /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 3 0 R >> ${xObjectRef} >> /Contents ${firstStreamObj + p} 0 R >> endobj\n`); }
+      for (let p = 0; p < numPaginas; p++) { const sBytes = stringParaWinAnsiBytes(paginasOps[p]); offsets.push(pos); pushTexto(`${firstStreamObj + p} 0 obj << /Length ${sBytes.length} >> stream\n`); pushBytes(sBytes); pushTexto("\nendstream endobj\n"); }
+      if (temFotoJpeg && imgBytes && imageObj) { offsets.push(pos); pushTexto(`${imageObj} 0 obj << /Type /XObject /Subtype /Image /Width ${it.fotoDim.w} /Height ${it.fotoDim.h} /ColorSpace /DeviceRGB /BitsPerComponent 8 /Filter /DCTDecode /Length ${imgBytes.length} >> stream\n`); pushBytes(imgBytes); pushTexto("\nendstream endobj\n"); }
+      const totalObjs = offsets.length - 1, xrefPos = pos;
+      let xref = `xref\n0 ${totalObjs + 1}\n0000000000 65535 f \n`;
+      for (let i = 1; i <= totalObjs; i++) xref += `${String(offsets[i]).padStart(10, "0")} 00000 n \n`;
+      pushTexto(`${xref}trailer << /Size ${totalObjs + 1} /Root 1 0 R >>\nstartxref\n${xrefPos}\n%%EOF`);
+      const blob = new Blob([concatUint8Arrays(blocos)], { type: "application/pdf" });
+      if (urlPdfAtual) URL.revokeObjectURL(urlPdfAtual);
+      urlPdfAtual = URL.createObjectURL(blob); nomePdfAtual = `${protRef}.pdf`;
+      if ($("pdfFrame")) { $("pdfFrame").src = urlPdfAtual; $("pdfFrame").style.display = "block"; }
+      if ($("btnBaixarPdf")) $("btnBaixarPdf").disabled = false; if ($("btnCompartilharPdf")) $("btnCompartilharPdf").disabled = false;
+      aviso(`PDF gerado (${numPaginas} página(s)).`);
+    }
+    function baixarPdf() { if (!urlPdfAtual) return aviso("Gere o PDF primeiro."); const a = document.createElement("a"); a.href = urlPdfAtual; a.download = nomePdfAtual || `${garantirProtocolo().protocolo}.pdf`; a.click(); }
+    async function compartilharPdf() {
+      if (!urlPdfAtual) return aviso("Gere o PDF primeiro.");
+      try { const res = await fetch(urlPdfAtual), blob = await res.blob(), arq = new File([blob], nomePdfAtual || `${garantirProtocolo().protocolo}.pdf`, { type: "application/pdf" }); if (navigator.canShare && navigator.canShare({ files: [arq] })) { await navigator.share({ title: `${TITULO_OFICIAL_RARU} — Laudo de Vistoria`, text: montarTextoLaudo(), files: [arq] }); return; } } catch (e) {}
+      baixarPdf();
+    }
+    function limparFormulario() {
+      ["endereco", "pontoRef", "separacao", "resp", "n1", "c1", "n2", "c2", "n3", "c3", "desc", "obs"].forEach(id => { if ($(id)) $(id).value = ""; });
+      if ($("munFiltro")) $("munFiltro").value = "";
+      riscos = []; tiposSel = []; vento = 0; chuva = 0; rotacao = 0; protocoloAtual = cod(); dataAtual = agora();
+      popularMunicipiosSelect("");
+      if ($("ventoRange")) $("ventoRange").value = 0; if ($("chuvaRange")) $("chuvaRange").value = 0;
+      if ($("ventoTxt")) $("ventoTxt").textContent = "0 km/h"; if ($("chuvaTxt")) $("chuvaTxt").textContent = "0 mm";
+      marcarRiscosUI(); marcarTiposUI(); limparFoto(); aplicarOrientacao(); atualizarCarimbo();
+      try { localStorage.removeItem(KEY); } catch (e) {}
+      aviso("Formulário limpo e novo protocolo iniciado.");
+    }
+
+    popularMunicipiosSelect("");
+    if ($("munFiltro")) on($("munFiltro"), "input", () => popularMunicipiosSelect($("munFiltro").value));
+    if ($("munSel")) on($("munSel"), "change", () => { selMun = MUNICIPIOS_92.find(x => x.n === $("munSel").value) || munPadrao; carregarClima(selMun); atualizarCarimbo(); salvarRascunho(); });
+    if ($("frenteSel")) { $("frenteSel").innerHTML = FRENTES.map(f => `<option value="${esc(f)}">${esc(f)}</option>`).join(""); on($("frenteSel"), "change", () => { selFrente = $("frenteSel").value; atualizarCarimbo(); salvarRascunho(); }); }
+    if ($("tiposBox")) {
+      $("tiposBox").innerHTML = TIPOS.map(g => `<div style="margin-bottom:10px"><div style="font-size:10px;font-weight:900;color:${g.grupo.startsWith("ALERTA") ? "#ff6b8b" : "#67e8f9"};margin-bottom:6px">${esc(g.grupo)}</div><div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:6px">${g.itens.map(it => `<button type="button" class="chip ${g.grupo.startsWith("ALERTA") ? "defesa" : ""}" data-tipo="${esc(it)}" data-defesa="${g.grupo.startsWith("ALERTA") ? "1" : "0"}">${esc(it)}</button>`).join("")}</div></div>`).join("");
+      on($("tiposBox"), "click", e => { const b = e.target.closest(".chip"); if (!b) return; const tp = b.dataset.tipo, i = tiposSel.indexOf(tp); if (i >= 0) tiposSel.splice(i, 1); else tiposSel.push(tp); marcarTiposUI(); atualizarCarimbo(); salvarRascunho(); });
+    }
+    if ($("riscosBox")) on($("riscosBox"), "click", e => { const b = e.target.closest(".chip"); if (!b) return; const r = b.dataset.r, i = riscos.indexOf(r); if (i >= 0) riscos.splice(i, 1); else riscos.push(r); marcarRiscosUI(); atualizarCarimbo(); salvarRascunho(); });
+    on($("btnVoz"), "click", () => { destravarVoz(); vozLigada = !vozLigada; $("btnVoz").textContent = vozLigada ? "Voz: ON" : "Voz: OFF"; $("btnVoz").className = "btn " + (vozLigada ? "btn-cyan" : "btn-ghost"); if (vozLigada) falar("Voz ativada."); else if (window.speechSynthesis) window.speechSynthesis.cancel(); });
+    on($("btnLigar"), "click", ligarCamera); on($("btnFoto"), "click", baterFoto); on($("btnParar"), "click", () => { pararCamera(); aviso("Câmera desligada."); });
+    on($("btnLimparFoto"), "click", limparFoto); on($("arquivoFoto"), "change", carregarArquivoFoto);
+    on($("zoomRange"), "input", () => { zoom = parseFloat($("zoomRange").value) || 1; aplicarZoom(); });
+    on($("btnZoomMenos"), "click", () => { zoom = Math.max(1, +(zoom - 0.5).toFixed(1)); aplicarZoom(); });
+    on($("btnZoomMais"), "click", () => { zoom = Math.min(maxZoom, +(zoom + 0.5).toFixed(1)); aplicarZoom(); });
+    [["btnAuto", "auto"], ["btnRetrato", "retrato"], ["btnPaisagem", "paisagem"]].forEach(([id, md]) => on($(id), "click", () => { modo = md; aplicarOrientacao(); salvarRascunho(); }));
+    on($("btnGirar"), "click", () => { rotacao = (rotacao + 90) % 360; aplicarOrientacao(); salvarRascunho(); });
+    on($("btnGps"), "click", pegarGps); on($("btnClima"), "click", () => carregarClima(selMun));
+    on($("ventoRange"), "input", () => { vento = parseInt($("ventoRange").value, 10) || 0; if ($("ventoTxt")) $("ventoTxt").textContent = `${vento} km/h`; atualizarRiscosAuto(); atualizarCarimbo(); salvarRascunho(); });
+    on($("chuvaRange"), "input", () => { chuva = parseInt($("chuvaRange").value, 10) || 0; if ($("chuvaTxt")) $("chuvaTxt").textContent = `${chuva} mm`; atualizarRiscosAuto(); atualizarCarimbo(); salvarRascunho(); });
+    ["endereco", "pontoRef", "separacao", "resp", "n1", "c1", "n2", "c2", "n3", "c3", "desc", "obs"].forEach(id => on($(id), "input", () => { atualizarCarimbo(); salvarRascunho(); }));
+    on($("btnSalvar"), "click", salvarRegistro);
+    on($("btnPdf"), "click", () => { const ref = garantirProtocolo(); gerarPdfDeItem({ protocolo: ref.protocolo, data: ref.data, texto: montarTextoLaudo(ref.protocolo, ref.data), foto, fotoDim, hash }); });
+    on($("btnBaixarPdf"), "click", baixarPdf); on($("btnCompartilharPdf"), "click", compartilharPdf); on($("btnLimpar"), "click", limparFormulario);
+    on($("btnExportJson"), "click", exportarJsonVistorias); on($("arquivoJson"), "change", importarJsonVistorias);
+    on($("btnCopiar"), "click", () => { const t = montarTextoLaudo(); if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(t).then(() => aviso("Laudo copiado.")).catch(() => aviso("Copie manualmente.")); });
+    on($("btnWhats"), "click", () => { const t = montarTextoLaudo(); if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(t).catch(() => {}); window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(t)}`, "_blank"); });
+    on($("btnFalarLaudo"), "click", () => falar(montarTextoLaudo()));
+    // ALARMES - LIGAÇÕES DOS BOTÕES
+    on($("btnAlarmeRusso"), "click", () => dispararSirene5Minutos("russo"));
+    on($("btnAlarmeCemaden"), "click", () => dispararSirene5Minutos("cemaden"));
+    on($("btnPararSirene"), "click", () => { pararTodasSirenes(); aviso("Sirene parada."); });
+    atualizarBotoesAlarme();
+    on($("listaVistorias"), "click", e => {
+      const b = e.target.closest("button[data-acao]"); if (!b) return;
+      const idx = parseInt(b.dataset.idx, 10), arr = lerLista(), it = arr[idx]; if (!it) return;
+      if (b.dataset.acao === "carregar") {
+        if (it.protocolo) protocoloAtual = it.protocolo; if (it.data) dataAtual = it.data;
+        const m = MUNICIPIOS_92.find(x => x.n === it.mun); if (m) { selMun = m; if ($("munFiltro")) $("munFiltro").value = ""; popularMunicipiosSelect(""); if ($("munSel")) $("munSel").value = m.n; }
+        if (it.frente) { selFrente = it.frente; if ($("frenteSel")) $("frenteSel").value = it.frente; }
+        tiposSel = it.tipos || [];
+        setVal($("endereco"), it.endereco); setVal($("pontoRef"), it.pontoRef); setVal($("separacao"), it.separacao); setVal($("resp"), it.resp);
+        if (it.contatos) { setVal($("n1"), it.contatos.n1); setVal($("c1"), it.contatos.c1); setVal($("n2"), it.contatos.n2); setVal($("c2"), it.contatos.c2); setVal($("n3"), it.contatos.n3); setVal($("c3"), it.contatos.c3); }
+        setVal($("desc"), it.desc); setVal($("obs"), it.obs);
+        riscos = it.riscos || []; vento = it.vento || 0; chuva = it.chuva || 0; hash = it.hash || ""; foto = it.foto || ""; fotoDim = it.fotoDim || { w: 0, h: 0 };
+        if (it.gps && it.gps.lat) { gps = it.gps; if ($("gpsInfo")) $("gpsInfo").textContent = `GPS: ${gps.lat}, ${gps.lon} (±${gps.acc || "?"} m)`; }
+        if ($("fotoImg")) { if (foto) { $("fotoImg").src = foto; $("fotoImg").style.display = "block"; } else { $("fotoImg").src = ""; $("fotoImg").style.display = "none"; } }
+        if ($("ventoRange")) $("ventoRange").value = vento; if ($("chuvaRange")) $("chuvaRange").value = chuva;
+        if ($("ventoTxt")) $("ventoTxt").textContent = `${vento} km/h`; if ($("chuvaTxt")) $("chuvaTxt").textContent = `${chuva} mm`;
+        if ($("hashInfo")) $("hashInfo").textContent = `Hash SHA-256: ${hash || "pendente"}`;
+        marcarRiscosUI(); marcarTiposUI(); atualizarCarimbo(); salvarRascunho(); aviso(`Vistoria carregada: ${it.protocolo}`);
+      } else if (b.dataset.acao === "pdf") gerarPdfDeItem(it);
+      else if (b.dataset.acao === "excluir") { arr.splice(idx, 1); salvarLista(arr); aviso("Vistoria excluída."); }
+    });
+    on(window, "resize", aplicarOrientacao);
+
+    garantirProtocolo(); carregarRascunho(); popularMunicipiosSelect($("munFiltro") ? $("munFiltro").value : "");
+    if (userName && $("resp") && !$("resp").value.trim()) $("resp").value = userName;
+    aplicarOrientacao(); carregarClima(selMun); pegarGps(); atualizarCarimbo(); renderLista();
+
+    return () => { pararTodasSirenes(); pararCamera(); if (urlPdfAtual) URL.revokeObjectURL(urlPdfAtual); listeners.forEach(([el, ev, fn]) => el.removeEventListener(ev, fn)); };
+  }, [perfilVozId, userName]);
+
+  return (
+    <div ref={containerRef} className="vist-modulo-root w-full font-mono text-white">
+      <div className="wrap">
+        <div className="topbar">
+          <div className="logo">{TITULO_OFICIAL_RARU}<small>{SUBTITULO_OFICIAL_RARU} • {COMPLEMENTO_OFICIAL_RARU}</small></div>
+          <div style={{ display: "flex", gap: "8px", flexWrap: "wrap" }}>
+            <button type="button" id="btnVoz" className="btn btn-cyan">Voz: ON</button>
+            <button type="button" onClick={onBackToDashboard} className="btn btn-ghost">Painel</button>
+          </div>
+        </div>
+        <div id="aviso" style={{ display: "none", position: "fixed", left: "50%", bottom: "18px", transform: "translateX(-50%)", background: "#00E5FF", color: "#00141a", fontWeight: 900, padding: "10px 16px", borderRadius: "999px", zIndex: 99, fontSize: "12px", maxWidth: "92vw", textAlign: "center" }}></div>
+        <div className="card">
+          <label>Município / Estação (92 Municípios do Estado do Rio de Janeiro)</label>
+          <input id="munFiltro" placeholder="Filtrar município ou estação (ex.: Mesquita, Caxias, Cabo Frio)..." style={{ marginBottom: "8px" }} />
+          <select id="munSel"></select>
+          <div style={{ display: "flex", justifyContent: "space-between", gap: "8px", flexWrap: "wrap", fontSize: "11px", color: "#67e8f9", marginTop: "8px" }}>
+            <span id="climaInfo">Clima: carregando...</span>
+            <span id="munFiltroInfo" style={{ color: "#94a3b8" }}>92 municípios oficiais do Estado do RJ disponíveis</span>
+          </div>
+        </div>
+        <div className="card"><label>Frente / Equipe de Atuação</label><select id="frenteSel"></select></div>
+        <div className="card"><label>Classificação da Ocorrência / Vistoria</label><div id="tiposBox"></div></div>
+
+        <div className="card">
+          <label>ALARMES - 5 MINUTOS (3 MIN TOCANDO + 1 MIN PAUSA + 1 MIN TOCANDO)</label>
+          <div style={{ fontSize: "11px", color: "#94a3b8", marginBottom: "10px" }}>3 min tocando • 1 min parado p/ morador raciocinar e reagir • 1 min tocando p/ despertar quem tá dormindo e alertar todos</div>
+          <div style={{ display: "flex", gap: "8px", flexWrap: "wrap" }}>
+            <button type="button" id="btnAlarmeRusso" className="btn btn-red">DISPARAR ALARME RUSSO</button>
+            <button type="button" id="btnAlarmeCemaden" className="btn btn-cyan">DISPARAR ALARME CEMADEN</button>
+            <button type="button" id="btnPararSirene" className="btn btn-ghost" style={{ display: "none" }}>PARAR SIRENE</button>
+          </div>
+          <div id="alarmeStatus" style={{ fontSize: "12px", color: "#ffd166", marginTop: "8px" }}>Alarmes: parados</div>
+        </div>
+
+        <div className="card">
+          <label>Câmera de Vistoria / Ocorrência</label>
+          <div style={{ display: "flex", gap: "8px", flexWrap: "wrap", marginBottom: "10px" }}>
+            <button type="button" id="btnLigar" className="btn btn-cyan">Ligar Câmera</button>
+            <button type="button" id="btnFoto" className="btn btn-green" disabled>Capturar Foto</button>
+            <button type="button" id="btnParar" className="btn btn-ghost" disabled>Parar Câmera</button>
+            <button type="button" id="btnLimparFoto" className="btn btn-red">Limpar Foto</button>
+            <label className="btn btn-ghost" style={{ marginBottom: 0 }}>Galeria / Arquivo<input type="file" id="arquivoFoto" accept="image/*" style={{ display: "none" }} /></label>
+          </div>
+          <div className="camera-box">
+            <div id="scanLine" className="scan-line"></div>
+            <div id="hud" className="hud">
+              <div className="grade"></div>
+              <div className="hud-corner" style={{ left: "10px", top: "10px", borderLeft: "3px solid #fff", borderTop: "3px solid #fff" }}></div>
+              <div className="hud-corner" style={{ right: "10px", top: "10px", borderRight: "3px solid #fff", borderTop: "3px solid #fff" }}></div>
+              <div className="hud-corner" style={{ left: "10px", bottom: "10px", borderLeft: "3px solid #fff", borderBottom: "3px solid #fff" }}></div>
+              <div className="hud-corner" style={{ right: "10px", bottom: "10px", borderRight: "3px solid #fff", borderBottom: "3px solid #fff" }}></div>
+              <div className="hud-centro"><div className="anel"></div><div className="anel2"></div><div className="cruz-h"></div><div className="cruz-v"></div><div className="ponto"></div></div>
+            </div>
+            <div className="etq" style={{ left: "10px", top: "10px" }}>SCANNER ATIVO • RARU NEXUS</div>
+            <div className="etq" style={{ right: "10px", top: "10px" }}>VISTORIA / OCORRÊNCIA</div>
+            <div className="etq" style={{ left: "10px", bottom: "10px" }}>CARIMBO HASH SHA-256</div>
+            <div className="etq" style={{ right: "10px", bottom: "10px" }}>MODO MONITORAMENTO</div>
+            <video id="video" playsInline muted style={{ display: "none" }}></video>
+            <img id="fotoImg" alt="Foto da vistoria" style={{ display: "none", maxWidth: "100%", maxHeight: "100%", objectFit: "contain" }} />
+          </div>
+          <div style={{ marginTop: "10px" }}>
+            <div style={{ display: "flex", justifyContent: "space-between", fontSize: "12px", marginBottom: "6px" }}><span>Zoom</span><b id="zoomVal" style={{ color: "#00E5FF" }}>1.0x</b></div>
+            <div style={{ display: "flex", gap: "8px", alignItems: "center" }}><button type="button" id="btnZoomMenos" className="btn btn-ghost btn-small">-</button><input id="zoomRange" className="range" type="range" min="1" max="5" step="0.1" defaultValue="1" /><button type="button" id="btnZoomMais" className="btn btn-ghost btn-small">+</button></div>
+          </div>
+          <div style={{ display: "flex", gap: "8px", flexWrap: "wrap", marginTop: "10px" }}><button type="button" id="btnAuto" className="btn btn-cyan btn-small">Automático</button><button type="button" id="btnRetrato" className="btn btn-ghost btn-small">Retrato</button><button type="button" id="btnPaisagem" className="btn btn-ghost btn-small">Paisagem</button><button type="button" id="btnGirar" className="btn btn-ghost btn-small">Girar 90°</button></div>
+          <div id="orientInfo" style={{ fontSize: "11px", color: "#94a3b8", marginTop: "6px" }}>Orientação: Automática</div>
+          <div style={{ display: "flex", justifyContent: "space-between", gap: "8px", flexWrap: "wrap", fontSize: "11px", color: "#94a3b8", marginTop: "8px" }}><span id="camStatus">Câmera: desligada</span><span id="hashInfo">Hash SHA-256: pendente</span></div>
+          <div id="carimboPreview" className="carimbo" style={{ marginTop: "10px" }}></div>
+        </div>
+        <div className="card">
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: "8px", flexWrap: "wrap", marginBottom: "8px" }}><label style={{ margin: 0 }}>Localização GPS</label><button type="button" id="btnGps" className="btn btn-cyan btn-small">Atualizar GPS</button></div>
+          <div id="gpsInfo" style={{ fontSize: "12px", color: "#67e8f9", marginBottom: "10px" }}>GPS: aguardando...</div>
+          <label>Endereço / Local da Vistoria ou Ocorrência</label><input id="endereco" placeholder="Ex.: Rua Amazonas, 120 - Rocha Sobrinho" />
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(220px,1fr))", gap: "10px", marginTop: "10px" }}><div><label>Ponto de Referência</label><input id="pontoRef" placeholder="Ex.: Próximo ao valão / praça" /></div><div><label>Separação / Divisão / Setor</label><input id="separacao" placeholder="Ex.: Quadra B, Lote 4, Casa 2" /></div></div>
+          <div style={{ marginTop: "10px" }}><label>Responsável / Morador / Solicitante</label><input id="resp" placeholder="Nome completo ou apelido" /></div>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(220px,1fr))", gap: "10px", marginTop: "10px" }}><div><label>Contato 1 - Nome</label><input id="n1" placeholder="Nome do contato 1" /></div><div><label>Contato 1 - Telefone / WhatsApp</label><input id="c1" placeholder="Ex.: (21) 99999-9999" /></div><div><label>Contato 2 - Nome</label><input id="n2" placeholder="Nome do contato 2" /></div><div><label>Contato 2 - Telefone / WhatsApp</label><input id="c2" placeholder="Ex.: (21) 98888-8888" /></div><div><label>Contato 3 - Nome</label><input id="n3" placeholder="Nome do contato 3" /></div><div><label>Contato 3 - Telefone / WhatsApp</label><input id="c3" placeholder="Ex.: (21) 97777-7777" /></div></div>
+        </div>
+        <div className="card">
+          <label>Riscos Observados</label>
+          <div id="riscosBox" style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(170px,1fr))", gap: "8px", marginBottom: "12px" }}>
+            <button type="button" className="chip" data-r="Infiltração">Infiltração</button><button type="button" className="chip" data-r="Mofo / Umidade">Mofo / Umidade</button><button type="button" className="chip" data-r="Rachadura">Rachadura</button><button type="button" className="chip" data-r="Telhado / Calha">Telhado / Calha</button><button type="button" className="chip" data-r="Elétrica">Elétrica</button><button type="button" className="chip" data-r="Esgoto / Drenagem">Esgoto / Drenagem</button><button type="button" className="chip defesa" data-r="Alagamento" data-defesa="1">Alagamento</button><button type="button" className="chip defesa" data-r="Encosta / Deslizamento" data-defesa="1">Encosta / Deslizamento</button><button type="button" className="chip defesa" data-r="Ventania" data-defesa="1">Ventania</button>
+          </div>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: "8px", flexWrap: "wrap", marginBottom: "8px" }}><label style={{ margin: 0 }}>Vento e Chuva</label><button type="button" id="btnClima" className="btn btn-ghost btn-small">Buscar Clima Agora</button></div>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(220px,1fr))", gap: "12px" }}>
+            <div><div style={{ display: "flex", justifyContent: "space-between", fontSize: "12px", marginBottom: "6px" }}><span>Vento</span><b id="ventoTxt" style={{ color: "#00E5FF" }}>0 km/h</b></div><input id="ventoRange" className="range" type="range" min="0" max="120" defaultValue="0" /></div>
+            <div><div style={{ display: "flex", justifyContent: "space-between", fontSize: "12px", marginBottom: "6px" }}><span>Chuva</span><b id="chuvaTxt" style={{ color: "#00E5FF" }}>0 mm</b></div><input id="chuvaRange" className="range" type="range" min="0" max="100" defaultValue="0" /></div>
+          </div>
+        </div>
+        <div className="card"><label>Descrição da Vistoria / Ocorrência</label><textarea id="desc" rows="4" placeholder="Descreva detalhadamente o que foi observado no local..."></textarea><div style={{ marginTop: "10px" }}><label>Observações / Encaminhamentos</label><textarea id="obs" rows="3" placeholder="Ex.: encaminhar à assistência social, obras ou zeladoria..."></textarea></div></div>
+        <div className="card">
+          <label>Laudo / Relatório Gerado</label><textarea id="laudo" rows="10" readOnly></textarea>
+          <div style={{ display: "flex", gap: "8px", flexWrap: "wrap", marginTop: "10px" }}>
+            <button type="button" id="btnSalvar" className="btn btn-green">Salvar Vistoria</button><button type="button" id="btnPdf" className="btn btn-cyan">Gerar PDF</button><button type="button" id="btnBaixarPdf" className="btn btn-ghost" disabled>Baixar PDF</button><button type="button" id="btnCompartilharPdf" className="btn btn-pink" disabled>Compartilhar PDF</button><button type="button" id="btnCopiar" className="btn btn-ghost">Copiar Laudo</button><button type="button" id="btnWhats" className="btn btn-green">WhatsApp</button><button type="button" id="btnFalarLaudo" className="btn btn-ghost">Ouvir Laudo</button><button type="button" id="btnLimpar" className="btn btn-red">Limpar</button>
+          </div>
+          <iframe id="pdfFrame" className="preview-pdf" title="Prévia do PDF" style={{ marginTop: "12px" }}></iframe>
+        </div>
+        <div className="card">
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: "8px", flexWrap: "wrap", marginBottom: "10px" }}>
+            <label style={{ margin: 0 }}>Vistorias Salvas no Aparelho</label>
+            <div style={{ display: "flex", gap: "8px", flexWrap: "wrap" }}><button type="button" id="btnExportJson" className="btn btn-ghost btn-small">Exportar JSON</button><label className="btn btn-ghost btn-small" style={{ marginBottom: 0 }}>Importar JSON<input type="file" id="arquivoJson" accept="application/json,.json" style={{ display: "none" }} /></label></div>
+          </div>
+          <div id="listaVistorias"></div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById("root")).render(<VistoriaRARU_NEXUS onBackToDashboard={() => window.history.back()} showToast={(msg) => console.log(msg)} perfilVozId="sarah" userName="" />);
+</script>
+</body>
+</html>
