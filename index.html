@@ -1,0 +1,2192 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <meta name="theme-color" content="#030712" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <title>RARU NEXUS V11.2 PLUS — Rede Automatizada de Resiliência Urbana</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin="" />
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
+  <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+  <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  <style>
+    * {
+      box-sizing: border-box;
+      -webkit-user-select: none;
+      -moz-user-select: none;
+      -ms-user-select: none;
+      user-select: none;
+      -webkit-touch-callout: none;
+    }
+    input, textarea, select {
+      -webkit-user-select: text !important;
+      -moz-user-select: text !important;
+      -ms-user-select: text !important;
+      user-select: text !important;
+    }
+    html, body {
+      margin: 0;
+      padding: 0;
+      background-color: #030712;
+      color: #e2e8f0;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+      overflow-x: hidden;
+    }
+    ::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    ::-webkit-scrollbar-track {
+      background: #030712;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #1e293b;
+      border-radius: 999px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: #00F2FE;
+    }
+    .hud-panel {
+      background: linear-gradient(180deg, rgba(10, 17, 36, 0.96) 0%, rgba(3, 7, 18, 0.99) 100%);
+      border: 1px solid rgba(0, 242, 254, 0.35);
+      box-shadow: 0 0 24px rgba(0, 242, 254, 0.06);
+    }
+    .hud-glow-cyan {
+      box-shadow: 0 0 16px rgba(0, 242, 254, 0.25);
+    }
+    .hud-glow-green {
+      box-shadow: 0 0 16px rgba(0, 255, 157, 0.22);
+    }
+    .hud-glow-amber {
+      box-shadow: 0 0 16px rgba(255, 183, 3, 0.22);
+    }
+    @keyframes pulseRing {
+      0% { transform: scale(0.95); opacity: 0.9; }
+      70% { transform: scale(1.12); opacity: 0.2; }
+      100% { transform: scale(0.95); opacity: 0.9; }
+    }
+    .pulse-ring {
+      animation: pulseRing 2.2s infinite ease-in-out;
+    }
+    .leaflet-container {
+      background: #030712 !important;
+      font-family: inherit !important;
+    }
+  </style>
+</head>
+<body>
+  <div id="root"></div>
+
+  <script type="text/babel">
+    const { useState, useEffect, useRef, useMemo } = React;
+
+    // =========================================================================
+    // CONSTANTES GLOBAIS E CONFIGURAÇÕES DO SISTEMA
+    // =========================================================================
+    const TITULO = "RARU NEXUS V11.2 PLUS";
+    const SUB = "REDE AUTOMATIZADA DE RESILIÊNCIA URBANA";
+    const COMP = "EDIÇÃO TEMPO & CLIMA";
+    const SARAH_WORKER_URL = "https://sarah-envelope.phantrorfirmo08.workers.dev";
+    const GADE_WHATSAPP_URL = "https://chat.whatsapp.com/I8vN9wQ2xLm4pRt7kYz3Bc";
+
+    // DRIVE DA EQUIPE - SÓ VOCÊ CONFIGURA UMA VEZ. NINGUÉM QUE USA O APP LOGA.
+    // Deixe vazio até configurar seu Apps Script. Com vazio, o botão só baixa/compartilha, sem pedir conta.
+    const DRIVE_EQUIPE_URL = "";
+
+    // CSS CONSOLIDADO DO MÓDULO DE VISTORIA TÉCNICA (ZERO EMOJIS + HUD TÁTICO)
+    const RARU_CSS = `
+    .vist-modulo-root .chip{padding:9px 11px;border-radius:999px;border:1px solid #334155;font-size:12px;font-weight:800;cursor:pointer;background:#000;color:#e2e8f0;text-align:left;transition:all .15s ease}
+    .vist-modulo-root .chip.ativo{background:#00E5FF;color:#000;border-color:#00E5FF}
+    .vist-modulo-root .chip.defesa.ativo{background:#ff3366;color:#fff;border-color:#ff3366}
+    .vist-modulo-root .hud{display:none;position:absolute;inset:0;pointer-events:none;z-index:20}
+    .vist-modulo-root .hud.on{display:block}
+    .vist-modulo-root #scan{display:none;position:absolute;left:0;right:0;height:3px;background:linear-gradient(90deg,transparent,#ff0000 20%,#ff4d4d 50%,#ff0000 80%,transparent);box-shadow:0 0 18px 4px rgba(255,0,0,.85);animation:scan 2.2s linear infinite;z-index:20}
+    @keyframes scan{0%{top:0;opacity:0}10%{opacity:1}90%{opacity:1}100%{top:100%;opacity:0}}
+    .vist-modulo-root .btn{border:0;cursor:pointer;border-radius:999px;padding:12px 16px;font-weight:900;font-size:13px;background:linear-gradient(90deg,#00E5FF,#00F2FE);color:#00141a;display:inline-flex;align-items:center;justify-content:center;gap:6px}
+    .vist-modulo-root .btn:disabled{opacity:.45;cursor:not-allowed}
+    .vist-modulo-root .btn-green{background:linear-gradient(90deg,#10b981,#34d399);color:#000}
+    .vist-modulo-root .btn-ghost{background:#0f172a;color:#fff;border:1px solid #334155}
+    .vist-modulo-root .btn-pink{background:linear-gradient(90deg,#FF2EA6,#f472b6);color:#fff}
+    .vist-modulo-root .btn-red{background:linear-gradient(90deg,#dc2626,#ef4444);color:#fff}
+    .vist-modulo-root .btn-small{padding:9px 13px;font-size:12px}
+    .vist-modulo-root .btn-foto-grande{width:100%;padding:16px;font-size:15px;margin-top:8px;margin-bottom:6px;background:linear-gradient(90deg,#00E5FF,#FF2EA6);color:#fff;letter-spacing:.04em}
+    .vist-modulo-root .card{background:linear-gradient(180deg,#050a1a,#030712);border:1px solid rgba(0,229,255,.45);border-radius:22px;padding:16px;margin-bottom:10px}
+    .vist-modulo-root .carimbo{background:rgba(3,7,18,.92);border:1px solid #00F2FE;border-radius:10px;padding:10px;font-size:11px;line-height:1.6;word-break:break-word}
+    .vist-modulo-root .camera-box{width:100%;height:380px;border-radius:14px;overflow:hidden;background:#000;display:flex;align-items:center;justify-content:center;position:relative;border:2px solid #1e293b}
+    .vist-modulo-root .camera-box video{width:100%;height:100%;object-fit:cover}
+    .vist-modulo-root .etq{position:absolute;background:rgba(0,0,0,.75);color:#fff;font-size:10px;padding:6px 8px;border-radius:8px;z-index:30}
+    .vist-modulo-root .grade{position:absolute;inset:0;opacity:.22;background-image:linear-gradient(rgba(255,255,255,.5) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.5) 1px,transparent 1px);background-size:33.33% 33.33%}
+    .vist-modulo-root .acordeao-btn{width:100%;text-align:left;background:#0f172a;border:1px solid #334155;color:#fff;border-radius:12px;padding:13px;font-weight:900;cursor:pointer;font-size:13px}
+    .vist-modulo-root .acordeao-conteudo{display:none;margin-top:10px}
+    .vist-modulo-root .acordeao-conteudo.aberto{display:block}
+    .vist-modulo-root .preview-pdf{width:100%;height:480px;border:1px solid #00E5FF;border-radius:12px;background:#fff;display:none}
+    `;
+
+    // =========================================================================
+    // BASE DE DADOS: 92 MUNICÍPIOS DO ESTADO DO RIO DE JANEIRO
+    // =========================================================================
+    const M_RAW = "Angra dos Reis|-23.00|-44.31|10.10.60.01|lagunas;Aperibé|-21.62|-42.10|10.10.60.02|paraiba;Araruama|-22.87|-42.33|10.10.60.03|lagunas;Areal|-22.23|-43.11|10.10.60.04|paraiba;Armação dos Búzios|-22.75|-41.88|10.10.60.05|sao_joao;Arraial do Cabo|-22.96|-42.02|10.10.60.06|lagunas;Barra do Piraí|-22.47|-43.81|10.10.60.07|guandu;Barra Mansa|-22.54|-44.17|10.10.60.08|guandu;Belford Roxo|-22.76|-43.39|10.10.60.09|guandu;Bom Jardim|-22.15|-42.41|10.10.60.10|paraiba;Bom Jesus do Itabapoana|-21.14|-41.67|10.10.60.11|paraiba;Cabo Frio|-22.88|-42.01|10.10.41.20|lagunas;Cachoeiras de Macacu|-22.46|-42.65|10.10.60.12|piratininga;Cambuci|-21.56|-41.90|10.10.60.13|paraiba;Campos dos Goytacazes|-21.75|-41.32|10.10.51.92|paraiba;Cantagalo|-21.97|-42.36|10.10.60.14|paraiba;Carapebus|-22.21|-41.65|10.10.60.15|macae;Cardoso Moreira|-21.48|-41.21|10.10.60.80|paraiba;Carmo|-21.92|-42.61|10.10.60.17|paraiba;Casimiro de Abreu|-22.48|-42.20|10.10.60.18|sao_joao;Comendador Levy Gasparian|-22.03|-43.20|10.10.60.16|paraiba;Conceição de Macabu|-22.08|-41.86|10.10.60.81|macae;Cordeiro|-22.02|-42.36|10.10.60.82|paraiba;Duas Barras|-22.05|-42.52|10.10.60.83|paraiba;Duque de Caxias|-22.78|-43.31|10.10.23.14|piratininga;Engenheiro Paulo de Frontin|-22.54|-43.68|10.10.60.19|guandu;Guapimirim|-22.53|-42.98|10.10.60.20|piratininga;Iguaba Grande|-22.84|-42.22|10.10.60.21|lagunas;Itaboraí|-22.74|-42.85|10.10.60.22|piratininga;Itaguaí|-22.85|-43.77|10.10.60.23|guandu;Italva|-21.42|-41.74|10.10.60.24|paraiba;Itaocara|-21.47|-42.07|10.10.60.25|paraiba;Itaperuna|-21.20|-41.88|10.10.60.26|paraiba;Itatiaia|-22.49|-44.56|10.10.60.27|guandu;Japeri|-22.64|-43.65|10.10.60.28|guandu;Laje do Muriaé|-21.20|-42.12|10.10.60.29|paraiba;Macaé|-22.37|-41.78|10.10.60.30|macae;Macuco|-21.98|-42.49|10.10.60.31|paraiba;Magé|-22.65|-43.04|10.10.60.32|piratininga;Mangaratiba|-22.95|-44.04|10.10.60.33|guandu;Maricá|-22.91|-42.81|10.10.60.34|piratininga;Mendes|-22.52|-43.73|10.10.60.35|guandu;Mesquita|-22.78|-43.43|10.10.21.15|guandu;Miguel Pereira|-22.45|-43.46|10.10.60.36|guandu;Miracema|-21.41|-42.19|10.10.60.37|paraiba;Natividade|-21.04|-41.97|10.10.60.38|paraiba;Nilópolis|-22.81|-43.41|10.10.60.39|guandu;Niterói|-22.88|-43.11|10.10.12.08|piratininga;Nova Friburgo|-22.28|-42.53|10.10.60.40|paraiba;Nova Iguaçu|-22.75|-43.45|10.10.22.12|guandu;Paracambi|-22.61|-43.71|10.10.60.41|guandu;Paraíba do Sul|-22.16|-43.29|10.10.60.42|paraiba;Paraty|-23.22|-44.71|10.10.60.43|lagunas;Paty do Alferes|-22.42|-43.43|10.10.60.44|guandu;Petrópolis|-22.50|-43.17|10.10.31.05|paraiba;Pinheiral|-22.51|-44.00|10.10.60.45|guandu;Piraí|-22.62|-43.89|10.10.60.46|guandu;Porciúncula|-20.97|-42.04|10.10.60.47|paraiba;Porto Real|-22.41|-44.28|10.10.60.48|guandu;Quatis|-22.41|-44.25|10.10.60.49|guandu;Queimados|-22.71|-43.55|10.10.60.50|guandu;Quissamã|-22.10|-41.47|10.10.60.51|macae;Resende|-22.47|-44.44|10.10.60.52|guandu;Rio Bonito|-22.70|-42.62|10.10.60.53|piratininga;Rio Claro|-22.73|-44.13|10.10.60.54|guandu;Rio das Ostras|-22.52|-41.94|10.10.60.55|macae;Rio de Janeiro|-22.90|-43.17|10.10.11.10|piratininga;Santa Maria Madalena|-21.95|-42.00|10.10.60.56|paraiba;Santo Antônio de Pádua|-21.53|-42.18|10.10.60.57|paraiba;São Fidélis|-21.64|-41.74|10.10.60.58|paraiba;São Francisco de Itabapoana|-21.46|-41.11|10.10.60.59|paraiba;São Gonçalo|-22.82|-43.05|10.10.60.60|piratininga;São João da Barra|-21.64|-41.05|10.10.60.61|paraiba;São João de Meriti|-22.80|-43.37|10.10.60.62|guandu;São José de Ubá|-21.35|-41.94|10.10.60.63|paraiba;São José do Vale do Rio Preto|-22.15|-43.15|10.10.60.64|paraiba;São Pedro da Aldeia|-22.84|-42.10|10.10.60.65|lagunas;São Sebastião do Alto|-21.95|-42.13|10.10.60.66|paraiba;Sapucaia|-21.99|-43.13|10.10.60.67|paraiba;Saquarema|-22.91|-42.50|10.10.60.68|lagunas;Seropédica|-22.74|-43.70|10.10.60.69|guandu;Silva Jardim|-22.65|-42.38|10.10.60.70|sao_joao;Sumidouro|-22.04|-42.67|10.10.60.71|paraiba;Tanguá|-22.72|-42.70|10.10.60.72|piratininga;Teresópolis|-22.41|-42.96|10.10.60.73|paraiba;Trajano de Moraes|-22.06|-42.06|10.10.60.74|paraiba;Três Rios|-22.11|-43.21|10.10.60.75|paraiba;Valença|-22.25|-43.70|10.10.60.76|paraiba;Varre-Sai|-20.93|-41.86|10.10.60.77|paraiba;Vassouras|-22.40|-43.66|10.10.60.78|guandu;Volta Redonda|-22.52|-44.10|10.10.60.79|guandu";
+    const MUNICIPIOS_RJ = M_RAW.split(";").map(s => {
+      const a = s.split("|");
+      return { n: a[0], lat: +a[1], lon: +a[2], ip: a[3], bacia: a[4] };
+    });
+
+    // =========================================================================
+    // UTILITÁRIOS GLOBAIS (VOZ, BINÁRIO, NORMALIZAÇÃO)
+    // =========================================================================
+    function falar(t, voiceURI = "") {
+      if (!("speechSynthesis" in window)) return;
+      const l = String(t || "").replace(/[*#_`]/g, "").replace(/https?:\/\/\S+/g, "").trim();
+      if (!l) return;
+      try {
+        window.speechSynthesis.cancel();
+        const u = new SpeechSynthesisUtterance(l);
+        u.lang = "pt-BR";
+        if (voiceURI) {
+          const v = window.speechSynthesis.getVoices().find(x => x.voiceURI === voiceURI);
+          if (v) u.voice = v;
+        }
+        window.speechSynthesis.speak(u);
+      } catch (e) {}
+    }
+
+    function norm(s) {
+      return String(s || "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().trim();
+    }
+
+    function winBytes(str) {
+      const m = { 0x20AC: 0x80, 0x201A: 0x82, 0x0192: 0x83, 0x201E: 0x84, 0x2026: 0x85, 0x2020: 0x86, 0x2021: 0x87, 0x02C6: 0x88, 0x2030: 0x89, 0x0160: 0x8A, 0x2039: 0x8B, 0x0152: 0x8C, 0x017D: 0x8E, 0x2018: 0x91, 0x2019: 0x92, 0x201C: 0x93, 0x201D: 0x94, 0x2022: 0x95, 0x2013: 0x96, 0x2014: 0x97, 0x02DC: 0x98, 0x2122: 0x99, 0x0161: 0x9A, 0x203A: 0x9B, 0x0153: 0x9C, 0x017E: 0x9E, 0x0178: 0x9F };
+      const o = [];
+      for (let i = 0; i < str.length; i++) {
+        const c = str.charCodeAt(i);
+        if ((c >= 0x20 && c <= 0x7E) || (c >= 0xA0 && c <= 0xFF)) o.push(c);
+        else if (m[c] !== undefined) o.push(m[c]);
+        else if (c === 0x0A || c === 0x0D) o.push(c);
+        else o.push(0x20);
+      }
+      return new Uint8Array(o);
+    }
+
+    function concat(a) {
+      const t = a.reduce((x, y) => x + y.length, 0), r = new Uint8Array(t);
+      let o = 0;
+      for (const b of a) { r.set(b, o); o += b.length; }
+      return r;
+    }
+
+    function b64ToBytes(d) {
+      const b = d.split(",")[1] || "", bin = atob(b), r = new Uint8Array(bin.length);
+      for (let i = 0; i < bin.length; i++) r[i] = bin.charCodeAt(i);
+      return r;
+    }
+
+    // =========================================================================
+    // BIBLIOTECA DE ÍCONES SVG VETORIAIS (ZERO EMOJIS)
+    // =========================================================================
+    const SvgIcon = ({ name, className = "w-4 h-4" }) => {
+      switch (name) {
+        case "shield":
+          return (
+            <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+            </svg>
+          );
+        case "radar":
+          return (
+            <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <circle cx="12" cy="12" r="10" />
+              <circle cx="12" cy="12" r="6" />
+              <circle cx="12" cy="12" r="2" />
+              <line x1="12" y1="12" x2="19" y2="5" />
+            </svg>
+          );
+        case "camera":
+          return (
+            <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z" />
+              <circle cx="12" cy="13" r="4" />
+            </svg>
+          );
+        case "route":
+          return (
+            <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <circle cx="6" cy="19" r="3" />
+              <path d="M9 19h8.5a3.5 3.5 0 0 0 0-7h-11a3.5 3.5 0 0 1 0-7H15" />
+              <circle cx="18" cy="5" r="3" />
+            </svg>
+          );
+        case "scale":
+          return (
+            <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <path d="M12 3v18" />
+              <path d="M5 7h14" />
+              <path d="M5 7l-3 7h6l-3-7z" />
+              <path d="M19 7l-3 7h6l-3-7z" />
+              <path d="M8 21h8" />
+            </svg>
+          );
+        case "bot":
+          return (
+            <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <rect x="3" y="8" width="18" height="12" rx="3" />
+              <path d="M12 2v6" />
+              <circle cx="12" cy="2" r="1.5" />
+              <circle cx="9" cy="14" r="1.5" fill="currentColor" />
+              <circle cx="15" cy="14" r="1.5" fill="currentColor" />
+            </svg>
+          );
+        case "gade":
+          return (
+            <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
+              <circle cx="9" cy="7" r="4" />
+              <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
+              <path d="M16 3.13a4 4 0 0 1 0 7.75" />
+            </svg>
+          );
+        case "alert":
+          return (
+            <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" />
+              <line x1="12" y1="9" x2="12" y2="13" />
+              <line x1="12" y1="17" x2="12.01" y2="17" />
+            </svg>
+          );
+        case "volume":
+          return (
+            <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5" />
+              <path d="M15.54 8.46a5 5 0 0 1 0 7.07" />
+              <path d="M19.07 4.93a10 10 0 0 1 0 14.14" />
+            </svg>
+          );
+        case "play":
+          return (
+            <svg className={className} viewBox="0 0 24 24" fill="currentColor">
+              <polygon points="5 3 19 12 5 21 5 3" />
+            </svg>
+          );
+        case "check":
+          return (
+            <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+              <polyline points="20 6 9 17 4 12" />
+            </svg>
+          );
+        case "gps":
+          return (
+            <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
+              <circle cx="12" cy="10" r="3" />
+            </svg>
+          );
+        default:
+          return null;
+      }
+    };
+
+    // =========================================================================
+    // MÓDULO CONSOLIDADO: VISTORIA TÉCNICA E OCORRÊNCIA COMUNITÁRIA
+    // =========================================================================
+    function VistoriaRARU_NEXUS({ onBackToDashboard, showToast, perfilVozId, userName }) {
+      const containerRef = useRef(null);
+
+      useEffect(() => {
+        const root = containerRef.current;
+        if (!root) return;
+
+        if (!document.getElementById("raru-nexus-css")) {
+          const st = document.createElement("style");
+          st.id = "raru-nexus-css";
+          st.textContent = RARU_CSS;
+          document.head.appendChild(st);
+        }
+
+        const M = M_RAW;
+        const MUN = M.split(";").map(s => { const a = s.split("|"); return { n: a[0], lat: +a[1], lon: +a[2], ip: a[3] }; });
+        const FRENTES = [
+          "Projeto Cidadão Sensor - Baixada Fluminense",
+          "Universidades e Pesquisadores de Campo",
+          "CEMADEN / INPE",
+          "CRAS / CREAS - Baixada Fluminense e RJ",
+          "SUS / Vigilância em Saúde - Baixada Fluminense e RJ",
+          "NUPDECs - 92 Municípios - RJ",
+          "Bom Dia Comunidade / A Chave da Esperança",
+          "Cidadão - Participação Direta"
+        ];
+        const ZEL = [
+          "MATO ALTO",
+          "BUEIRO ENTUPIDO",
+          "BUEIRO SEM TAMPA",
+          "PODA DE ÁRVORE",
+          "BURACOS NA VIA",
+          "DESCARTE IRREGULAR DE LIXO",
+          "ILUMINAÇÃO PÚBLICA APAGADA",
+          "DANOS AO PATRIMÔNIO PÚBLICO",
+          "EQUIPAMENTO PÚBLICO QUEBRADO"
+        ];
+        const RISCO = [
+          "ALAGAMENTO - ÁGUA PARADA",
+          "ENXURRADA - ÁGUA CORRENDO COM FORÇA",
+          "INUNDAÇÃO / RIO CHEIO",
+          "DESLIZAMENTO / ENCOSTA INSTÁVEL",
+          "RISCO DE DESABAMENTO",
+          "ÁRVORE EM RISCO DE QUEDA",
+          "EROSÃO / TALUDE"
+        ];
+        const KEY = "raru_v11_2", KEYL = "raru_vistorias_v1";
+        const pad = MUN.find(x => x.n === "Mesquita") || MUN[0];
+
+        let voz = true, stream = null, track = null, zoom = 1, hasZoom = false, maxZoom = 5;
+        let foto = "", fotoDim = { w: 0, h: 0 }, fotoBlob = null, hash = "";
+        let gps = { lat: 0, lon: 0, acc: "" }, clima = null, vento = 0, chuva = 0;
+        let riscos = [], tipos = [], selMun = pad, selFrente = FRENTES[0], modo = "auto", rot = 0;
+        let prot = "", data = "", urlPdf = "", nomePdf = "", pdfBlob = null;
+
+        const $ = id => root.querySelector(`#${id}`);
+        const L = [];
+        const on = (el, ev, fn) => { if (el) { el.addEventListener(ev, fn); L.push([el, ev, fn]); } };
+
+        function falarLocal(t) {
+          if (!voz) return;
+          falar(t, perfilVozId || "");
+        }
+
+        function aviso(t) {
+          if ($("aviso")) {
+            $("aviso").textContent = t;
+            $("aviso").style.display = "block";
+            clearTimeout(aviso.t);
+            aviso.t = setTimeout(() => { if ($("aviso")) $("aviso").style.display = "none"; }, 4000);
+          }
+          if (showToast) showToast(t);
+        }
+
+        function esc(s) {
+          return (s || "").replace(/[&<>'"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", "'": "&#39;", '"': "&quot;" }[c]));
+        }
+
+        function agora() { return new Date().toLocaleString("pt-BR"); }
+
+        function cod() {
+          const d = new Date();
+          return `RARU-V11.2-${d.getFullYear()}${String(d.getMonth() + 1).padStart(2, "0")}${String(d.getDate()).padStart(2, "0")}-${String(d.getHours()).padStart(2, "0")}${String(d.getMinutes()).padStart(2, "0")}${String(d.getSeconds()).padStart(2, "0")}`;
+        }
+
+        function gar() {
+          if (!prot) prot = cod();
+          if (!data) data = agora();
+          return { protocolo: prot, data };
+        }
+
+        async function sha(buf) {
+          const h = await crypto.subtle.digest("SHA-256", buf);
+          return [...new Uint8Array(h)].map(b => b.toString(16).padStart(2, "0")).join("").toUpperCase();
+        }
+
+        // SIRENES DE EMERGÊNCIA (RUSSO E CEMADEN - CICLO 3+1+1 = 5 MIN)
+        let actx = null, osc = null, gain = null, sInt = null, sT = [], alarme = "";
+        function clrT() { sT.forEach(t => clearTimeout(t)); sT = []; }
+        function pararOsc() { if (sInt) { clearInterval(sInt); sInt = null; } try { if (osc) osc.stop(); } catch (e) {} osc = null; }
+        function updAl() {
+          if ($("btnRusso")) $("btnRusso").textContent = alarme === "russo" ? "ALARME RUSSO ATIVO" : "DISPARAR ALARME RUSSO";
+          if ($("btnCem")) $("btnCem").textContent = alarme === "cemaden" ? "ALARME CEMADEN ATIVO" : "DISPARAR ALARME CEMADEN";
+          if ($("btnPararSir")) $("btnPararSir").style.display = alarme ? "inline-flex" : "none";
+          if ($("alStatus")) $("alStatus").textContent = alarme ? `Sirene ativa: ${alarme === "russo" ? "ALARME RUSSO" : "ALARME CEMADEN"} - 3+1+1 = 5 min` : "Alarmes: parados";
+        }
+        function pararAll() { clrT(); pararOsc(); alarme = ""; updAl(); }
+        function startOsc(tipo) {
+          try {
+            if (!actx) { const AC = window.AudioContext || window.webkitAudioContext; actx = new AC(); }
+            actx.resume();
+            const r = tipo === "russo";
+            osc = actx.createOscillator();
+            gain = actx.createGain();
+            osc.type = r ? "sawtooth" : "sine";
+            osc.frequency.value = r ? 450 : 600;
+            gain.gain.value = 0.15;
+            osc.connect(gain);
+            gain.connect(actx.destination);
+            osc.start();
+            let up = true;
+            sInt = setInterval(() => {
+              if (!osc) return;
+              let f = osc.frequency.value;
+              if (up) { f += 30; if (f >= 950) up = false; }
+              else { f -= 30; if (f <= 400) up = true; }
+              osc.frequency.setTargetAtTime(f, actx.currentTime, 0.1);
+            }, 80);
+          } catch (e) {}
+        }
+        function disp(tipo) {
+          pararAll();
+          alarme = tipo;
+          updAl();
+          falarLocal("Atenção comunidade! Alerta máximo disparado.");
+          startOsc(tipo);
+          if ($("alStatus")) $("alStatus").textContent = `${tipo === "russo" ? "ALARME RUSSO" : "ALARME CEMADEN"} - FASE 1: 3 min tocando`;
+          sT.push(setTimeout(() => {
+            pararOsc();
+            if ($("alStatus")) $("alStatus").textContent = `${tipo === "russo" ? "ALARME RUSSO" : "ALARME CEMADEN"} - PAUSA: 1 min p/ raciocinar`;
+            sT.push(setTimeout(() => {
+              startOsc(tipo);
+              if ($("alStatus")) $("alStatus").textContent = `${tipo === "russo" ? "ALARME RUSSO" : "ALARME CEMADEN"} - FASE 2: 1 min tocando p/ despertar`;
+              sT.push(setTimeout(() => { pararAll(); aviso("Ciclo de 5 minutos encerrado."); }, 60000));
+            }, 60000));
+          }, 180000));
+        }
+
+        function laudoIA() {
+          const t = montar();
+          if ($("laudo")) $("laudo").value = t;
+          return t;
+        }
+        function falarLaudo() {
+          falarLocal("Laudo gerado pela inteligência artificial. " + laudoIA());
+        }
+
+        // DRIVE DA EQUIPE - APENAS POST HTTPS SEM EXPOR UPLOAD ABERTO
+        async function enviarDriveEquipe() {
+          if (!pdfBlob) { aviso("Gere o PDF primeiro."); return; }
+          if (!DRIVE_EQUIPE_URL || !DRIVE_EQUIPE_URL.startsWith("https://")) {
+            aviso("Drive da equipe não configurado pelo admin. Baixando PDF para compartilhar.");
+            baixarPdf();
+            return;
+          }
+          try {
+            const rdr = new FileReader();
+            rdr.onload = async () => {
+              const b64 = rdr.result.split(",")[1];
+              const r = await fetch(DRIVE_EQUIPE_URL, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ nome: nomePdf || `${gar().protocolo}.pdf`, pdf: b64, protocolo: gar().protocolo })
+              });
+              if (r.ok) aviso("PDF enviado pro Drive da Equipe automaticamente. Sem pedir sua conta.");
+              else { aviso("Falha no Drive da equipe. PDF baixado para compartilhar."); baixarPdf(); }
+            };
+            rdr.readAsDataURL(pdfBlob);
+          } catch (e) {
+            aviso("Falha no Drive. Baixando PDF.");
+            baixarPdf();
+          }
+        }
+
+        function popMun(f) {
+          const sel = $("munSel");
+          if (!sel) return;
+          const q = norm(f), fil = q ? MUN.filter(m => norm(m.n).includes(q) || norm(m.ip).includes(q)) : MUN;
+          const lista = fil.length ? fil : MUN;
+          sel.innerHTML = lista.map(m => `<option value="${esc(m.n)}">${esc(m.n)} (${esc(m.ip)})</option>`).join("");
+          if (lista.some(m => m.n === selMun.n)) sel.value = selMun.n;
+          else if (fil.length) { selMun = fil[0]; sel.value = selMun.n; climaLoad(selMun); }
+          else sel.value = selMun.n;
+          if ($("munInfo")) $("munInfo").textContent = `${MUN.length} municípios - conferido: ${MUN.length} / 92`;
+        }
+
+        async function climaLoad(m) {
+          try {
+            const r = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${m.lat}&longitude=${m.lon}&current=temperature_2m,relative_humidity_2m,precipitation,wind_speed_10m,wind_gusts_10m&timezone=America%2FSao_Paulo`);
+            const d = await r.json(), c = d.current || {};
+            clima = { temp: c.temperature_2m, umi: c.relative_humidity_2m, chuva: c.precipitation ?? 0, vento: c.wind_speed_10m ?? 0, rajada: c.wind_gusts_10m ?? 0 };
+            vento = Math.max(clima.vento, clima.rajada);
+            chuva = clima.chuva;
+            if ($("climaInfo")) $("climaInfo").textContent = `${m.n}: ${clima.temp} °C • Umidade ${clima.umi}% • Chuva ${chuva} mm • Vento ${vento} km/h`;
+            autoRisco();
+            carimbo();
+          } catch (e) {
+            if ($("climaInfo")) $("climaInfo").textContent = `${m.n}: clima offline`;
+          }
+        }
+
+        function gpsLoad() {
+          if (!navigator.geolocation) return aviso("GPS não disponível.");
+          if ($("gpsInfo")) $("gpsInfo").textContent = "GPS: buscando...";
+          navigator.geolocation.getCurrentPosition(p => {
+            gps = { lat: p.coords.latitude.toFixed(6), lon: p.coords.longitude.toFixed(6), acc: Math.round(p.coords.accuracy) };
+            if ($("gpsInfo")) $("gpsInfo").textContent = `GPS: ${gps.lat}, ${gps.lon} (±${gps.acc} m)`;
+            carimbo();
+            salvar();
+          }, () => {
+            if ($("gpsInfo")) $("gpsInfo").textContent = "GPS: sem sinal";
+          }, { enableHighAccuracy: true, timeout: 12000, maximumAge: 0 });
+        }
+
+        function ler(el) { return el ? el.value.trim() : ""; }
+        function setV(el, v) { if (el) el.value = v || ""; }
+
+        function montar(pF, dF) {
+          const r = gar(), pr = pF || r.protocolo, dt = dF || r.data;
+          const ag = ler($("agWhats")), mn = ler($("moNome")), mw = ler($("moWhats"));
+          const respNome = ler($("resp")) || userName || "NÃO INFORMADO";
+          const linhas = [
+            `${TITULO} — ${SUB} (${COMP})`,
+            "LAUDO DE VISTORIA TÉCNICA E OCORRÊNCIA COMUNITÁRIA",
+            `Protocolo: ${pr} • Data/Hora: ${dt}`,
+            `Município: ${selMun.n} (RJ) • Frente/Equipe: ${selFrente}`,
+            `Classificação: ${tipos.length ? tipos.join(" | ") : "NÃO INFORMADO"}`,
+            `Endereço: ${ler($("endereco")) || "NÃO INFORMADO"} • Ponto de Referência: ${ler($("pontoRef")) || "NÃO INFORMADO"}`,
+            `Responsável / Morador: ${respNome}`
+          ];
+          if (ag) linhas.push(`Contato do Agente em Campo: ${ag}`);
+          if (mn || mw) linhas.push(`Contato do Morador: ${(mn || "SEM NOME")} - ${(mw || "SEM NÚMERO")}`);
+          linhas.push(
+            `Riscos Observados: ${riscos.length ? riscos.join(", ") : "NENHUM"} • Vento: ${vento} km/h • Chuva: ${chuva} mm`,
+            `Condições Climáticas: ${clima ? `${clima.temp} °C • Umidade ${clima.umi}% • Chuva ${clima.chuva} mm • Vento ${clima.vento} km/h (Rajada ${clima.rajada} km/h)` : "SEM LEITURA"}`,
+            `Coordenadas GPS: ${gps.lat ? `${gps.lat}, ${gps.lon} (±${gps.acc || "?"} m)` : "SEM GPS"}`,
+            `Descrição da Vistoria: ${ler($("desc")) || "SEM DESCRIÇÃO"}`,
+            `Observações e Encaminhamentos: ${ler($("obs")) || "SEM OBSERVAÇÕES"}`,
+            `Hash SHA-256 da Imagem: ${hash || "SEM FOTO ANEXADA"}`,
+            "Integração via Equipe Responsável"
+          );
+          return linhas.join("\n");
+        }
+
+        function carimbo() {
+          const ag = ler($("agWhats")), mn = ler($("moNome")), mw = ler($("moWhats"));
+          if ($("carimbo")) {
+            let h = `<div><b>${TITULO} • ${COMP}</b> • ${agora()}</div><div><b>Município:</b> ${esc(selMun.n)} (RJ) • <b>Frente:</b> ${esc(selFrente)}</div><div><b>Classificação:</b> ${esc(tipos.length ? tipos.join(" • ") : "NÃO INFORMADO")}</div><div><b>Local:</b> ${esc(ler($("endereco")) || "Endereço não informado")} • <b>GPS:</b> ${esc(gps.lat ? `${gps.lat}, ${gps.lon} (±${gps.acc || "?"} m)` : "GPS pendente")}</div><div><b>Clima:</b> ${esc(clima ? `${clima.temp} °C • Chuva ${clima.chuva} mm • Vento ${vento} km/h` : `Chuva ${chuva} mm • Vento ${vento} km/h`)} • <b>Riscos:</b> ${esc(riscos.length ? riscos.join(", ") : "Nenhum")}</div>`;
+            if (ag) h += `<div><b>Contato do Agente:</b> ${esc(ag)}</div>`;
+            if (mn || mw) h += `<div><b>Contato do Morador:</b> ${esc(mn || "SEM NOME")} - ${esc(mw || "SEM NÚMERO")}</div>`;
+            h += `<div><b>Hash SHA-256:</b> ${esc(hash || "Sem foto")}</div><div><b>Integração via Equipe Responsável</b></div>`;
+            $("carimbo").innerHTML = h;
+          }
+          laudoIA();
+        }
+
+        function salvar() {
+          try {
+            localStorage.setItem(KEY, JSON.stringify({
+              protocolo: prot, data, mun: selMun.n, frente: selFrente, tipos,
+              endereco: ler($("endereco")), pontoRef: ler($("pontoRef")),
+              resp: ler($("resp")), agWhats: ler($("agWhats")),
+              moNome: ler($("moNome")), moWhats: ler($("moWhats")),
+              desc: ler($("desc")), obs: ler($("obs")),
+              riscos, vento, chuva, gps, hash, rot
+            }));
+          } catch (e) {}
+        }
+
+        function carregar() {
+          try {
+            const d = JSON.parse(localStorage.getItem(KEY) || "null");
+            if (!d) {
+              if (userName && $("resp") && !$("resp").value) setV($("resp"), userName);
+              return;
+            }
+            if (d.protocolo) prot = d.protocolo;
+            if (d.data) data = d.data;
+            if (d.mun) { const m = MUN.find(x => x.n === d.mun); if (m) selMun = m; }
+            if (d.frente) selFrente = d.frente;
+            if (Array.isArray(d.tipos)) tipos = d.tipos;
+            setV($("endereco"), d.endereco);
+            setV($("pontoRef"), d.pontoRef);
+            setV($("resp"), d.resp || userName || "");
+            setV($("agWhats"), d.agWhats);
+            setV($("moNome"), d.moNome);
+            setV($("moWhats"), d.moWhats);
+            setV($("desc"), d.desc);
+            setV($("obs"), d.obs);
+            riscos = d.riscos || [];
+            vento = d.vento || 0;
+            chuva = d.chuva || 0;
+            gps = d.gps || { lat: 0, lon: 0, acc: "" };
+            hash = d.hash || "";
+            rot = d.rot || 0;
+            if ($("gpsInfo") && gps.lat) $("gpsInfo").textContent = `GPS: ${gps.lat}, ${gps.lon} (±${gps.acc || "?"} m)`;
+            if ($("hashInfo") && hash) $("hashInfo").textContent = `Hash SHA-256: ${hash}`;
+            marcarR();
+            marcarT();
+          } catch (e) {}
+        }
+
+        function marcarR() {
+          if ($("riscosBox")) {
+            $("riscosBox").querySelectorAll(".chip").forEach(b => {
+              const onChip = riscos.includes(b.dataset.r);
+              b.classList.toggle("ativo", onChip);
+              b.classList.toggle("defesa", onChip && b.dataset.defesa === "1");
+            });
+          }
+        }
+
+        function marcarT() {
+          root.querySelectorAll("[data-tipo]").forEach(b => {
+            const onChip = tipos.includes(b.dataset.tipo);
+            b.classList.toggle("ativo", onChip);
+            b.classList.toggle("defesa", onChip && b.dataset.defesa === "1");
+          });
+        }
+
+        function autoRisco() {
+          let m = false;
+          if (vento >= 60 && !riscos.includes("Ventania")) { riscos.push("Ventania"); m = true; }
+          if (chuva >= 20 && !riscos.includes("Alagamento")) { riscos.push("Alagamento"); m = true; }
+          if (m) { marcarR(); salvar(); }
+        }
+
+        function aplZoom() {
+          try {
+            if (track && hasZoom) track.applyConstraints({ advanced: [{ zoom }] }).catch(() => {});
+            else if ($("video")) $("video").style.transform = `scale(${zoom}) rotate(${rot}deg)`;
+          } catch (e) {}
+          if ($("zoomVal")) $("zoomVal").textContent = `${Number(zoom).toFixed(1)}x`;
+          if ($("zoomRange")) $("zoomRange").value = zoom;
+        }
+
+        function aplOri() {
+          const m = modo === "auto" ? (window.innerWidth > window.innerHeight ? "paisagem" : "retrato") : modo;
+          if ($("video")) {
+            $("video").style.objectFit = m === "paisagem" ? "contain" : "cover";
+            $("video").style.transform = `scale(${zoom}) rotate(${rot}deg)`;
+          }
+          if ($("oriInfo")) $("oriInfo").textContent = `Orientação: ${modo === "auto" ? `Automática (${m})` : m} • Rotação: ${rot}°`;
+        }
+
+        async function ligarCam() {
+          pararCam();
+          try {
+            try {
+              stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: { ideal: "environment" }, width: { ideal: 1920 }, height: { ideal: 1080 } }, audio: false });
+            } catch (e) {
+              stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" }, audio: false });
+            }
+            if ($("video")) { $("video").srcObject = stream; await $("video").play(); }
+            track = stream.getVideoTracks()[0] || null;
+            hasZoom = false;
+            zoom = 1;
+            if (track && track.getCapabilities) {
+              const cap = track.getCapabilities();
+              if (cap.zoom) {
+                hasZoom = true;
+                maxZoom = Math.min(cap.zoom.max || 5, 8);
+                if ($("zoomRange")) {
+                  $("zoomRange").min = cap.zoom.min || 1;
+                  $("zoomRange").max = maxZoom;
+                  $("zoomRange").step = cap.zoom.step || 0.1;
+                  $("zoomRange").value = 1;
+                }
+              }
+            }
+            if ($("video")) $("video").style.display = "block";
+            if ($("fotoImg")) $("fotoImg").style.display = "none";
+            if ($("hud")) $("hud").classList.add("on");
+            if ($("scan")) $("scan").style.display = "block";
+            if ($("btnFoto")) $("btnFoto").disabled = false;
+            if ($("btnParar")) $("btnParar").disabled = false;
+            if ($("camStatus")) $("camStatus").textContent = "Câmera: ativa";
+            aplOri();
+            aviso("Câmera ligada.");
+          } catch (e) {
+            if ($("camStatus")) $("camStatus").textContent = "Câmera: bloqueada";
+            aviso("Use Galeria / Arquivo.");
+          }
+        }
+
+        function pararCam() {
+          if (stream) { stream.getTracks().forEach(t => t.stop()); stream = null; }
+          track = null;
+          if ($("hud")) $("hud").classList.remove("on");
+          if ($("scan")) $("scan").style.display = "none";
+          if ($("btnParar")) $("btnParar").disabled = true;
+          if ($("camStatus")) $("camStatus").textContent = "Câmera: desligada";
+        }
+
+        function renderFoto(img, w, h) {
+          const c = document.createElement("canvas");
+          const maxW = 1200;
+          const troca = (rot % 180) !== 0;
+          const baseW = troca ? h : w;
+          const baseH = troca ? w : h;
+          const esc2 = baseW > maxW ? maxW / baseW : 1;
+          c.width = Math.round(baseW * esc2);
+          c.height = Math.round(baseH * esc2);
+          const ctx = c.getContext("2d");
+          ctx.save();
+          ctx.translate(c.width / 2, c.height / 2);
+          ctx.rotate(rot * Math.PI / 180);
+          ctx.scale(zoom, zoom);
+          const dw = troca ? c.height : c.width, dh = troca ? c.width : c.height;
+          ctx.drawImage(img, -dw / 2, -dh / 2, dw, dh);
+          ctx.restore();
+
+          const pad = Math.round(14 * esc2), lh = Math.round(19 * esc2);
+          const linhas = [
+            `${TITULO} • ${COMP} • ${agora()}`,
+            `Município: ${selMun.n} (RJ) • Frente: ${selFrente}`,
+            `Classificação: ${tipos.length ? tipos.join(" | ") : "NÃO INFORMADO"}`,
+            `Endereço: ${ler($("endereco")) || "NÃO INFORMADO"}`,
+            `GPS: ${gps.lat ? `${gps.lat}, ${gps.lon} (±${gps.acc || "?"} m)` : "SEM GPS"} • Clima: ${clima ? `${clima.temp} °C • Chuva ${chuva} mm • Vento ${vento} km/h` : `Chuva ${chuva} mm • Vento ${vento} km/h`}`,
+            `Riscos: ${riscos.length ? riscos.join(", ") : "NENHUM"}`
+          ];
+          const boxH = linhas.length * lh + pad * 2;
+          ctx.fillStyle = "rgba(3,7,18,.88)";
+          ctx.fillRect(0, c.height - boxH, c.width, boxH);
+          ctx.fillStyle = "#00F2FE";
+          ctx.font = `bold ${Math.max(11, Math.round(13 * esc2))}px monospace`;
+          linhas.forEach((l, i) => ctx.fillText(l, pad, c.height - boxH + pad + (i + 0.8) * lh));
+
+          foto = c.toDataURL("image/jpeg", 0.82);
+          fotoDim = { w: c.width, h: c.height };
+          if ($("fotoImg")) { $("fotoImg").src = foto; $("fotoImg").style.display = "block"; }
+          if ($("video")) $("video").style.display = "none";
+          if ($("hud")) $("hud").classList.remove("on");
+          if ($("scan")) $("scan").style.display = "none";
+
+          c.toBlob(async b => {
+            fotoBlob = b;
+            if (b) {
+              hash = await sha(await b.arrayBuffer());
+              if ($("hashInfo")) $("hashInfo").textContent = `Hash SHA-256: ${hash}`;
+              carimbo();
+              salvar();
+            }
+          }, "image/jpeg", 0.82);
+        }
+
+        function bater() {
+          const v = $("video");
+          if (!v || !v.videoWidth) {
+            if (foto) return aviso("Foto já capturada.");
+            return aviso("Ligue a câmera ou use Galeria.");
+          }
+          renderFoto(v, v.videoWidth, v.videoHeight);
+          pararCam();
+          aviso("Foto capturada e carimbada.");
+        }
+
+        function arquivoFoto(ev) {
+          const f = ev.target.files[0];
+          if (!f) return;
+          const r = new FileReader();
+          r.onload = () => {
+            const im = new Image();
+            im.onload = () => {
+              pararCam();
+              renderFoto(im, im.width, im.height);
+              aviso("Imagem carregada e carimbada.");
+            };
+            im.src = r.result;
+          };
+          r.readAsDataURL(f);
+        }
+
+        function limparFoto() {
+          foto = "";
+          fotoDim = { w: 0, h: 0 };
+          fotoBlob = null;
+          hash = "";
+          if ($("fotoImg")) { $("fotoImg").src = ""; $("fotoImg").style.display = "none"; }
+          if ($("hashInfo")) $("hashInfo").textContent = "Hash SHA-256: pendente";
+          if ($("arqFoto")) $("arqFoto").value = "";
+          carimbo();
+          salvar();
+        }
+
+        function lerLista() {
+          try { return JSON.parse(localStorage.getItem(KEYL) || "[]"); } catch (e) { return []; }
+        }
+
+        function salvarLista(a) {
+          try {
+            localStorage.setItem(KEYL, JSON.stringify(a));
+          } catch (e) {
+            try {
+              localStorage.setItem(KEYL, JSON.stringify(a.map(x => ({ ...x, foto: "" }))));
+              aviso("Armazenamento cheio: salvo sem imagem.");
+            } catch (e2) {
+              aviso("Falha ao salvar.");
+            }
+          }
+          renderLista();
+        }
+
+        function salvarReg() {
+          const r = gar();
+          const item = {
+            id: Date.now(), protocolo: r.protocolo, data: r.data, mun: selMun.n, frente: selFrente,
+            tipos: [...tipos], endereco: ler($("endereco")), pontoRef: ler($("pontoRef")),
+            resp: ler($("resp")) || userName || "", agWhats: ler($("agWhats")),
+            moNome: ler($("moNome")), moWhats: ler($("moWhats")),
+            desc: ler($("desc")), obs: ler($("obs")),
+            riscos: [...riscos], vento, chuva, clima, gps, hash,
+            texto: montar(r.protocolo, r.data), foto, fotoDim
+          };
+          const arr = lerLista(), ix = arr.findIndex(x => x.protocolo === r.protocolo);
+          if (ix >= 0) arr[ix] = item; else arr.unshift(item);
+          salvarLista(arr);
+          salvar();
+          aviso(`Vistoria salva: ${item.protocolo}`);
+          falarLaudo();
+        }
+
+        function gerarPdf(it) {
+          const pr = it.protocolo || gar().protocolo, fmt = [];
+          (it.texto || montar(pr, it.data)).split("\n").forEach(ln => {
+            const s = String(ln || "");
+            if (s.length <= 88) fmt.push(s);
+            else {
+              let at = "";
+              s.split(" ").forEach(p => {
+                if ((at + (at ? " " : "") + p).length <= 88) at += (at ? " " : "") + p;
+                else { if (at) fmt.push(at); at = p; }
+              });
+              if (at) fmt.push(at);
+            }
+          });
+          const escPdf = s => String(s || "").replace(/\\/g, "\\\\").replace(/\(/g, "\\(").replace(/\)/g, "\\)");
+          const pags = [];
+          let ops = ["BT", "/F1 10 Tf", "42 790 Td", "14 TL"], y = 790, prim = true;
+          const fechar = () => { ops.push("ET"); pags.push(ops.join("\n")); };
+          const abrir = () => { ops = ["BT", "/F1 10 Tf", "42 790 Td", "14 TL"]; y = 790; prim = true; };
+          fmt.forEach(ln => {
+            if (y < 56) { fechar(); abrir(); }
+            const e = escPdf(ln);
+            if (prim) { ops.push(`(${e}) Tj`); prim = false; }
+            else ops.push(`T* (${e}) Tj`);
+            y -= 14;
+          });
+          fechar();
+
+          const temFoto = it.foto && it.foto.startsWith("data:image/jpeg;base64,") && it.fotoDim && it.fotoDim.w > 0;
+          let imgBytes = null;
+          if (temFoto) {
+            imgBytes = b64ToBytes(it.foto);
+            const ratio = Math.min(510 / it.fotoDim.w, 340 / it.fotoDim.h);
+            const wP = Math.round(it.fotoDim.w * ratio), hP = Math.round(it.fotoDim.h * ratio);
+            pags.push([
+              "BT", "/F1 10 Tf", "42 775 Td",
+              `(${escPdf(`ANEXO FOTOGRAFICO - ${pr} - HASH: ${(it.hash || hash || "N/A").slice(0, 32)}...`)}) Tj`,
+              "ET",
+              `q ${wP} 0 0 ${hP} ${Math.round((595 - wP) / 2)} ${Math.round(740 - hP)} cm /Im1 Do Q`
+            ].join("\n"));
+          }
+
+          const nP = pags.length, firstPage = 4, firstStream = 4 + nP, imgObj = temFoto ? (4 + nP * 2) : null;
+          const blocos = [], off = [0];
+          let pos = 0;
+          const pushT = t => { const b = winBytes(t); blocos.push(b); pos += b.length; };
+          const pushB = b => { blocos.push(b); pos += b.length; };
+
+          pushT("%PDF-1.4\n");
+          off.push(pos); pushT("1 0 obj << /Type /Catalog /Pages 2 0 R >> endobj\n");
+          const kids = [];
+          for (let p = 0; p < nP; p++) kids.push(`${firstPage + p} 0 R`);
+          off.push(pos); pushT(`2 0 obj << /Type /Pages /Kids [${kids.join(" ")}] /Count ${nP} >> endobj\n`);
+          off.push(pos); pushT("3 0 obj << /Type /Font /Subtype /Type1 /BaseFont /Helvetica /Encoding /WinAnsiEncoding >> endobj\n");
+          for (let p = 0; p < nP; p++) {
+            const xo = (temFoto && p === nP - 1) ? `/XObject << /Im1 ${imgObj} 0 R >>` : "";
+            off.push(pos);
+            pushT(`${firstPage + p} 0 obj << /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 3 0 R >> ${xo} >> /Contents ${firstStream + p} 0 R >> endobj\n`);
+          }
+          for (let p = 0; p < nP; p++) {
+            const sb = winBytes(pags[p]);
+            off.push(pos);
+            pushT(`${firstStream + p} 0 obj << /Length ${sb.length} >> stream\n`);
+            pushB(sb);
+            pushT("\nendstream endobj\n");
+          }
+          if (temFoto && imgBytes && imgObj) {
+            off.push(pos);
+            pushT(`${imgObj} 0 obj << /Type /XObject /Subtype /Image /Width ${it.fotoDim.w} /Height ${it.fotoDim.h} /ColorSpace /DeviceRGB /BitsPerComponent 8 /Filter /DCTDecode /Length ${imgBytes.length} >> stream\n`);
+            pushB(imgBytes);
+            pushT("\nendstream endobj\n");
+          }
+
+          const tot = off.length - 1, xPos = pos;
+          let xref = `xref\n0 ${tot + 1}\n0000000000 65535 f \n`;
+          for (let i = 1; i <= tot; i++) xref += `${String(off[i]).padStart(10, "0")} 00000 n \n`;
+          pushT(`${xref}trailer << /Size ${tot + 1} /Root 1 0 R >>\nstartxref\n${xPos}\n%%EOF`);
+
+          const blob = new Blob([concat(blocos)], { type: "application/pdf" });
+          pdfBlob = blob;
+          if (urlPdf) URL.revokeObjectURL(urlPdf);
+          urlPdf = URL.createObjectURL(blob);
+          nomePdf = `${pr}.pdf`;
+
+          if ($("pdfFrame")) { $("pdfFrame").src = urlPdf; $("pdfFrame").style.display = "block"; }
+          if ($("drivePrev")) {
+            $("drivePrev").innerHTML = `<div style="font-size:12px;color:#67e8f9">Prévia - ${esc(pr)} - ${it.foto ? "Texto + Foto" : "Texto sem foto"} - Foto sem achatar, leve</div>${it.foto ? `<img src="${it.foto}" style="width:100%;max-height:320px;object-fit:contain;border-radius:12px;margin-top:8px"/>` : ""}<div style="font-size:12px;white-space:pre-line;margin-top:8px">${esc(it.texto || montar(pr, it.data))}</div>`;
+            $("drivePrev").style.display = "block";
+          }
+          if ($("btnBaixar")) $("btnBaixar").disabled = false;
+          if ($("btnSharePdf")) $("btnSharePdf").disabled = false;
+          if ($("btnDrive")) $("btnDrive").disabled = false;
+          aviso(`PDF gerado (${nP} página(s)).`);
+          falarLaudo();
+        }
+
+        function baixarPdf() {
+          if (!urlPdf) return aviso("Gere o PDF primeiro.");
+          const a = document.createElement("a");
+          a.href = urlPdf;
+          a.download = nomePdf || `${gar().protocolo}.pdf`;
+          a.click();
+        }
+
+        async function sharePdf() {
+          if (!urlPdf) return aviso("Gere o PDF primeiro.");
+          try {
+            const r = await fetch(urlPdf), b = await r.blob();
+            const arq = new File([b], nomePdf || `${gar().protocolo}.pdf`, { type: "application/pdf" });
+            const arr = [arq];
+            if (fotoBlob) arr.push(new File([fotoBlob], `${gar().protocolo}-foto.jpg`, { type: "image/jpeg" }));
+            if (navigator.canShare && navigator.canShare({ files: arr })) {
+              await navigator.share({ title: `${TITULO} — Laudo`, text: montar(), files: arr });
+              return;
+            }
+          } catch (e) {}
+          baixarPdf();
+        }
+
+        async function whats() {
+          const txt = montar();
+          const num = (ler($("agWhats")) || ler($("moWhats"))).replace(/\D/g, "");
+          try {
+            const arr = [];
+            if (fotoBlob) arr.push(new File([fotoBlob], "foto-vistoria.jpg", { type: "image/jpeg" }));
+            if (arr.length && navigator.canShare && navigator.canShare({ files: arr, text: txt })) {
+              await navigator.share({ text: txt, files: arr });
+              return;
+            }
+          } catch (e) {}
+          if (num) window.open(`https://wa.me/${num}?text=${encodeURIComponent(txt)}`, "_blank");
+          else window.open(`https://wa.me/?text=${encodeURIComponent(txt)}`, "_blank");
+          if (navigator.clipboard) navigator.clipboard.writeText(txt).catch(() => {});
+        }
+
+        function limpar() {
+          ["endereco", "pontoRef", "resp", "agWhats", "moNome", "moWhats", "desc", "obs"].forEach(id => { if ($(id)) $(id).value = ""; });
+          if ($("munFiltro")) $("munFiltro").value = "";
+          riscos = [];
+          tipos = [];
+          vento = 0;
+          chuva = 0;
+          rot = 0;
+          prot = cod();
+          data = agora();
+          popMun("");
+          marcarR();
+          marcarT();
+          limparFoto();
+          aplOri();
+          carimbo();
+          try { localStorage.removeItem(KEY); } catch (e) {}
+          aviso("Formulário limpo.");
+        }
+
+        function ac(id) {
+          const el = $(id);
+          if (el) el.classList.toggle("aberto");
+        }
+
+        function renderLista() {
+          if (!$("lista")) return;
+          const arr = lerLista();
+          if (!arr.length) {
+            $("lista").innerHTML = `<div style="font-size:12px;color:#94a3b8">Nenhuma vistoria salva.</div>`;
+            return;
+          }
+          $("lista").innerHTML = arr.map((it, ix) => `<div style="background:#000;border:1px solid #1e293b;border-radius:14px;padding:12px;margin-bottom:10px"><div style="display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap"><b style="color:#00E5FF;font-size:12px">${esc(it.protocolo)} • ${esc(it.mun)}</b><span style="font-size:10px;color:#94a3b8">${esc(it.data)}</span></div><div style="font-size:11px;color:#10b981">${esc(it.frente || "")}</div><div style="font-size:11px;color:#ffd166"><b>Classificação:</b> ${esc(it.tipos && it.tipos.length ? it.tipos.join(" | ") : "Não informado")}</div><div style="font-size:11px;color:#cbd5e1;margin-top:4px">${esc(it.endereco || "Sem endereço")}</div><div style="font-size:11px;color:#94a3b8;margin-top:2px">Riscos: ${esc(it.riscos && it.riscos.length ? it.riscos.join(", ") : "Nenhum")} • Vento: ${esc(String(it.vento ?? 0))} km/h • Chuva: ${esc(String(it.chuva ?? 0))} mm</div><div style="font-size:12px;white-space:pre-line;margin-top:6px">${esc(it.desc || "Sem descrição")}</div><div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px"><button type="button" data-carregar="${ix}" style="padding:6px 10px;border-radius:8px;border:1px solid #00F2FE;background:#082f49;color:#e0f2fe;font-size:11px;cursor:pointer">Carregar</button><button type="button" data-pdf="${ix}" style="padding:6px 10px;border-radius:8px;border:1px solid #10b981;background:#064e3b;color:#d1fae5;font-size:11px;cursor:pointer">Gerar PDF</button><button type="button" data-excluir="${ix}" style="padding:6px 10px;border-radius:8px;border:1px solid #ef4444;background:#450a0a;color:#fee2e2;font-size:11px;cursor:pointer">Excluir</button></div></div>`).join("");
+        }
+
+        function carregarItem(ix) {
+          const arr = lerLista(), it = arr[ix];
+          if (!it) return;
+          prot = it.protocolo || cod();
+          data = it.data || agora();
+          const m = MUN.find(x => x.n === it.mun);
+          if (m) { selMun = m; popMun($("munFiltro") ? $("munFiltro").value : ""); climaLoad(selMun); }
+          if (it.frente && FRENTES.includes(it.frente)) { selFrente = it.frente; if ($("frenteSel")) $("frenteSel").value = selFrente; }
+          tipos = Array.isArray(it.tipos) ? [...it.tipos] : [];
+          riscos = Array.isArray(it.riscos) ? [...it.riscos] : [];
+          vento = it.vento || 0;
+          chuva = it.chuva || 0;
+          clima = it.clima || null;
+          gps = it.gps || { lat: 0, lon: 0, acc: "" };
+          hash = it.hash || "";
+          foto = it.foto || "";
+          fotoDim = it.fotoDim || { w: 0, h: 0 };
+          fotoBlob = null;
+          if (foto) { try { fotoBlob = new Blob([b64ToBytes(foto)], { type: "image/jpeg" }); } catch (e) {} }
+          setV($("endereco"), it.endereco);
+          setV($("pontoRef"), it.pontoRef);
+          setV($("resp"), it.resp);
+          setV($("agWhats"), it.agWhats);
+          setV($("moNome"), it.moNome);
+          setV($("moWhats"), it.moWhats);
+          setV($("desc"), it.desc);
+          setV($("obs"), it.obs);
+          if ($("fotoImg")) {
+            if (foto) { $("fotoImg").src = foto; $("fotoImg").style.display = "block"; }
+            else { $("fotoImg").src = ""; $("fotoImg").style.display = "none"; }
+          }
+          if ($("gpsInfo")) $("gpsInfo").textContent = gps.lat ? `GPS: ${gps.lat}, ${gps.lon} (±${gps.acc || "?"} m)` : "GPS: pendente";
+          if ($("hashInfo")) $("hashInfo").textContent = hash ? `Hash SHA-256: ${hash}` : "Hash SHA-256: pendente";
+          marcarR();
+          marcarT();
+          carimbo();
+          salvar();
+          aviso(`Vistoria carregada: ${prot}`);
+        }
+
+        function excluirItem(ix) {
+          const arr = lerLista();
+          if (!arr[ix]) return;
+          const rem = arr[ix].protocolo;
+          arr.splice(ix, 1);
+          salvarLista(arr);
+          aviso(`Removido: ${rem || "registro"}`);
+        }
+
+        function montarChips() {
+          if ($("riscosBox")) {
+            $("riscosBox").innerHTML = RISCO.map(r => `<button type="button" class="chip" data-r="${esc(r)}" data-defesa="${/DESLIZAMENTO|DESABAMENTO|INUNDA|ENXURRADA|EROS/.test(r) ? "1" : "0"}">${esc(r)}</button>`).join("");
+          }
+          if ($("zelBox")) {
+            $("zelBox").innerHTML = ZEL.map(z => `<button type="button" class="chip" data-tipo="${esc(z)}" data-defesa="0">${esc(z)}</button>`).join("");
+          }
+          if ($("frenteSel")) {
+            $("frenteSel").innerHTML = FRENTES.map(f => `<option value="${esc(f)}">${esc(f)}</option>`).join("");
+            $("frenteSel").value = selFrente;
+          }
+        }
+
+        gar();
+        montarChips();
+        popMun("");
+        carregar();
+        if ($("munSel")) $("munSel").value = selMun.n;
+        if ($("frenteSel")) $("frenteSel").value = selFrente;
+        climaLoad(selMun);
+        gpsLoad();
+        carimbo();
+        renderLista();
+        aplOri();
+        updAl();
+
+        on($("munFiltro"), "input", e => popMun(e.target.value));
+        on($("munSel"), "change", e => {
+          const m = MUN.find(x => x.n === e.target.value);
+          if (m) { selMun = m; climaLoad(selMun); carimbo(); salvar(); }
+        });
+        on($("frenteSel"), "change", () => { selFrente = $("frenteSel").value; carimbo(); salvar(); });
+
+        on(root, "click", e => {
+          const bTipo = e.target.closest("[data-tipo]");
+          if (bTipo) {
+            const v = bTipo.dataset.tipo;
+            if (tipos.includes(v)) tipos = tipos.filter(x => x !== v);
+            else tipos.push(v);
+            marcarT();
+            carimbo();
+            salvar();
+            return;
+          }
+          const bR = e.target.closest("[data-r]");
+          if (bR) {
+            const v = bR.dataset.r;
+            if (riscos.includes(v)) riscos = riscos.filter(x => x !== v);
+            else riscos.push(v);
+            marcarR();
+            carimbo();
+            salvar();
+            return;
+          }
+        });
+
+        on($("btnGps"), "click", gpsLoad);
+        on($("btnClima"), "click", () => climaLoad(selMun));
+        on($("btnLigarCam"), "click", ligarCam);
+        on($("btnParar"), "click", pararCam);
+        on($("btnFoto"), "click", bater);
+        on($("btnLimparFoto"), "click", limparFoto);
+        on($("arqFoto"), "change", arquivoFoto);
+        on($("btnGirar"), "click", () => { rot = (rot + 90) % 360; aplOri(); salvar(); });
+        on($("btnOri"), "click", () => { modo = modo === "auto" ? "paisagem" : modo === "paisagem" ? "retrato" : "auto"; aplOri(); });
+        on($("zoomRange"), "input", e => { zoom = parseFloat(e.target.value) || 1; aplZoom(); });
+        on($("btnSalvar"), "click", salvarReg);
+        on($("btnGerarPdf"), "click", () => gerarPdf({ protocolo: gar().protocolo, data: gar().data, texto: montar(), foto, fotoDim, hash }));
+        on($("btnBaixar"), "click", baixarPdf);
+        on($("btnSharePdf"), "click", sharePdf);
+        on($("btnDrive"), "click", enviarDriveEquipe);
+        on($("btnWhats"), "click", whats);
+        on($("btnFalar"), "click", falarLaudo);
+        on($("btnLimpar"), "click", limpar);
+        on($("btnRusso"), "click", () => disp("russo"));
+        on($("btnCem"), "click", () => disp("cemaden"));
+        on($("btnPararSir"), "click", pararAll);
+        on($("btnVoltar"), "click", () => { pararAll(); pararCam(); if (onBackToDashboard) onBackToDashboard(); });
+        on($("btnVoz"), "click", () => {
+          voz = !voz;
+          if ($("btnVoz")) $("btnVoz").textContent = voz ? "Voz: ON" : "Voz: OFF";
+          aviso(voz ? "Voz ativada." : "Voz desativada.");
+        });
+        on($("btnZel"), "click", () => ac("cZel"));
+        on($("btnRisco"), "click", () => ac("cRisco"));
+        on($("btnRiscosObs"), "click", () => ac("cRiscosObs"));
+
+        ["endereco", "pontoRef", "resp", "agWhats", "moNome", "moWhats", "desc", "obs"].forEach(id => {
+          on($(id), "input", () => { carimbo(); salvar(); });
+        });
+
+        if ($("lista")) {
+          on($("lista"), "click", e => {
+            const bCar = e.target.closest("[data-carregar]");
+            const bPdf = e.target.closest("[data-pdf]");
+            const bExc = e.target.closest("[data-excluir]");
+            if (bCar) carregarItem(Number(bCar.dataset.carregar));
+            else if (bPdf) { const it = lerLista()[Number(bPdf.dataset.pdf)]; if (it) gerarPdf(it); }
+            else if (bExc) excluirItem(Number(bExc.dataset.excluir));
+          });
+        }
+
+        const onResize = () => aplOri();
+        window.addEventListener("resize", onResize);
+
+        return () => {
+          window.removeEventListener("resize", onResize);
+          pararAll();
+          pararCam();
+          if (urlPdf) URL.revokeObjectURL(urlPdf);
+          L.forEach(([el, ev, fn]) => el.removeEventListener(ev, fn));
+        };
+      }, [onBackToDashboard, showToast, perfilVozId, userName]);
+
+      return (
+        <div ref={containerRef} className="vist-modulo-root" style={{ background: "#030712", color: "#e2e8f0", minHeight: "100vh", padding: 12, fontFamily: "monospace" }}>
+          <div id="aviso" style={{ display: "none", position: "fixed", top: 12, right: 12, zIndex: 9999, background: "#082f49", color: "#00F2FE", border: "1px solid #00F2FE", padding: "8px 12px", borderRadius: 10, fontSize: 12 }} />
+
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 8, flexWrap: "wrap", borderBottom: "1px solid #1e293b", paddingBottom: 10 }}>
+            <div>
+              <div style={{ color: "#00F2FE", fontWeight: "bold", fontSize: 15 }}>{TITULO}</div>
+              <div style={{ color: "#94a3b8", fontSize: 11 }}>{SUB} • {COMP}</div>
+            </div>
+            <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
+              <button id="btnVoz" type="button" className="btn btn-cyan btn-small">Voz: ON</button>
+              <button id="btnVoltar" type="button" className="btn btn-ghost btn-small">Voltar ao Painel</button>
+            </div>
+          </div>
+
+          <div style={{ marginTop: 12, display: "grid", gap: 10 }}>
+            <div className="card">
+              <label style={{ fontSize: 11, color: "#00E5FF", fontWeight: 900, display: "block", marginBottom: 6 }}>
+                Município / Estação (92 Municípios do RJ)
+              </label>
+              <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+                <input id="munFiltro" placeholder="Filtrar município ou IP..." style={{ flex: 1, minWidth: 180, padding: 8, background: "#0f172a", color: "#fff", border: "1px solid #334155", borderRadius: 8 }} />
+                <select id="munSel" style={{ flex: 1, minWidth: 200, padding: 8, background: "#0f172a", color: "#fff", border: "1px solid #334155", borderRadius: 8 }} />
+                <select id="frenteSel" style={{ flex: 1, minWidth: 220, padding: 8, background: "#0f172a", color: "#fff", border: "1px solid #334155", borderRadius: 8 }} />
+              </div>
+              <div style={{ display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center", fontSize: 12, marginTop: 8 }}>
+                <span id="munInfo">92 municípios</span>
+                <span id="gpsInfo">GPS: aguardando...</span>
+                <span id="climaInfo">Clima: aguardando...</span>
+                <button id="btnGps" type="button" className="btn btn-cyan btn-small">Atualizar GPS</button>
+                <button id="btnClima" type="button" className="btn btn-ghost btn-small">Atualizar Clima</button>
+              </div>
+            </div>
+
+            <div className="card">
+              <button id="btnZel" type="button" className="acordeao-btn">▼ ZELADORIA / MANUTENÇÃO - CLIQUE PARA ABRIR</button>
+              <div id="cZel" className="acordeao-conteudo">
+                <div id="zelBox" style={{ display: "flex", gap: 6, flexWrap: "wrap" }} />
+              </div>
+            </div>
+
+            <div className="card">
+              <button id="btnRisco" type="button" className="acordeao-btn">▼ DESCRIÇÃO DE RISCO / ALERTA - CLIQUE PARA ABRIR</button>
+              <div id="cRisco" className="acordeao-conteudo">
+                <div id="riscosBox" style={{ display: "flex", gap: 6, flexWrap: "wrap" }} />
+              </div>
+            </div>
+
+            <div className="card">
+              <button id="btnRiscosObs" type="button" className="acordeao-btn">▼ RISCOS OBSERVADOS - CLIQUE PARA ABRIR</button>
+              <div id="cRiscosObs" className="acordeao-conteudo">
+                <div style={{ fontSize: 11, color: "#94a3b8" }}>Os riscos selecionados acima aparecem automaticamente no laudo e no carimbo fotográfico.</div>
+              </div>
+            </div>
+
+            <div className="card">
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(220px,1fr))", gap: 8 }}>
+                <input id="endereco" placeholder="Endereço" style={{ padding: 8, background: "#0f172a", color: "#fff", border: "1px solid #334155", borderRadius: 8 }} />
+                <input id="pontoRef" placeholder="Ponto de referência" style={{ padding: 8, background: "#0f172a", color: "#fff", border: "1px solid #334155", borderRadius: 8 }} />
+                <input id="resp" placeholder="Responsável / Morador" style={{ padding: 8, background: "#0f172a", color: "#fff", border: "1px solid #334155", borderRadius: 8 }} />
+                <input id="agWhats" placeholder="WhatsApp do agente" style={{ padding: 8, background: "#0f172a", color: "#fff", border: "1px solid #334155", borderRadius: 8 }} />
+                <input id="moNome" placeholder="Nome do morador" style={{ padding: 8, background: "#0f172a", color: "#fff", border: "1px solid #334155", borderRadius: 8 }} />
+                <input id="moWhats" placeholder="WhatsApp do morador" style={{ padding: 8, background: "#0f172a", color: "#fff", border: "1px solid #334155", borderRadius: 8 }} />
+              </div>
+              <textarea id="desc" rows={3} placeholder="Descrição da vistoria" style={{ width: "100%", padding: 8, background: "#0f172a", color: "#fff", border: "1px solid #334155", borderRadius: 8, marginTop: 8 }} />
+              <textarea id="obs" rows={2} placeholder="Observações e encaminhamentos" style={{ width: "100%", padding: 8, background: "#0f172a", color: "#fff", border: "1px solid #334155", borderRadius: 8, marginTop: 8 }} />
+            </div>
+
+            <div className="card">
+              <div style={{ display: "flex", gap: 6, flexWrap: "wrap", alignItems: "center", marginBottom: 8 }}>
+                <button id="btnLigarCam" type="button" className="btn btn-cyan btn-small">Ligar Câmera</button>
+                <button id="btnParar" type="button" className="btn btn-ghost btn-small" disabled>Parar Câmera</button>
+                <button id="btnLimparFoto" type="button" className="btn btn-red btn-small">Limpar Foto</button>
+                <button id="btnGirar" type="button" className="btn btn-ghost btn-small">Girar 90°</button>
+                <button id="btnOri" type="button" className="btn btn-ghost btn-small">Orientação</button>
+                <input id="arqFoto" type="file" accept="image/*" style={{ fontSize: 11, color: "#94a3b8" }} />
+                <span id="camStatus" style={{ fontSize: 11 }}>Câmera: desligada</span>
+                <span id="oriInfo" style={{ fontSize: 11 }}>Orientação: Automática</span>
+              </div>
+
+              <button id="btnFoto" type="button" className="btn btn-foto-grande" disabled>
+                <SvgIcon name="camera" className="w-5 h-5" />
+                TIRAR FOTO - CAPTURAR EVIDÊNCIA CARIMBADA
+              </button>
+
+              <div style={{ display: "flex", gap: 8, alignItems: "center", marginBottom: 8, marginTop: 6, flexWrap: "wrap" }}>
+                <span style={{ fontSize: 11 }}>Zoom: <b id="zoomVal">1.0x</b></span>
+                <input id="zoomRange" type="range" min="1" max="5" step="0.1" defaultValue="1" />
+                <span id="hashInfo" style={{ fontSize: 11, color: "#00FF9D" }}>Hash SHA-256: pendente</span>
+              </div>
+
+              <div className="camera-box">
+                <div id="scan" className="scan-line"></div>
+                <div id="hud" className="hud"><div className="grade"></div></div>
+                <div className="etq" style={{ left: 10, top: 10 }}>SCANNER ATIVO • RARU NEXUS</div>
+                <div className="etq" style={{ right: 10, top: 10 }}>VISTORIA / OCORRÊNCIA</div>
+                <video id="video" playsInline muted style={{ display: "none" }} />
+                <img id="fotoImg" alt="Evidência" style={{ display: "none", width: "100%", maxHeight: 360, objectFit: "contain" }} />
+              </div>
+            </div>
+
+            <div id="carimbo" className="carimbo" />
+            <textarea id="laudo" rows={6} readOnly style={{ width: "100%", padding: 8, background: "#090d16", color: "#a5f3fc", border: "1px solid #1e293b", borderRadius: 8, fontSize: 11 }} />
+
+            <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+              <button id="btnSalvar" type="button" className="btn btn-green btn-small">Salvar Vistoria</button>
+              <button id="btnGerarPdf" type="button" className="btn btn-cyan btn-small">Gerar PDF</button>
+              <button id="btnBaixar" type="button" className="btn btn-ghost btn-small" disabled>Baixar PDF</button>
+              <button id="btnSharePdf" type="button" className="btn btn-pink btn-small" disabled>Compartilhar PDF</button>
+              <button id="btnDrive" type="button" className="btn btn-ghost btn-small" disabled>Enviar Drive Equipe</button>
+              <button id="btnWhats" type="button" className="btn btn-green btn-small">WhatsApp</button>
+              <button id="btnFalar" type="button" className="btn btn-ghost btn-small">Ouvir Laudo</button>
+              <button id="btnLimpar" type="button" className="btn btn-red btn-small">Limpar</button>
+            </div>
+
+            <div style={{ display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center" }}>
+              <button id="btnRusso" type="button" className="btn btn-red btn-small">DISPARAR ALARME RUSSO</button>
+              <button id="btnCem" type="button" className="btn btn-cyan btn-small">DISPARAR ALARME CEMADEN</button>
+              <button id="btnPararSir" type="button" className="btn btn-ghost btn-small" style={{ display: "none" }}>PARAR SIRENE</button>
+              <span id="alStatus" style={{ fontSize: 12, color: "#FFB703" }}>Alarmes: parados</span>
+            </div>
+
+            <div id="drivePrev" style={{ display: "none", background: "#090d16", border: "1px solid #1e293b", borderRadius: 12, padding: 10 }} />
+            <iframe id="pdfFrame" title="Prévia do PDF" className="preview-pdf" />
+
+            <div>
+              <div style={{ fontSize: 12, color: "#00F2FE", marginBottom: 6 }}>Vistorias salvas</div>
+              <div id="lista" />
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    // =========================================================================
+    // APLICAÇÃO PRINCIPAL: RARU NEXUS V11.2 PLUS (CIDADÃO SENSOR)
+    // =========================================================================
+    function App() {
+      const [activeTab, setActiveTab] = useState("radar");
+      const [toast, setToast] = useState("");
+      const [userName, setUserName] = useState(() => localStorage.getItem("raru_operator_name") || "");
+      const [showNameModal, setShowNameModal] = useState(() => !localStorage.getItem("raru_operator_name"));
+      const [tempName, setTempName] = useState("");
+
+      // Seleção de Município e Telemetria Open-Meteo
+      const [selectedMunName, setSelectedMunName] = useState("Mesquita");
+      const [munQuery, setMunQuery] = useState("");
+      const [weather, setWeather] = useState(null);
+      const [loadingWeather, setLoadingWeather] = useState(false);
+
+      // Voz & Sarah AI Supervisor
+      const [voices, setVoices] = useState([]);
+      const [perfilVozId, setPerfilVozId] = useState(() => localStorage.getItem("raru_voice_uri") || "");
+      const [sarahMessages, setSarahMessages] = useState([]);
+      const [sarahInput, setSarahInput] = useState("");
+      const [sarahLoading, setSarahLoading] = useState(false);
+
+      // Estação GADE & Kit Sobrevivência
+      const [kitItems, setKitItems] = useState(() => {
+        try {
+          return JSON.parse(localStorage.getItem("raru_kit_v1")) || [
+            { id: "doc", label: "Documentos pessoais em saco plástico vedado", ok: false },
+            { id: "agua", label: "Água potável (mínimo 2L por pessoa) e alimentos não perecíveis", ok: false },
+            { id: "lanterna", label: "Lanterna LED, pilhas extras e carregador portátil (PowerBank)", ok: false },
+            { id: "med", label: "Medicamentos de uso contínuo e kit de primeiros socorros", ok: false },
+            { id: "apito", label: "Apito de sinalização sonora e capa de chuva", ok: false },
+            { id: "chave", label: "Desligar disjuntor elétrico e registro de gás antes de sair", ok: false }
+          ];
+        } catch (e) {
+          return [];
+        }
+      });
+
+      // Painel Rotas de Fuga & Abrigos
+      const [rotas, setRotas] = useState(() => {
+        try {
+          return JSON.parse(localStorage.getItem("raru_rotas_v1")) || [
+            { id: "r1", nome: "Rota Alta 01 — Cota Segura Praça / Escola Municipal", bairro: "Centro / Comunidade", status: "LIVRE", elevacao: "+18m" },
+            { id: "r2", nome: "Rota Alta 02 — Eixo Avenida Principal / Ponto de Apoio CRAS", bairro: "Corredor Norte", status: "ATENÇÃO", elevacao: "+12m" },
+            { id: "r3", nome: "Abrigo Comunitário — Quadra Coberta / Unidade Escolar", bairro: "Zona Alta", status: "ATIVO", elevacao: "+22m" }
+          ];
+        } catch (e) {
+          return [];
+        }
+      });
+      const [novaRotaNome, setNovaRotaNome] = useState("");
+      const [novaRotaBairro, setNovaRotaBairro] = useState("");
+
+      // Balança & ESG (Reciclagem Comunitária)
+      const [esgRegistros, setEsgRegistros] = useState(() => {
+        try {
+          return JSON.parse(localStorage.getItem("raru_esg_v1")) || [];
+        } catch (e) {
+          return [];
+        }
+      });
+      const [esgMaterial, setEsgMaterial] = useState("Plástico PET");
+      const [esgPeso, setEsgPeso] = useState("");
+
+      const mapContainerRef = useRef(null);
+      const mapInstanceRef = useRef(null);
+      const markerRef = useRef(null);
+
+      const selectedMun = useMemo(
+        () => MUNICIPIOS_RJ.find(m => m.n === selectedMunName) || MUNICIPIOS_RJ.find(m => m.n === "Mesquita") || MUNICIPIOS_RJ[0],
+        [selectedMunName]
+      );
+
+      const filteredMuns = useMemo(() => {
+        const q = norm(munQuery);
+        if (!q) return MUNICIPIOS_RJ;
+        return MUNICIPIOS_RJ.filter(m => norm(m.n).includes(q) || norm(m.ip).includes(q) || norm(m.bacia).includes(q));
+      }, [munQuery]);
+
+      const triggerToast = (msg) => {
+        setToast(msg);
+        clearTimeout(triggerToast.t);
+        triggerToast.t = setTimeout(() => setToast(""), 3800);
+      };
+
+      // Proteção Anti-Cópia Global (preservando inputs e textareas)
+      useEffect(() => {
+        const blockContext = (e) => {
+          const tag = (e.target && e.target.tagName) || "";
+          if (tag === "INPUT" || tag === "TEXTAREA" || tag === "SELECT") return;
+          e.preventDefault();
+        };
+        const blockCopy = (e) => {
+          const tag = (e.target && e.target.tagName) || "";
+          if (tag === "INPUT" || tag === "TEXTAREA") return;
+          e.preventDefault();
+        };
+        const blockDrag = (e) => e.preventDefault();
+
+        document.addEventListener("contextmenu", blockContext);
+        document.addEventListener("copy", blockCopy);
+        document.addEventListener("cut", blockCopy);
+        document.addEventListener("dragstart", blockDrag);
+        return () => {
+          document.removeEventListener("contextmenu", blockContext);
+          document.removeEventListener("copy", blockCopy);
+          document.removeEventListener("cut", blockCopy);
+          document.removeEventListener("dragstart", blockDrag);
+        };
+      }, []);
+
+      // Carregar vozes do navegador (PT-BR)
+      useEffect(() => {
+        if (!("speechSynthesis" in window)) return;
+        const loadV = () => {
+          const list = window.speechSynthesis.getVoices().filter(v => v.lang.toLowerCase().includes("pt"));
+          setVoices(list);
+          if (!perfilVozId && list.length > 0) {
+            const fem = list.find(v => /luciana|francisca|maria|google|female/i.test(v.name)) || list[0];
+            setPerfilVozId(fem.voiceURI);
+          }
+        };
+        loadV();
+        window.speechSynthesis.onvoiceschanged = loadV;
+      }, [perfilVozId]);
+
+      // Saudação inicial personalizada da Sarah AI (pergunta o nome se não definido)
+      useEffect(() => {
+        if (sarahMessages.length === 0) {
+          const intro = userName
+            ? `Olá, ${userName}. Sou Sarah AI, supervisora operacional do RARU NEXUS V11.2 PLUS — Projeto Cidadão Sensor. Telemetria ativa para ${selectedMun.n}. Como posso apoiar sua operação agora?`
+            : "Olá! Sou Sarah AI, supervisora operacional do RARU NEXUS V11.2 PLUS — Projeto Cidadão Sensor. Antes de começarmos, qual é o seu nome para que eu possa te chamar corretamente?";
+          setSarahMessages([{ role: "assistant", text: intro }]);
+        }
+      }, [userName]);
+
+      // Buscar Telemetria Meteorológica Open-Meteo
+      const fetchWeather = async (mun) => {
+        setLoadingWeather(true);
+        try {
+          const url = `https://api.open-meteo.com/v1/forecast?latitude=${mun.lat}&longitude=${mun.lon}&current=temperature_2m,relative_humidity_2m,precipitation,rain,wind_speed_10m,wind_gusts_10m,pressure_msl&hourly=precipitation_probability,precipitation&forecast_days=1&timezone=America%2FSao_Paulo`;
+          const res = await fetch(url);
+          const data = await res.json();
+          setWeather(data);
+        } catch (e) {
+          triggerToast("Falha ao sincronizar telemetria Open-Meteo.");
+        } finally {
+          setLoadingWeather(false);
+        }
+      };
+
+      useEffect(() => {
+        fetchWeather(selectedMun);
+      }, [selectedMun]);
+
+      // Inicializar Mapa Leaflet com Radar RainViewer + GOES-19 / Satélite
+      useEffect(() => {
+        if (activeTab !== "radar") return;
+        const timer = setTimeout(async () => {
+          if (!mapContainerRef.current) return;
+          if (!mapInstanceRef.current) {
+            const map = L.map(mapContainerRef.current, {
+              center: [selectedMun.lat, selectedMun.lon],
+              zoom: 11,
+              zoomControl: true
+            });
+            L.tileLayer("https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png", {
+              attribution: "CARTO / OpenStreetMap / RARU NEXUS",
+              maxZoom: 18
+            }).addTo(map);
+
+            try {
+              const rvRes = await fetch("https://api.rainviewer.com/public/weather-maps.json");
+              const rvData = await rvRes.json();
+              const past = rvData?.radar?.past || [];
+              if (past.length > 0) {
+                const latest = past[past.length - 1];
+                L.tileLayer(`https://tilecache.rainviewer.com${latest.path}/256/{z}/{x}/{y}/2/1_1.png`, {
+                  opacity: 0.65,
+                  zIndex: 10
+                }).addTo(map);
+              }
+            } catch (e) {}
+
+            markerRef.current = L.circleMarker([selectedMun.lat, selectedMun.lon], {
+              radius: 9,
+              color: "#00F2FE",
+              fillColor: "#00FF9D",
+              fillOpacity: 0.85,
+              weight: 2
+            }).addTo(map).bindPopup(`<b>${selectedMun.n} (RJ)</b><br/>Nó IP: ${selectedMun.ip}<br/>Bacia: ${selectedMun.bacia.toUpperCase()}`);
+
+            mapInstanceRef.current = map;
+          } else {
+            mapInstanceRef.current.setView([selectedMun.lat, selectedMun.lon], 11);
+            if (markerRef.current) {
+              markerRef.current.setLatLng([selectedMun.lat, selectedMun.lon]);
+              markerRef.current.setPopupContent(`<b>${selectedMun.n} (RJ)</b><br/>Nó IP: ${selectedMun.ip}<br/>Bacia: ${selectedMun.bacia.toUpperCase()}`);
+            }
+          }
+        }, 120);
+
+        return () => clearTimeout(timer);
+      }, [activeTab, selectedMun]);
+
+      useEffect(() => {
+        return () => {
+          if (mapInstanceRef.current) {
+            mapInstanceRef.current.remove();
+            mapInstanceRef.current = null;
+          }
+        };
+      }, [activeTab]);
+
+      // Confirmar Nome do Operador
+      const handleSaveUserName = (e) => {
+        e.preventDefault();
+        const clean = tempName.trim();
+        if (!clean) return;
+        setUserName(clean);
+        localStorage.setItem("raru_operator_name", clean);
+        setShowNameModal(false);
+        const welcome = `Bem-vindo, ${clean}. Identificação registrada no terminal RARU NEXUS V11.2 PLUS. Telemetria pronta em ${selectedMun.n}.`;
+        setSarahMessages([{ role: "assistant", text: welcome }]);
+        falar(welcome, perfilVozId);
+      };
+
+      // SOS Vizinhança GADE com GPS
+      const handleSosGade = () => {
+        const operador = userName || "Operador Comunitário";
+        const sendAlert = (coordsText) => {
+          const msg = `ALERTA GADE — RARU NEXUS V11.2 PLUS (CIDADÃO SENSOR)\nOperador: ${operador}\nMunicípio: ${selectedMun.n} (RJ)\nLocalização: ${coordsText}\nSolicito apoio imediato da rede comunitária e verificação de risco.`;
+          if (navigator.clipboard) navigator.clipboard.writeText(msg).catch(() => {});
+          triggerToast("Mensagem SOS copiada com GPS! Abrindo WhatsApp...");
+          falar(`Atenção ${operador}, alerta de vizinhança preparado com coordenadas.`, perfilVozId);
+          window.open(`https://wa.me/?text=${encodeURIComponent(msg)}`, "_blank");
+        };
+
+        if (navigator.geolocation) {
+          navigator.geolocation.getCurrentPosition(
+            p => sendAlert(`${p.coords.latitude.toFixed(6)}, ${p.coords.longitude.toFixed(6)} (±${Math.round(p.coords.accuracy)}m)`),
+            () => sendAlert("GPS indisponível no momento"),
+            { enableHighAccuracy: true, timeout: 8000 }
+          );
+        } else {
+          sendAlert("GPS não suportado");
+        }
+      };
+
+      // Toggle Kit de Sobrevivência
+      const toggleKit = (id) => {
+        const updated = kitItems.map(item => item.id === id ? { ...item, ok: !item.ok } : item);
+        setKitItems(updated);
+        localStorage.setItem("raru_kit_v1", JSON.stringify(updated));
+      };
+
+      // Adicionar Rota de Fuga
+      const addRota = (e) => {
+        e.preventDefault();
+        if (!novaRotaNome.trim()) return;
+        const next = [
+          {
+            id: "r-" + Date.now(),
+            nome: novaRotaNome.trim(),
+            bairro: novaRotaBairro.trim() || selectedMun.n,
+            status: "LIVRE",
+            elevacao: "+15m"
+          },
+          ...rotas
+        ];
+        setRotas(next);
+        localStorage.setItem("raru_rotas_v1", JSON.stringify(next));
+        setNovaRotaNome("");
+        setNovaRotaBairro("");
+        triggerToast("Rota de fuga registrada e sincronizada.");
+      };
+
+      const toggleRotaStatus = (id) => {
+        const next = rotas.map(r => {
+          if (r.id !== id) return r;
+          const ordem = ["LIVRE", "ATENÇÃO", "INTERDITADA"];
+          const idx = (ordem.indexOf(r.status) + 1) % ordem.length;
+          return { ...r, status: ordem[idx] };
+        });
+        setRotas(next);
+        localStorage.setItem("raru_rotas_v1", JSON.stringify(next));
+      };
+
+      // Balança & ESG - Registrar Pesagem
+      const handleAddEsg = (e) => {
+        e.preventDefault();
+        const kg = parseFloat(String(esgPeso).replace(",", "."));
+        if (!kg || kg <= 0) {
+          triggerToast("Informe um peso válido em kg.");
+          return;
+        }
+        const novo = {
+          id: Date.now(),
+          data: new Date().toLocaleString("pt-BR"),
+          material: esgMaterial,
+          kg,
+          municipio: selectedMun.n,
+          operador: userName || "Cidadão Sensor"
+        };
+        const next = [novo, ...esgRegistros];
+        setEsgRegistros(next);
+        localStorage.setItem("raru_esg_v1", JSON.stringify(next));
+        setEsgPeso("");
+        triggerToast(`Pesagem registrada: ${kg.toFixed(2)} kg de ${esgMaterial}.`);
+      };
+
+      const esgTotals = useMemo(() => {
+        const totalKg = esgRegistros.reduce((acc, item) => acc + (Number(item.kg) || 0), 0);
+        return {
+          totalKg,
+          aguaLitros: Math.round(totalKg * 42),
+          co2Kg: (totalKg * 2.15).toFixed(1),
+          bueirosProtegidos: Math.max(1, Math.floor(totalKg / 5))
+        };
+      }, [esgRegistros]);
+
+      // Sarah AI Conversacional (Cloudflare Worker + Fallback Inteligente Local)
+      const sendSarahMessage = async (e) => {
+        e.preventDefault();
+        const text = sarahInput.trim();
+        if (!text || sarahLoading) return;
+
+        // Se o usuário ainda não informou o nome, captura como nome se for curto
+        if (!userName && text.split(" ").length <= 3) {
+          const cleanName = text.replace(/^(meu nome e|meu nome é|sou|eu sou)\s+/i, "").trim();
+          if (cleanName) {
+            setUserName(cleanName);
+            localStorage.setItem("raru_operator_name", cleanName);
+          }
+        }
+
+        const updatedHistory = [...sarahMessages, { role: "user", text }];
+        setSarahMessages(updatedHistory);
+        setSarahInput("");
+        setSarahLoading(true);
+
+        const cur = weather?.current;
+        const contexto = `Município ativo: ${selectedMun.n} (RJ). Clima atual: ${cur ? `${cur.temperature_2m}°C, chuva ${cur.precipitation}mm, vento ${cur.wind_speed_10m}km/h` : "sem leitura"}. Operador: ${userName || "Cidadão"}.`;
+
+        try {
+          const res = await fetch(SARAH_WORKER_URL, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              message: text,
+              context: contexto,
+              userName: userName || "Operador"
+            })
+          });
+          if (res.ok) {
+            const data = await res.json();
+            const reply = data.reply || data.response || data.text || `Entendido, ${userName || "operador"}. Telemetria monitorada em ${selectedMun.n}.`;
+            setSarahMessages(prev => [...prev, { role: "assistant", text: reply }]);
+            falar(reply, perfilVozId);
+          } else {
+            throw new Error("Worker offline");
+          }
+        } catch (err) {
+          const fallback = `${userName ? userName + ", " : ""}análise local concluída para ${selectedMun.n}: ${cur ? `temperatura de ${cur.temperature_2m} graus, precipitação de ${cur.precipitation} milímetros e ventos de ${cur.wind_speed_10m} quilômetros por hora.` : "telemetria em sincronização."} Recomendo manter monitoramento ativo na aba Vistoria e Rotas de Fuga.`;
+          setSarahMessages(prev => [...prev, { role: "assistant", text: fallback }]);
+          falar(fallback, perfilVozId);
+        } finally {
+          setSarahLoading(false);
+        }
+      };
+
+      // Renderização direta do Módulo de Vistoria quando ativo
+      if (activeTab === "vistoria") {
+        return (
+          <VistoriaRARU_NEXUS
+            onBackToDashboard={() => setActiveTab("radar")}
+            showToast={triggerToast}
+            perfilVozId={perfilVozId}
+            userName={userName}
+          />
+        );
+      }
+
+      const curW = weather?.current;
+      const nivelAlerta = curW
+        ? (curW.precipitation >= 20 || curW.wind_gusts_10m >= 60 ? "CRÍTICO" : curW.precipitation >= 5 || curW.wind_gusts_10m >= 40 ? "ATENÇÃO" : "NORMAL")
+        : "MONITORANDO";
+
+      return (
+        <div className="min-h-screen bg-[#030712] text-slate-200 flex flex-col">
+          {/* TOAST FLUTUANTE */}
+          {toast && (
+            <div className="fixed top-4 right-4 z-50 bg-[#082f49] border border-[#00F2FE] text-[#00F2FE] px-4 py-2.5 rounded-xl text-xs font-bold shadow-lg">
+              {toast}
+            </div>
+          )}
+
+          {/* MODAL DE IDENTIFICAÇÃO DO OPERADOR (NUNCA HARDCODED) */}
+          {showNameModal && (
+            <div className="fixed inset-0 z-50 bg-black/85 backdrop-blur-sm flex items-center justify-center p-4">
+              <form onSubmit={handleSaveUserName} className="hud-panel rounded-2xl max-w-md w-full p-6 border border-[#00F2FE]">
+                <div className="flex items-center gap-2 text-[#00F2FE] font-bold text-sm mb-2">
+                  <SvgIcon name="shield" className="w-5 h-5" />
+                  <span>IDENTIFICAÇÃO DO TERMINAL — CIDADÃO SENSOR</span>
+                </div>
+                <p className="text-xs text-slate-300 leading-relaxed mb-4">
+                  Bem-vindo ao <b>RARU NEXUS V11.2 PLUS</b>. Para que a supervisora <b>Sarah AI</b> e os laudos técnicos identifiquem você corretamente, digite seu nome abaixo:
+                </p>
+                <input
+                  type="text"
+                  value={tempName}
+                  onChange={e => setTempName(e.target.value)}
+                  placeholder="Digite seu nome..."
+                  className="w-full px-3.5 py-2.5 rounded-xl bg-slate-900 border border-slate-700 text-white text-sm mb-4 focus:outline-none focus:border-[#00F2FE]"
+                  autoFocus
+                />
+                <div className="flex justify-end gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setShowNameModal(false)}
+                    className="px-4 py-2 rounded-full bg-slate-800 text-slate-300 text-xs font-bold"
+                  >
+                    Continuar sem nome
+                  </button>
+                  <button
+                    type="submit"
+                    className="px-5 py-2 rounded-full bg-[#00F2FE] text-slate-950 text-xs font-black"
+                  >
+                    Confirmar Acesso
+                  </button>
+                </div>
+              </form>
+            </div>
+          )}
+
+          {/* CABEÇALHO TÁTICO SUPERIOR */}
+          <header className="border-b border-slate-800/90 bg-[#050a18] px-4 py-3 sticky top-0 z-40">
+            <div className="max-w-7xl mx-auto flex flex-wrap items-center justify-between gap-3">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-[#00F2FE]/10 border border-[#00F2FE] flex items-center justify-center text-[#00F2FE] pulse-ring">
+                  <SvgIcon name="radar" className="w-6 h-6" />
+                </div>
+                <div>
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <h1 className="text-sm md:text-base font-black tracking-wider text-[#00F2FE]">{TITULO}</h1>
+                    <span className="text-[10px] px-2 py-0.5 rounded-full bg-[#00FF9D]/15 text-[#00FF9D] border border-[#00FF9D]/40 font-bold">
+                      PROJETO CIDADÃO SENSOR
+                    </span>
+                  </div>
+                  <p className="text-[11px] text-slate-400">{SUB} • {COMP}</p>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-2 flex-wrap">
+                <button
+                  type="button"
+                  onClick={() => { setTempName(userName); setShowNameModal(true); }}
+                  className="px-3 py-1.5 rounded-full bg-slate-900 border border-slate-700 text-xs text-slate-300 hover:border-[#00F2FE]"
+                >
+                  Operador: <b className="text-[#00FF9D]">{userName || "Definir Nome"}</b>
+                </button>
+                <span className={`px-3 py-1.5 rounded-full text-xs font-black border ${
+                  nivelAlerta === "CRÍTICO"
+                    ? "bg-red-950/80 text-red-400 border-red-500"
+                    : nivelAlerta === "ATENÇÃO"
+                    ? "bg-amber-950/80 text-[#FFB703] border-[#FFB703]"
+                    : "bg-emerald-950/70 text-[#00FF9D] border-[#00FF9D]/50"
+                }`}>
+                  STATUS: {nivelAlerta}
+                </span>
+              </div>
+            </div>
+
+            {/* BARRA DE NAVEGAÇÃO DOS 6 MÓDULOS */}
+            <nav className="max-w-7xl mx-auto mt-3 flex gap-2 overflow-x-auto pb-1">
+              {[
+                { id: "radar", label: "Radar & GOES-19", icon: "radar" },
+                { id: "vistoria", label: "Vistoria & Laudo PDF", icon: "camera" },
+                { id: "gade", label: "Estação GADE", icon: "gade" },
+                { id: "rotas", label: "Rotas de Fuga", icon: "route" },
+                { id: "esg", label: "Balança & ESG", icon: "scale" },
+                { id: "sarah", label: "Sarah AI Voz", icon: "bot" }
+              ].map(tab => (
+                <button
+                  key={tab.id}
+                  type="button"
+                  onClick={() => setActiveTab(tab.id)}
+                  className={`flex items-center gap-2 px-3.5 py-2 rounded-full text-xs font-extrabold whitespace-nowrap transition-all ${
+                    activeTab === tab.id
+                      ? "bg-[#00F2FE] text-slate-950 hud-glow-cyan"
+                      : "bg-slate-900/90 text-slate-300 border border-slate-800 hover:border-[#00F2FE]/50"
+                  }`}
+                >
+                  <SvgIcon name={tab.icon} className="w-4 h-4" />
+                  <span>{tab.label}</span>
+                </button>
+              ))}
+            </nav>
+          </header>
+
+          {/* SELETOR GLOBAL DE MUNICÍPIO (92 MUNICÍPIOS RJ) */}
+          <section className="max-w-7xl w-full mx-auto px-4 pt-4">
+            <div className="hud-panel rounded-2xl p-3.5 flex flex-wrap items-center justify-between gap-3">
+              <div className="flex items-center gap-2 flex-1 min-w-[240px]">
+                <SvgIcon name="gps" className="w-4 h-4 text-[#00F2FE] shrink-0" />
+                <input
+                  type="text"
+                  value={munQuery}
+                  onChange={e => setMunQuery(e.target.value)}
+                  placeholder="Filtrar 92 municípios RJ ou bacia..."
+                  className="bg-slate-900/90 border border-slate-700 rounded-lg px-2.5 py-1.5 text-xs text-white w-44 focus:outline-none focus:border-[#00F2FE]"
+                />
+                <select
+                  value={selectedMun.n}
+                  onChange={e => setSelectedMunName(e.target.value)}
+                  className="bg-slate-900/90 border border-slate-700 rounded-lg px-2.5 py-1.5 text-xs text-[#00F2FE] font-bold flex-1 min-w-[160px]"
+                >
+                  {filteredMuns.map(m => (
+                    <option key={m.n} value={m.n}>{m.n} ({m.ip})</option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="flex items-center gap-4 text-xs flex-wrap">
+                <div>
+                  <span className="text-slate-400">Temp: </span>
+                  <b className="text-white">{curW ? `${curW.temperature_2m} °C` : "--"}</b>
+                </div>
+                <div>
+                  <span className="text-slate-400">Chuva: </span>
+                  <b className="text-[#00F2FE]">{curW ? `${curW.precipitation} mm` : "--"}</b>
+                </div>
+                <div>
+                  <span className="text-slate-400">Vento/Rajada: </span>
+                  <b className="text-[#FFB703]">{curW ? `${curW.wind_speed_10m} / ${curW.wind_gusts_10m} km/h` : "--"}</b>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => fetchWeather(selectedMun)}
+                  className="px-3 py-1 rounded-full bg-slate-800 border border-slate-700 text-[11px] font-bold hover:border-[#00F2FE]"
+                >
+                  {loadingWeather ? "Sincronizando..." : "Atualizar"}
+                </button>
+              </div>
+            </div>
+          </section>
+
+          {/* CONTEÚDO PRINCIPAL POR ABA */}
+          <main className="max-w-7xl w-full mx-auto px-4 py-4 flex-1">
+            {/* ABA 1: RADAR METEOROLÓGICO & GOES-19 */}
+            {activeTab === "radar" && (
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+                <div className="lg:col-span-2 hud-panel rounded-2xl p-4 flex flex-col">
+                  <div className="flex items-center justify-between gap-2 mb-3 flex-wrap">
+                    <div className="flex items-center gap-2">
+                      <SvgIcon name="radar" className="w-5 h-5 text-[#00F2FE]" />
+                      <h2 className="text-sm font-black text-white">RADAR DOPPLER RAINVIEWER & MONITORAMENTO TERRITORIAL</h2>
+                    </div>
+                    <span className="text-[11px] text-[#00FF9D] font-bold">
+                      LAT {selectedMun.lat} • LON {selectedMun.lon}
+                    </span>
+                  </div>
+                  <div ref={mapContainerRef} className="w-full h-[380px] rounded-xl border border-slate-800 overflow-hidden z-10" />
+                  <div className="mt-3 flex flex-wrap gap-2 justify-between items-center text-[11px] text-slate-400">
+                    <span>Bacia Hidrográfica: <b className="text-[#00F2FE] uppercase">{selectedMun.bacia}</b></span>
+                    <button
+                      type="button"
+                      onClick={() => setActiveTab("vistoria")}
+                      className="px-4 py-2 rounded-full bg-gradient-to-r from-[#00F2FE] to-[#00FF9D] text-slate-950 font-black text-xs flex items-center gap-1.5"
+                    >
+                      <SvgIcon name="camera" className="w-4 h-4" />
+                      <span>ABRIR VISTORIA DE CAMPO & LAUDO</span>
+                    </button>
+                  </div>
+                </div>
+
+                <div className="space-y-4">
+                  <div className="hud-panel rounded-2xl p-4">
+                    <div className="flex items-center justify-between mb-2">
+                      <h3 className="text-xs font-black text-[#00F2FE]">SATÉLITE GOES-19 (AMÉRICA DO SUL / SUDESTE)</h3>
+                      <span className="text-[10px] px-2 py-0.5 rounded bg-cyan-950 text-[#00F2FE]">NOAA / STAR</span>
+                    </div>
+                    <div className="rounded-xl overflow-hidden border border-slate-800 bg-black aspect-video flex items-center justify-center">
+                      <img
+                        src="https://cdn.star.nesdis.noaa.gov/GOES16/ABI/SECTOR/ssa/GEOCOLOR/600x600.jpg"
+                        alt="Satélite GOES GeoColor"
+                        className="w-full h-full object-cover"
+                      />
+                    </div>
+                    <p className="text-[11px] text-slate-400 mt-2">
+                      Monitoramento de bandas convectivas e deslocamento de frentes frias sobre o Estado do Rio de Janeiro.
+                    </p>
+                  </div>
+
+                  <div className="hud-panel rounded-2xl p-4">
+                    <h3 className="text-xs font-black text-[#FFB703] mb-2">TELEMETRIA DETALHADA — {selectedMun.n.toUpperCase()}</h3>
+                    <div className="grid grid-cols-2 gap-2 text-xs">
+                      <div className="bg-slate-950/90 p-2.5 rounded-xl border border-slate-800">
+                        <div className="text-slate-400 text-[10px]">UMIDADE RELATIVA</div>
+                        <div className="text-sm font-black text-[#00F2FE]">{curW ? `${curW.relative_humidity_2m}%` : "--"}</div>
+                      </div>
+                      <div className="bg-slate-950/90 p-2.5 rounded-xl border border-slate-800">
+                        <div className="text-slate-400 text-[10px]">PRESSÃO ATMOSFÉRICA</div>
+                        <div className="text-sm font-black text-white">{curW ? `${curW.pressure_msl} hPa` : "--"}</div>
+                      </div>
+                      <div className="bg-slate-950/90 p-2.5 rounded-xl border border-slate-800">
+                        <div className="text-slate-400 text-[10px]">RAJADA MÁXIMA</div>
+                        <div className="text-sm font-black text-[#FFB703]">{curW ? `${curW.wind_gusts_10m} km/h` : "--"}</div>
+                      </div>
+                      <div className="bg-slate-950/90 p-2.5 rounded-xl border border-slate-800">
+                        <div className="text-slate-400 text-[10px]">ESTAÇÃO IP</div>
+                        <div className="text-sm font-black text-[#00FF9D]">{selectedMun.ip}</div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* ABA 2: ESTAÇÃO GADE (MOBILIZAÇÃO COMUNITÁRIA E KIT SOBREVIVÊNCIA) */}
+            {activeTab === "gade" && (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="hud-panel rounded-2xl p-5">
+                  <div className="flex items-center gap-2 text-[#00FF9D] font-black text-sm mb-2">
+                    <SvgIcon name="gade" className="w-5 h-5" />
+                    <span>ESTAÇÃO GADE — GRUPO DE APOIO E DEFESA EM EMERGÊNCIAS</span>
+                  </div>
+                  <p className="text-xs text-slate-300 leading-relaxed mb-4">
+                    Articulação rápida entre moradores, lideranças comunitárias e brigadas cidadãs em {selectedMun.n} e toda a Baixada Fluminense.
+                  </p>
+                  <div className="flex flex-wrap gap-3">
+                    <button
+                      type="button"
+                      onClick={handleSosGade}
+                      className="px-4 py-3 rounded-xl bg-red-600 hover:bg-red-500 text-white font-black text-xs flex items-center gap-2"
+                    >
+                      <SvgIcon name="alert" className="w-4 h-4" />
+                      <span>DISPARAR SOS VIZINHANÇA (GPS + WHATSAPP)</span>
+                    </button>
+                    <a
+                      href={GADE_WHATSAPP_URL}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="px-4 py-3 rounded-xl bg-[#00FF9D] text-slate-950 font-black text-xs flex items-center gap-2"
+                    >
+                      <SvgIcon name="gade" className="w-4 h-4" />
+                      <span>REDE COMUNITÁRIA GADE</span>
+                    </a>
+                  </div>
+                </div>
+
+                <div className="hud-panel rounded-2xl p-5">
+                  <h3 className="text-sm font-black text-[#00F2FE] mb-3">CHECKLIST — KIT DE PRONTIDÃO FAMILIAR</h3>
+                  <div className="space-y-2">
+                    {kitItems.map(item => (
+                      <button
+                        key={item.id}
+                        type="button"
+                        onClick={() => toggleKit(item.id)}
+                        className={`w-full text-left p-3 rounded-xl border text-xs flex items-center justify-between gap-2 transition-all ${
+                          item.ok
+                            ? "bg-emerald-950/50 border-[#00FF9D] text-[#00FF9D]"
+                            : "bg-slate-950/90 border-slate-800 text-slate-300"
+                        }`}
+                      >
+                        <span>{item.label}</span>
+                        <span className="font-black">{item.ok ? "PRONTO" : "PENDENTE"}</span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* ABA 3: PAINEL ROTAS DE FUGA & ABRIGOS */}
+            {activeTab === "rotas" && (
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+                <div className="lg:col-span-2 hud-panel rounded-2xl p-5">
+                  <div className="flex items-center justify-between mb-4 flex-wrap gap-2">
+                    <div className="flex items-center gap-2 text-[#00F2FE] font-black text-sm">
+                      <SvgIcon name="route" className="w-5 h-5" />
+                      <span>CORREDORES DE EVACUAÇÃO E PONTOS ALTOS — {selectedMun.n.toUpperCase()}</span>
+                    </div>
+                    <span className="text-[11px] text-slate-400">Clique no status para atualizar em tempo real</span>
+                  </div>
+                  <div className="space-y-3">
+                    {rotas.map(r => (
+                      <div key={r.id} className="p-3.5 rounded-xl bg-slate-950 border border-slate-800 flex flex-wrap items-center justify-between gap-3">
+                        <div>
+                          <div className="text-xs font-black text-white">{r.nome}</div>
+                          <div className="text-[11px] text-slate-400">Setor: {r.bairro} • Cota relativa: {r.elevacao}</div>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => toggleRotaStatus(r.id)}
+                          className={`px-3.5 py-1.5 rounded-full text-xs font-black ${
+                            r.status === "LIVRE"
+                              ? "bg-[#00FF9D]/20 text-[#00FF9D] border border-[#00FF9D]"
+                              : r.status === "ATENÇÃO"
+                              ? "bg-[#FFB703]/20 text-[#FFB703] border border-[#FFB703]"
+                              : "bg-red-950 text-red-400 border border-red-500"
+                          }`}
+                        >
+                          {r.status}
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                <form onSubmit={addRota} className="hud-panel rounded-2xl p-5">
+                  <h3 className="text-xs font-black text-[#00FF9D] mb-3">CADASTRAR NOVA ROTA / PONTO DE APOIO</h3>
+                  <div className="space-y-3">
+                    <input
+                      type="text"
+                      value={novaRotaNome}
+                      onChange={e => setNovaRotaNome(e.target.value)}
+                      placeholder="Nome da rota ou abrigo seguro..."
+                      className="w-full p-2.5 rounded-xl bg-slate-900 border border-slate-700 text-xs text-white"
+                    />
+                    <input
+                      type="text"
+                      value={novaRotaBairro}
+                      onChange={e => setNovaRotaBairro(e.target.value)}
+                      placeholder="Comunidade / Bairro..."
+                      className="w-full p-2.5 rounded-xl bg-slate-900 border border-slate-700 text-xs text-white"
+                    />
+                    <button type="submit" className="w-full py-2.5 rounded-xl bg-[#00F2FE] text-slate-950 font-black text-xs">
+                      SALVAR NO MAPA DE ROTAS
+                    </button>
+                  </div>
+                </form>
+              </div>
+            )}
+
+            {/* ABA 4: BALANÇA & ESG (RECICLAGEM COMUNITÁRIA E DRENAGEM) */}
+            {activeTab === "esg" && (
+              <div className="space-y-4">
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                  <div className="hud-panel rounded-2xl p-4">
+                    <div className="text-[10px] text-slate-400">TOTAL RECICLADO</div>
+                    <div className="text-xl font-black text-[#00FF9D] mt-1">{esgTotals.totalKg.toFixed(2)} kg</div>
+                  </div>
+                  <div className="hud-panel rounded-2xl p-4">
+                    <div className="text-[10px] text-slate-400">ÁGUA PRESERVADA</div>
+                    <div className="text-xl font-black text-[#00F2FE] mt-1">{esgTotals.aguaLitros} L</div>
+                  </div>
+                  <div className="hud-panel rounded-2xl p-4">
+                    <div className="text-[10px] text-slate-400">CO2 EVITADO</div>
+                    <div className="text-xl font-black text-[#FFB703] mt-1">{esgTotals.co2Kg} kg</div>
+                  </div>
+                  <div className="hud-panel rounded-2xl p-4">
+                    <div className="text-[10px] text-slate-400">BUEIROS DESOBSTRUÍDOS</div>
+                    <div className="text-xl font-black text-white mt-1">{esgTotals.bueirosProtegidos} un.</div>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <form onSubmit={handleAddEsg} className="hud-panel rounded-2xl p-5 space-y-3">
+                    <div className="flex items-center gap-2 text-[#00FF9D] font-black text-xs">
+                      <SvgIcon name="scale" className="w-4 h-4" />
+                      <span>REGISTRO DE PESAGEM COMUNITÁRIA</span>
+                    </div>
+                    <select
+                      value={esgMaterial}
+                      onChange={e => setEsgMaterial(e.target.value)}
+                      className="w-full p-2.5 rounded-xl bg-slate-900 border border-slate-700 text-xs text-white"
+                    >
+                      <option>Plástico PET</option>
+                      <option>Alumínio / Latinha</option>
+                      <option>Papelão / Papel</option>
+                      <option>Ferro / Sucata Metálica</option>
+                      <option>Vidro</option>
+                      <option>Óleo de Cozinha Usado</option>
+                    </select>
+                    <input
+                      type="number"
+                      step="0.01"
+                      value={esgPeso}
+                      onChange={e => setEsgPeso(e.target.value)}
+                      placeholder="Peso em kg (ex: 4.50)"
+                      className="w-full p-2.5 rounded-xl bg-slate-900 border border-slate-700 text-xs text-white"
+                    />
+                    <button type="submit" className="w-full py-2.5 rounded-xl bg-[#00FF9D] text-slate-950 font-black text-xs">
+                      REGISTRAR NA BALANÇA ESG
+                    </button>
+                  </form>
+
+                  <div className="md:col-span-2 hud-panel rounded-2xl p-5">
+                    <h3 className="text-xs font-black text-[#00F2FE] mb-3">HISTÓRICO DE PESAGENS & RASTREABILIDADE</h3>
+                    {esgRegistros.length === 0 ? (
+                      <p className="text-xs text-slate-400">Nenhuma pesagem registrada ainda.</p>
+                    ) : (
+                      <div className="space-y-2 max-h-64 overflow-y-auto">
+                        {esgRegistros.map(item => (
+                          <div key={item.id} className="p-2.5 rounded-xl bg-slate-950 border border-slate-800 flex justify-between items-center text-xs">
+                            <div>
+                              <b className="text-[#00FF9D]">{item.material}</b> — <span className="text-white font-bold">{item.kg.toFixed(2)} kg</span>
+                              <div className="text-[10px] text-slate-400">{item.municipio} • {item.data} • {item.operador}</div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* ABA 5: SARAH AI — SUPERVISORA DE VOZ E INTELIGÊNCIA TÁTICA */}
+            {activeTab === "sarah" && (
+              <div className="hud-panel rounded-2xl p-5 max-w-4xl mx-auto">
+                <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-800 pb-3 mb-4">
+                  <div className="flex items-center gap-2">
+                    <SvgIcon name="bot" className="w-5 h-5 text-[#00F2FE]" />
+                    <div>
+                      <h2 className="text-sm font-black text-[#00F2FE]">SARAH AI — SUPERVISORA OPERACIONAL</h2>
+                      <p className="text-[11px] text-slate-400">Síntese de Voz PT-BR & Análise Climática em Tempo Real</p>
+                    </div>
+                  </div>
+                  <select
+                    value={perfilVozId}
+                    onChange={e => {
+                      setPerfilVozId(e.target.value);
+                      localStorage.setItem("raru_voice_uri", e.target.value);
+                    }}
+                    className="bg-slate-900 border border-slate-700 rounded-lg px-2.5 py-1.5 text-xs text-white max-w-[220px]"
+                  >
+                    <option value="">Voz Padrão do Sistema</option>
+                    {voices.map(v => (
+                      <option key={v.voiceURI} value={v.voiceURI}>{v.name}</option>
+                    ))}
+                  </select>
+                </div>
+
+                <div className="space-y-3 max-h-80 overflow-y-auto mb-4 pr-1">
+                  {sarahMessages.map((m, idx) => (
+                    <div
+                      key={idx}
+                      className={`p-3 rounded-2xl text-xs leading-relaxed ${
+                        m.role === "assistant"
+                          ? "bg-slate-900/95 border border-[#00F2FE]/40 text-cyan-100"
+                          : "bg-[#00F2FE]/15 border border-[#00F2FE] text-white ml-8"
+                      }`}
+                    >
+                      <div className="flex items-center justify-between mb-1">
+                        <span className="font-black text-[10px] uppercase text-[#00F2FE]">
+                          {m.role === "assistant" ? "SARAH AI" : (userName || "OPERADOR")}
+                        </span>
+                        {m.role === "assistant" && (
+                          <button
+                            type="button"
+                            onClick={() => falar(m.text, perfilVozId)}
+                            className="text-[#00FF9D] flex items-center gap-1 text-[10px] font-bold"
+                          >
+                            <SvgIcon name="volume" className="w-3.5 h-3.5" />
+                            <span>Ouvir</span>
+                          </button>
+                        )}
+                      </div>
+                      <div>{m.text}</div>
+                    </div>
+                  ))}
+                </div>
+
+                <form onSubmit={sendSarahMessage} className="flex gap-2">
+                  <input
+                    type="text"
+                    value={sarahInput}
+                    onChange={e => setSarahInput(e.target.value)}
+                    placeholder="Pergunte sobre clima, protocolos de emergência ou informe seu nome..."
+                    className="flex-1 px-3.5 py-2.5 rounded-xl bg-slate-900 border border-slate-700 text-xs text-white focus:outline-none focus:border-[#00F2FE]"
+                  />
+                  <button
+                    type="submit"
+                    disabled={sarahLoading}
+                    className="px-5 py-2.5 rounded-xl bg-[#00F2FE] text-slate-950 font-black text-xs flex items-center gap-1.5"
+                  >
+                    <SvgIcon name="play" className="w-3.5 h-3.5" />
+                    <span>{sarahLoading ? "Analisando..." : "Enviar"}</span>
+                  </button>
+                </form>
+              </div>
+            )}
+          </main>
+
+          {/* RODAPÉ INSTITUCIONAL */}
+          <footer className="border-t border-slate-900 px-4 py-3 text-center text-[11px] text-slate-500">
+            RARU NEXUS V11.2 PLUS • PROJETO CIDADÃO SENSOR • MONITORAMENTO CONTÍNUO DOS 92 MUNICÍPIOS DO ESTADO DO RIO DE JANEIRO
+          </footer>
+        </div>
+      );
+    }
+
+    const root = ReactDOM.createRoot(document.getElementById("root"));
+    root.render(<App />);
+  </script>
+</body>
+</html>
